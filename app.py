@@ -61,7 +61,11 @@ orders = []
 def home():
     language = request.args.get('lang', 'en')
     return render_template('home.html', products=products, language=language)
-
+@app.route('/category/<category_name>')
+def category(category_name):
+    language = request.args.get('lang', 'en')
+    filtered_products = [product for product in products if category_name in product['categories']]
+    return render_template('home.html', products=filtered_products, language=language)
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
     language = request.args.get('lang', 'en')
