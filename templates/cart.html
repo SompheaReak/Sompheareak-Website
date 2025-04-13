@@ -2,30 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Cart - Somphea Reak</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>Your Cart</title>
 </head>
 <body>
     <h1>Your Cart</h1>
 
-    {% if cart %}
-        <ul>
-        {% for index, item in enumerate(cart) %}
-            <li>
-                {{ item.product.name_en }} - Quantity: {{ item.quantity }}
-                <form action="/remove-from-cart/{{ index }}" method="POST" style="display:inline;">
-                    <button type="submit" style="background-color: red; color: white; border: none; padding: 5px 10px; border-radius: 4px;">Delete</button>
-                </form>
-            </li>
-        {% endfor %}
-        </ul>
+    <ul>
+    {% set total = 0 %}
+    {% for order in orders %}
+        <li>{{ order.product.name_en }} - Quantity: {{ order.quantity }} - Subtotal: {{ order.product.price * order.quantity }}៛</li>
+        {% set total = total + (order.product.price * order.quantity) %}
+    {% endfor %}
+    </ul>
 
-        <a href="/checkout">Proceed to Checkout</a>
-    {% else %}
-        <p>Your cart is empty!</p>
-    {% endif %}
+    <h2>Total: {{ total }}៛</h2>
 
-    <br><br>
-    <a href="/">Continue Shopping</a>
+    <a href="/">Back to Home</a>
 </body>
 </html>
