@@ -1,10 +1,12 @@
+// script.js
+
 function increaseQuantity(button) {
-    const input = button.parentElement.querySelector('input[name="quantity"]');
+    const input = button.parentNode.querySelector('input[name="quantity"]');
     input.value = parseInt(input.value) + 1;
 }
 
 function decreaseQuantity(button) {
-    const input = button.parentElement.querySelector('input[name="quantity"]');
+    const input = button.parentNode.querySelector('input[name="quantity"]');
     if (parseInt(input.value) > 1) {
         input.value = parseInt(input.value) - 1;
     }
@@ -26,16 +28,29 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update cart count
-                    document.getElementById('cart-count').innerText = data.cart_count;
-                    // Show success message
-                    const successDiv = document.getElementById('success');
-                    successDiv.style.display = 'block';
-                    setTimeout(() => {
-                        successDiv.style.display = 'none';
-                    }, 2000);
+                    updateCartCount(data.cart_count);
+                    showSuccessMessage();
                 }
             });
         });
     });
 });
+
+// Update cart count everywhere
+function updateCartCount(newCount) {
+    document.querySelectorAll('#cart-count').forEach(el => el.innerText = newCount);
+}
+
+// Show and hide success message
+function showSuccessMessage() {
+    const success = document.getElementById('success');
+    success.style.display = 'block';
+
+    setTimeout(() => {
+        success.style.animation = 'fadeout 0.5s forwards';
+        setTimeout(() => {
+            success.style.display = 'none';
+            success.style.animation = ''; // reset animation for next time
+        }, 500);
+    }, 1500);
+}
