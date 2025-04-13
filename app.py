@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
+import requests  # <--- important for sending message to Telegram
 
 app = Flask(__name__)
 
@@ -100,8 +101,43 @@ def checkout():
         name = request.form['name']
         phone = request.form['phone']
         address = request.form['address']
-        cart.clear()  # Clear the cart after placing order
+
+        # Prepare Telegram message
+        message = f"🛒 *New Order Received!*\n\n"
+        message += f"*Name:* {name}\n"
+        message += f"*Phone:* {phone}\n"
+        message += f"*Address:* {address}\n\n"
+        message += "*Order Details:*\n"
+
+        total = 0
+        for item in cart:
+            product_name = item['product']['name_en']
+            quantity = item['quantity']
+            price = item['product']['price']
+            subtotal = price * quantity
+            total += subtotal
+            message += f"- {product_name} x {quantity} = {subtotal}៛\n"
+
+        message += f"\n*Total:* {total}៛"
+
+        # Send message to Telegram
+        bot_token = '7981426501:AAE7CInWMNE2_sz5DaCMuAcKmH8yji1YBqk'
+        chat_id = 1098161879
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+
+        payload = {
+            "chat_id": chat_id,
+            "text": message,
+            "parse_mode": "Markdown"
+        }
+
+        response = requests.post(url, data=payload)
+        if response.status_code != 200:
+            print("Failed to send Telegram message:", response.text)
+
+        cart.clear()  # Clear cart after sending
         return redirect(url_for('home'))
+
     return render_template('checkout.html')
 
 if __name__ == '__main__':
