@@ -17,11 +17,14 @@
         h1, h2 {
             text-align: center;
         }
-        a {
+        a, form {
             display: block;
             text-align: center;
             margin-top: 20px;
-            font-size: 18px;
+        }
+        button {
+            padding: 8px 12px;
+            margin: 5px;
         }
     </style>
 </head>
@@ -29,7 +32,7 @@
 
     <h1>Your Cart</h1>
 
-    {% if orders %}
+    {% if cart %}
     <table>
         <thead>
             <tr>
@@ -37,23 +40,33 @@
                 <th>Price (៛)</th>
                 <th>Quantity</th>
                 <th>Subtotal (៛)</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
             {% set total = 0 %}
-            {% for order in orders %}
+            {% for item in cart %}
             <tr>
-                <td>{{ order.product.name_en }}</td>
-                <td>{{ order.product.price }}</td>
-                <td>{{ order.quantity }}</td>
-                <td>{{ order.product.price * order.quantity }}</td>
+                <td>{{ item.product.name_en }}</td>
+                <td>{{ item.product.price }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.product.price * item.quantity }}</td>
+                <td>
+                    <form action="/remove-from-cart/{{ loop.index0 }}" method="post">
+                        <button type="submit">Remove</button>
+                    </form>
+                </td>
             </tr>
-            {% set total = total + (order.product.price * order.quantity) %}
+            {% set total = total + (item.product.price * item.quantity) %}
             {% endfor %}
         </tbody>
     </table>
 
     <h2>Total: {{ total }}៛</h2>
+
+    <form action="/checkout" method="get">
+        <button type="submit">Checkout</button>
+    </form>
 
     {% else %}
     <h2>Your cart is empty.</h2>
