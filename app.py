@@ -51,34 +51,10 @@ products = [
         "price": 6000,
         "image": "/static/images/Bracelet.jpg",
         "categories": ["Hot Sale"]
-    },
-    {
-        "id": 7,
-        "name_en": "Bracelet",
-        "name_kh": "កងដៃ",
-        "price": 6000,
-        "image": "/static/images/Bracelet.jpg",
-        "categories": ["Hot Sale"]
-    },
-    {
-        "id": 8,
-        "name_en": "Bracelet",
-        "name_kh": "កងដៃ",
-        "price": 6000,
-        "image": "/static/images/Bracelet.jpg",
-        "categories": ["Hot Sale"]
-    },
-    {
-        "id": 9,
-        "name_en": "Bracelet",
-        "name_kh": "កងដៃ",
-        "price": 6000,
-        "image": "/static/images/Bracelet.jpg",
-        "categories": ["Hot Sale"]
     }
 ]
 
-# Simple in-memory carts (before checkout)
+# In-memory cart
 cart = []
 
 @app.route('/')
@@ -112,14 +88,19 @@ def cart_page():
         return redirect(url_for('cart_page'))
     return render_template('cart.html', cart=cart)
 
+@app.route('/remove-from-cart/<int:index>', methods=["POST"])
+def remove_from_cart(index):
+    if 0 <= index < len(cart):
+        cart.pop(index)
+    return redirect(url_for('cart_page'))
+
 @app.route('/checkout', methods=["GET", "POST"])
 def checkout():
     if request.method == "POST":
         name = request.form['name']
         phone = request.form['phone']
         address = request.form['address']
-        # You can also save cart items here
-        cart.clear()  # Clear cart after order placed
+        cart.clear()  # Clear the cart after placing order
         return redirect(url_for('home'))
     return render_template('checkout.html')
 
