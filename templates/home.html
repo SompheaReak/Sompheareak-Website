@@ -10,7 +10,7 @@
             font-family: Arial, sans-serif;
             padding: 20px;
             font-size: 18px;
-            margin-bottom: 100px; /* so floating button doesn't cover products */
+            margin-bottom: 100px;
         }
         h1 {
             text-align: center;
@@ -24,6 +24,15 @@
             font-size: 22px;
             color: #007bff;
             font-weight: bold;
+        }
+        .banner {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .banner img {
+            width: 100%;
+            max-width: 800px;
+            border-radius: 10px;
         }
         .categories {
             text-align: center;
@@ -40,12 +49,25 @@
         }
         .success-message {
             display: none;
+            position: fixed;
+            top: 80px;
+            right: 20px;
             background-color: #28a745;
             color: white;
-            padding: 10px;
-            text-align: center;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            padding: 15px 25px;
+            font-size: 18px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            animation: fadein 0.5s;
+        }
+        @keyframes fadein {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+        @keyframes fadeout {
+            from {opacity: 1;}
+            to {opacity: 0;}
         }
         .product-grid {
             display: grid;
@@ -89,6 +111,7 @@
             color: white;
             border: none;
             border-radius: 5px;
+            cursor: pointer;
         }
         .add-cart-button {
             width: 100%;
@@ -104,7 +127,6 @@
         .add-cart-button:hover {
             background-color: #218838;
         }
-        /* Floating Cart Button */
         .floating-cart {
             position: fixed;
             bottom: 20px;
@@ -125,46 +147,54 @@
 </head>
 <body>
 
-    <h1>Somphea Reak Shop</h1>
+<!-- Success message -->
+<div id="success" class="success-message">Item added to cart successfully!</div>
 
-    <div class="top-bar">
-        <span class="cart-counter">🛒 Cart (<span id="cart-count">{{ cart|length }}</span>)</span>
+<h1>Somphea Reak Shop</h1>
+
+<!-- Top Bar -->
+<div class="top-bar">
+    <span class="cart-counter">🛒 Cart (<span id="cart-count">{{ cart|length }}</span>)</span>
+</div>
+
+<!-- Banner -->
+<div class="banner">
+    <img src="/static/images/banner.jpg" alt="Somphea Reak Banner">
+</div>
+
+<!-- Categories -->
+<div class="categories">
+    <a href="/category/Hot Sale">Hot Sale</a>
+    <a href="/category/Toy">Toy</a>
+    <a href="/category/Keychain">Keychain</a>
+    <a href="/category/Accessories">Accessories</a>
+</div>
+
+<!-- Product Grid -->
+<div class="product-grid">
+    {% for product in products %}
+    <div class="product-card">
+        <img src="{{ product.image }}" alt="{{ product.name_en }}">
+        <h3>{{ product.name_en }}</h3>
+        <p class="price">{{ product.price }}៛</p>
+
+        <form class="add-to-cart-form">
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+            <div class="quantity-selector">
+                <button type="button" onclick="decreaseQuantity(this)">-</button>
+                <input type="number" name="quantity" value="1" min="1">
+                <button type="button" onclick="increaseQuantity(this)">+</button>
+            </div>
+            <button type="submit" class="add-cart-button">Add to Cart</button>
+        </form>
     </div>
+    {% endfor %}
+</div>
 
-    <div class="categories">
-        <a href="/category/Hot Sale">Hot Sale</a>
-        <a href="/category/Toy">Toy</a>
-        <a href="/category/Keychain">Keychain</a>
-        <a href="/category/Accessories">Accessories</a>
-    </div>
-
-    <div id="success" class="success-message">Item added to cart successfully!</div>
-
-    <div class="product-grid">
-        {% for product in products %}
-        <div class="product-card">
-            <img src="{{ product.image }}" alt="{{ product.name_en }}">
-            <h3>{{ product.name_en }}</h3>
-            <p class="price">{{ product.price }}៛</p>
-
-            <form class="add-to-cart-form">
-                <input type="hidden" name="product_id" value="{{ product.id }}">
-                <div class="quantity-selector">
-                    <button type="button" onclick="decreaseQuantity(this)">-</button>
-                    <input type="number" name="quantity" value="1" min="1">
-                    <button type="button" onclick="increaseQuantity(this)">+</button>
-                </div>
-                <button type="submit" class="add-cart-button">Add to Cart</button>
-            </form>
-
-        </div>
-        {% endfor %}
-    </div>
-
-    <!-- Floating Cart Button -->
-    <a href="/cart" class="floating-cart">
-        🛒 Cart (<span id="cart-count">{{ cart|length }}</span>)
-    </a>
+<!-- Floating Cart Button -->
+<a href="/cart" class="floating-cart">
+    🛒 Cart (<span id="cart-count">{{ cart|length }}</span>)
+</a>
 
 </body>
 </html>
