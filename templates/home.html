@@ -5,9 +5,53 @@
     <title>Somphea Reak - Home</title>
     <link rel="stylesheet" href="/static/style.css">
     <script src="/static/script.js" defer></script>
+
+    <style>
+        /* Quick styling for the banner */
+        .banner {
+            width: 100%;
+            height: auto;
+            max-height: 300px;
+            object-fit: cover;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+        .product-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .product-card {
+            width: 250px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+        .quantity-selector {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .quantity-selector button {
+            padding: 5px 10px;
+        }
+        .quantity-selector input {
+            width: 50px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <h1>Somphea Reak Shop</h1>
+
+    <h1 style="text-align: center;">Somphea Reak Shop</h1>
+
+    <!-- Banner image -->
+    <div style="text-align: center;">
+        <img src="/static/images/banner.jpg" alt="Shop Banner" class="banner">
+    </div>
 
     <button onclick="switchLanguage()">Switch Language</button>
 
@@ -24,18 +68,18 @@
     <div id="products" class="product-grid">
     {% for product in products %}
         <div class="product-card">
-            <img src="{{ product.image }}" alt="{{ product.name_en }}">
+            <img src="{{ product.image }}" alt="{{ product.name_en }}" style="max-width:100%;">
             <h3>{{ product.name_en }}</h3>
-            <p class="price">{{ product.price }}៛</p>
+            <p>{{ product.price }}៛</p>
 
-            <form action="/cart" method="POST" class="add-cart-form">
+            <form action="/cart" method="POST">
                 <input type="hidden" name="product_id" value="{{ product.id }}">
                 <div class="quantity-selector">
                     <button type="button" onclick="decreaseQuantity(this)">-</button>
                     <input type="number" name="quantity" value="1" min="1">
                     <button type="button" onclick="increaseQuantity(this)">+</button>
                 </div>
-                <button type="submit" class="add-cart-button">Add to Cart</button>
+                <button type="submit">Add to Cart</button>
             </form>
 
             <a href="/product/{{ product.id }}?lang={{ language }}">View Details</a>
@@ -44,5 +88,6 @@
     </div>
 
     <a href="/cart">Go to Cart</a>
+
 </body>
 </html>
