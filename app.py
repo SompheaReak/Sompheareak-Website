@@ -139,9 +139,15 @@ def checkout():
             print("Failed to send Telegram message:", response.text)
 
         cart.clear()  # Clear cart after sending
-        return redirect(url_for('home'))
+
+        # Redirect to Thank You Page
+        return redirect(url_for('thank_you'))
 
     return render_template('checkout.html')
+
+@app.route('/thankyou')
+def thank_you():
+    return render_template('thankyou.html')
 
 if __name__ == '__main__':
     import os
