@@ -43,6 +43,14 @@ products = [
         "price": 6000,
         "image": "/static/images/scarl-default.jpg",
         "categories": ["Keychain"]
+    },
+     {
+        "id": 6,
+        "name_en": "Bracelet",
+        "name_kh": "Scar L - ពណ៌ដើម",
+        "price": 6000,
+        "image": "/static/images/Bracelet.jpg",
+        "categories": ["Hot Sale"]
     }
 ]
 
