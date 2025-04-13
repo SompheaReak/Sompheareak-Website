@@ -36,7 +36,7 @@ products = [
         "image": "/static/images/akm-default.jpg",
         "categories": ["Keychain"]
     },
-     {
+    {
         "id": 5,
         "name_en": "Scar L - Default",
         "name_kh": "Scar L - ពណ៌ដើម",
@@ -44,61 +44,73 @@ products = [
         "image": "/static/images/scarl-default.jpg",
         "categories": ["Keychain"]
     },
-     {
+    {
         "id": 6,
         "name_en": "Bracelet",
-        "name_kh": "Scar L - ពណ៌ដើម",
+        "name_kh": "កងដៃ",
         "price": 6000,
         "image": "/static/images/Bracelet.jpg",
         "categories": ["Hot Sale"]
     },
-     {
+    {
         "id": 7,
         "name_en": "Bracelet",
-        "name_kh": "Scar L - ពណ៌ដើម",
+        "name_kh": "កងដៃ",
         "price": 6000,
         "image": "/static/images/Bracelet.jpg",
         "categories": ["Hot Sale"]
-    }, 
+    },
     {
         "id": 8,
         "name_en": "Bracelet",
-        "name_kh": "Scar L - ពណ៌ដើម",
+        "name_kh": "កងដៃ",
         "price": 6000,
         "image": "/static/images/Bracelet.jpg",
         "categories": ["Hot Sale"]
     },
-     {
+    {
         "id": 9,
         "name_en": "Bracelet",
-        "name_kh": "Scar L - ពណ៌ដើម",
+        "name_kh": "កងដៃ",
         "price": 6000,
         "image": "/static/images/Bracelet.jpg",
         "categories": ["Hot Sale"]
     }
 ]
 
-# Simple in-memory orders (not real database yet)
-orders = []
+# Simple in-memory carts (before checkout)
+cart = []
 
 @app.route('/')
 def home():
     language = request.args.get('lang', 'en')
     return render_template('home.html', products=products, language=language)
+
 @app.route('/category/<category_name>')
 def category(category_name):
     language = request.args.get('lang', 'en')
     filtered_products = [product for product in products if category_name in product['categories']]
     return render_template('home.html', products=filtered_products, language=language)
+
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
     language = request.args.get('lang', 'en')
     product = next((item for item in products if item["id"] == product_id), None)
     return render_template('product.html', product=product, language=language)
 
-@app.route('/cart')
-def cart():
-    return render_template('cart.html')
+@app.route('/cart', methods=["GET", "POST"])
+def cart_page():
+    if request.method == "POST":
+        product_id = int(request.form['product_id'])
+        quantity = int(request.form['quantity'])
+        product = next((item for item in products if item["id"] == product_id), None)
+        if product:
+            cart.append({
+                "product": product,
+                "quantity": quantity
+            })
+        return redirect(url_for('cart_page'))
+    return render_template('cart.html', cart=cart)
 
 @app.route('/checkout', methods=["GET", "POST"])
 def checkout():
@@ -106,7 +118,8 @@ def checkout():
         name = request.form['name']
         phone = request.form['phone']
         address = request.form['address']
-        orders.append({"name": name, "phone": phone, "address": address})
+        # You can also save cart items here
+        cart.clear()  # Clear cart after order placed
         return redirect(url_for('home'))
     return render_template('checkout.html')
 
@@ -114,4 +127,3 @@ if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-    
