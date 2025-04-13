@@ -3,20 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <title>Your Cart</title>
+    <style>
+        table {
+            width: 80%;
+            margin: auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        a {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
 </head>
 <body>
+
     <h1>Your Cart</h1>
 
-    <ul>
-    {% set total = 0 %}
-    {% for order in orders %}
-        <li>{{ order.product.name_en }} - Quantity: {{ order.quantity }} - Subtotal: {{ order.product.price * order.quantity }}៛</li>
-        {% set total = total + (order.product.price * order.quantity) %}
-    {% endfor %}
-    </ul>
+    {% if orders %}
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Price (៛)</th>
+                <th>Quantity</th>
+                <th>Subtotal (៛)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set total = 0 %}
+            {% for order in orders %}
+            <tr>
+                <td>{{ order.product.name_en }}</td>
+                <td>{{ order.product.price }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>{{ order.product.price * order.quantity }}</td>
+            </tr>
+            {% set total = total + (order.product.price * order.quantity) %}
+            {% endfor %}
+        </tbody>
+    </table>
 
     <h2>Total: {{ total }}៛</h2>
 
+    {% else %}
+    <h2>Your cart is empty.</h2>
+    {% endif %}
+
     <a href="/">Back to Home</a>
+
 </body>
 </html>
