@@ -51,6 +51,30 @@ products = [
         "price": 6000,
         "image": "/static/images/Bracelet.jpg",
         "categories": ["Hot Sale"]
+    },
+     {
+        "id": 7,
+        "name_en": "Bracelet",
+        "name_kh": "Scar L - ពណ៌ដើម",
+        "price": 6000,
+        "image": "/static/images/Bracelet.jpg",
+        "categories": ["Hot Sale"]
+    }, 
+    {
+        "id": 8,
+        "name_en": "Bracelet",
+        "name_kh": "Scar L - ពណ៌ដើម",
+        "price": 6000,
+        "image": "/static/images/Bracelet.jpg",
+        "categories": ["Hot Sale"]
+    },
+     {
+        "id": 9,
+        "name_en": "Bracelet",
+        "name_kh": "Scar L - ពណ៌ដើម",
+        "price": 6000,
+        "image": "/static/images/Bracelet.jpg",
+        "categories": ["Hot Sale"]
     }
 ]
 
