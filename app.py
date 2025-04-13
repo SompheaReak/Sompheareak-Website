@@ -10,7 +10,7 @@ products = [
         "name_kh": "M416 - ប្រាក់មាស",
         "price": 6000,
         "image": "/static/images/m416-gold.jpg",
-        "categories": ["Hot Sale", "Toy", "Keychain"]
+        "categories": ["Keychain"]
     },
     {
         "id": 2,
@@ -18,7 +18,7 @@ products = [
         "name_kh": "M416 - ពណ៌ដើម",
         "price": 6000,
         "image": "/static/images/m416-default.jpg",
-        "categories": ["Toy", "Keychain"]
+        "categories": ["Keychain"]
     },
     {
         "id": 3,
@@ -26,7 +26,7 @@ products = [
         "name_kh": "AKM - ប្រាក់មាស",
         "price": 6000,
         "image": "/static/images/akm-gold.jpg",
-        "categories": ["Hot Sale", "Toy", "Keychain"]
+        "categories": ["Keychain"]
     },
     {
         "id": 4,
@@ -34,7 +34,15 @@ products = [
         "name_kh": "AKM - ពណ៌ដើម",
         "price": 6000,
         "image": "/static/images/akm-default.jpg",
-        "categories": ["Toy", "Keychain"]
+        "categories": ["Keychain"]
+    }
+     {
+        "id": 5,
+        "name_en": "Scar L - Default",
+        "name_kh": "Scar L - ពណ៌ដើម",
+        "price": 6000,
+        "image": "/static/images/scarl-default.jpg",
+        "categories": ["Keychain"]
     }
 ]
 
@@ -70,3 +78,4 @@ if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+    
