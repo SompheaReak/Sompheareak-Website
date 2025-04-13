@@ -35,7 +35,7 @@ products = [
         "price": 6000,
         "image": "/static/images/akm-default.jpg",
         "categories": ["Keychain"]
-    }
+    },
      {
         "id": 5,
         "name_en": "Scar L - Default",
