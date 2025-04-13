@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Somphea Reak - Home</title>
+    <title>Somphea Reak Shop</title>
     <link rel="stylesheet" href="/static/style.css">
     <script src="/static/script.js" defer></script>
     <style>
@@ -14,21 +14,28 @@
         h1 {
             text-align: center;
         }
-        .categories {
+        .top-bar {
             text-align: center;
             margin-bottom: 20px;
         }
-        .categories a {
-            margin: 0 10px;
-            font-size: 20px;
-            text-decoration: none;
+        .cart-counter {
+            font-size: 22px;
             color: #007bff;
+            font-weight: bold;
+        }
+        .success-message {
+            display: none;
+            background-color: #28a745;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 20px;
         }
         .product-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
-            margin-top: 20px;
         }
         .product-card {
             border: 1px solid #ccc;
@@ -69,16 +76,15 @@
             border-radius: 5px;
         }
         .add-cart-button {
-            display: block;
             width: 100%;
             padding: 15px;
-            margin-top: 10px;
             font-size: 20px;
             background-color: #28a745;
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
+            margin-top: 10px;
         }
         .add-cart-button:hover {
             background-color: #218838;
@@ -96,12 +102,11 @@
 
     <h1>Somphea Reak Shop</h1>
 
-    <div class="categories">
-        <a href="/category/Hot Sale">Hot Sale</a>
-        <a href="/category/Toy">Toy</a>
-        <a href="/category/Keychain">Keychain</a>
-        <a href="/category/Accessories">Accessories</a>
+    <div class="top-bar">
+        <span class="cart-counter">🛒 Cart (<span id="cart-count">{{ cart|length }}</span>)</span>
     </div>
+
+    <div id="success" class="success-message">Item added to cart successfully!</div>
 
     <div class="product-grid">
         {% for product in products %}
@@ -110,7 +115,7 @@
             <h3>{{ product.name_en }}</h3>
             <p class="price">{{ product.price }}៛</p>
 
-            <form action="/cart" method="POST">
+            <form class="add-to-cart-form">
                 <input type="hidden" name="product_id" value="{{ product.id }}">
                 <div class="quantity-selector">
                     <button type="button" onclick="decreaseQuantity(this)">-</button>
