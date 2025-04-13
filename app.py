@@ -48,11 +48,11 @@ products = [
     },
     {
         "id": 6,
-        "name_en": "Bracelet",
-        "name_kh": "កងដៃ",
+        "name_en": "Scar L - Gold",
+        "name_kh": "Scar L - ពណ៌ដើម ",
         "price": 6000,
         "image": "/static/images/Bracelet.jpg",
-        "categories": ["Hot Sale"]
+        "categories": ["Keychain"]
     }
 ]
 
