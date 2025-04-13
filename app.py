@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import requests  # important for sending message to Telegram
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Required if you plan to use session in future
+app.secret_key = 'your_secret_key'
 
 # Dummy products data
 products = [
@@ -62,13 +62,13 @@ cart = []
 @app.route('/')
 def home():
     language = request.args.get('lang', 'en')
-    return render_template('home.html', products=products, language=language)
+    return render_template('home.html', products=products, language=language, cart=cart)
 
 @app.route('/category/<category_name>')
 def category(category_name):
     language = request.args.get('lang', 'en')
     filtered_products = [product for product in products if category_name in product['categories']]
-    return render_template('home.html', products=filtered_products, language=language)
+    return render_template('home.html', products=filtered_products, language=language, cart=cart)
 
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
@@ -76,19 +76,21 @@ def product_detail(product_id):
     product = next((item for item in products if item["id"] == product_id), None)
     return render_template('product.html', product=product, language=language)
 
-@app.route('/cart', methods=["GET", "POST"])
+@app.route('/cart', methods=["GET"])
 def cart_page():
-    if request.method == "POST":
-        product_id = int(request.form['product_id'])
-        quantity = int(request.form['quantity'])
-        product = next((item for item in products if item["id"] == product_id), None)
-        if product:
-            cart.append({
-                "product": product,
-                "quantity": quantity
-            })
-        return redirect(url_for('cart_page'))
     return render_template('cart.html', cart=cart)
+
+@app.route('/add-to-cart', methods=["POST"])
+def add_to_cart():
+    product_id = int(request.form['product_id'])
+    quantity = int(request.form['quantity'])
+    product = next((item for item in products if item["id"] == product_id), None)
+    if product:
+        cart.append({
+            "product": product,
+            "quantity": quantity
+        })
+    return jsonify({"success": True, "cart_count": len(cart)})
 
 @app.route('/remove-from-cart/<int:index>', methods=["POST"])
 def remove_from_cart(index):
