@@ -9,7 +9,7 @@ products = [
         "name_en": "M416 - Gold Plate",
         "name_kh": "M416 - ប្រាក់មាស",
         "price": 6000,
-        "image": "/static/m416-gold.jpg",
+        "image": "/static/images/m416-gold.jpg",
         "categories": ["Hot Sale", "Toy", "Keychain"]
     },
     {
@@ -17,7 +17,7 @@ products = [
         "name_en": "M416 - Default",
         "name_kh": "M416 - ពណ៌ដើម",
         "price": 6000,
-        "image": "/static/m416-default.jpg",
+        "image": "/static/images/m416-default.jpg",
         "categories": ["Toy", "Keychain"]
     },
     {
@@ -25,7 +25,7 @@ products = [
         "name_en": "AKM - Gold Plate",
         "name_kh": "AKM - ប្រាក់មាស",
         "price": 6000,
-        "image": "/static/akm-gold.jpg",
+        "image": "/static/images/akm-gold.jpg",
         "categories": ["Hot Sale", "Toy", "Keychain"]
     },
     {
@@ -33,7 +33,7 @@ products = [
         "name_en": "AKM - Default",
         "name_kh": "AKM - ពណ៌ដើម",
         "price": 6000,
-        "image": "/static/akm-default.jpg",
+        "image": "/static/images/akm-default.jpg",
         "categories": ["Toy", "Keychain"]
     }
 ]
