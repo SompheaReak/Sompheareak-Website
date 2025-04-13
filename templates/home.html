@@ -13,10 +13,10 @@
 
     <h2>Categories</h2>
     <ul>
-        <li><a href="{{ url_for('category', category_name='Hot Sale') }}">Hot Sale</a></li>
-        <li><a href="{{ url_for('category', category_name='Toy') }}">Toy</a></li>
-        <li><a href="{{ url_for('category', category_name='Keychain') }}">Keychain</a></li>
-        <li><a href="{{ url_for('category', category_name='Accessories') }}">Accessories</a></li>
+        <li><a href="/category/Hot Sale">Hot Sale</a></li>
+        <li><a href="/category/Toy">Toy</a></li>
+        <li><a href="/category/Keychain">Keychain</a></li>
+        <li><a href="/category/Accessories">Accessories</a></li>
     </ul>
 
     <h2>Products</h2>
@@ -25,11 +25,19 @@
     {% for product in products %}
         <div class="product-card">
             <img src="{{ product.image }}" alt="{{ product.name_en }}">
-            <h3 id="name-{{ product.id }}">{{ product.name_en }}</h3>
+            <h3>{{ product.name_en }}</h3>
             <p>{{ product.price }}៛</p>
-            <a href="/cart" class="add-cart-button">Add to Cart</a>
+
+            <!-- Form to add to cart with quantity -->
+            <form action="/cart" method="POST">
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                Quantity: 
+                <input type="number" name="quantity" value="1" min="1" style="width: 50px;">
+                <button type="submit" class="add-cart-button">Add to Cart</button>
+            </form>
+
             <br>
-            <a href="/product/{{ product.id }}?lang={{ language }}">View</a>
+            <a href="/product/{{ product.id }}?lang={{ language }}">View Details</a>
         </div>
     {% endfor %}
     </div>
