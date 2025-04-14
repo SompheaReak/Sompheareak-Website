@@ -23,7 +23,7 @@ subcategories_map = {
     "Accessories": ["Gem Stone Bracelets", "Gym Bracelet"],
     "Keychain": ["Gun Keychains"],
     "Hot Sale": [],
-    "Toy": []
+    "Toy": ["Lego Ninjago","Lego WWII","Lego Soldier"]
 }
 
 # In-memory cart
