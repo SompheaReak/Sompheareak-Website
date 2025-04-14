@@ -4,7 +4,7 @@ import requests
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
-# Dummy products data (with subcategory)
+# Products data
 products = [
     {
         "id": 1,
@@ -64,25 +64,35 @@ products = [
     }
 ]
 
+# Subcategories map
+subcategories_map = {
+    "Accessories": ["Bracelets"],
+    "Keychain": ["Gun Keychains"],
+    "Hot Sale": [],
+    "Toy": []
+}
+
 # In-memory cart
 cart = []
 
+# Routes
 @app.route('/')
 def home():
     language = request.args.get('lang', 'en')
-    return render_template('home.html', products=products, language=language, cart=cart)
+    return render_template('home.html', products=products, language=language, cart=cart, current_category=None, subcategories=[])
 
 @app.route('/category/<category_name>')
 def category(category_name):
     language = request.args.get('lang', 'en')
     filtered_products = [product for product in products if category_name in product['categories']]
-    return render_template('home.html', products=filtered_products, language=language, cart=cart)
+    subs = subcategories_map.get(category_name, [])
+    return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=category_name, subcategories=subs)
 
 @app.route('/subcategory/<subcategory_name>')
 def subcategory(subcategory_name):
     language = request.args.get('lang', 'en')
     filtered_products = [product for product in products if product.get('subcategory') == subcategory_name]
-    return render_template('home.html', products=filtered_products, language=language, cart=cart)
+    return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=subcategory_name, subcategories=[])
 
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
