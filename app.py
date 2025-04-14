@@ -82,7 +82,7 @@ products = [
         "id": 10,
         "name_en": "Strawberry Crystal",
         "price": 9000,
-        "image": "/static/images/bc-04,jpg",
+        "image": "/static/images/bc-04.jpg",
         "categories": ["Accessories"],
         "subcategory": "Gem Stone Bracelets"
     }
@@ -90,7 +90,7 @@ products = [
 
 # Subcategories map
 subcategories_map = {
-    "Accessories": ["Gem Stone Bracelets","Gym Bracelet"]
+    "Accessories": ["Gem Stone Bracelets", "Gym Bracelet"],
     "Keychain": ["Gun Keychains"],
     "Hot Sale": [],
     "Toy": []
