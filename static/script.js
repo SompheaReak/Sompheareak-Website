@@ -33,8 +33,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Handle auto-load subcategories
+    // Setup product auto-loading (if needed)
     setupAutoLoadProducts();
+
+    // Highlight active category/subcategory on load
+    highlightActiveCategory();
 });
 
 // Update cart count everywhere
@@ -58,28 +61,38 @@ function showSuccessMessage() {
     }, 1500);
 }
 
-// Auto-load next products when scroll
+// Auto-load next products when scrolling
 function setupAutoLoadProducts() {
     const productCards = document.querySelectorAll('.product-card');
+    if (!productCards.length) return;
+
     const observer = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 loadMoreProducts();
-                observer.unobserve(entry.target);
+                observer.disconnect(); // stop after loading all
             }
         });
     }, {
         rootMargin: "100px",
     });
 
-    if (productCards.length) {
-        observer.observe(productCards[productCards.length - 1]);
-    }
+    observer.observe(productCards[productCards.length - 1]);
 }
 
 function loadMoreProducts() {
     const hiddenProducts = document.querySelectorAll('.product-card[style*="display: none"]');
     hiddenProducts.forEach(card => {
         card.style.display = 'block';
+    });
+}
+
+// Highlight current category or subcategory
+function highlightActiveCategory() {
+    const currentUrl = window.location.href;
+    document.querySelectorAll('.category-box a, .subcategory-box a').forEach(link => {
+        if (currentUrl.includes(link.getAttribute('href'))) {
+            link.classList.add('active');
+        }
     });
 }
