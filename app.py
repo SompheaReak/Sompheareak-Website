@@ -128,8 +128,8 @@ def checkout():
 
         message += f"\n*Total:* {total}៛"
 
-        bot_token = 'YOUR_TELEGRAM_BOT_TOKEN'
-        chat_id = YOUR_CHAT_ID
+        bot_token = '7981426501:AAE7CInWMNE2_sz5DaCMuAcKmH8yji1YBqk'
+        chat_id = 1098161879
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
         response = requests.post(url, data=payload)
