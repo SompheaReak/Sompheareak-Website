@@ -1,9 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 import requests
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 app.debug = True
+
+
 # Products data
 products = [
     {"id": 1, "name_kh": "M416 - ប្រាក់មាស", "name_en": "M416 - Gold Plate", "price": 6000, "image": "/static/images/m416-gold.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
@@ -71,13 +73,11 @@ subcategories_map = {
     "Toy": ["Lego Ninjago", "Lego WWII", "Lego ទាហាន"]
 }
 
-# In-memory cart
-cart = []
-
 # Home
 @app.route('/')
 def home():
-    language = request.args.get('lang', 'kh')  # Khmer is default
+    language = request.args.get('lang', 'kh')
+    cart = session.get('cart', [])
     return render_template('home.html', products=products, language=language, cart=cart, current_category=None, subcategories=[])
 
 # Category
@@ -86,6 +86,7 @@ def category(category_name):
     language = request.args.get('lang', 'kh')
     filtered_products = [p for p in products if category_name in p['categories']]
     subs = subcategories_map.get(category_name, [])
+    cart = session.get('cart', [])
     return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=category_name, subcategories=subs)
 
 # Subcategory
@@ -93,6 +94,7 @@ def category(category_name):
 def subcategory(subcategory_name):
     language = request.args.get('lang', 'kh')
     filtered_products = [p for p in products if p.get('subcategory') == subcategory_name]
+    cart = session.get('cart', [])
     return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=subcategory_name, subcategories=[])
 
 # Product Detail
@@ -100,12 +102,14 @@ def subcategory(subcategory_name):
 def product_detail(product_id):
     language = request.args.get('lang', 'kh')
     product = next((p for p in products if p['id'] == product_id), None)
-    return render_template('product.html', product=product, language=language)
+    cart = session.get('cart', [])
+    return render_template('product.html', product=product, language=language, cart=cart)
 
 # Cart Page
 @app.route('/cart')
 def cart_page():
     language = request.args.get('lang', 'kh')
+    cart = session.get('cart', [])
     return render_template('cart.html', cart=cart, language=language)
 
 # Add to Cart
@@ -114,21 +118,29 @@ def add_to_cart():
     product_id = int(request.form['product_id'])
     quantity = int(request.form['quantity'])
     product = next((p for p in products if p["id"] == product_id), None)
+    
     if product:
+        cart = session.get('cart', [])
         cart.append({"product": product, "quantity": quantity})
-    return jsonify({"success": True, "cart_count": len(cart)})
+        session['cart'] = cart  # Save cart back to session
+
+    return jsonify({"success": True, "cart_count": len(session.get('cart', []))})
 
 # Remove from Cart
 @app.route('/remove-from-cart/<int:index>', methods=["POST"])
 def remove_from_cart(index):
+    cart = session.get('cart', [])
     if 0 <= index < len(cart):
         cart.pop(index)
+    session['cart'] = cart  # Save cart back
     return redirect(url_for('cart_page'))
 
 # Checkout
 @app.route('/checkout', methods=["GET", "POST"])
 def checkout():
     language = request.args.get('lang', 'kh')
+    cart = session.get('cart', [])
+    
     if request.method == "POST":
         name = request.form['name']
         phone = request.form['phone']
@@ -146,8 +158,8 @@ def checkout():
 
         message += f"\n*Total:* {total}៛"
 
-        bot_token = '7981426501:AAE7CInWMNE2_sz5DaCMuAcKmH8yji1YBqk'
-        chat_id = 1098161879
+        bot_token = 'YOUR_BOT_TOKEN'
+        chat_id = YOUR_CHAT_ID
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
         response = requests.post(url, data=payload)
@@ -155,12 +167,12 @@ def checkout():
         if response.status_code != 200:
             print("Telegram error:", response.text)
 
-        cart.clear()
+        session['cart'] = []  # clear cart
         return redirect(url_for('thank_you'))
 
-    return render_template('checkout.html', language=language)
+    return render_template('checkout.html', language=language, cart=cart)
 
-# Thank you
+# Thank You
 @app.route('/thankyou')
 def thank_you():
     language = request.args.get('lang', 'kh')
