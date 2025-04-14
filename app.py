@@ -16,13 +16,17 @@ products = [
     {"id": 8, "name_kh": "ក្រវិលពណ៌ផ្កាឈូក", "name_en": "Pink Opal", "price": 6000, "image": "/static/images/bc-02.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
     {"id": 9, "name_kh": "គ្រីស្ទាល់ពណ៌ផ្កាឈូក", "name_en": "Pink Crystal", "price": 5500, "image": "/static/images/bc-03.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
     {"id": 10, "name_kh": "គ្រីស្ទាល់ស្ករត្រសក់", "name_en": "Strawberry Crystal", "price": 9000, "image": "/static/images/bc-04.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
-    {"id": 11, "name_kh": "Lego Ninjago - រដូវកាលទី១", "name_en": "Lego Ninjago Season 1 - DX Suit", "price": 30000, "image": "/static/images/njoss1dx.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 1"},
+    {"id": 11, "name_kh": "Lego Ninjago Season 1 - DX Suit", "name_en": "Lego Ninjago Season 1 - DX Suit", "price": 30000, "image": "/static/images/njoss1dx.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 1"},
     {"id": 12, "name_kh": "Kai (DX)", "name_en": "Lego Ninjago Season 1 - Kai", "price": 5000, "image": "/static/images/njoss1dxkai.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 1"},
     {"id": 13, "name_kh": "Zane (DX)", "name_en": "Lego Ninjago Season 1 - Zane", "price": 5000, "image": "/static/images/njoss1dxzane.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 1"},
     {"id": 14, "name_kh": "Jay (DX)", "name_en": "Lego Ninjago Season 1 - Jay", "price": 5000, "image": "/static/images/njoss1dxjay.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 1"},
     {"id": 15, "name_kh": "Cole (DX)", "name_en": "Lego Ninjago Season 1 - Cole", "price": 5000, "image": "/static/images/njoss1dxcole.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 1"},
     {"id": 16, "name_kh": "Nya (DX)", "name_en": "Lego Ninjago Season 1 - Nya", "price": 5000, "image": "/static/images/njoss1dxnya.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 1"},
     {"id": 17, "name_kh": "Lloyd (DX)", "name_en": "Lego Ninjago Season 1 - Lloyd", "price": 5000, "image": "/static/images/njoss1dxlloyd.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 1"},
+    {"id": 18, "name_kh": "Lego Ninjago Season 1 - Pilot Suit", "name_en": "Lego Ninjago Season 1 - Pilot Suit", "price": 25000, "image": "/static/images/njoss1pilot.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 2"},
+    {"id": 19, "name_kh": "Lego Ninjago Season 1 - Kai", "name_en": "Lego Ninjago Season 1 - Kai", "price": 5000, "image": "/static/images/njoss1pilotkai.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 2"},
+
+
 ]
 
 # Subcategories map
