@@ -71,11 +71,33 @@
         .category-box a:hover, .subcategory-box a:hover {
             background-color: #0056b3;
         }
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
+        <!-- Product Grid -->
+<div class="product-grid" id="product-grid">
+    {% for product in products %}
+    <div class="product-card">
+        <img src="{{ product.image }}" alt="{{ product.name_en }}">
+        <h3>{% if language == 'en' %}{{ product.name_en }}{% else %}{{ product.name_kh }}{% endif %}</h3>
+        <p class="price">{{ product.price }}៛</p>
+
+        <form class="add-to-cart-form">
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+            <div class="quantity-selector">
+                <button type="button" onclick="decreaseQuantity(this)">-</button>
+                <input type="number" name="quantity" value="1" min="1">
+                <button type="button" onclick="increaseQuantity(this)">+</button>
+            </div>
+            <button type="submit" class="add-cart-button">Add to Cart</button>
+        </form>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Show More Button -->
+<div style="text-align:center; margin-top: 20px;">
+    <button id="show-more" style="padding: 10px 20px; font-size: 18px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer;">
+        Show More
+    </button>
+</div>
         .product-card {
             border: 1px solid #ccc;
             padding: 15px;
