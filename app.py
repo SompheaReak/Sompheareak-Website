@@ -6,16 +6,16 @@ app.secret_key = 'your_secret_key'
 
 # Products data
 products = [
-    {"id": 1, "name_en": "M416 - Gold Plate", "name_kh": "M416 - ប្រាក់មាស", "price": 6000, "image": "/static/images/m416-gold.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
-    {"id": 2, "name_en": "M416 - Default", "name_kh": "M416 - ពណ៌ដើម", "price": 6000, "image": "/static/images/m416-default.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
-    {"id": 3, "name_en": "AKM - Gold Plate", "name_kh": "AKM - ប្រាក់មាស", "price": 6000, "image": "/static/images/akm-gold.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
-    {"id": 4, "name_en": "AKM - Default", "name_kh": "AKM - ពណ៌ដើម", "price": 6000, "image": "/static/images/akm-default.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
-    {"id": 5, "name_en": "Scar L - Default", "name_kh": "Scar L - ពណ៌ដើម", "price": 6000, "image": "/static/images/scarl-default.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
-    {"id": 6, "name_en": "Scar L - Gold", "name_kh": "Scar L - ពណ៌មាស", "price": 6000, "image": "/static/images/scarl-gold.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
-    {"id": 7, "name_en": "White Chalcedony", "name_kh": "ក្រវិលស", "price": 6000, "image": "/static/images/bc-01.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
-    {"id": 8, "name_en": "Pink Opal", "name_kh": "ក្រវិលពណ៌ផ្កាឈូក", "price": 6000, "image": "/static/images/bc-02.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
-    {"id": 9, "name_en": "Pink Crystal", "name_kh": "គ្រីស្ទាល់ពណ៌ផ្កាឈូក", "price": 5500, "image": "/static/images/bc-03.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
-    {"id": 10, "name_en": "Strawberry Crystal", "name_kh": "គ្រីស្ទាល់ស្ករត្រសក់", "price": 9000, "image": "/static/images/bc-04.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"}
+    {"id": 1, "name_kh": "M416 - Gold Plate", "name_en": "M416 - Gold Plate", "price": 6000, "image": "/static/images/m416-gold.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
+    {"id": 2, "name_kh": "M416 - Default", "name_en": "M416 - Default", "price": 6000, "image": "/static/images/m416-default.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
+    {"id": 3, "name_kh": "AKM - Gold Plate", "name_en": "AKM - Gold Plate", "price": 6000, "image": "/static/images/akm-gold.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
+    {"id": 4, "name_kh": "AKM - Default", "name_en": "AKM - Default", "price": 6000, "image": "/static/images/akm-default.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
+    {"id": 5, "name_kh": "Scar L - Default", "name_en": "Scar L - Default", "price": 6000, "image": "/static/images/scarl-default.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
+    {"id": 6, "name_kh": "Scar L - Gold", "name_en": "Scar L - Gold", "price": 6000, "image": "/static/images/scarl-gold.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
+    {"id": 7, "name_kh": "White Chalcedony", "name_en": "White Chalcedony", "price": 6000, "image": "/static/images/bc-01.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
+    {"id": 8, "name_kh": "Pink Opal", "name_en": "Pink Opal", "price": 6000, "image": "/static/images/bc-02.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
+    {"id": 9, "name_kh": "Pink Crystal", "name_en": "Pink Crystal", "price": 5500, "image": "/static/images/bc-03.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
+    {"id": 10, "name_kh": "Strawberry Crystal", "name_en": "Strawberry Crystal", "price": 9000, "image": "/static/images/bc-04.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"}
 ]
 
 # Subcategories map
