@@ -25,7 +25,10 @@ products = [
     {"id": 17, "name_kh": "Lloyd (DX)", "name_en": "Lego Ninjago Season 1 - Lloyd", "price": 5000, "image": "/static/images/njoss1dxlloyd.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 1"},
     {"id": 18, "name_kh": "Lego Ninjago Season 1 - Pilot Suit", "name_en": "Lego Ninjago Season 1 - Pilot Suit", "price": 25000, "image": "/static/images/njoss1pilot.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 2"},
     {"id": 19, "name_kh": "Lego Ninjago Season 1 - Kai", "name_en": "Lego Ninjago Season 1 - Kai", "price": 5000, "image": "/static/images/njoss1pilotkai.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 2"},
-
+    {"id": 20, "name_kh": "Lego Ninjago Season 1 - Zane", "name_en": "Lego Ninjago Season 1 - Zane", "price": 5000, "image": "/static/images/njoss1pilotzane.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 2"},
+    {"id": 21, "name_kh": "Lego Ninjago Season 1 - Jay", "name_en": "Lego Ninjago Season 1 - Jay", "price": 5000, "image": "/static/images/njoss1pilotjay.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 2"},
+    {"id": 22, "name_kh": "Lego Ninjago Season 1 - Cole", "name_en": "Lego Ninjago Season 1 - Cole", "price": 5000, "image": "/static/images/njoss1pilotcole.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 2"},
+    {"id": 23, "name_kh": "Lego Ninjago Season 1 - Lloyd", "name_en": "Lego Ninjago Season 1 - Lloyd", "price": 5000, "image": "/static/images/njoss1pilotlloyd.jpg", "categories": ["Lego Ninjago", "Toy"], "subcategory": "Season 2"},
 
 ]
 
