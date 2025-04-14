@@ -11,6 +11,7 @@
             padding: 20px;
             font-size: 18px;
             margin-bottom: 100px;
+            background-color: #f9f9f9;
         }
         h1 {
             text-align: center;
@@ -46,7 +47,6 @@
         .banner img {
             width: 100%;
             height: auto;
-            border-radius: 0;
             display: block;
         }
         .category-box, .subcategory-box {
@@ -71,39 +71,17 @@
         .category-box a:hover, .subcategory-box a:hover {
             background-color: #0056b3;
         }
-        <!-- Product Grid -->
-<div class="product-grid" id="product-grid">
-    {% for product in products %}
-    <div class="product-card">
-        <img src="{{ product.image }}" alt="{{ product.name_en }}">
-        <h3>{% if language == 'en' %}{{ product.name_en }}{% else %}{{ product.name_kh }}{% endif %}</h3>
-        <p class="price">{{ product.price }}៛</p>
-
-        <form class="add-to-cart-form">
-            <input type="hidden" name="product_id" value="{{ product.id }}">
-            <div class="quantity-selector">
-                <button type="button" onclick="decreaseQuantity(this)">-</button>
-                <input type="number" name="quantity" value="1" min="1">
-                <button type="button" onclick="increaseQuantity(this)">+</button>
-            </div>
-            <button type="submit" class="add-cart-button">Add to Cart</button>
-        </form>
-    </div>
-    {% endfor %}
-</div>
-
-<!-- Show More Button -->
-<div style="text-align:center; margin-top: 20px;">
-    <button id="show-more" style="padding: 10px 20px; font-size: 18px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer;">
-        Show More
-    </button>
-</div>
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
         .product-card {
+            background-color: white;
             border: 1px solid #ccc;
             padding: 15px;
             border-radius: 10px;
             text-align: center;
-            background-color: white;
         }
         .product-card img {
             max-width: 100%;
@@ -114,6 +92,30 @@
             font-size: 20px;
             font-weight: bold;
             margin: 10px 0;
+            color: #e60000;
+        }
+        .quantity-selector {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .quantity-selector button {
+            width: 35px;
+            height: 35px;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #ddd;
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .quantity-selector input[type="number"] {
+            width: 60px;
+            text-align: center;
+            font-size: 18px;
+            margin: 0 10px;
         }
         .add-cart-button {
             width: 100%;
@@ -125,6 +127,9 @@
             border-radius: 8px;
             cursor: pointer;
             margin-top: 10px;
+        }
+        .add-cart-button:hover {
+            background-color: #218838;
         }
         .floating-cart {
             position: fixed;
@@ -139,6 +144,19 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
             z-index: 1000;
         }
+        #success {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
@@ -149,7 +167,7 @@
 </div>
 
 <!-- Success Message -->
-<div id="success" style="display:none; position:fixed; top:20px; right:20px; background:#28a745; color:white; padding:15px 20px; border-radius:8px; font-size:18px; box-shadow:0px 4px 10px rgba(0,0,0,0.3); z-index:1000;">
+<div id="success">
     ✅ បន្ថែមទៅកន្ត្រកទំនិញបានជោគជ័យ!
 </div>
 
@@ -184,13 +202,12 @@
 {% endif %}
 
 <!-- Product Grid -->
-<div class="product-grid">
+<div class="product-grid" id="product-grid">
     {% for product in products %}
     <div class="product-card">
         <img src="{{ product.image }}" alt="{{ product.name_kh }}">
         <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_en }}{% endif %}</h3>
         <p class="price">{{ product.price }}៛</p>
-
         <form class="add-to-cart-form">
             <input type="hidden" name="product_id" value="{{ product.id }}">
             <div class="quantity-selector">
