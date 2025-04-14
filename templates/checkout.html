@@ -9,6 +9,7 @@
             font-size: 18px;
             padding: 20px;
             text-align: center;
+            background-color: #f9f9f9;
         }
         input[type="text"] {
             width: 250px;
@@ -34,10 +35,26 @@
         .button:hover {
             background-color: #218838;
         }
-        a {
-            display: block;
-            margin-top: 30px;
-            font-size: 18px;
+        .cart-items {
+            margin: 30px auto;
+            max-width: 600px;
+            text-align: left;
+        }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+        .cart-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            margin-right: 20px;
+            border-radius: 10px;
+        }
+        .cart-item-details {
+            flex-grow: 1;
         }
     </style>
 </head>
@@ -45,6 +62,25 @@
 
     <h1>Checkout</h1>
 
+    <!-- Cart Items Summary -->
+    {% if cart %}
+    <div class="cart-items">
+        {% for item in cart %}
+        <div class="cart-item">
+            <img src="{{ item.product.image }}" alt="{{ item.product.name_kh }}">
+            <div class="cart-item-details">
+                <strong>{% if language == 'kh' %}{{ item.product.name_kh }}{% else %}{{ item.product.name_en }}{% endif %}</strong><br>
+                Quantity: {{ item.quantity }}<br>
+                Price: {{ item.product.price }}៛
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No items in cart.</p>
+    {% endif %}
+
+    <!-- Checkout Form -->
     <form method="POST">
         <label for="name">Name:</label>
         <input type="text" name="name" required>
@@ -59,6 +95,7 @@
         <button type="submit" class="button">Place Order</button>
     </form>
 
+    <br><br>
     <a href="/">Back to Home</a>
 
 </body>
