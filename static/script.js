@@ -31,7 +31,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateCartCount(data.cart_count);
                     showSuccessMessage();
                 }
-            });
+            })
+            .catch(error => console.error('Error adding to cart:', error));
         });
     });
 });
@@ -44,13 +45,16 @@ function updateCartCount(newCount) {
 // Show and hide success message
 function showSuccessMessage() {
     const success = document.getElementById('success');
+    if (!success) return;
+
     success.style.display = 'block';
+    success.style.opacity = '1';
+    success.style.transition = 'opacity 0.5s ease';
 
     setTimeout(() => {
-        success.style.animation = 'fadeout 0.5s forwards';
+        success.style.opacity = '0';
         setTimeout(() => {
             success.style.display = 'none';
-            success.style.animation = ''; // reset animation for next time
-        }, 500);
-    }, 1500);
+        }, 500); // after fade out
+    }, 1500); // show for 1.5 seconds
 }
