@@ -35,7 +35,13 @@ products = [
     {"id": 27, "name_kh": "ខ្សៃដៃថ្មធម្មជាតិ - ", "name_en": "Gem Stone Bracelet - ", "price": 5000, "image": "/static/images/bc-08.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
     {"id": 28, "name_kh": "ខ្សៃដៃថ្មធម្មជាតិ - ", "name_en": "Gem Stone Bracelet - ", "price": 5000, "image": "/static/images/bc-09.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
     {"id": 29, "name_kh": "ខ្សៃដៃថ្មធម្មជាតិ - ", "name_en": "Gem Stone Bracelet - ", "price": 5000, "image": "/static/images/bc-10.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
-    
+    {"id": 30, "name_kh": "ខ្សៃដៃ - ", "name_en": "Gym Bracelet - ", "price": 5000, "image": "/static/images/gymblack1.jpg", "categories": ["Accessories"], "subcategory": "Gym Bracelet"},
+    {"id": 31, "name_kh": "ខ្សៃដៃ - ", "name_en": "Gym Bracelet - ", "price": 5000, "image": "/static/images/gymblack2.jpg", "categories": ["Accessories"], "subcategory": "Gym Bracelet"},
+    {"id": 32, "name_kh": "ខ្សៃដៃ - ", "name_en": "Gym Bracelet - ", "price": 5000, "image": "/static/images/gymsilver1.jpg", "categories": ["Accessories"], "subcategory": "Gym Bracelet"},
+    {"id": 33, "name_kh": "ខ្សៃដៃ - ", "name_en": "Gym Bracelet - ", "price": 5000, "image": "/static/images/gymsilver2.jpg", "categories": ["Accessories"], "subcategory": "Gym Bracelet"},
+    {"id": 34, "name_kh": "ខ្សៃដៃ - ", "name_en": "Gym Bracelet - ", "price": 5000, "image": "/static/images/gymgold1.jpg", "categories": ["Accessories"], "subcategory": "Gym Bracelet"},
+    {"id": 35, "name_kh": "ខ្សៃដៃ - ", "name_en": "Gym Bracelet - ", "price": 5000, "image": "/static/images/gymgold2.jpg", "categories": ["Accessories"], "subcategory": "Gym Bracelet"},
+
 ]
 
 # Subcategories map
