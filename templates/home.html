@@ -49,31 +49,27 @@
             border-radius: 0;
             display: block;
         }
-        .categories {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .categories a {
-            margin: 0 10px;
-            font-size: 24px;
-            text-decoration: none;
-            color: #007bff;
-        }
-        .categories a:hover {
-            text-decoration: underline;
-        }
-        .subcategories {
-            text-align: center;
+        .category-box, .subcategory-box {
+            background: #ffffff;
+            border: 1px solid #ddd;
+            padding: 20px;
             margin-bottom: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
         }
-        .subcategories a {
-            margin: 0 10px;
+        .category-box a, .subcategory-box a {
+            margin: 8px;
+            padding: 10px 20px;
             font-size: 18px;
-            color: #555;
+            background-color: #007bff;
+            color: white;
+            border-radius: 8px;
+            display: inline-block;
             text-decoration: none;
         }
-        .subcategories a:hover {
-            text-decoration: underline;
+        .category-box a:hover, .subcategory-box a:hover {
+            background-color: #0056b3;
         }
         .product-grid {
             display: grid;
@@ -85,6 +81,7 @@
             padding: 15px;
             border-radius: 10px;
             text-align: center;
+            background-color: white;
         }
         .product-card img {
             max-width: 100%;
@@ -126,19 +123,19 @@
 
 <!-- Language Switch -->
 <div class="language-switch">
-    <button onclick="switchLanguage()">Switch Language</button>
+    <button onclick="switchLanguage()">ប្តូរភាសា (Switch Language)</button>
 </div>
 
 <!-- Success Message -->
 <div id="success" style="display:none; position:fixed; top:20px; right:20px; background:#28a745; color:white; padding:15px 20px; border-radius:8px; font-size:18px; box-shadow:0px 4px 10px rgba(0,0,0,0.3); z-index:1000;">
-    ✅ Item added to cart successfully!
+    ✅ បន្ថែមទៅកន្ត្រកទំនិញបានជោគជ័យ!
 </div>
 
 <h1>Somphea Reak Shop</h1>
 
 <!-- Top Bar -->
 <div class="top-bar">
-    <span class="cart-counter">🛒 Cart (<span id="cart-count">{{ cart|length }}</span>)</span>
+    <span class="cart-counter">🛒 កន្ត្រក (<span id="cart-count">{{ cart|length }}</span>)</span>
 </div>
 
 <!-- Banner -->
@@ -147,16 +144,16 @@
 </div>
 
 <!-- Categories -->
-<div class="categories">
-    <a href="/category/Hot Sale">Hot Sale</a>
-    <a href="/category/Toy">Toy</a>
-    <a href="/category/Keychain">Keychain</a>
-    <a href="/category/Accessories">Accessories</a>
+<div class="category-box">
+    <a href="/category/Hot Sale">លក់ពិសេស</a>
+    <a href="/category/Toy">ប្រដាប់ក្មេងលេង</a>
+    <a href="/category/Keychain">គ្រាប់សោ</a>
+    <a href="/category/Accessories">គ្រឿងសង្ហារឹម</a>
 </div>
 
 <!-- Subcategories -->
 {% if subcategories %}
-<div class="subcategories">
+<div class="subcategory-box">
     {% for sub in subcategories %}
         <a href="/subcategory/{{ sub }}">{{ sub }}</a>
     {% endfor %}
@@ -167,8 +164,8 @@
 <div class="product-grid">
     {% for product in products %}
     <div class="product-card">
-        <img src="{{ product.image }}" alt="{{ product.name_en }}">
-        <h3>{% if language == 'en' %}{{ product.name_en }}{% else %}{{ product.name_kh }}{% endif %}</h3>
+        <img src="{{ product.image }}" alt="{{ product.name_kh }}">
+        <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_en }}{% endif %}</h3>
         <p class="price">{{ product.price }}៛</p>
 
         <form class="add-to-cart-form">
@@ -178,7 +175,7 @@
                 <input type="number" name="quantity" value="1" min="1">
                 <button type="button" onclick="increaseQuantity(this)">+</button>
             </div>
-            <button type="submit" class="add-cart-button">Add to Cart</button>
+            <button type="submit" class="add-cart-button">បន្ថែម</button>
         </form>
     </div>
     {% endfor %}
@@ -186,13 +183,13 @@
 
 <!-- Floating Cart Button -->
 <a href="/cart" class="floating-cart">
-    🛒 Cart (<span id="cart-count">{{ cart|length }}</span>)
+    🛒 កន្ត្រក (<span id="cart-count">{{ cart|length }}</span>)
 </a>
 
 <script>
 function switchLanguage() {
     const currentUrl = new URL(window.location.href);
-    const lang = currentUrl.searchParams.get('lang') === 'kh' ? 'en' : 'kh';
+    const lang = currentUrl.searchParams.get('lang') === 'en' ? 'kh' : 'en';
     currentUrl.searchParams.set('lang', lang);
     window.location.href = currentUrl.toString();
 }
