@@ -53,7 +53,15 @@ products = [
         "price": 6000,
         "image": "/static/images/scarl-gold.jpg",
         "categories": ["Keychain"]
-    }
+    },
+      {
+        "id": 7,
+        "name_en": "White Chalcedony",
+        "name_kh": "M416 - ប្រាក់មាស",
+        "price": 6000,
+        "image": "/static/images/bc-01.jpg",
+        "categories": ["Bracelet"]
+    },
 ]
 
 # In-memory cart
