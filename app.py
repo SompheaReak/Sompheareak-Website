@@ -3,7 +3,7 @@ import requests
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
-
+app.debug = True
 # Products data
 products = [
     {"id": 1, "name_kh": "M416 - ប្រាក់មាស", "name_en": "M416 - Gold Plate", "price": 6000, "image": "/static/images/m416-gold.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
