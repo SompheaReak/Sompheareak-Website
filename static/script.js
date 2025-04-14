@@ -33,29 +33,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Handle "Show More" products
-    const productCards = document.querySelectorAll('.product-card');
-    const showMoreButton = document.getElementById('show-more');
-    if (showMoreButton) {
-        let visibleCount = 6;
-        function updateVisibleProducts() {
-            productCards.forEach((card, index) => {
-                if (index < visibleCount) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-        updateVisibleProducts();
-        showMoreButton.addEventListener('click', () => {
-            visibleCount += 6;
-            updateVisibleProducts();
-            if (visibleCount >= productCards.length) {
-                showMoreButton.style.display = 'none';
-            }
-        });
-    }
+    // Handle auto-load subcategories
+    setupAutoLoadProducts();
 });
 
 // Update cart count everywhere
@@ -77,4 +56,30 @@ function showSuccessMessage() {
             success.style.display = 'none';
         }, 500);
     }, 1500);
+}
+
+// Auto-load next products when scroll
+function setupAutoLoadProducts() {
+    const productCards = document.querySelectorAll('.product-card');
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                loadMoreProducts();
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        rootMargin: "100px",
+    });
+
+    if (productCards.length) {
+        observer.observe(productCards[productCards.length - 1]);
+    }
+}
+
+function loadMoreProducts() {
+    const hiddenProducts = document.querySelectorAll('.product-card[style*="display: none"]');
+    hiddenProducts.forEach(card => {
+        card.style.display = 'block';
+    });
 }
