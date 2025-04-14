@@ -44,7 +44,9 @@ products = [
     {"id": 36, "name_kh": "WWII Germany 01", "name_en": "WWII Germany 01", "price": 1250, "image": "/static/images/wwii-01.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
     {"id": 37, "name_kh": "WWII Germany 02", "name_en": "WWII Germany 02", "price": 1250, "image": "/static/images/wwii-02.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
     {"id": 38, "name_kh": "WWII Germany 03", "name_en": "WWII Germany 03", "price": 1250, "image": "/static/images/wwii-03.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
-
+    {"id": 39, "name_kh": "WWII Germany 04", "name_en": "WWII Germany 04", "price": 1250, "image": "/static/images/wwii-04.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
+    {"id": 40, "name_kh": "WWII Germany 05", "name_en": "WWII Germany 05", "price": 1250, "image": "/static/images/wwii-05.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
+    {"id": 41, "name_kh": "WWII Germany 06", "name_en": "WWII Germany 06", "price": 1250, "image": "/static/images/wwii-06.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
 ]
 
 # Subcategories map
