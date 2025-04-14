@@ -164,7 +164,6 @@ def checkout():
         phone = request.form['phone']
         address = request.form['address']
 
-        # Prepare Telegram message
         message = f"🛒 *New Order Received!*\n\n"
         message += f"*Name:* {name}\n"
         message += f"*Phone:* {phone}\n"
@@ -182,7 +181,6 @@ def checkout():
 
         message += f"\n*Total:* {total}៛"
 
-        # Send message to Telegram
         bot_token = '7981426501:AAE7CInWMNE2_sz5DaCMuAcKmH8yji1YBqk'
         chat_id = 1098161879
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -197,7 +195,7 @@ def checkout():
         if response.status_code != 200:
             print("Failed to send Telegram message:", response.text)
 
-        cart.clear()  # Clear cart after sending
+        cart.clear()
         return redirect(url_for('thank_you'))
 
     return render_template('checkout.html')
