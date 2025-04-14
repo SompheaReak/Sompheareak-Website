@@ -41,6 +41,9 @@ products = [
     {"id": 33, "name_kh": "ខ្សៃដៃ - ", "name_en": "Gym Bracelet - ", "price": 5000, "image": "/static/images/gymsilver2.jpg", "categories": ["Accessories"], "subcategory": "Gym Bracelet"},
     {"id": 34, "name_kh": "ខ្សៃដៃ - ", "name_en": "Gym Bracelet - ", "price": 5000, "image": "/static/images/gymgold1.jpg", "categories": ["Accessories"], "subcategory": "Gym Bracelet"},
     {"id": 35, "name_kh": "ខ្សៃដៃ - ", "name_en": "Gym Bracelet - ", "price": 5000, "image": "/static/images/gymgold2.jpg", "categories": ["Accessories"], "subcategory": "Gym Bracelet"},
+    {"id": 36, "name_kh": "WWII Germany 01", "name_en": "WWII Germany 01", "price": 1250, "image": "/static/images/wwii-01.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
+    {"id": 37, "name_kh": "WWII Germany 02", "name_en": "WWII Germany 02", "price": 1250, "image": "/static/images/wwii-02.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
+    {"id": 38, "name_kh": "WWII Germany 03", "name_en": "WWII Germany 03", "price": 1250, "image": "/static/images/wwii-03.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
 
 ]
 
