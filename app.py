@@ -1,67 +1,67 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-import requests  # important for sending message to Telegram
+import requests
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
-# Dummy products data
+# Dummy products data (with subcategory)
 products = [
     {
         "id": 1,
         "name_en": "M416 - Gold Plate",
-        "name_kh": "M416 - ប្រាក់មាស",
         "price": 6000,
         "image": "/static/images/m416-gold.jpg",
-        "categories": ["Keychain"]
+        "categories": ["Keychain"],
+        "subcategory": "Gun Keychains"
     },
     {
         "id": 2,
         "name_en": "M416 - Default",
-        "name_kh": "M416 - ពណ៌ដើម",
         "price": 6000,
         "image": "/static/images/m416-default.jpg",
-        "categories": ["Keychain"]
+        "categories": ["Keychain"],
+        "subcategory": "Gun Keychains"
     },
     {
         "id": 3,
         "name_en": "AKM - Gold Plate",
-        "name_kh": "AKM - ប្រាក់មាស",
         "price": 6000,
         "image": "/static/images/akm-gold.jpg",
-        "categories": ["Keychain"]
+        "categories": ["Keychain"],
+        "subcategory": "Gun Keychains"
     },
     {
         "id": 4,
         "name_en": "AKM - Default",
-        "name_kh": "AKM - ពណ៌ដើម",
         "price": 6000,
         "image": "/static/images/akm-default.jpg",
-        "categories": ["Keychain"]
+        "categories": ["Keychain"],
+        "subcategory": "Gun Keychains"
     },
     {
         "id": 5,
         "name_en": "Scar L - Default",
-        "name_kh": "Scar L - ពណ៌ដើម",
         "price": 6000,
         "image": "/static/images/scarl-default.jpg",
-        "categories": ["Keychain"]
+        "categories": ["Keychain"],
+        "subcategory": "Gun Keychains"
     },
     {
         "id": 6,
         "name_en": "Scar L - Gold",
-        "name_kh": "Scar L - ពណ៌ដើម ",
         "price": 6000,
         "image": "/static/images/scarl-gold.jpg",
-        "categories": ["Keychain"]
+        "categories": ["Keychain"],
+        "subcategory": "Gun Keychains"
     },
-      {
+    {
         "id": 7,
         "name_en": "White Chalcedony",
-        "name_kh": "M416 - ប្រាក់មាស",
         "price": 6000,
         "image": "/static/images/bc-01.jpg",
-        "categories": ["Bracelet"]
-    },
+        "categories": ["Accessories"],
+        "subcategory": "Bracelets"
+    }
 ]
 
 # In-memory cart
@@ -76,6 +76,12 @@ def home():
 def category(category_name):
     language = request.args.get('lang', 'en')
     filtered_products = [product for product in products if category_name in product['categories']]
+    return render_template('home.html', products=filtered_products, language=language, cart=cart)
+
+@app.route('/subcategory/<subcategory_name>')
+def subcategory(subcategory_name):
+    language = request.args.get('lang', 'en')
+    filtered_products = [product for product in products if product.get('subcategory') == subcategory_name]
     return render_template('home.html', products=filtered_products, language=language, cart=cart)
 
 @app.route('/product/<int:product_id>')
@@ -147,8 +153,6 @@ def checkout():
             print("Failed to send Telegram message:", response.text)
 
         cart.clear()  # Clear cart after sending
-
-        # Redirect to Thank You Page
         return redirect(url_for('thank_you'))
 
     return render_template('checkout.html')
