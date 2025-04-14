@@ -74,12 +74,23 @@ subcategories_map = {
 }
 
 # Home
-@app.route('/')
-def home():
+@app.route('/subcategory/<subcategory_name>')
+def subcategory(subcategory_name):
     language = request.args.get('lang', 'kh')
+    filtered_products = [p for p in products if p.get('subcategory') == subcategory_name]
     cart = session.get('cart', [])
-    return render_template('home.html', products=products, language=language, cart=cart, current_category=None, subcategories=[])
 
+    # NEW PART: Find main category of this subcategory
+    main_category = None
+    for category, subs in subcategories_map.items():
+        if subcategory_name in subs:
+            main_category = category
+            break
+
+    # Get subcategories list again
+    subs = subcategories_map.get(main_category, []) if main_category else []
+
+    return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=subcategory_name, subcategories=subs)
 # Category
 @app.route('/category/<category_name>')
 def category(category_name):
