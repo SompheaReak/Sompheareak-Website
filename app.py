@@ -16,7 +16,9 @@ products = [
     {"id": 8, "name_kh": "Pink Opal", "name_en": "Pink Opal", "price": 6000, "image": "/static/images/bc-02.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
     {"id": 9, "name_kh": "Pink Crystal", "name_en": "Pink Crystal", "price": 5500, "image": "/static/images/bc-03.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
     {"id": 10, "name_kh": "Strawberry Crystal", "name_en": "Strawberry Crystal", "price": 9000, "image": "/static/images/bc-04.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"}
+    {"id": 11, "name_kh": "Lego Ninjago Season 1", "name_en": "Lego Ninjago Season 1", "price": 30000, "image": "/static/images/njoss1dx.jpg", "categories": ["Toy"], "subcategory": "Lego Ninjago"}
 ]
+
 
 # Subcategories map
 subcategories_map = {
