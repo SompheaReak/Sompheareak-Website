@@ -64,7 +64,7 @@ products = [
     {"id": 54, "name_kh": "WWII SOVIET 08", "name_en": "WWII SOVIET 08", "price": 1250, "image": "/static/images/wwii-19.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
 ]
 
-# Subcategories map
+# --- Subcategories Map ---
 subcategories_map = {
     "Accessories": ["Gem Stone Bracelets", "Gym Bracelet"],
     "Lego Ninjago": ["Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8"],
@@ -73,24 +73,15 @@ subcategories_map = {
     "Toy": ["Lego Ninjago", "Lego WWII", "Lego ទាហាន"]
 }
 
+# --- Routes ---
+
 # Home
-@app.route('/subcategory/<subcategory_name>')
-def subcategory(subcategory_name):
+@app.route('/')
+def home():
     language = request.args.get('lang', 'kh')
-    filtered_products = [p for p in products if p.get('subcategory') == subcategory_name]
     cart = session.get('cart', [])
+    return render_template('home.html', products=products, language=language, cart=cart, current_category=None, subcategories=[])
 
-    # NEW PART: Find main category of this subcategory
-    main_category = None
-    for category, subs in subcategories_map.items():
-        if subcategory_name in subs:
-            main_category = category
-            break
-
-    # Get subcategories list again
-    subs = subcategories_map.get(main_category, []) if main_category else []
-
-    return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=subcategory_name, subcategories=subs)
 # Category
 @app.route('/category/<category_name>')
 def category(category_name):
@@ -106,7 +97,17 @@ def subcategory(subcategory_name):
     language = request.args.get('lang', 'kh')
     filtered_products = [p for p in products if p.get('subcategory') == subcategory_name]
     cart = session.get('cart', [])
-    return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=subcategory_name, subcategories=[])
+
+    # Find the main category
+    main_category = None
+    for category, subs in subcategories_map.items():
+        if subcategory_name in subs:
+            main_category = category
+            break
+
+    subs = subcategories_map.get(main_category, []) if main_category else []
+
+    return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=main_category, subcategories=subs)
 
 # Product Detail
 @app.route('/product/<int:product_id>')
@@ -129,11 +130,11 @@ def add_to_cart():
     product_id = int(request.form['product_id'])
     quantity = int(request.form['quantity'])
     product = next((p for p in products if p["id"] == product_id), None)
-    
+
     if product:
         cart = session.get('cart', [])
         cart.append({"product": product, "quantity": quantity})
-        session['cart'] = cart  # Save cart back to session
+        session['cart'] = cart
 
     return jsonify({"success": True, "cart_count": len(session.get('cart', []))})
 
@@ -143,7 +144,7 @@ def remove_from_cart(index):
     cart = session.get('cart', [])
     if 0 <= index < len(cart):
         cart.pop(index)
-    session['cart'] = cart  # Save cart back
+    session['cart'] = cart
     return redirect(url_for('cart_page'))
 
 # Checkout
@@ -151,7 +152,7 @@ def remove_from_cart(index):
 def checkout():
     language = request.args.get('lang', 'kh')
     cart = session.get('cart', [])
-    
+
     if request.method == "POST":
         name = request.form['name']
         phone = request.form['phone']
@@ -169,8 +170,9 @@ def checkout():
 
         message += f"\n*Total:* {total}៛"
 
-        bot_token = 'YOUR_BOT_TOKEN'
-        chat_id = YOUR_CHAT_ID
+        # Replace YOUR_BOT_TOKEN and YOUR_CHAT_ID
+        bot_token = '7981426501:AAE7CInWMNE2_sz5DaCMuAcKmH8yji1YBqk'
+        chat_id = 1098161879
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
         response = requests.post(url, data=payload)
@@ -178,17 +180,18 @@ def checkout():
         if response.status_code != 200:
             print("Telegram error:", response.text)
 
-        session['cart'] = []  # clear cart
+        session['cart'] = []
         return redirect(url_for('thank_you'))
 
     return render_template('checkout.html', language=language, cart=cart)
 
-# Thank You
+# Thank you page
 @app.route('/thankyou')
 def thank_you():
     language = request.args.get('lang', 'kh')
     return render_template('thankyou.html', language=language)
 
+# --- Run app ---
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
