@@ -17,12 +17,12 @@ products = [
     {"id": 9, "name_kh": "Pink Crystal", "name_en": "Pink Crystal", "price": 5500, "image": "/static/images/bc-03.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
     {"id": 10, "name_kh": "Strawberry Crystal", "name_en": "Strawberry Crystal", "price": 9000, "image": "/static/images/bc-04.jpg", "categories": ["Accessories"], "subcategory": "Gem Stone Bracelets"},
     {"id": 11, "name_kh": "Lego Ninjago Season 1 - DX Suit", "name_en": "Lego Ninjago Season 1", "price": 30000, "image": "/static/images/njoss1dx.jpg", "categories": ["Lego Ninjago,Toy"], "subcategory": "Season 1"},
-    {"id": 12, "name_kh": "Lego Ninjago Season 1 - Kai", "name_en": "Lego Ninjago Season 1 - Kai", "price": 5000, "image": "/static/images/njoss1dxkai.jpg", "categories": ["Lego Ninjago,Toy"], "subcategory": "Season 1"}
-    {"id": 13, "name_kh": "Lego Ninjago Season 1 - Zane", "name_en": "Lego Ninjago Season 1 - Zane", "price": 5000, "image": "/static/images/njoss1dxzane.jpg", "categories": ["Lego Ninjago,Toy"], "subcategory": "Season 1"}
-    {"id": 14, "name_kh": "Lego Ninjago Season 1 - Jay", "name_en": "Lego Ninjago Season 1 - Jay", "price": 5000, "image": "/static/images/njoss1dxjay.jpg", "categories": ["Lego Ninjago,Toy"], "subcategory": "Season 1"}
-    {"id": 15, "name_kh": "Lego Ninjago Season 1 - Cole", "name_en": "Lego Ninjago Season 1 - Cole", "price": 5000, "image": "/static/images/njoss1dxcole.jpg", "categories": ["Lego Ninjago,Toy"], "subcategory": "Season 1"}
-    {"id": 16, "name_kh": "Lego Ninjago Season 1 - Nya", "name_en": "Lego Ninjago Season 1 - Nya", "price": 5000, "image": "/static/images/njoss1dxnya.jpg", "categories": ["Lego Ninjago,Toy"], "subcategory": "Season 1"}
-    {"id": 17, "name_kh": "Lego Ninjago Season 1 - Lloyd", "name_en": "Lego Ninjago Season 1 - Lloyd", "price": 5000, "image": "/static/images/njoss1dxlloyd.jpg", "categories": ["Lego Ninjago,Toy"], "subcategory": "Season 1"}
+    {"id": 12, "name_kh": "Lego Ninjago Season 1 - Kai", "name_en": "Lego Ninjago Season 1 - Kai", "price": 5000, "image": "/static/images/njoss1dxkai.jpg", "categories": ["Lego Ninjago,Toy"], "subcategory": "Season 1"},
+    {"id": 13, "name_kh": "Lego Ninjago Season 1 - Zane", "name_en": "Lego Ninjago Season 1 - Zane", "price": 5000, "image": "/static/images/njoss1dxzane.jpg", "categories": ["Lego Ninjago,Toy"], "subcategory": "Season 1"},
+    {"id": 14, "name_kh": "Lego Ninjago Season 1 - Jay", "name_en": "Lego Ninjago Season 1 - Jay", "price": 5000, "image": "/static/images/njoss1dxjay.jpg", "categories": ["Lego Ninjago,Toy"], "subcategory": "Season 1"},
+    {"id": 15, "name_kh": "Lego Ninjago Season 1 - Cole", "name_en": "Lego Ninjago Season 1 - Cole", "price": 5000, "image": "/static/images/njoss1dxcole.jpg", "categories": ["Lego Ninjago,Toy"], "subcategory": "Season 1"},
+    {"id": 16, "name_kh": "Lego Ninjago Season 1 - Nya", "name_en": "Lego Ninjago Season 1 - Nya", "price": 5000, "image": "/static/images/njoss1dxnya.jpg", "categories": ["Lego Ninjago,Toy"], "subcategory": "Season 1"},
+    {"id": 17, "name_kh": "Lego Ninjago Season 1 - Lloyd", "name_en": "Lego Ninjago Season 1 - Lloyd", "price": 5000, "image": "/static/images/njoss1dxlloyd.jpg", "categories": ["Lego Ninjago,Toy"], "subcategory": "Season 1"},
 ]
 
 
