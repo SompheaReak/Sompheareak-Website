@@ -80,7 +80,7 @@ products = [
     },
     {
         "id": 10,
-        "name_en": "Strawberry Crystal
+        "name_en": "Strawberry Crystal",
         "price": 9000,
         "image": "/static/images/bc-04,jpg",
         "categories": ["Accessories"],
