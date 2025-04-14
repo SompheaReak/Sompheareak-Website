@@ -4,6 +4,58 @@ import requests  # important for sending message to Telegram
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
+# Dummy products data
+products = [
+    {
+        "id": 1,
+        "name_en": "M416 - Gold Plate",
+        "name_kh": "M416 - ប្រាក់មាស",
+        "price": 6000,
+        "image": "/static/images/m416-gold.jpg",
+        "categories": ["Keychain"]
+    },
+    {
+        "id": 2,
+        "name_en": "M416 - Default",
+        "name_kh": "M416 - ពណ៌ដើម",
+        "price": 6000,
+        "image": "/static/images/m416-default.jpg",
+        "categories": ["Keychain"]
+    },
+    {
+        "id": 3,
+        "name_en": "AKM - Gold Plate",
+        "name_kh": "AKM - ប្រាក់មាស",
+        "price": 6000,
+        "image": "/static/images/akm-gold.jpg",
+        "categories": ["Keychain"]
+    },
+    {
+        "id": 4,
+        "name_en": "AKM - Default",
+        "name_kh": "AKM - ពណ៌ដើម",
+        "price": 6000,
+        "image": "/static/images/akm-default.jpg",
+        "categories": ["Keychain"]
+    },
+    {
+        "id": 5,
+        "name_en": "Scar L - Default",
+        "name_kh": "Scar L - ពណ៌ដើម",
+        "price": 6000,
+        "image": "/static/images/scarl-default.jpg",
+        "categories": ["Keychain"]
+    },
+    {
+        "id": 6,
+        "name_en": "Scar L - Gold",
+        "name_kh": "Scar L - ពណ៌ដើម ",
+        "price": 6000,
+        "image": "/static/images/scarl-gold.jpg",
+        "categories": ["Keychain"]
+    }
+]
+
 # In-memory cart
 cart = []
 
