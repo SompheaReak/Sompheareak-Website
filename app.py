@@ -5,7 +5,6 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 app.debug = True
 
-
 # Products data
 products = [
     {"id": 1, "name_kh": "M416 - ប្រាក់មាស", "name_en": "M416 - Gold Plate", "price": 6000, "image": "/static/images/m416-gold.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
@@ -75,30 +74,26 @@ subcategories_map = {
 
 # --- Routes ---
 
-# Home
 @app.route('/')
 def home():
     language = request.args.get('lang', 'kh')
     cart = session.get('cart', [])
-    return render_template('home.html', products=products, language=language, cart=cart, current_category=None, subcategories=[])
+    return render_template('home.html', products=products, language=language, cart=cart, current_category=None, current_subcategory=None, subcategories=[])
 
-# Category
 @app.route('/category/<category_name>')
 def category(category_name):
     language = request.args.get('lang', 'kh')
     filtered_products = [p for p in products if category_name in p['categories']]
     subs = subcategories_map.get(category_name, [])
     cart = session.get('cart', [])
-    return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=category_name, subcategories=subs)
+    return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=category_name, current_subcategory=None, subcategories=subs)
 
-# Subcategory
 @app.route('/subcategory/<subcategory_name>')
 def subcategory(subcategory_name):
     language = request.args.get('lang', 'kh')
     filtered_products = [p for p in products if p.get('subcategory') == subcategory_name]
     cart = session.get('cart', [])
 
-    # Find the main category
     main_category = None
     for category, subs in subcategories_map.items():
         if subcategory_name in subs:
@@ -107,9 +102,8 @@ def subcategory(subcategory_name):
 
     subs = subcategories_map.get(main_category, []) if main_category else []
 
-    return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=main_category, subcategories=subs)
+    return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=main_category, current_subcategory=subcategory_name, subcategories=subs)
 
-# Product Detail
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
     language = request.args.get('lang', 'kh')
@@ -117,14 +111,12 @@ def product_detail(product_id):
     cart = session.get('cart', [])
     return render_template('product.html', product=product, language=language, cart=cart)
 
-# Cart Page
 @app.route('/cart')
 def cart_page():
     language = request.args.get('lang', 'kh')
     cart = session.get('cart', [])
     return render_template('cart.html', cart=cart, language=language)
 
-# Add to Cart
 @app.route('/add-to-cart', methods=["POST"])
 def add_to_cart():
     product_id = int(request.form['product_id'])
@@ -138,7 +130,6 @@ def add_to_cart():
 
     return jsonify({"success": True, "cart_count": len(session.get('cart', []))})
 
-# Remove from Cart
 @app.route('/remove-from-cart/<int:index>', methods=["POST"])
 def remove_from_cart(index):
     cart = session.get('cart', [])
@@ -147,7 +138,6 @@ def remove_from_cart(index):
     session['cart'] = cart
     return redirect(url_for('cart_page'))
 
-# Checkout
 @app.route('/checkout', methods=["GET", "POST"])
 def checkout():
     language = request.args.get('lang', 'kh')
@@ -170,7 +160,7 @@ def checkout():
 
         message += f"\n*Total:* {total}៛"
 
-        # Replace YOUR_BOT_TOKEN and YOUR_CHAT_ID
+        # Telegram Bot
         bot_token = '7981426501:AAE7CInWMNE2_sz5DaCMuAcKmH8yji1YBqk'
         chat_id = 1098161879
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -185,13 +175,11 @@ def checkout():
 
     return render_template('checkout.html', language=language, cart=cart)
 
-# Thank you page
 @app.route('/thankyou')
 def thank_you():
     language = request.args.get('lang', 'kh')
     return render_template('thankyou.html', language=language)
 
-# --- Run app ---
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
