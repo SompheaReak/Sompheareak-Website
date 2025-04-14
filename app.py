@@ -60,13 +60,37 @@ products = [
         "price": 6000,
         "image": "/static/images/bc-01.jpg",
         "categories": ["Accessories"],
-        "subcategory": "Bracelets"
+        "subcategory": "Gem Stone Bracelets"
+    },
+    {
+        "id": 8,
+        "name_en": "Pink Opal",
+        "price": 6000,
+        "image": "/static/images/bc-02.jpg",
+        "categories": ["Accessories"],
+        "subcategory": "Gem Stone Bracelets"
+    },
+    {
+        "id": 9,
+        "name_en": "Pink Crystal",
+        "price": 5500,
+        "image": "/static/images/bc-03.jpg",
+        "categories": ["Accessories"],
+        "subcategory": "Gem Stone Bracelets"
+    },
+    {
+        "id": 10,
+        "name_en": "Strawberry Crystal
+        "price": 9000,
+        "image": "/static/images/bc-04,jpg",
+        "categories": ["Accessories"],
+        "subcategory": "Gem Stone Bracelets"
     }
 ]
 
 # Subcategories map
 subcategories_map = {
-    "Accessories": ["Bracelets"],
+    "Accessories": ["Gem Stone Bracelets"],["Gym Bracelet"]
     "Keychain": ["Gun Keychains"],
     "Hot Sale": [],
     "Toy": []
