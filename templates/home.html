@@ -141,23 +141,23 @@
             background-color: #218838;
         }
         .floating-cart {
-    position: fixed;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #007bff;
-    color: white;
-    padding: 30px 80px;
-    width: 90%;
-    max-width: 500px;
-    text-align: center;
-    font-size: 22px;
-    font-weight: bold;
-    border-radius: 12px;
-    text-decoration: none;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-}
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #007bff;
+            color: white;
+            padding: 30px 80px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 12px;
+            text-decoration: none;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
         #success {
             display: none;
             position: fixed;
@@ -216,22 +216,15 @@
 {% endif %}
 
 <!-- Product Grid -->
-<div class="product-card">
-    <a href="/product/{{ product.id }}">
-        <img src="{{ product.image }}" alt="{{ product.name_kh }}">
-    </a>
-    <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_en }}{% endif %}</h3>
-    <p class="price">{{ product.price }}៛</p>
-    <form class="add-to-cart-form">
-        <input type="hidden" name="product_id" value="{{ product.id }}">
-        <div class="quantity-selector">
-            <button type="button" onclick="decreaseQuantity(this)">-</button>
-            <input type="number" name="quantity" value="1" min="1">
-            <button type="button" onclick="increaseQuantity(this)">+</button>
-        </div>
-        <button type="submit" class="add-cart-button">បន្ថែម</button>
-    </form>
-</div>
+<div class="product-grid" id="product-grid">
+    {% for product in products %}
+    <div class="product-card">
+        <a href="/product/{{ product.id }}">
+            <img src="{{ product.image }}" alt="{{ product.name_kh }}">
+        </a>
+        <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_en }}{% endif %}</h3>
+        <p class="price">{{ product.price }}៛</p>
+        <form class="add-to-cart-form">
             <input type="hidden" name="product_id" value="{{ product.id }}">
             <div class="quantity-selector">
                 <button type="button" onclick="decreaseQuantity(this)">-</button>
@@ -248,15 +241,3 @@
 <a href="/cart" class="floating-cart">
     🛒 ពិនិត្យមើលទំនិញដែលបានជ្រើសរើស (<span id="cart-count">{{ cart|length }}</span>)
 </a>
-
-<script>
-function switchLanguage() {
-    const currentUrl = new URL(window.location.href);
-    const lang = currentUrl.searchParams.get('lang') === 'en' ? 'kh' : 'en';
-    currentUrl.searchParams.set('lang', lang);
-    window.location.href = currentUrl.toString();
-}
-</script>
-
-</body>
-</html>
