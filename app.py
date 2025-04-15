@@ -83,17 +83,32 @@ def home():
 @app.route('/category/<category_name>')
 def category(category_name):
     language = request.args.get('lang', 'kh')
-    filtered_products = [p for p in products if subcategory_name in p.get('subcategory', [])]
+    filtered_products = [
+        p for p in products
+        if category_name in p.get('categories', [])
+    ]
     subs = subcategories_map.get(category_name, [])
     cart = session.get('cart', [])
-    return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=category_name, current_subcategory=None, subcategories=subs)
+    return render_template(
+        'home.html',
+        products=filtered_products,
+        language=language,
+        cart=cart,
+        current_category=category_name,
+        current_subcategory=None,
+        subcategories=subs
+    )
 
 @app.route('/subcategory/<subcategory_name>')
 def subcategory(subcategory_name):
     language = request.args.get('lang', 'kh')
-    filtered_products = [p for p in products if p.get('subcategory') == subcategory_name]
+    filtered_products = [
+        p for p in products
+        if subcategory_name in p.get('subcategory', [])
+    ]
     cart = session.get('cart', [])
 
+    # Find main category
     main_category = None
     for category, subs in subcategories_map.items():
         if subcategory_name in subs:
@@ -102,8 +117,15 @@ def subcategory(subcategory_name):
 
     subs = subcategories_map.get(main_category, []) if main_category else []
 
-    return render_template('home.html', products=filtered_products, language=language, cart=cart, current_category=main_category, current_subcategory=subcategory_name, subcategories=subs)
-
+    return render_template(
+        'home.html',
+        products=filtered_products,
+        language=language,
+        cart=cart,
+        current_category=main_category,
+        current_subcategory=subcategory_name,
+        subcategories=subs
+    )
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
     language = request.args.get('lang', 'kh')
