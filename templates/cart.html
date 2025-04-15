@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cart</title>
     <style>
-        /* Responsive styling for cart table and buttons */
         .cart-table { width: 100%; border-collapse: collapse; }
         .cart-table th, .cart-table td { padding: 8px; border-bottom: 1px solid #ccc; }
         .cart-table th { background: #f7f7f7; text-align: left; }
@@ -17,6 +16,7 @@
 </head>
 <body>
     <h2>{{ "Shopping Cart" if language == 'en' else "រទេះទំនិញ" }}</h2>
+
     {% if cart and cart|length > 0 %}
     <div class="cart-container">
         <table class="cart-table">
@@ -42,9 +42,9 @@
                             {{ item.product.name_kh }}
                         {% endif %}
                     </td>
-                    <td>${{ item.product.price }}</td>
+                    <td>{{ item.product.price }}៛</td>
                     <td>{{ item.quantity }}</td>
-                    <td>${{ item.product.price * item.quantity }}</td>
+                    <td>{{ item.product.price * item.quantity }}៛</td>
                     <td>
                         <form action="/remove-from-cart/{{ loop.index0 }}" method="post">
                             <button type="submit" style="background: #dc3545; color: #fff; border: none; padding: 5px 10px; border-radius: 3px;">
@@ -59,7 +59,7 @@
             <tfoot>
                 <tr>
                     <td colspan="6" class="cart-total">
-                        {{ "Total" if language == 'en' else "សរុប" }}: ${{ ns.total }}
+                        {{ "Total" if language == 'en' else "សរុប" }}: {{ ns.total }}៛
                     </td>
                 </tr>
             </tfoot>
@@ -69,13 +69,14 @@
     {% else %}
     <p>{{ "Your cart is empty." if language == 'en' else "រទេះទំនិញទទេ។" }}</p>
     {% endif %}
+
     <!-- Product Grid -->
     <div class="product-grid" id="product-grid">
         {% for prod in products %}
         <div class="product-item">
             <img src="{{ prod.image }}" alt="{{ prod['name_' ~ language] }}" style="max-width: 100px; height: auto;">
             <p>{{ prod['name_' ~ language] }}</p>
-            <p>${{ prod.price }}</p>
+            <p>{{ prod.price }}៛</p>
             <form action="/add-to-cart/{{ prod.id }}" method="post">
                 <button type="submit">{{ "Add to Cart" if language == 'en' else "ដាក់ចូលរទេះ" }}</button>
             </form>
