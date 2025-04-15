@@ -65,7 +65,7 @@ products = [
 
 # --- Subcategories Map ---
 subcategories_map = {
-    "Accessories": ["Gem Stone Bracelets", "Gym Bracelet"],
+    "Accessories": ["Gym Bracelet", "Gem Stone Bracelet","Dragon Bracelet"],
     "LEGO Ninjago": ["Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8"],
     "Keychain": ["Gun Keychains"],
     "Hot Sale": [],
