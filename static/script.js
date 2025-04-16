@@ -48,7 +48,15 @@ function updateCartCount(newCount) {
 // Show and hide success message
 function showSuccessMessage() {
     const success = document.getElementById('success');
+    const sound = document.getElementById('success-sound'); // NEW: get the sound element
     if (!success) return;
+
+    // Play the sound
+    if (sound) {
+        sound.currentTime = 0; // restart sound if clicked multiple times
+        sound.play();
+    }
+
     success.style.display = 'block';
     success.style.opacity = '1';
     success.style.transition = 'opacity 0.5s ease';
@@ -60,7 +68,6 @@ function showSuccessMessage() {
         }, 500);
     }, 1500);
 }
-
 // Auto-load next products when scrolling
 function setupAutoLoadProducts() {
     const productCards = document.querySelectorAll('.product-card');
