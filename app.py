@@ -1,3 +1,6 @@
+# Admin login credentials
+ADMIN_USERNAME = 'AdminSompheaReakVitou'
+ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 import requests
 
@@ -170,7 +173,19 @@ def product_detail(product_id):
     product = next((p for p in products if p['id'] == product_id), None)
     cart = session.get('cart', [])
     return render_template('product.html', product=product, language=language, cart=cart)
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    error = None
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['admin'] = True
+            return redirect(url_for('admin_dashboard'))
+        else:
+            error = 'Invalid credentials. Try again.'
 
+    return render_template('admin_login.html', error=error)
 @app.route('/cart')
 def cart_page():
     language = request.args.get('lang', 'kh')
