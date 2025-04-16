@@ -7,6 +7,10 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 banned_ips = ['123.45.67.89', '111.222.333.444']  # Replace with real IPs
 
 app = Flask(__name__)
+@app.before_request
+def block_banned_ips():
+    if request.remote_addr in banned_ips:
+        abort(403)
 app.secret_key = 'your_secret_key'
 app.debug = True
 
@@ -278,6 +282,9 @@ def admin_dashboard():
         return redirect(url_for('admin_login'))
     return render_template('admin_dashboard.html')
 
+@app.errorhandler(403)
+def forbidden(e):
+    return "Access Denied: Your IP is blocked.", 403
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
