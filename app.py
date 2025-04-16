@@ -2,7 +2,7 @@
 ADMIN_USERNAME = 'AdminSompheaReakVitou'
 ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
-
+import requests
 # List of IPs you want to ban
 banned_ips = ['123.45.67.89', '111.222.333.444']  # Replace with real IPs
 
@@ -285,6 +285,35 @@ def admin_dashboard():
 @app.errorhandler(403)
 def forbidden(e):
     return "Access Denied: Your IP is blocked.", 403
+@app.route('/admin/products')
+def admin_products():
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+    return render_template('admin_products.html', products=products)
+@app.route('/admin/delete-product/<int:product_id>', methods=['POST'])
+def delete_product(product_id):
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+    global products
+    products = [p for p in products if p['id'] != product_id]
+    return redirect(url_for('admin_products'))
+@app.route('/admin/edit-product/<int:product_id>', methods=['GET', 'POST'])
+def edit_product(product_id):
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+
+    product = next((p for p in products if p['id'] == product_id), None)
+    if not product:
+        return "Product not found", 404
+
+    if request.method == 'POST':
+        product['name_kh'] = request.form['name_kh']
+        product['name_en'] = request.form['name_en']
+        product['price'] = int(request.form['price'])
+        product['image'] = request.form['image']
+        return redirect(url_for('admin_products'))
+
+    return render_template('edit_product.html', product=product)
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
