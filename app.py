@@ -314,6 +314,26 @@ def edit_product(product_id):
         return redirect(url_for('admin_products'))
 
     return render_template('edit_product.html', product=product)
+@app.route('/admin/add-product', methods=['GET', 'POST'])
+def add_product():
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+
+    if request.method == 'POST':
+        new_id = max([p['id'] for p in products]) + 1 if products else 1
+        new_product = {
+            'id': new_id,
+            'name_kh': request.form['name_kh'],
+            'name_en': request.form['name_en'],
+            'price': int(request.form['price']),
+            'image': request.form['image'],
+            'categories': [request.form['category']],
+            'subcategory': request.form['subcategory']
+        }
+        products.append(new_product)
+        return redirect(url_for('admin_products'))
+
+    return render_template('add_product.html')
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
