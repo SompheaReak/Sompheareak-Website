@@ -1,8 +1,10 @@
 # Admin login credentials
 ADMIN_USERNAME = 'AdminSompheaReakVitou'
 ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session
-import requests
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
+
+# List of IPs you want to ban
+banned_ips = ['123.45.67.89', '111.222.333.444']  # Replace with real IPs
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
