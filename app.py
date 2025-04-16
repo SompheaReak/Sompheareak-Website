@@ -207,9 +207,24 @@ def checkout():
         name = request.form['name']
         phone = request.form['phone']
         address = request.form['address']
+        delivery_method = request.form['delivery']
+
+        delivery_text = ""
+        delivery_fee = 0
+
+        if delivery_method == "door":
+            delivery_text = "ទំនិញដល់ដៃទូទាត់ប្រាក់"
+            delivery_fee = 7000  # fixed for now
+        elif delivery_method == "vet":
+            delivery_text = "វីរៈប៊ុនថាំ (VET)"
+            delivery_fee = 5000
+        elif delivery_method == "jnt":
+            delivery_text = "J&T"
+            delivery_fee = 7000
 
         message = f"🛒 *New Order Received!*\n\n"
-        message += f"*Name:* {name}\n*Phone:* {phone}\n*Address:* {address}\n\n*Order Details:*\n"
+        message += f"*Name:* {name}\n*Phone:* {phone}\n*Address:* {address}\n"
+        message += f"*Delivery:* {delivery_text} ({delivery_fee}៛)\n\n*Order Details:*\n"
 
         total = 0
         for item in cart:
@@ -218,7 +233,8 @@ def checkout():
             total += subtotal
             message += f"- {p['name_en']} x {item['quantity']} = {subtotal}៛\n"
 
-        message += f"\n*Total:* {total}៛"
+        total += delivery_fee
+        message += f"\n*Total with Delivery:* {total}៛"
 
         # Telegram Bot
         bot_token = '7981426501:AAE7CInWMNE2_sz5DaCMuAcKmH8yji1YBqk'
@@ -234,7 +250,6 @@ def checkout():
         return redirect(url_for('thank_you'))
 
     return render_template('checkout.html', language=language, cart=cart)
-
 @app.route('/thankyou')
 def thank_you():
     language = request.args.get('lang', 'kh')
