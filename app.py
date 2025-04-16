@@ -270,11 +270,12 @@ def thank_you():
     language = request.args.get('lang', 'kh')
     return render_template('thankyou.html', language=language)
 
- @app.route('/admin/dashboard')
+@app.route('/admin/dashboard')
 def admin_dashboard():
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
     return render_template('admin_dashboard.html')
+
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
