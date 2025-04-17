@@ -290,30 +290,8 @@ def admin_products():
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
     return render_template('admin_products.html', products=products)
-@app.route('/admin/delete-product/<int:product_id>', methods=['POST'])
-def delete_product(product_id):
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
-    global products
-    products = [p for p in products if p['id'] != product_id]
-    return redirect(url_for('admin_products'))
-@app.route('/admin/edit-product/<int:product_id>', methods=['GET', 'POST'])
-def edit_product(product_id):
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
 
-    product = next((p for p in products if p['id'] == product_id), None)
-    if not product:
-        return "Product not found", 404
 
-    if request.method == 'POST':
-        product['name_kh'] = request.form['name_kh']
-        product['name_en'] = request.form['name_en']
-        product['price'] = int(request.form['price'])
-        product['image'] = request.form['image']
-        return redirect(url_for('admin_products'))
-
-    return render_template('edit_product.html', product=product)
 @app.route('/admin/add-product', methods=['GET', 'POST'])
 def add_product():
     if not session.get('admin'):
@@ -334,8 +312,58 @@ def add_product():
         return redirect(url_for('admin_products'))
 
     return render_template('add_product.html')
+
+
+@app.route('/admin/edit-product/<int:product_id>', methods=['GET', 'POST'])
+def edit_product(product_id):
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+
+    product = next((p for p in products if p['id'] == product_id), None)
+    if not product:
+        return "Product not found", 404
+
+    if request.method == 'POST':
+        product['name_kh'] = request.form['name_kh']
+        product['name_en'] = request.form['name_en']
+        product['price'] = int(request.form['price'])
+        product['image'] = request.form['image']
+        return redirect(url_for('admin_products'))
+
+    return render_template('edit_product.html', product=product)
+
+
+@app.route('/admin/delete-product/<int:product_id>', methods=['POST'])
+def delete_product(product_id):
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+
+    global products
+    products = [p for p in products if p['id'] != product_id]
+    return redirect(url_for('admin_products'))
+
+
+@app.route('/admin/ban-ip', methods=['GET', 'POST'])
+def ban_ip():
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+
+    message = ""
+    if request.method == 'POST':
+        ip = request.form.get('ip')
+        if ip and ip not in banned_ips:
+            banned_ips.append(ip)
+            message = f"IP {ip} has been banned."
+
+    return render_template('ban_ip.html', banned_ips=banned_ips, message=message)
+
+
+@app.errorhandler(403)
+def forbidden(e):
+    return "Access Denied: Your IP is blocked.", 403
+
+
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-   
