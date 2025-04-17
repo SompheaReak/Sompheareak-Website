@@ -257,7 +257,7 @@ def checkout():
 
         if delivery_method == "door":
             delivery_text = "ទំនិញដល់ដៃទូទាត់ប្រាក់"
-            delivery_fee = 7000  # fixed for now
+            delivery_fee = 7000
         elif delivery_method == "vet":
             delivery_text = "វីរៈប៊ុនថាំ (VET)"
             delivery_fee = 5000
@@ -279,22 +279,21 @@ def checkout():
         total += delivery_fee
         message += f"\n*Total with Delivery:* {total}៛"
 
-        # Telegram Bot
-        import os
-
-        if request.method == "POST":
-        # ... existing message creation code
-
+        # Send to Telegram
         bot_token = os.environ.get("ORDER_BOT_TOKEN")
         chat_id = os.environ.get("TELEGRAM_CHAT_ID")
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
         response = requests.post(url, data=payload)
-    print("ORDER_BOT_TOKEN =", bot_token)
-    print("TELEGRAM_CHAT_ID =", chat_id)
-    print("Telegram response:", response.text)
-    if response.status_code != 200:
-        print("Telegram error:", response.text)
+
+        # Debug output
+        print("ORDER_BOT_TOKEN =", bot_token)
+        print("TELEGRAM_CHAT_ID =", chat_id)
+        print("Telegram response:", response.text)
+
+        if response.status_code != 200:
+            print("Telegram error:", response.text)
+
         session['cart'] = []
         return redirect(url_for('thank_you'))
 
@@ -379,7 +378,7 @@ def ban_ip():
     message = ""
     if request.method == 'POST':
         ip = request.form.get('ip')
-        if ip and ip not in banned_ips:
+    if ip and ip not in banned_ips:
         banned_ips.append(ip)
         message = f"IP {ip} has been banned."
     return render_template('ban_ip.html', banned_ips=banned_ips, message=message)
