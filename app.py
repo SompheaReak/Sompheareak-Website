@@ -2,14 +2,21 @@
 ADMIN_USERNAME = 'AdminSompheaReakVitou'
 ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
-import requests
+import datetime
 # List of IPs you want to ban
 banned_ips = ['123.45.67.89', '111.222.333.444']  # Replace with real IPs
 
 app = Flask(__name__)
 @app.before_request
 def block_banned_ips():
-    if request.remote_addr in banned_ips:
+    ip = request.remote_addr
+
+    # Log every IP with timestamp
+    with open("ip_logs.txt", "a") as f:
+        f.write(f"{datetime.datetime.now()} - {ip}\n")
+
+    # Block if banned
+    if ip in banned_ips:
         abort(403)
 app.secret_key = 'your_secret_key'
 app.debug = True
