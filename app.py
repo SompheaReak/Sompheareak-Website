@@ -1,3 +1,4 @@
+import requests
 # Admin login credentials
 ADMIN_USERNAME = 'AdminSompheaReakVitou'
 ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
@@ -24,12 +25,12 @@ def block_banned_ips():
     ip = request.remote_addr
     user_agent = request.headers.get('User-Agent')
 
-  # Block banned IPs first
-if ip in banned_ips:
+    # Block banned IPs first
+    if ip in banned_ips:
     abort(403)
 
-# Then log only allowed visitors
-notify_telegram(ip, user_agent)
+    # Then log only allowed visitors
+    notify_telegram(ip, user_agent)
 
 app.secret_key = 'your_secret_key'
 app.debug = True
