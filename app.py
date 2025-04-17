@@ -282,12 +282,17 @@ def checkout():
         # Telegram Bot
         import os
 
-    bot_token = os.environ.get("ORDER_BOT_TOKEN")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
-    response = requests.post(url, data=payload)
+        if request.method == "POST":
+        # ... existing message creation code
 
+        bot_token = os.environ.get("ORDER_BOT_TOKEN")
+        chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
+        response = requests.post(url, data=payload)
+    print("ORDER_BOT_TOKEN =", bot_token)
+    print("TELEGRAM_CHAT_ID =", chat_id)
+    print("Telegram response:", response.text)
     if response.status_code != 200:
         print("Telegram error:", response.text)
         session['cart'] = []
@@ -374,10 +379,9 @@ def ban_ip():
     message = ""
     if request.method == 'POST':
         ip = request.form.get('ip')
-    if ip in banned_ips:
-            banned_ips.append(ip)
-            message = f"IP {ip} has been banned."
-
+        if ip and ip not in banned_ips:
+        banned_ips.append(ip)
+        message = f"IP {ip} has been banned."
     return render_template('ban_ip.html', banned_ips=banned_ips, message=message)
 
 
