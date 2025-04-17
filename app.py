@@ -3,6 +3,18 @@ ADMIN_USERNAME = 'AdminSompheaReakVitou'
 ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
 import datetime
+def notify_telegram(ip, user_agent):
+    bot_token = '7663680888:AAG-s9AYKFISfkNU7CcDRBaSOywZ6x5A9-k'
+    chat_id = '1098161879'
+    message = f"🌐 *New Visitor Alert!*\n\n*IP:* `{ip}`\n*Device:* `{user_agent}`"
+    
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        'chat_id': chat_id,
+        'text': message,
+        'parse_mode': 'Markdown'
+    }
+    requests.post(url, data=payload)
 # List of IPs you want to ban
 banned_ips = ['123.45.67.89', '111.222.333.444']  # Replace with real IPs
 
@@ -10,10 +22,14 @@ app = Flask(__name__)
 @app.before_request
 def block_banned_ips():
     ip = request.remote_addr
-    print(f"User IP: {ip}")  # This prints to Render logs
+    user_agent = request.headers.get('User-Agent')
+
+    # Send to Telegram
+    notify_telegram(ip, user_agent)
+
+    # Block banned IPs
     if ip in banned_ips:
-        abort(403)
-app.secret_key = 'your_secret_key'
+        abort(403)r_secret_key'
 app.debug = True
 
 # Products data
