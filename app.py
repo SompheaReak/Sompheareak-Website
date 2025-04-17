@@ -6,10 +6,10 @@ ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
 import datetime
 def notify_telegram(ip, user_agent):
-    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    bot_token = os.environ.get("VISITOR_BOT_TOKEN")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     message = f"🌐 *New Visitor Alert!*\n\n*IP:* `{ip}`\n*Device:* `{user_agent}`"
-    
+
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {
         'chat_id': chat_id,
@@ -282,15 +282,14 @@ def checkout():
         # Telegram Bot
         import os
 
-        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
-        chat_id = os.environ.get("TELEGRAM_CHAT_ID")
-        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
-        response = requests.post(url, data=payload)
+    bot_token = os.environ.get("ORDER_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
+    response = requests.post(url, data=payload)
 
-        if response.status_code != 200:
-            print("Telegram error:", response.text)
-
+    if response.status_code != 200:
+        print("Telegram error:", response.text)
         session['cart'] = []
         return redirect(url_for('thank_you'))
 
