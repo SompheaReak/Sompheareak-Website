@@ -10,12 +10,7 @@ app = Flask(__name__)
 @app.before_request
 def block_banned_ips():
     ip = request.remote_addr
-
-    # Log every IP with timestamp
-    with open("ip_logs.txt", "a") as f:
-        f.write(f"{datetime.datetime.now()} - {ip}\n")
-
-    # Block if banned
+    print(f"User IP: {ip}")  # This prints to Render logs
     if ip in banned_ips:
         abort(403)
 app.secret_key = 'your_secret_key'
