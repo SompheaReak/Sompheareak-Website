@@ -24,12 +24,14 @@ def block_banned_ips():
     ip = request.remote_addr
     user_agent = request.headers.get('User-Agent')
 
-    # Send to Telegram
-    notify_telegram(ip, user_agent)
+  # Block banned IPs first
+if ip in banned_ips:
+    abort(403)
 
-    # Block banned IPs
-    if ip in banned_ips:
-        abort(403)r_secret_key'
+# Then log only allowed visitors
+notify_telegram(ip, user_agent)
+
+app.secret_key = 'your_secret_key'
 app.debug = True
 
 # Products data
@@ -276,8 +278,10 @@ def checkout():
         message += f"\n*Total with Delivery:* {total}៛"
 
         # Telegram Bot
-        bot_token = '7981426501:AAE7CInWMNE2_sz5DaCMuAcKmH8yji1YBqk'
-        chat_id = 1098161879
+        import os
+
+        bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+        chat_id = os.environ.get("TELEGRAM_CHAT_ID")
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
         response = requests.post(url, data=payload)
