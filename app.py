@@ -27,7 +27,7 @@ def block_banned_ips():
 
     # Block banned IPs first
     if ip in banned_ips:
-    abort(403)
+        abort(403)
 
     # Then log only allowed visitors
     notify_telegram(ip, user_agent)
@@ -374,7 +374,7 @@ def ban_ip():
     message = ""
     if request.method == 'POST':
         ip = request.form.get('ip')
-        if ip and ip not in banned_ips:
+    if ip in banned_ips:
             banned_ips.append(ip)
             message = f"IP {ip} has been banned."
 
