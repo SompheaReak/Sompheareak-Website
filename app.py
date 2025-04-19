@@ -6,8 +6,8 @@ ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
 import datetime
 def notify_telegram(ip, user_agent):
-    bot_token = os.environ.get("VISITOR_BOT_TOKEN")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    bot_token = "7663680888:AAG-s9AYKETSfLNUZCoD..."  # your VISITOR_BOT_TOKEN
+    chat_id = "1098161879"  # your TELEGRAM_CHAT_ID
     message = f"🌐 *New Visitor Alert!*\n\n*IP:* `{ip}`\n*Device:* `{user_agent}`"
 
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
