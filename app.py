@@ -247,6 +247,7 @@ def checkout():
     cart = session.get('cart', [])
 
     if request.method == "POST":
+        print("==> Checkout POST triggered")
         name = request.form['name']
         phone = request.form['phone']
         address = request.form['address']
