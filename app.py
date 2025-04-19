@@ -285,7 +285,7 @@ def checkout():
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
         response = requests.post(url, data=payload)
-
+    
         # Debug output
         print("ORDER_BOT_TOKEN =", bot_token)
         print("TELEGRAM_CHAT_ID =", chat_id)
