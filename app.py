@@ -16,7 +16,13 @@ def notify_telegram(ip, user_agent):
         'text': message,
         'parse_mode': 'Markdown'
     }
-    requests.post(url, data=payload)
+
+    response = requests.post(url, data=payload)
+    print("==> Visitor Bot Message Sent")
+    print("BOT TOKEN:", bot_token)
+    print("CHAT ID:", chat_id)
+    print("MESSAGE:", message)
+    print("RESPONSE:", response.text)
 # List of IPs you want to ban
 banned_ips = ['123.45.67.89', '111.222.333.444']  # Replace with real IPs
 
