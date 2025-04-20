@@ -390,3 +390,58 @@ if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+@app.route('/checkout', methods=["GET", "POST"])
+def checkout():
+    language = request.args.get('lang', 'kh')
+    cart = session.get('cart', [])
+
+    if request.method == "POST":
+        name = request.form['name']
+        phone = request.form['phone']
+        address = request.form['address']
+        delivery_method = request.form['delivery']
+
+        delivery_text = ""
+        delivery_fee = 0
+
+        if delivery_method == "door":
+            delivery_text = "ទំនិញដល់ដៃទូទាត់ប្រាក់"
+            delivery_fee = 7000
+        elif delivery_method == "vet":
+            delivery_text = "វីរៈប៊ុនថាំ (VET)"
+            delivery_fee = 5000
+        elif delivery_method == "jnt":
+            delivery_text = "J&T"
+            delivery_fee = 7000
+
+        message = f"🛒 *New Order Received!*\n\n"
+        message += f"*Name:* {name}\n*Phone:* {phone}\n*Address:* {address}\n"
+        message += f"*Delivery:* {delivery_text} ({delivery_fee}៛)\n\n*Order Details:*\n"
+
+        total = 0
+        for item in cart:
+            p = item['product']
+            subtotal = p['price'] * item['quantity']
+            total += subtotal
+            message += f"- {p['name_en']} x {item['quantity']} = {subtotal}៛\n"
+
+        total += delivery_fee
+        message += f"\n*Total with Delivery:* {total}៛"
+
+        # Telegram API
+        bot_token = "YOUR_ORDER_BOT_TOKEN"
+        chat_id = "YOUR_CHAT_ID"
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
+
+        response = requests.post(url, data=payload)
+        print("Telegram response:", response.text)
+
+        if response.status_code != 200:
+            print("Telegram error:", response.text)
+
+        session['cart'] = []
+        return redirect(url_for('thank_you'))
+
+    # This is for GET request (no Telegram message here)
+    return render_template('checkout.html', language=language, cart=cart)
