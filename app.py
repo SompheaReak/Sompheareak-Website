@@ -290,7 +290,7 @@ def checkout():
     print("Telegram response:", response.text)
 
     if response.status_code != 200:
-    print("Telegram error:", response.text)
+        print("Telegram error:", response.text)
         session['cart'] = []
         return redirect(url_for('thank_you'))
 
