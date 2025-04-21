@@ -254,8 +254,8 @@ def checkout():
 
     if request.method == "POST":
         print("==> Checkout POST triggered")
-        print("ENV ORDER_BOT_TOKEN:", os.environ.get("ORDER_BOT_TOKEN"))
-        print("ENV TELEGRAM_CHAT_ID:", os.environ.get("TELEGRAM_CHAT_ID"))
+        print("ENV bot_token = "7663680888:AAH...YOUR_TOKEN"
+        print("ENV chat_id = "-1002660809745"
         
         print("==> Checkout POST triggered")
         name = request.form['name']
