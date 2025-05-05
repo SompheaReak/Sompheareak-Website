@@ -198,10 +198,21 @@ def checkout():
         total += delivery_fee
         message += f"\n*Total with Delivery:* {total}៛"
 
-        # Send to Telegram
+        # Send message to Telegram
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {
-            "chat_id
+            "chat_id": chat_id,
+            "text": message,
+            "parse_mode": "Markdown"
+        }
+        response = requests.post(url, data=payload)
+        print("Telegram response:", response.text)
+
+        # Clear cart and redirect
+        session['cart'] = []
+        return redirect(url_for('thank_you'))
+
+    return render_template('checkout.html', language=language, cart=cart)
 @app.route('/thankyou')
 def thank_you():
     language = request.args.get('lang', 'kh')
