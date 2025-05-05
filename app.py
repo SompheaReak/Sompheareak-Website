@@ -210,7 +210,7 @@ def checkout():
 
         # Clear cart and redirect
         session['cart'] = []
-        return redirect(url
+        return redirect(url_for('thank_you'))
 
                 # Send to Telegram
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
