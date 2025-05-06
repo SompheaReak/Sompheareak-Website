@@ -24,7 +24,7 @@ def notify_telegram(ip, user_agent):
     print("MESSAGE:", message)
     print("RESPONSE:", response.text)
 # List of IPs you want to ban
-banned_ips = ['123.45.67.89', '58.97.219.232']  # Replace with real IPs
+banned_ips = ['123.45.67.89']  # Replace with real IPs
 
 app = Flask(__name__)
 @app.before_request
