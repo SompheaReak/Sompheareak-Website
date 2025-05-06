@@ -29,7 +29,7 @@ banned_ips = ['123.45.67.89', '111.222.333.444']  # Replace with real IPs
 app = Flask(__name__)
 @app.before_request
 def block_banned_ips():
-    ip = request.remote_addr
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
     user_agent = request.headers.get('User-Agent')
 
     # Block banned IPs first
