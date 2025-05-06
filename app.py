@@ -163,8 +163,8 @@ def checkout():
 
     if request.method == "POST":
         # Replace with your actual bot token and chat ID
-        bot_token = "your_bot_token"
-        chat_id = "your_chat_id"
+        bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
+        chat_id = "-1002660809745"
 
         name = request.form['name']
         phone = request.form['phone']
