@@ -252,18 +252,15 @@ def checkout():
     language = request.args.get('lang', 'kh')
     cart = session.get('cart', [])
 
-   if request.method == "POST":
-    print("==> Checkout POST triggered")
-    bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
-    chat_id = "-1002660809745"
-    
-    # Get visitor IP
-    ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    if request.method == "POST":
+        print("==> Checkout POST triggered")
+        bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
+        chat_id = "-1002660809745"
 
-    name = request.form['name']
-    phone = request.form['phone']
-    address = request.form['address']
-    delivery_method = request.form['delivery']
+        name = request.form['name']
+        phone = request.form['phone']
+        address = request.form['address']
+        delivery_method = request.form['delivery']
 
     delivery_text = ""
     delivery_fee = 0
