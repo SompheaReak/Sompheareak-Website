@@ -162,9 +162,8 @@ def checkout():
     cart = session.get('cart', [])
 
     if request.method == "POST":
-        print("==> Checkout POST triggered")
-        bot_token = "your_token_here"
-        chat_id = "your_chat_id_here"
+        bot_token = "your_bot_token"
+        chat_id = "your_chat_id"
 
         name = request.form['name']
         phone = request.form['phone']
@@ -198,18 +197,17 @@ def checkout():
         total += delivery_fee
         message += f"\n*Total with Delivery:* {total}៛"
 
-        # Send Telegram message
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {
             "chat_id": chat_id,
             "text": message,
             "parse_mode": "Markdown"
         }
-        response = requests.post(url, data=payload)
-        print("Telegram response:", response.text)
+        requests.post(url, data=payload)
 
         session['cart'] = []
         return redirect(url_for('thank_you'))
+
 @app.route('/thankyou')
 def thank_you():
     language = request.args.get('lang', 'kh')
