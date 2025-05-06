@@ -254,56 +254,55 @@ def checkout():
 
     if request.method == "POST":
         print("==> Checkout POST triggered")
-        bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
-        chat_id = "-1002660809745"
+        bot_token = "your_token_here"
+        chat_id = "your_chat_id_here"
 
         name = request.form['name']
         phone = request.form['phone']
         address = request.form['address']
         delivery_method = request.form['delivery']
 
-    delivery_text = ""
-    delivery_fee = 0
+        delivery_text = ""
+        delivery_fee = 0
 
-    if delivery_method == "door":
-        delivery_text = "ទំនិញដល់ដៃទូទាត់ប្រាក់"
-        delivery_fee = 7000
-    elif delivery_method == "vet":
-        delivery_text = "វីរៈប៊ុនថាំ (VET)"
-        delivery_fee = 5000
-    elif delivery_method == "jnt":
-        delivery_text = "J&T"
-        delivery_fee = 7000
+        if delivery_method == "door":
+            delivery_text = "ទំនិញដល់ដៃទូទាត់ប្រាក់"
+            delivery_fee = 7000
+        elif delivery_method == "vet":
+            delivery_text = "វីរៈប៊ុនថាំ (VET)"
+            delivery_fee = 5000
+        elif delivery_method == "jnt":
+            delivery_text = "J&T"
+            delivery_fee = 7000
 
-    message = f"🛒 *New Order Received!*\n\n"
-    message += f"*IP:* `{ip}`\n"
-    message += f"*Name:* {name}\n*Phone:* {phone}\n*Address:* {address}\n"
-    message += f"*Delivery:* {delivery_text} ({delivery_fee}៛)\n\n*Order Details:*\n"
+        message = f"🛒 *New Order Received!*\n\n"
+        message += f"*Name:* {name}\n*Phone:* {phone}\n*Address:* {address}\n"
+        message += f"*Delivery:* {delivery_text} ({delivery_fee}៛)\n\n*Order Details:*\n"
 
-    total = 0
-    for item in cart:
-        p = item['product']
-        subtotal = p['price'] * item['quantity']
-        total += subtotal
-        message += f"- {p['name_en']} x {item['quantity']} = {subtotal}៛\n"
+        total = 0
+        for item in cart:
+            p = item['product']
+            subtotal = p['price'] * item['quantity']
+            total += subtotal
+            message += f"- {p['name_en']} x {item['quantity']} = {subtotal}៛\n"
 
-    total += delivery_fee
-    message += f"\n*Total with Delivery:* {total}៛"
+        total += delivery_fee
+        message += f"\n*Total with Delivery:* {total}៛"
 
-    # Send to Telegram
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    payload = {
-        "chat_id": chat_id,
-        "text": message,
-        "parse_mode": "Markdown"
-    }
-    response = requests.post(url, data=payload)
-    print("Telegram response:", response.text)
+        # Send Telegram message
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        payload = {
+            "chat_id": chat_id,
+            "text": message,
+            "parse_mode": "Markdown"
+        }
+        response = requests.post(url, data=payload)
+        print("Telegram response:", response.text)
 
-    session['cart'] = []
-    return redirect(url_for('thank_you'))
+        session['cart'] = []
+        return redirect(url_for('thank_you'))
 
-@app.route('/thankyou')
+    return render_template('checkout.html', language=language, cart=cart)@app.route('/thankyou')
 def thank_you():
     language = request.args.get('lang', 'kh')
     return render_template('thankyou.html', language=language)
