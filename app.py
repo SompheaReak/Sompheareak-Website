@@ -162,6 +162,7 @@ def checkout():
     cart = session.get('cart', [])
 
     if request.method == "POST":
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr)
         # Replace with your actual bot token and chat ID
         bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
         chat_id = "-1002660809745"
@@ -186,7 +187,8 @@ def checkout():
 
         message = f"🛒 *New Order Received!*\n\n"
         message += f"*Name:* {name}\n*Phone:* {phone}\n*Address:* {address}\n"
-        message += f"*Delivery:* {delivery_text} ({delivery_fee}៛)\n\n*Order Details:*\n"
+        message += f"*Delivery:* {delivery_text} ({delivery_fee}៛)\n"
+        message += f"*IP:* {ip}\n\n*Order Details:*\n"
 
         total = 0
         for item in cart:
