@@ -115,3 +115,16 @@ function closeImageModal() {
     const modal = document.getElementById('image-modal');
     modal.style.display = 'none';
 }
+function openImageModal(src) {
+    const modal = document.getElementById('image-modal');
+    const modalImg = document.getElementById('modal-image');
+    modalImg.src = src;
+    modal.style.display = 'flex';
+}
+
+function closeImageModal(event) {
+    // Only close if the background or the X was clicked
+    if (!event || event.target.id === 'image-modal' || event.target.classList.contains('close-button')) {
+        document.getElementById('image-modal').style.display = 'none';
+    }
+}
