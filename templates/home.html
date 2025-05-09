@@ -282,6 +282,39 @@ document.addEventListener('DOMContentLoaded', function () {
             box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
             z-index: 1000;
         }
+        .product-labels {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 1;
+}
+
+.product-label {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: bold;
+  color: white;
+}
+
+.product-label.hot {
+  background-color: #ff5722;
+}
+
+.product-label.new {
+  background-color: #28a745;
+}
+
+.product-label.limited {
+  background-color: #6f42c1;
+}
+
+.product-card {
+  position: relative;
+}
     </style>
 </head>
 <body>
@@ -328,23 +361,31 @@ document.addEventListener('DOMContentLoaded', function () {
 {% endif %}
 
 <!-- Product Grid -->
-<div class="product-grid" id="product-grid">
-    {% for product in products %}
-    <div class="product-card">
-       <img src="{{ product.image }}" alt="{{ product.name_kh }}" onclick="openImageModal(this.src)">
-        <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_en }}{% endif %}</h3>
-        <p class="price">{{ product.price }}៛</p>
-       <form class="add-to-cart-form">
-  <input type="hidden" name="product_id" value="{{ product.id }}">
-  <div class="quantity-selector">
-    <button type="button" onclick="decreaseQuantity(this)">-</button>
-    <input type="number" name="quantity" value="1" min="1">
-    <button type="button" onclick="increaseQuantity(this)">+</button>
+<div class="product-card">
+  <div class="product-labels">
+    {% if "Hot Sale" in product.categories %}
+      <span class="product-label hot">Hot Sale</span>
+    {% endif %}
+    {% if "New" in product.categories %}
+      <span class="product-label new">New</span>
+    {% endif %}
+    {% if "Limited" in product.categories %}
+      <span class="product-label limited">Limited</span>
+    {% endif %}
   </div>
-  <button type="submit" class="add-cart-button">បន្ថែម</button>
-</form>
+
+  <img src="{{ product.image }}" alt="{{ product.name_kh }}" onclick="openImageModal(this.src)">
+  <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_en }}{% endif %}</h3>
+  <p class="price">{{ product.price }}៛</p>
+  <form class="add-to-cart-form">
+    <input type="hidden" name="product_id" value="{{ product.id }}">
+    <div class="quantity-selector">
+      <button type="button" onclick="decreaseQuantity(this)">-</button>
+      <input type="number" name="quantity" value="1" min="1">
+      <button type="button" onclick="increaseQuantity(this)">+</button>
     </div>
-    {% endfor %}
+    <button type="submit" class="add-cart-button">បន្ថែម</button>
+  </form>
 </div>
 
 <!-- Floating Cart Button -->
