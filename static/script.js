@@ -33,10 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Setup product auto-loading (if needed)
     setupAutoLoadProducts();
-
-    // Highlight active category/subcategory on load
     highlightActiveCategory();
 });
 
@@ -48,12 +45,11 @@ function updateCartCount(newCount) {
 // Show and hide success message
 function showSuccessMessage() {
     const success = document.getElementById('success');
-    const sound = document.getElementById('success-sound'); // NEW: get the sound element
+    const sound = document.getElementById('success-sound');
     if (!success) return;
 
-    // Play the sound
     if (sound) {
-        sound.currentTime = 0; // restart sound if clicked multiple times
+        sound.currentTime = 0;
         sound.play();
     }
 
@@ -68,6 +64,7 @@ function showSuccessMessage() {
         }, 500);
     }, 1500);
 }
+
 // Auto-load next products when scrolling
 function setupAutoLoadProducts() {
     const productCards = document.querySelectorAll('.product-card');
@@ -77,7 +74,7 @@ function setupAutoLoadProducts() {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 loadMoreProducts();
-                observer.disconnect(); // stop after loading all
+                observer.disconnect();
             }
         });
     }, {
@@ -103,6 +100,7 @@ function highlightActiveCategory() {
         }
     });
 }
+
 // Handle full-screen image preview
 function openImageModal(src) {
     const modal = document.getElementById('image-modal');
@@ -111,19 +109,7 @@ function openImageModal(src) {
     modal.style.display = 'flex';
 }
 
-function closeImageModal() {
-    const modal = document.getElementById('image-modal');
-    modal.style.display = 'none';
-}
-function openImageModal(src) {
-    const modal = document.getElementById('image-modal');
-    const modalImg = document.getElementById('modal-image');
-    modalImg.src = src;
-    modal.style.display = 'flex';
-}
-
 function closeImageModal(event) {
-    // Only close if the background or the X was clicked
     if (!event || event.target.id === 'image-modal' || event.target.classList.contains('close-button')) {
         document.getElementById('image-modal').style.display = 'none';
     }
