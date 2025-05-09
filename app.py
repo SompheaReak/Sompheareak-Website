@@ -145,7 +145,7 @@ products = [
 # --- Subcategories Map ---
 subcategories_map = {
     "Accessories": ["Gym Bracelet", "Gem Stone Bracelet","Dragon Bracelet","Bracelet"],
-    "LEGO Ninjago": ["Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8"],
+    "LEGO Ninjago": ["ម៉ូតពិសេស","ឈុតសង់","Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8"],
     "Keychain": ["Gun Keychains"],
     "Hot Sale": [],
     "Toy": ["Lego Ninjago", "Lego WWII", "Lego ទាហាន"]
