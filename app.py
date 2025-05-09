@@ -233,17 +233,18 @@ def cart_page():
 
 @app.route('/add-to-cart', methods=['POST'])
 def add_to_cart():
-    product_id = request.form.get('product_id')
+    product_id = int(request.form.get('product_id'))
     quantity = int(request.form.get('quantity', 1))
-    # Add to cart logic here...
-    return jsonify({'success': True, 'cart_count': updated_cart_count})
-    if product:
-        cart = session.get('cart', [])
-        cart.append({"product": product, "quantity": quantity})
-        session['cart'] = cart
 
-    return jsonify({"success": True, "cart_count": len(session.get('cart', []))})
+    product = next((p for p in products if p['id'] == product_id), None)
+    if not product:
+        return jsonify({'success': False})
 
+    cart = session.get('cart', [])
+    cart.append({"product": product, "quantity": quantity})
+    session['cart'] = cart
+
+    return jsonify({"success": True, "cart_count": len(cart)})
 @app.route('/remove-from-cart/<int:index>', methods=["POST"])
 def remove_from_cart(index):
     cart = session.get('cart', [])
