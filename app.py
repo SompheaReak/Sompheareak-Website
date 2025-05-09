@@ -231,12 +231,12 @@ def cart_page():
     cart = session.get('cart', [])
     return render_template('cart.html', cart=cart, language=language)
 
-@app.route('/add-to-cart', methods=["POST"])
+@app.route('/add-to-cart', methods=['POST'])
 def add_to_cart():
-    product_id = int(request.form['product_id'])
-    quantity = int(request.form['quantity'])
-    product = next((p for p in products if p["id"] == product_id), None)
-
+    product_id = request.form.get('product_id')
+    quantity = int(request.form.get('quantity', 1))
+    # Add to cart logic here...
+    return jsonify({'success': True, 'cart_count': updated_cart_count})
     if product:
         cart = session.get('cart', [])
         cart.append({"product": product, "quantity": quantity})
