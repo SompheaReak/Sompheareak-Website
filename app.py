@@ -62,7 +62,7 @@ products = [
     {"id": 1101, "name_kh": "Zane's Set", "name_en": "", "price": 44000, "image": "/static/images/set01.jpg", "categories": ["LEGO Ninjago","Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
     {"id": 1102, "name_kh": "Kai Merch", "name_en": "", "price": 5000, "image": "/static/images/set02.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
     {"id": 1003, "name_kh": "cole Merch", "name_en": "", "price": 5000, "image": "/static/images/set03.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 1004, "name_kh": "idk name ", "name_en": "", "price": 5000, "image": "/static/images/set04.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"},
+    {"id": 1004, "name_kh": "idk name ", "name_en": "", "price": 5000, "image": "/static/images/set04.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
 
     {"id": 2001, "name_kh": "WWII Germany 01", "name_en": "WWII Germany 01", "price": 1250, "image": "/static/images/wwii-01.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
     {"id": 2002, "name_kh": "WWII Germany 02", "name_en": "WWII Germany 02", "price": 1250, "image": "/static/images/wwii-02.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
