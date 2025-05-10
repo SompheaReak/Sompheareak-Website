@@ -367,49 +367,47 @@ document.addEventListener('DOMContentLoaded', function () {
     {% endif %}
   </div>
 </div>
-<!-- Product Grid -->
-<div class="product-grid" id="product-grid">
-  {% for product in products %}
-  <div class="product-card">
-    <div class="product-labels">
-      {% if "Hot Sale" in product.categories %}
-        <span class="product-label hot">Hot Sale</span>
-      {% endif %}
-      {% if "New" in product.categories %}
-        <span class="product-label new">New</span>
-      {% endif %}
-      {% if "Limited" in product.categories %}
-        <span class="product-label limited">Limited</span>
-      {% endif %}
-      {% if "Season 1" in product.subcategory %}
-        <span class="product-label sub1">S1</span>
-      {% endif %}
-      {% if "Gun Keychains" in product.subcategory %}
-        <span class="product-label sub2">Guns</span>
-      {% endif %}
+{% for sub in subcategories %}
+  <h2 style="margin-top: 30px;">{{ sub }}</h2>
+  <div class="horizontal-scroll">
+    {% for product in products %}
+      {% if sub in product.subcategory %}
+        <div class="product-card">
+          <div class="product-labels">
+            {% if "Hot Sale" in product.categories %}
+              <span class="product-label hot">Hot Sale</span>
+            {% endif %}
+            {% if "New" in product.categories %}
+              <span class="product-label new">New</span>
+            {% endif %}
+            {% if "Limited" in product.categories %}
+              <span class="product-label limited">Limited</span>
+            {% endif %}
+            {% if product.stock == 0 %}
+              <span class="product-label out-of-stock">Out of Stock</span>
+            {% else %}
+              <span class="product-label in-stock">In Stock</span>
+            {% endif %}
+          </div>
 
-      {% if product.stock == 0 %}
-        <span class="product-label out-of-stock">Out of Stock</span>
-      {% else %}
-        <span class="product-label in-stock">In Stock</span>
+          <img src="{{ product.image }}" alt="{{ product.name_kh }}" onclick="openImageModal(this.src)">
+          <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_en }}{% endif %}</h3>
+          <p class="price">{{ product.price }}៛</p>
+
+          <form class="add-to-cart-form">
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+            <div class="quantity-selector">
+              <button type="button" onclick="decreaseQuantity(this)">-</button>
+              <input type="number" name="quantity" value="1" min="1">
+              <button type="button" onclick="increaseQuantity(this)">+</button>
+            </div>
+            <button type="submit" class="add-cart-button" {% if product.stock == 0 %}disabled{% endif %}>បន្ថែម</button>
+          </form>
+        </div>
       {% endif %}
-    </div>
-
-    <img src="{{ product.image }}" alt="{{ product.name_kh }}" onclick="openImageModal(this.src)">
-    <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_en }}{% endif %}</h3>
-    <p class="price">{{ product.price }}៛</p>
-
-    <form class="add-to-cart-form">
-      <input type="hidden" name="product_id" value="{{ product.id }}">
-      <div class="quantity-selector">
-        <button type="button" onclick="decreaseQuantity(this)">-</button>
-        <input type="number" name="quantity" value="1" min="1">
-        <button type="button" onclick="increaseQuantity(this)">+</button>
-      </div>
-      <button type="submit" class="add-cart-button" {% if product.stock == 0 %}disabled{% endif %}>បន្ថែម</button>
-    </form>
+    {% endfor %}
   </div>
-  {% endfor %}
+{% endfor %}
 </div>
 <!-- Floating Cart Button -->
 <a href="/cart" class="floating-cart">
