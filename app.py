@@ -59,10 +59,10 @@ products = [
     {"id": 22, "name_kh": "Lego Ninjago Season 1 - Cole", "name_en": "Lego Ninjago Season 1 - Cole", "price": 5000, "image": "/static/images/njoss1pilotcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"]},
     {"id": 23, "name_kh": "Lego Ninjago Season 1 - Lloyd", "name_en": "Lego Ninjago Season 1 - Lloyd", "price": 5000, "image": "/static/images/njoss1pilotlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"]},
 
-    {"id": 1101, "name_kh": "Zane's Set", "name_en": "", "price": 44000, "image": "/static/images/set01.jpg", "categories": ["LEGO Ninjago", "ឈុតសង់","Toy"], "subcategory": ["Lego Ninjago"]},
-    {"id": 1102, "name_kh": "Kai", "name_en": "", "price": 5000, "image": "/static/images/set02.jpg", "categories": ["LEGO Ninjago", "ឈុតសង់","Toy"], "subcategory": ["Lego Ninjago","Season 1"]},
-    {"id": 1003, "name_kh": "cole", "name_en": "", "price": 5000, "image": "/static/images/set03.jpg", "categories": ["LEGO Ninjago","ឈុតសង់", "Toy"], "subcategory": ["Lego Ninjago","Season 1"]},
-    {"id": 1004, "name_kh": "idk", "name_en": "", "price": 5000, "image": "/static/images/set04.jpg", "categories": ["LEGO Ninjago", "ឈុតសង់","Toy"], "subcategory": ["Lego Ninjago","Season 1"]},
+    {"id": 1101, "name_kh": "Zane's Set", "name_en": "", "price": 44000, "image": "/static/images/set01.jpg", "categories": ["LEGO Ninjago", "Building Set","Toy"], "subcategory": ["Lego Ninjago"]},
+    {"id": 1102, "name_kh": "Kai", "name_en": "", "price": 5000, "image": "/static/images/set02.jpg", "categories": ["LEGO Ninjago", "Building Set","Toy"], "subcategory": ["Lego Ninjago","Season 1"]},
+    {"id": 1003, "name_kh": "cole", "name_en": "", "price": 5000, "image": "/static/images/set03.jpg", "categories": ["LEGO Ninjago","Building Set", "Toy"], "subcategory": ["Lego Ninjago","Season 1"]},
+    {"id": 1004, "name_kh": "idk", "name_en": "", "price": 5000, "image": "/static/images/set04.jpg", "categories": ["LEGO Ninjago", "Building Set","Toy"], "subcategory": ["Lego Ninjago","Season 1"]},
 
     {"id": 2001, "name_kh": "WWII Germany 01", "name_en": "WWII Germany 01", "price": 1250, "image": "/static/images/wwii-01.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
     {"id": 2002, "name_kh": "WWII Germany 02", "name_en": "WWII Germany 02", "price": 1250, "image": "/static/images/wwii-02.jpg", "categories": ["toy"], "subcategory": "Lego WWII"},
@@ -150,7 +150,7 @@ products = [
 # --- Subcategories Map ---
 subcategories_map = {
     "Accessories": ["Gym Bracelet", "Gem Stone Bracelet","Dragon Bracelet","Bracelet"],
-    "LEGO Ninjago": ["ម៉ូតពិសេស","ឈុតសង់","Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8"],
+    "LEGO Ninjago": ["New","Building Set","Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8"],
     "Keychain": ["Gun Keychains"],
     "Hot Sale": [],
     "Toy": ["Lego Ninjago", "Lego WWII", "Lego ទាហាន"]
