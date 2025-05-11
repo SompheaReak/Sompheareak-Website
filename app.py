@@ -162,14 +162,11 @@ subcategories_map = {
 }
 
 # --- Routes ---
-
 @app.route('/')
 def home():
-    return redirect(url_for('category', category_name='Hot Sale'))
     language = request.args.get('lang', 'kh')
     cart = session.get('cart', [])
-    return render_template('home.html', products=products, language=language, cart=cart, current_category=None, current_subcategory=None, subcategories=[])
-
+    return redirect(url_for('category', category_name='Hot Sale'))
 @app.route('/category/<category_name>')
 def category(category_name):
     language = request.args.get('lang', 'kh')
@@ -212,15 +209,15 @@ def subcategory(subcategory_name):
 
     subs = subcategories_map.get(main_category, []) if main_category else []
 
-    return render_template(
-        'home.html',
-        products=filtered_products,
-        language=language,
-        cart=cart,
-        current_category=main_category,
-        current_subcategory=subcategory_name,
-        subcategories=subs
-    )
+return render_template(
+    'home.html',
+    products=filtered_products,
+    language=language,
+    cart=cart,
+    current_category=main_category,
+    current_subcategory=subcategory_name,
+    subcategories=subs
+)
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
     language = request.args.get('lang', 'kh')
@@ -410,7 +407,6 @@ def ban_ip():
         banned_ips.append(ip)
         message = f"IP {ip} has been banned."
     return render_template('ban_ip.html', banned_ips=banned_ips, message=message)
-
 
 @app.errorhandler(403)
 def forbidden(e):
