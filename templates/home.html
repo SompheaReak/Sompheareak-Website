@@ -334,7 +334,9 @@ document.addEventListener('DOMContentLoaded', function () {
     </style>
 </head>
 <body>
-
+<input type="hidden" id="current-category" value="{{ current_category }}">
+<input type="hidden" id="current-subcategory" value="{{ current_subcategory }}">
+<input type="hidden" id="subcategory-list" value="{{ subcategories|join(',') }}">
 <!-- Language Switch -->
 <div class="language-switch">
     <button onclick="switchLanguage()">ប្តូរភាសា (Switch Language)</button>
@@ -434,15 +436,16 @@ document.addEventListener('DOMContentLoaded', function () {
   </div>
 </div>
 <script>
+<script>
 window.addEventListener('scroll', function () {
   const scrollTop = window.scrollY;
   const windowHeight = window.innerHeight;
   const docHeight = document.body.offsetHeight;
 
-  // Check if user is near the bottom of the page
-  if (scrollTop + windowHeight >= docHeight - 50) {
+  if (scrollTop + windowHeight >= docHeight - 100) {
     const current = document.getElementById("current-subcategory")?.value;
-    const list = document.getElementById("subcategory-list")?.value.split(",") || [];
+    const listRaw = document.getElementById("subcategory-list")?.value;
+    const list = listRaw ? listRaw.split(",") : [];
     const category = document.getElementById("current-category")?.value;
 
     const index = list.indexOf(current);
