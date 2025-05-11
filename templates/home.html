@@ -34,50 +34,56 @@
             }
         }
     </script>
-    
-<script>
-let loadingNext = false;
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+  const forms = document.querySelectorAll('.add-to-cart-form');
 
-window.addEventListener('scroll', function () {
-  if (loadingNext) return;
+  forms.forEach(form => {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
 
-  const scrollTop = window.scrollY;
-  const windowHeight = window.innerHeight;
-  const docHeight = document.body.scrollHeight;
+      const formData = new FormData(form);
 
-  if (scrollTop + windowHeight >= docHeight - 150) {
-    loadingNext = true;
+      fetch('/add-to-cart', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Update cart count
+          document.querySelectorAll('#cart-count').forEach(el => {
+            el.innerText = data.cart_count;
+          });
 
-    const current = document.getElementById("current-subcategory")?.value;
-    const listRaw = document.getElementById("subcategory-list")?.value;
-    const list = listRaw ? listRaw.split(",") : [];
+          // Show success message
+          const success = document.getElementById('success');
+          const sound = document.getElementById('success-sound');
+          if (sound) {
+            sound.currentTime = 0;
+            sound.play();
+          }
 
-    const index = list.indexOf(current);
-    if (index !== -1 && index < list.length - 1) {
-      const nextSub = list[index + 1].trim();
+          success.style.display = 'block';
+          success.style.opacity = '1';
+          success.style.transition = 'opacity 0.5s ease';
 
-      const loader = document.createElement("div");
-      loader.innerText = "កំពុងផ្ទុក...";
-      loader.style.textAlign = "center";
-      loader.style.padding = "20px";
-      loader.id = "scroll-loader";
-      document.getElementById("product-grid").appendChild(loader);
-
-      fetch(`/subcategory/${encodeURIComponent(nextSub)}?ajax=true`)
-        .then(response => response.text())
-        .then(html => {
-          document.getElementById("product-grid").insertAdjacentHTML("beforeend", html);
-          document.getElementById("current-subcategory").value = nextSub;
-          document.getElementById("scroll-loader")?.remove();
-          loadingNext = false;
-        })
-        .catch(err => {
-          console.error("Scroll load error:", err);
-          document.getElementById("scroll-loader")?.remove();
-          loadingNext = false;
-        });
-    }
-  }
+          setTimeout(() => {
+            success.style.opacity = '0';
+            setTimeout(() => {
+              success.style.display = 'none';
+            }, 500);
+          }, 1500);
+        } else {
+          alert('បន្ថែមទៅកន្ត្រកមិនបានទេ!');
+        }
+      })
+      .catch(error => {
+        console.error('Add to cart error:', error);
+        alert('មានបញ្ហា នៅពេលបន្ថែមទៅកន្ត្រក!');
+      });
+    });
+  });
 });
 </script>
     <style>
@@ -327,17 +333,7 @@ window.addEventListener('scroll', function () {
     </style>
 </head>
 <body>
-<input type="hidden" id="current-category" value="{{ current_category }}">
-<input type="hidden" id="current-subcategory" value="{{ current_subcategory }}">
-<input type="hidden" id="subcategory-list" value="{{ subcategories|join(',') }}">
 
-{% if subcategories %}
-  <div class="subcategory-box scroll-subcategory">
-    {% for sub in subcategories %}
-      <a href="/subcategory/{{ sub }}" class="{% if current_subcategory == sub %}active{% endif %}">{{ sub }}</a>
-    {% endfor %}
-  </div>
-{% endif %}
 <!-- Language Switch -->
 <div class="language-switch">
     <button onclick="switchLanguage()">ប្តូរភាសា (Switch Language)</button>
@@ -370,6 +366,15 @@ window.addEventListener('scroll', function () {
     <a href="/category/Keychain" class="{% if current_category == 'Keychain' %}active{% endif %}">បណ្ដោងសោ</a>
     <a href="/category/LEGO Ninjago" class="{% if current_category == 'LEGO Ninjago' %}active{% endif %}">LEGO Ninjago</a>
     <a href="/category/Accessories" class="{% if current_category == 'Accessories' %}active{% endif %}">គ្រឿងតែងខ្លួន</a>
+  </div>
+
+  {% if subcategories %}
+  <div class="subcategory-box scroll-subcategory">
+    {% for sub in subcategories %}
+      <a href="/subcategory/{{ sub }}" class="{% if current_subcategory == sub %}active{% endif %}">{{ sub }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
 </div>
 <!-- Product Grid -->
 <div class="product-grid" id="product-grid">
@@ -427,38 +432,6 @@ window.addEventListener('scroll', function () {
     <img id="modal-image" src="" alt="Preview">
   </div>
 </div>
-<script>
-let loadingNext = false;
-
-window.addEventListener('scroll', function () {
-  const scrollTop = window.scrollY;
-  const windowHeight = window.innerHeight;
-  const docHeight = document.body.offsetHeight;
-
-  if (scrollTop + windowHeight >= docHeight - 100 && !loadingNext) {
-    loadingNext = true;
-
-    const current = document.getElementById("current-subcategory")?.value;
-    const listRaw = document.getElementById("subcategory-list")?.value;
-    const list = listRaw ? listRaw.split(",") : [];
-
-    const index = list.indexOf(current);
-    if (index !== -1 && index < list.length - 1) {
-      const nextSub = list[index + 1].trim();
-
-      fetch(`/subcategory/${encodeURIComponent(nextSub)}?ajax=true`)
-        .then(response => response.text())
-        .then(html => {
-          document.getElementById("product-grid").insertAdjacentHTML("beforeend", html);
-          document.getElementById("current-subcategory").value = nextSub;
-          loadingNext = false;
-        })
-        .catch(err => {
-          console.error("Scroll load error:", err);
-          loadingNext = false;
-        });
-    }
-  }
-});
-</script>
+</body>
 </html>
+Help me fix it And I copy paste 
