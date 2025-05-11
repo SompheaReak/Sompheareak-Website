@@ -4,6 +4,7 @@ import requests
 ADMIN_USERNAME = 'AdminSompheaReakVitou'
 ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
+app = Flask(__name__)
 import datetime
 def notify_telegram(ip, user_agent):
     bot_token = "7663680888:AAH...YOUR_TOKEN"
