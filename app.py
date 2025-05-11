@@ -25,19 +25,6 @@ def notify_telegram(ip, user_agent):
     print("RESPONSE:", response.text)
 # List of IPs you want to ban
 banned_ips = ['123.45.67.89']  # Replace with real IPs
-
-app = Flask(__name__)
-@app.route('/category/<category>')
-def view_category(category):
-    # Find subcategories for this category
-    subcategories = get_subcategories_for(category)  # replace with your own logic
-
-    if subcategories:
-        return redirect(url_for('view_subcategory', subcategory=subcategories[0]))
-    else:
-        # Show all products in that category if no subcategories
-        products = get_products_by_category(category)
-        return render_template("home.html", products=products, ...)
 @app.before_request
 def block_banned_ips():
     ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
@@ -185,11 +172,17 @@ def home():
 @app.route('/category/<category_name>')
 def category(category_name):
     language = request.args.get('lang', 'kh')
+    subs = subcategories_map.get(category_name, [])
+    
+    # If subcategories exist, redirect to first one
+    if subs:
+        return redirect(url_for('subcategory', subcategory_name=subs[0]))
+
+    # If no subcategories, show all products in that category
     filtered_products = [
         p for p in products
         if category_name in p.get('categories', [])
     ]
-    subs = subcategories_map.get(category_name, [])
     cart = session.get('cart', [])
     return render_template(
         'home.html',
@@ -198,9 +191,8 @@ def category(category_name):
         cart=cart,
         current_category=category_name,
         current_subcategory=None,
-        subcategories=subs
+        subcategories=[]
     )
-
 @app.route('/subcategory/<subcategory_name>')
 def subcategory(subcategory_name):
     language = request.args.get('lang', 'kh')
