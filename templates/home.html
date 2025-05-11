@@ -334,15 +334,16 @@ document.addEventListener('DOMContentLoaded', function () {
     </style>
 </head>
 <body>
+<input type="hidden" id="current-category" value="{{ current_category }}">
+<input type="hidden" id="current-subcategory" value="{{ current_subcategory }}">
+<input type="hidden" id="subcategory-list" value="{{ subcategories|join(',') }}">
+
 {% if subcategories %}
   <div class="subcategory-box scroll-subcategory">
     {% for sub in subcategories %}
       <a href="/subcategory/{{ sub }}" class="{% if current_subcategory == sub %}active{% endif %}">{{ sub }}</a>
     {% endfor %}
   </div>
-  <input type="hidden" id="current-category" value="{{ current_category }}">
-  <input type="hidden" id="current-subcategory" value="{{ current_subcategory }}">
-  <input type="hidden" id="subcategory-list" value="{{ subcategories|join(',') }}">
 {% endif %}
 <!-- Language Switch -->
 <div class="language-switch">
@@ -443,7 +444,6 @@ document.addEventListener('DOMContentLoaded', function () {
   </div>
 </div>
 <script>
-<script>
 window.addEventListener('scroll', function () {
   const scrollTop = window.scrollY;
   const windowHeight = window.innerHeight;
@@ -463,25 +463,4 @@ window.addEventListener('scroll', function () {
   }
 });
 </script>
-</body>
-<script>
-  window.addEventListener('scroll', function () {
-    const scrollTop = window.scrollY;
-    const windowHeight = window.innerHeight;
-    const docHeight = document.body.offsetHeight;
-
-    if (scrollTop + windowHeight >= docHeight - 50) {
-      const current = document.getElementById("current-subcategory")?.value;
-      const list = document.getElementById("subcategory-list")?.value.split(",") || [];
-      const category = document.getElementById("current-category")?.value;
-
-      const index = list.indexOf(current);
-      if (index !== -1 && index < list.length - 1) {
-        const nextSub = list[index + 1].trim();
-        window.location.href = `/subcategory/${encodeURIComponent(nextSub)}`;
-      }
-    }
-  });
-</script>
 </html>
-Help me fix it And I copy paste 
