@@ -198,6 +198,7 @@ def subcategory(subcategory_name):
     ]
     cart = session.get('cart', [])
 
+    # Find main category
     main_category = None
     for category, subs in subcategories_map.items():
         if subcategory_name in subs:
@@ -206,7 +207,12 @@ def subcategory(subcategory_name):
 
     subs = subcategories_map.get(main_category, []) if main_category else []
 
-    return render_template(  # <-- now it's inside the function
+    # ADD THIS BLOCK to handle AJAX loading
+    if request.args.get('ajax') == 'true':
+        return render_template('product_cards.html', products=filtered_products, language=language)
+
+    # Full page load
+    return render_template(
         'home.html',
         products=filtered_products,
         language=language,
