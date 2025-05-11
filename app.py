@@ -198,7 +198,6 @@ def subcategory(subcategory_name):
     ]
     cart = session.get('cart', [])
 
-    # Find main category
     main_category = None
     for category, subs in subcategories_map.items():
         if subcategory_name in subs:
@@ -207,15 +206,15 @@ def subcategory(subcategory_name):
 
     subs = subcategories_map.get(main_category, []) if main_category else []
 
-return render_template(
-    'home.html',
-    products=filtered_products,
-    language=language,
-    cart=cart,
-    current_category=main_category,
-    current_subcategory=subcategory_name,
-    subcategories=subs
-)
+    return render_template(  # <-- now it's inside the function
+        'home.html',
+        products=filtered_products,
+        language=language,
+        cart=cart,
+        current_category=main_category,
+        current_subcategory=subcategory_name,
+        subcategories=subs
+    )
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
     language = request.args.get('lang', 'kh')
