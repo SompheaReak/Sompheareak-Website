@@ -164,8 +164,6 @@ subcategories_map = {
 # --- Routes ---
 @app.route('/')
 def home():
-    language = request.args.get('lang', 'kh')
-    cart = session.get('cart', [])
     return redirect(url_for('category', category_name='Hot Sale'))
 @app.route('/category/<category_name>')
 def category(category_name):
