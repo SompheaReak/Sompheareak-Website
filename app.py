@@ -27,6 +27,17 @@ def notify_telegram(ip, user_agent):
 banned_ips = ['123.45.67.89']  # Replace with real IPs
 
 app = Flask(__name__)
+@app.route('/category/<category>')
+def view_category(category):
+    # Find subcategories for this category
+    subcategories = get_subcategories_for(category)  # replace with your own logic
+
+    if subcategories:
+        return redirect(url_for('view_subcategory', subcategory=subcategories[0]))
+    else:
+        # Show all products in that category if no subcategories
+        products = get_products_by_category(category)
+        return render_template("home.html", products=products, ...)
 @app.before_request
 def block_banned_ips():
     ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
