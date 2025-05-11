@@ -447,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function () {
   </div>
 </div>
 <script>
-window.addEventListener('scroll', function () {
+window.addEventListener('scroll', async function () {
   const scrollTop = window.scrollY;
   const windowHeight = window.innerHeight;
   const docHeight = document.body.offsetHeight;
@@ -461,7 +461,30 @@ window.addEventListener('scroll', function () {
     const index = list.indexOf(current);
     if (index !== -1 && index < list.length - 1) {
       const nextSub = list[index + 1].trim();
-      window.location.href = `/subcategory/${encodeURIComponent(nextSub)}`;
+
+      // Avoid multiple requests
+      if (document.body.dataset.loading === "true") return;
+      document.body.dataset.loading = "true";
+
+      try {
+        const res = await fetch(`/subcategory/${encodeURIComponent(nextSub)}?ajax=true`);
+        const html = await res.text();
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+
+        // Extract product cards
+        const newProducts = temp.querySelectorAll(".product-card");
+        newProducts.forEach(card => {
+          document.getElementById("product-grid").appendChild(card);
+        });
+
+        // Update hidden input to new current subcategory
+        document.getElementById("current-subcategory").value = nextSub;
+      } catch (e) {
+        console.error("Failed to load more products:", e);
+      } finally {
+        document.body.dataset.loading = "false";
+      }
     }
   }
 });
