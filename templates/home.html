@@ -396,7 +396,6 @@ document.addEventListener('DOMContentLoaded', function () {
       {% if "Gun Keychains" in product.subcategory %}
         <span class="product-label sub2">Guns</span>
       {% endif %}
-
       {% if product.stock == 0 %}
         <span class="product-label out-of-stock">Out of Stock</span>
       {% else %}
@@ -420,6 +419,38 @@ document.addEventListener('DOMContentLoaded', function () {
   </div>
   {% endfor %}
 </div>
+
+<!-- Load Next Subcategory Button -->
+<div style="text-align:center; margin-top: 30px;">
+  <button id="next-sub-btn" style="padding: 12px 30px; font-size: 18px; border: none; background-color: #ff5722; color: white; border-radius: 8px; cursor: pointer;">
+    បង្ហាញបន្ត Subcategory បន្ទាប់
+  </button>
+</div>
+
+<script>
+document.getElementById('next-sub-btn')?.addEventListener('click', function () {
+  const current = document.getElementById("current-subcategory")?.value;
+  const listRaw = document.getElementById("subcategory-list")?.value;
+  const list = listRaw ? listRaw.split(",") : [];
+
+  const index = list.indexOf(current);
+  if (index !== -1 && index < list.length - 1) {
+    const nextSub = list[index + 1].trim();
+
+    fetch(`/subcategory/${encodeURIComponent(nextSub)}?ajax=true`)
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById("product-grid").insertAdjacentHTML("beforeend", html);
+        document.getElementById("current-subcategory").value = nextSub;
+      })
+      .catch(err => {
+        console.error("Load next subcategory error:", err);
+      });
+  } else {
+    alert("មិនមាន Subcategory បន្ទាប់ទៀតទេ!");
+  }
+});
+</script>
 <!-- Floating Cart Button -->
 <a href="/cart" class="floating-cart">
     🛒 ពិនិត្យមើលទំនិញដែលបានជ្រើសរើស (<span id="cart-count">{{ cart|length }}</span>)
