@@ -125,7 +125,7 @@ products = [
     {"id": 3028, "name_kh": "ខ្សែដៃ -", "price": 6000, "image": "/static/images/bc20.jpg", "categories": ["Accessories"], "subcategory": ["Bracelet","Gem Stone Bracelet"]},
     {"id": 3029, "name_kh": "ខ្សែដៃ -", "price": 6000, "image": "/static/images/bc21.jpg", "categories": ["Accessories"], "subcategory": ["Bracelet","Gem Stone Bracelet"]},
     {"id": 3030, "name_kh": "ខ្សែដៃ -", "price": 6000, "image": "/static/images/bc22.jpg", "categories": ["Accessories"], "subcategory": ["Bracelet","Gem Stone Bracelet"]},
-    {"id": 3031, "name_kh": "ខ្សែដៃ tesy -", "price": 6000, "image": "/static/images/bc23.jpg", "categories": ["Accessories"], "subcategory": ["Bracelet","Gem Stone Bracelets"]},
+    {"id": 3031, "name_kh": "ខ្សែដៃ -", "price": 6000, "image": "/static/images/bc23.jpg", "categories": ["Accessories"], "subcategory": ["Bracelet","Gem Stone Bracelets"]},
     {"id": 3032, "name_kh": "ខ្សែដៃ -", "price": 6000, "image": "/static/images/bc24.jpg", "categories": ["Accessories"], "subcategory": ["Bracelet","Gem Stone Bracelet"]},
     {"id": 3033, "name_kh": "ខ្សែដៃ -", "price": 6000, "image": "/static/images/bc25.jpg", "categories": ["Accessories"], "subcategory": ["Bracelet","Gem Stone Bracelet"]},
     {"id": 3034, "name_kh": "ខ្សែដៃ -", "price": 6000, "image": "/static/images/bc26.jpg", "categories": ["Accessories"], "subcategory": ["Bracelet","Gem Stone Bracelet"]},
@@ -162,9 +162,14 @@ subcategories_map = {
 }
 
 # --- Routes ---
+
 @app.route('/')
 def home():
     return redirect(url_for('category', category_name='Hot Sale'))
+    language = request.args.get('lang', 'kh')
+    cart = session.get('cart', [])
+    return render_template('home.html', products=products, language=language, cart=cart, current_category=None, current_subcategory=None, subcategories=[])
+
 @app.route('/category/<category_name>')
 def category(category_name):
     language = request.args.get('lang', 'kh')
@@ -207,11 +212,6 @@ def subcategory(subcategory_name):
 
     subs = subcategories_map.get(main_category, []) if main_category else []
 
-    # ADD THIS BLOCK to handle AJAX loading
-    if request.args.get('ajax') == 'true':
-        return render_template('product_cards.html', products=filtered_products, language=language)
-
-    # Full page load
     return render_template(
         'home.html',
         products=filtered_products,
@@ -410,6 +410,7 @@ def ban_ip():
         banned_ips.append(ip)
         message = f"IP {ip} has been banned."
     return render_template('ban_ip.html', banned_ips=banned_ips, message=message)
+
 
 @app.errorhandler(403)
 def forbidden(e):
