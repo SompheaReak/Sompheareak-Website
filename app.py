@@ -98,7 +98,7 @@ products = [
     {"id": 3011, "name_kh": "ខ្សែដៃថ្មធម្មជាតិ - WHITE CHALCODONY","price": 6000, "image": "/static/images/bcl01.jpg", "categories": ["Accessories"], "subcategory": "Bracelet"},
     {"id": 3012, "name_kh": "ខ្សែដៃថ្មធម្មជាតិ - PINK OPAL","price": 6000, "image": "/static/images/bcl02.jpg", "categories": ["Accessories"], "subcategory": "Bracelet"},
     {"id": 3013, "name_kh": "ខ្សែដៃថ្មធម្មជាតិ - PINK CRYSTAL","price": 5500, "image": "/static/images/bcl03.jpg", "categories": ["Accessories"], "subcategory": "Bracelet"},
-    {"id": 3014, "name_kh": "ខ្សែដៃថ្មធម្មជាតិ - STRAWBERRY CRYSTAL","price": 9000, "image": "/static/images/bcl04.jpg", "categories": ["Accessories"], "subcategory": "Bracelet"}
+    {"id": 3014, "name_kh": "ខ្សែដៃថ្មធម្មជាតិ - STRAWBERRY CRYSTAL","price": 9000, "image": "/static/images/bcl04.jpg", "categories": ["Accessories"], "subcategory": "Bracelet"},
     {"id": 3015, "name_kh": "ខ្សែដៃ -", "name_en": "Bracelet - ", "price": 6000, "image": "/static/images/bcl05.jpg", "categories": ["Accessories"], "subcategory": "Bracelet"},
     {"id": 3016, "name_kh": "ខ្សែដៃ -", "name_en": "Bracelet - ", "price": 6000, "image": "/static/images/bcl06.jpg", "categories": ["Accessories"], "subcategory": "Bracelet"},
     {"id": 3017, "name_kh": "ខ្សែដៃ -", "name_en": "Bracelet - ", "price": 6000, "image": "/static/images/bcl07.jpg", "categories": ["Accessories"], "subcategory": "Bracelet"},
