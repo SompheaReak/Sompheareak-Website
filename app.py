@@ -312,8 +312,8 @@ def checkout():
             p = item['product']
             subtotal = p['price'] * item['quantity']
             total += subtotal
-            message += f"- {p['name_en']} x {item['quantity']} = {subtotal}៛\n"
-
+        name = p.get('name_en', p.get('name_kh', 'Unknown Product'))
+        message += f"{name} x {item['quantity']} = {subtotal}\n"
         total += delivery_fee
         message += f"\n*Total with Delivery:* {total}៛"
 
