@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const currentSubInput = document.getElementById('current-subcategory');
   const subListInput = document.getElementById('subcategory-list');
 
+  // Check that all required elements exist
   if (!loadButton || !productGrid || !currentSubInput || !subListInput) return;
 
   loadButton.addEventListener('click', function () {
@@ -54,10 +55,14 @@ document.addEventListener('DOMContentLoaded', function () {
       fetch(`/subcategory/${encodeURIComponent(nextSub)}?ajax=true`)
         .then(response => response.text())
         .then(html => {
+          // Only append product cards, not full page
           productGrid.insertAdjacentHTML('beforeend', html);
+
+          // Update hidden input to reflect current subcategory
           currentSubInput.value = nextSub;
 
-          if (index + 1 === list.length - 1) {
+          // If no more subcategories after this, disable the button
+          if (index + 1 >= list.length - 1) {
             loadButton.disabled = true;
             loadButton.textContent = 'បញ្ចប់ (No More Subcategories)';
             loadButton.style.backgroundColor = '#6c757d';
