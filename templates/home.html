@@ -102,37 +102,28 @@ document.addEventListener('DOMContentLoaded', function () {
     if (index !== -1 && index < list.length - 1) {
       const nextSub = list[index + 1];
 
-      fetch(`/subcategory/${encodeURIComponent(nextSub)}?ajax=true`)
-        .then(response => response.text())
-        .then(html => {
-          productGrid.insertAdjacentHTML('beforeend', html);
-          currentSubInput.value = nextSub;
+fetch(`/subcategory/${encodeURIComponent(nextSub)}?ajax=true`)
+  .then(response => response.text())
+  .then(html => {
+    productGrid.insertAdjacentHTML('beforeend', html);
+    currentSubInput.value = nextSub;
 
-          // Update active subcategory button
-          document.querySelectorAll('.subcategory-box a').forEach(a => {
-            a.classList.remove('active');
-            if (a.textContent.trim() === nextSub) {
-              a.classList.add('active');
-            }
-          });
+    // Update active subcategory button
+    document.querySelectorAll('.subcategory-box a').forEach(a => {
+      a.classList.remove('active');
+      if (a.textContent.trim() === nextSub) {
+        a.classList.add('active');
+      }
+    });
 
-          bindAddToCartHandlers(); // Re-bind to new products
-
-          if (index + 1 === list.length - 1) {
-            loadButton.disabled = true;
-            loadButton.textContent = 'បញ្ចប់ (No More Subcategories)';
-            loadButton.style.backgroundColor = '#6c757d';
-            loadButton.style.cursor = 'default';
-          }
-        })
-        .catch(err => {
-          console.error("Load error:", err);
-          alert('មានបញ្ហា នៅពេលបង្ហាញបន្ទាប់!');
-        });
+    // Disable button if no more subcategories
+    if (index + 1 === list.length - 1) {
+      loadButton.disabled = true;
+      loadButton.textContent = 'បញ្ចប់ (No More Subcategories)';
+      loadButton.style.backgroundColor = '#6c757d';
+      loadButton.style.cursor = 'default';
     }
-  });
-});
-</script>
+  })
     <style>
         body {
             font-family: Arial, sans-serif;
