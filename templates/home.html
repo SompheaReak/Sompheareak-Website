@@ -420,6 +420,8 @@ document.addEventListener('DOMContentLoaded', function () {
   </div>
   {% endfor %}
 </div>
+<input type="hidden" id="current-subcategory" value="{{ current_subcategory }}">
+<input type="hidden" id="subcategory-list" value="{{ subcategories|join(',') }}">
 <!-- Floating Cart Button -->
 <a href="/cart" class="floating-cart">
     🛒 ពិនិត្យមើលទំនិញដែលបានជ្រើសរើស (<span id="cart-count">{{ cart|length }}</span>)
@@ -432,6 +434,104 @@ document.addEventListener('DOMContentLoaded', function () {
     <img id="modal-image" src="" alt="Preview">
   </div>
 </div>
+<script>
+function bindAddToCartHandlers() {
+  const forms = document.querySelectorAll('.add-to-cart-form');
+  forms.forEach(form => {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+      fetch('/add-to-cart', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          document.querySelectorAll('#cart-count').forEach(el => {
+            el.innerText = data.cart_count;
+          });
+          const success = document.getElementById('success');
+          const sound = document.getElementById('success-sound');
+          if (sound) {
+            sound.currentTime = 0;
+            sound.play();
+          }
+          success.style.display = 'block';
+          success.style.opacity = '1';
+          success.style.transition = 'opacity 0.5s ease';
+          setTimeout(() => {
+            success.style.opacity = '0';
+            setTimeout(() => {
+              success.style.display = 'none';
+            }, 500);
+          }, 1500);
+        } else {
+          alert('បន្ថែមទៅកន្ត្រកមិនបានទេ!');
+        }
+      })
+      .catch(error => {
+        console.error('Add to cart error:', error);
+        alert('មានបញ្ហា នៅពេលបន្ថែមទៅកន្ត្រក!');
+      });
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  bindAddToCartHandlers();
+
+  const button = document.getElementById('next-sub-btn');
+  const grid = document.getElementById('product-grid');
+  const currentInput = document.getElementById('current-subcategory');
+  const listInput = document.getElementById('subcategory-list');
+
+  if (!button || !grid || !currentInput || !listInput) return;
+
+  button.addEventListener('click', function () {
+    const current = currentInput.value;
+    const list = listInput.value.split(',').map(s => s.trim());
+    const index = list.indexOf(current);
+
+    if (index !== -1 && index < list.length - 1) {
+      const nextSub = list[index + 1];
+
+      fetch(`/subcategory/${encodeURIComponent(nextSub)}?ajax=true`)
+        .then(response => response.text())
+        .then(html => {
+          grid.insertAdjacentHTML('beforeend', html);
+          currentInput.value = nextSub;
+
+          // Update subcategory button style
+          document.querySelectorAll('.subcategory-box a').forEach(a => {
+            a.classList.remove('active');
+            if (a.textContent.trim() === nextSub) {
+              a.classList.add('active');
+            }
+          });
+
+          bindAddToCartHandlers(); // Re-bind to new products
+
+          if (index + 1 === list.length - 1) {
+            button.disabled = true;
+            button.textContent = 'បញ្ចប់ (No More Subcategories)';
+            button.style.backgroundColor = '#6c757d';
+            button.style.cursor = 'default';
+          }
+        })
+        .catch(err => {
+          console.error("Load error:", err);
+          alert('មានបញ្ហា នៅពេលបង្ហាញបន្ទាប់!');
+        });
+    } else {
+      button.disabled = true;
+      button.textContent = 'បញ្ចប់ (No More Subcategories)';
+      button.style.backgroundColor = '#6c757d';
+      button.style.cursor = 'default';
+    }
+  });
+});
+</script>
 </body>
 </html>
 Help me fix it And I copy paste 
