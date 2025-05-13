@@ -201,8 +201,6 @@ def subcategory(subcategory_name):
         p for p in products
         if subcategory_name in p.get('subcategory', [])
     ]
-    if request.args.get('ajax') == 'true':
-    return render_template('product_cards.html', products=filtered_products, language=language)
     cart = session.get('cart', [])
 
     # Find main category
@@ -214,6 +212,11 @@ def subcategory(subcategory_name):
 
     subs = subcategories_map.get(main_category, []) if main_category else []
 
+    # Correct indentation here!
+    if request.args.get('ajax') == 'true':
+        return render_template('product_cards.html', products=filtered_products, language=language)
+
+    # Full page render
     return render_template(
         'home.html',
         products=filtered_products,
