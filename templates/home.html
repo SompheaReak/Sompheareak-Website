@@ -34,55 +34,46 @@
             }
         }
     </script>
-    <script>
+<script>
 document.addEventListener('DOMContentLoaded', function () {
-  const forms = document.querySelectorAll('.add-to-cart-form');
+  const loadButton = document.getElementById('load-next-subcategory');
+  const productGrid = document.getElementById('product-grid');
+  const currentSubInput = document.getElementById('current-subcategory');
+  const subListInput = document.getElementById('subcategory-list');
 
-  forms.forEach(form => {
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
+  if (!loadButton || !productGrid || !currentSubInput || !subListInput) return;
 
-      const formData = new FormData(form);
+  loadButton.addEventListener('click', function () {
+    const current = currentSubInput.value;
+    const list = subListInput.value.split(',').map(s => s.trim());
+    const index = list.indexOf(current);
 
-      fetch('/add-to-cart', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Update cart count
-          document.querySelectorAll('#cart-count').forEach(el => {
-            el.innerText = data.cart_count;
-          });
+    if (index !== -1 && index < list.length - 1) {
+      const nextSub = list[index + 1];
 
-          // Show success message
-          const success = document.getElementById('success');
-          const sound = document.getElementById('success-sound');
-          if (sound) {
-            sound.currentTime = 0;
-            sound.play();
+      fetch(`/subcategory/${encodeURIComponent(nextSub)}?ajax=true`)
+        .then(response => response.text())
+        .then(html => {
+          productGrid.insertAdjacentHTML('beforeend', html);
+          currentSubInput.value = nextSub;
+
+          if (index + 1 === list.length - 1) {
+            loadButton.disabled = true;
+            loadButton.textContent = 'បញ្ចប់ (No More Subcategories)';
+            loadButton.style.backgroundColor = '#6c757d';
+            loadButton.style.cursor = 'default';
           }
-
-          success.style.display = 'block';
-          success.style.opacity = '1';
-          success.style.transition = 'opacity 0.5s ease';
-
-          setTimeout(() => {
-            success.style.opacity = '0';
-            setTimeout(() => {
-              success.style.display = 'none';
-            }, 500);
-          }, 1500);
-        } else {
-          alert('បន្ថែមទៅកន្ត្រកមិនបានទេ!');
-        }
-      })
-      .catch(error => {
-        console.error('Add to cart error:', error);
-        alert('មានបញ្ហា នៅពេលបន្ថែមទៅកន្ត្រក!');
-      });
-    });
+        })
+        .catch(err => {
+          console.error("Load error:", err);
+          alert('មានបញ្ហា នៅពេលបង្ហាញបន្ទាប់!');
+        });
+    } else {
+      loadButton.disabled = true;
+      loadButton.textContent = 'បញ្ចប់ (No More Subcategories)';
+      loadButton.style.backgroundColor = '#6c757d';
+      loadButton.style.cursor = 'default';
+    }
   });
 });
 </script>
@@ -419,7 +410,8 @@ document.addEventListener('DOMContentLoaded', function () {
   </div>
   {% endfor %}
 </div>
-
+<input type="hidden" id="current-subcategory" value="{{ current_subcategory }}">
+<input type="hidden" id="subcategory-list" value="{{ subcategories|join(',') }}">
 <!-- Load Next Subcategory Button -->
 <div style="text-align:center; margin-top: 30px;">
   <button id="next-sub-btn" style="padding: 12px 30px; font-size: 18px; border: none; background-color: #ff5722; color: white; border-radius: 8px; cursor: pointer;">
