@@ -31,13 +31,14 @@ def block_banned_ips():
     ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
     user_agent = request.headers.get('User-Agent')
 
-    # Block banned IPs first
+    # Block banned IPs
     if ip in banned_ips:
         abort(403)
 
-    # Then log only allowed visitors
-    notify_telegram(ip, user_agent)
-
+    # Only notify once per session
+    if not session.get('notified'):
+        notify_telegram(ip, user_agent)
+        session['notified'] = True
 app.secret_key = 'your_secret_key'
 app.debug = True
 
