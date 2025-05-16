@@ -1,3 +1,4 @@
+<script>
 // Handle quantity increase/decrease
 function increaseQuantity(button) {
     const input = button.parentNode.querySelector('input[name="quantity"]');
@@ -10,40 +11,6 @@ function decreaseQuantity(button) {
         input.value = parseInt(input.value) - 1;
     }
 }
-
-// Handle Add to Cart without refreshing page
-document.addEventListener('DOMContentLoaded', function () {
-  const forms = document.querySelectorAll('.add-to-cart-form');
-
-  forms.forEach(form => {
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-
-      const formData = new FormData(form);
-
-      fetch('/add-to-cart', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          updateCartCount(data.cart_count);
-          showSuccessMessage();
-        } else {
-          alert('Failed to add to cart');
-        }
-      })
-      .catch(error => {
-        console.error('Add to cart error:', error);
-      });
-    });
-  });
-});
-
-    setupAutoLoadProducts();
-    highlightActiveCategory();
-});
 
 // Update cart count everywhere
 function updateCartCount(newCount) {
@@ -122,3 +89,36 @@ function closeImageModal(event) {
         document.getElementById('image-modal').style.display = 'none';
     }
 }
+
+// Handle Add to Cart without refreshing page
+document.addEventListener('DOMContentLoaded', function () {
+    const forms = document.querySelectorAll('.add-to-cart-form');
+
+    forms.forEach(form => {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(form);
+
+            fetch('/add-to-cart', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateCartCount(data.cart_count);
+                    showSuccessMessage();
+                } else {
+                    alert('Failed to add to cart');
+                }
+            })
+            .catch(error => {
+                console.error('Add to cart error:', error);
+            });
+        });
+    });
+
+    setupAutoLoadProducts();
+    highlightActiveCategory();
+});
+</script>
