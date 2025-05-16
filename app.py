@@ -321,7 +321,7 @@ def checkout():
         name = p.get('name_en', p.get('name_kh', 'Unknown Product'))
         message += f"{name} x {item['quantity']} = {subtotal:,}៛\n"total += delivery_fee
     total += delivery_fee
-    message += f"\n*Total with Delivery:* {total:,}៛"
+    message += f"{name} x {item['quantity']} = {subtotal:,}៛\n"
 
         # Send to Telegram
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
