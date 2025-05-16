@@ -284,19 +284,19 @@ def checkout():
     language = request.args.get('lang', 'kh')
     cart = session.get('cart', [])
 
-if request.method == "POST":
-    ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
-    chat_id = "-1002660809745"
-    
-    name = request.form['name']
-    phone = request.form['phone']
-    address = request.form['address']
-    delivery_method = request.form['delivery']
+    if request.method == "POST":
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+        bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
+        chat_id = "-1002660809745"
 
-    delivery_text = ""
-    delivery_fee = 0
-    total = 0
+        name = request.form['name']
+        phone = request.form['phone']
+        address = request.form['address']
+        delivery_method = request.form['delivery']
+
+        delivery_text = ""
+        delivery_fee = 0
+        total = 0
 
         if delivery_method == "door":
             delivery_text = "ទំនិញដល់ដៃទូទាត់ប្រាក់"
@@ -313,18 +313,16 @@ if request.method == "POST":
         message += f"*Delivery:* {delivery_text} ({delivery_fee}៛)\n"
         message += f"*IP:* {ip}\n\n*Order Details:*\n"
 
-        total = 0
- total = 0
-for item in cart:
-    p = item['product']
-    subtotal = p['price'] * item['quantity']
-    name = p.get('name_en', p.get('name_kh', 'Unknown Product'))
-    message += f"{name} x {item['quantity']} = {subtotal:,}៛\n"
-    total += subtotal
+        for item in cart:
+            p = item['product']
+            subtotal = p['price'] * item['quantity']
+            total += subtotal
+            name = p.get('name_en', p.get('name_kh', 'Unknown Product'))
+            message += f"{name} x {item['quantity']} = {subtotal:,}៛\n"
 
-total += delivery_fee
-message += f"\n*Total with Delivery:* {total:,}៛"
-        # Send to Telegram
+        total += delivery_fee
+        message += f"\n*Total with Delivery:* {total:,}៛"
+
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {
             "chat_id": chat_id,
@@ -337,9 +335,7 @@ message += f"\n*Total with Delivery:* {total:,}៛"
         session['cart'] = []
         return redirect(url_for('thank_you'))
 
-    # If not POST, render checkout page
-    return render_template('checkout.html', language=language, cart=cart)
-@app.route('/thankyou')
+    return render_template('checkout.html', language=language, cart=cart)@app.route('/thankyou')
 def thank_you():
     language = request.args.get('lang', 'kh')
     return render_template('thankyou.html', language=language)
