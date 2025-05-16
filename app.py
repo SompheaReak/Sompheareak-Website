@@ -7,7 +7,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 app = Flask(__name__)
 import datetime
 def send_order_to_telegram(name, phone, address, delivery_method, delivery_fee, ip_list, cart, total):
-    bot_token = "7663680888:AAH...YOUR_TOKEN"
+    bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
     chat_id = "-1002660809745"
 
     # Send image media group
