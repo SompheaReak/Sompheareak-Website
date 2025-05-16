@@ -23,12 +23,17 @@ def notify_telegram(ip, user_agent):
         print("Visitor Telegram response:", response.text)
     except Exception as e:
         print("Telegram error:", e)    # Send image media group
+def send_order_to_telegram(name, phone, address, delivery_method, delivery_fee, ip_list, cart, total):
+    bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
+    chat_id = "-1002660809745"
+
+    # Send image media group
     media = []
     for item in cart:
         media.append({
             "type": "photo",
-            "media": item["image"],
-            "caption": f"{item['name_kh']} x {item['quantity']} = {item['quantity'] * item['price']:,}៛",
+            "media": item["product"]["image"],
+            "caption": f"{item['product']['name_kh']} x {item['quantity']} = {item['quantity'] * item['product']['price']:,}៛",
             "parse_mode": "HTML"
         })
 
@@ -43,7 +48,7 @@ def notify_telegram(ip, user_agent):
 
     # Summary message
     order_lines = "\n".join(
-        f"{item['name_kh']} x {item['quantity']} = {item['quantity'] * item['price']:,}៛"
+        f"{item['product']['name_kh']} x {item['quantity']} = {item['quantity'] * item['product']['price']:,}៛"
         for item in cart
     )
     summary = f"""🛒 បញ្ជាទិញថ្មី!
