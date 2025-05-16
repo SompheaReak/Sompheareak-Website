@@ -314,15 +314,16 @@ def checkout():
         message += f"*IP:* {ip}\n\n*Order Details:*\n"
 
         total = 0
-    for item in cart:
-        p = item['product']
-        subtotal = p['price'] * item['quantity']
-        total += subtotal
-        name = p.get('name_en', p.get('name_kh', 'Unknown Product'))
-        message += f"{name} x {item['quantity']} = {subtotal:,}៛\n"total += delivery_fee
-    total += delivery_fee
+ total = 0
+for item in cart:
+    p = item['product']
+    subtotal = p['price'] * item['quantity']
+    name = p.get('name_en', p.get('name_kh', 'Unknown Product'))
     message += f"{name} x {item['quantity']} = {subtotal:,}៛\n"
+    total += subtotal
 
+total += delivery_fee
+message += f"\n*Total with Delivery:* {total:,}៛"
         # Send to Telegram
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {
