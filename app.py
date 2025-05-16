@@ -6,9 +6,23 @@ ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
 app = Flask(__name__)
 import datetime
-def send_order_to_telegram(name, phone, address, delivery_method, delivery_fee, ip_list, cart, total):
+def notify_telegram(ip, user_agent):
     bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
     chat_id = "-1002660809745"
+    message = f"🌐 *New Visitor Alert!*\n\n*IP:* `{ip}`\n*Device:* `{user_agent}`"
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        'chat_id': chat_id,
+        'text': message,
+        'parse_mode': 'Markdown'
+    }
+
+    try:
+        response = requests.post(url, data=payload)
+        print("Visitor Telegram response:", response.text)
+    except Exception as e:
+        print("Telegram error:", e)
 
     # Send image media group
     media = []
