@@ -6,24 +6,56 @@ ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
 app = Flask(__name__)
 import datetime
-def notify_telegram(ip, user_agent):
+def send_order_to_telegram(name, phone, address, delivery_method, delivery_fee, ip_list, cart, total):
     bot_token = "7663680888:AAH...YOUR_TOKEN"
     chat_id = "-1002660809745"
-    message = f"🌐 *New Visitor Alert!*\n\n*IP:* `{ip}`\n*Device:* `{user_agent}`"
 
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    payload = {
-        'chat_id': chat_id,
-        'text': message,
-        'parse_mode': 'Markdown'
-    }
+    # Send image media group
+    media = []
+    for item in cart:
+        media.append({
+            "type": "photo",
+            "media": item["image"],
+            "caption": f"{item['name_kh']} x {item['quantity']} = {item['quantity'] * item['price']:,}៛",
+            "parse_mode": "HTML"
+        })
 
-    response = requests.post(url, data=payload)
-    print("==> Visitor Bot Message Sent")
-    print("BOT TOKEN:", bot_token)
-    print("CHAT ID:", chat_id)
-    print("MESSAGE:", message)
-    print("RESPONSE:", response.text)
+    if media:
+        requests.post(
+            f"https://api.telegram.org/bot{bot_token}/sendMediaGroup",
+            json={
+                "chat_id": chat_id,
+                "media": media[:10]
+            }
+        )
+
+    # Summary message
+    order_lines = "\n".join(
+        f"{item['name_kh']} x {item['quantity']} = {item['quantity'] * item['price']:,}៛"
+        for item in cart
+    )
+    summary = f"""🛒 បញ្ជាទិញថ្មី!
+
+ឈ្មោះ: {name}
+ទូរស័ព្ទ: {phone}
+អាសយដ្ឋាន: {address}
+ដឹកជញ្ជូន: {delivery_method} ({delivery_fee:,}៛)
+IP: {ip_list}
+
+ព័ត៌មានការកម្មង់:
+{order_lines}
+
+សរុបជាមួយដឹកជញ្ជូន: {total:,}៛
+"""
+
+    requests.post(
+        f"https://api.telegram.org/bot{bot_token}/sendMessage",
+        json={
+            "chat_id": chat_id,
+            "text": summary,
+            "parse_mode": "HTML"
+        }
+    )
 # List of IPs you want to ban
 banned_ips = ['123.45.67.89']  # Replace with real IPs
 @app.before_request
@@ -284,11 +316,7 @@ def checkout():
     cart = session.get('cart', [])
 
     if request.method == "POST":
-        ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-        # Replace with your actual bot token and chat ID
-        bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
-        chat_id = "-1002660809745"
-
+        ip_list = request.headers.get('X-Forwarded-For', request.remote_addr)
         name = request.form['name']
         phone = request.form['phone']
         address = request.form['address']
@@ -296,7 +324,6 @@ def checkout():
 
         delivery_text = ""
         delivery_fee = 0
-
         if delivery_method == "door":
             delivery_text = "ទំនិញដល់ដៃទូទាត់ប្រាក់"
             delivery_fee = 7000
@@ -307,21 +334,39 @@ def checkout():
             delivery_text = "J&T"
             delivery_fee = 7000
 
-        message = f"🛒 *New Order Received!*\n\n"
-        message += f"*Name:* {name}\n*Phone:* {phone}\n*Address:* {address}\n"
-        message += f"*Delivery:* {delivery_text} ({delivery_fee}៛)\n"
-        message += f"*IP:* {ip}\n\n*Order Details:*\n"
-
+        # Build detailed cart data
+        full_cart = []
         total = 0
         for item in cart:
             p = item['product']
-            subtotal = p['price'] * item['quantity']
+            quantity = item['quantity']
+            subtotal = p['price'] * quantity
             total += subtotal
-        name = p.get('name_en', p.get('name_kh', 'Unknown Product'))
-        message += f"{name} x {item['quantity']} = {subtotal}\n"
-        total += delivery_fee
-        message += f"\n*Total with Delivery:* {total}៛"
+            full_cart.append({
+                "name_kh": p.get("name_kh", "No Name"),
+                "quantity": quantity,
+                "price": p['price'],
+                "image": request.url_root.rstrip('/') + p['image']  # absolute image URL
+            })
 
+        total += delivery_fee
+
+        # Send notification to Telegram
+        send_order_to_telegram(
+            name=name,
+            phone=phone,
+            address=address,
+            delivery_method=delivery_text,
+            delivery_fee=delivery_fee,
+            ip_list=ip_list,
+            cart=full_cart,
+            total=total
+        )
+
+        session['cart'] = []
+        return redirect(url_for('thank_you'))
+
+    return render_template('checkout.html', language=language, cart=cart)
         # Send to Telegram
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {
