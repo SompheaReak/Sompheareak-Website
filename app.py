@@ -316,7 +316,10 @@ def checkout():
     cart = session.get('cart', [])
 
     if request.method == "POST":
-        ip_list = request.headers.get('X-Forwarded-For', request.remote_addr)
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+        bot_token = "YOUR_BOT_TOKEN"
+        chat_id = "-1002660809745"
+
         name = request.form['name']
         phone = request.form['phone']
         address = request.form['address']
@@ -324,6 +327,7 @@ def checkout():
 
         delivery_text = ""
         delivery_fee = 0
+
         if delivery_method == "door":
             delivery_text = "ទំនិញដល់ដៃទូទាត់ប្រាក់"
             delivery_fee = 7000
@@ -334,40 +338,22 @@ def checkout():
             delivery_text = "J&T"
             delivery_fee = 7000
 
-        # Build detailed cart data
-        full_cart = []
+        message = f"🛒 *New Order Received!*\n\n"
+        message += f"*Name:* {name}\n*Phone:* {phone}\n*Address:* {address}\n"
+        message += f"*Delivery:* {delivery_text} ({delivery_fee}៛)\n"
+        message += f"*IP:* {ip}\n\n*Order Details:*\n"
+
         total = 0
         for item in cart:
             p = item['product']
-            quantity = item['quantity']
-            subtotal = p['price'] * quantity
+            subtotal = p['price'] * item['quantity']
             total += subtotal
-            full_cart.append({
-                "name_kh": p.get("name_kh", "No Name"),
-                "quantity": quantity,
-                "price": p['price'],
-                "image": request.url_root.rstrip('/') + p['image']  # absolute image URL
-            })
+            name_display = p.get('name_en', p.get('name_kh', 'Unknown Product'))
+            message += f"{name_display} x {item['quantity']} = {subtotal:,}៛\n"
 
         total += delivery_fee
+        message += f"\n*Total with Delivery:* {total:,}៛"
 
-        # Send notification to Telegram
-        send_order_to_telegram(
-            name=name,
-            phone=phone,
-            address=address,
-            delivery_method=delivery_text,
-            delivery_fee=delivery_fee,
-            ip_list=ip_list,
-            cart=full_cart,
-            total=total
-        )
-
-        session['cart'] = []
-        return redirect(url_for('thank_you'))
-
-    return render_template('checkout.html', language=language, cart=cart)
-        # Send to Telegram
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {
             "chat_id": chat_id,
@@ -380,9 +366,7 @@ def checkout():
         session['cart'] = []
         return redirect(url_for('thank_you'))
 
-    # If not POST, render checkout page
-    return render_template('checkout.html', language=language, cart=cart)
-@app.route('/thankyou')
+
 def thank_you():
     language = request.args.get('lang', 'kh')
     return render_template('thankyou.html', language=language)
