@@ -70,7 +70,7 @@ products = [
     {"id": 1920, "name_kh": " Dragon Rising S3 - KUR","price": 9000, "image": "/static/images/ss3kur.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
 
     {"id": 1101, "name_kh": "Zane's Set", "price": 44000, "image": "/static/images/set01.jpg", "categories": ["LEGO Ninjago","Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 1102, "name_kh": "Kai Merch", "price": 5000, "image": "/static/images/set02.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+    {"id": 1102, "name_kh": "Kai Merch", "price": 44000, "image": "/static/images/set02.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
     {"id": 1003, "name_kh": "cole Merch", "price": 5000, "image": "/static/images/set03.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
     {"id": 1004, "name_kh": "idk name ", "price": 5000, "image": "/static/images/set04.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
 
