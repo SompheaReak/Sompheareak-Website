@@ -7,9 +7,8 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 app = Flask(__name__)
 import datetime
 def notify_telegram(ip, user_agent):
-    bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"    chat_id = "-1002660809745"
-    message = f"🌐 *New Visitor Alert!*\n\n*IP:* `{ip}`\n*Device:* `{user_agent}`"
-
+    bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
+    chat_id = "-1002660809745"    message = f"🌐 *New Visitor Alert!*\n\n*IP:* `{ip}`\n*Device:* `{user_agent}`"
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {
         'chat_id': chat_id,
