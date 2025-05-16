@@ -22,9 +22,7 @@ def notify_telegram(ip, user_agent):
         response = requests.post(url, data=payload)
         print("Visitor Telegram response:", response.text)
     except Exception as e:
-        print("Telegram error:", e)
-
-    # Send image media group
+        print("Telegram error:", e)    # Send image media group
     media = []
     for item in cart:
         media.append({
