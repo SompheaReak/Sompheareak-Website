@@ -334,8 +334,9 @@ def checkout():
 
         session['cart'] = []
         return redirect(url_for('thank_you'))
+    return render_template('checkout.html', language=language, cart=cart)
 
-    return render_template('checkout.html', language=language, cart=cart)@app.route('/thankyou')
+@app.route('/thankyou')
 def thank_you():
     language = request.args.get('lang', 'kh')
     return render_template('thankyou.html', language=language)
