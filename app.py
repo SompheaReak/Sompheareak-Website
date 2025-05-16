@@ -465,7 +465,10 @@ def ban_ip():
         message = f"IP {ip} has been banned."
     return render_template('ban_ip.html', banned_ips=banned_ips, message=message)
 
-
+@app.route('/thank-you')
+def thank_you():
+    language = request.args.get('lang', 'kh')
+    return render_template('thankyou.html', language=language)
 @app.errorhandler(403)
 def forbidden(e):
     return "Access Denied: Your IP is blocked.", 403
