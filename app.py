@@ -41,8 +41,6 @@ def block_banned_ips():
         session['visited'] = True
 
     # Then log only allowed visitors
-    notify_telegram(ip, user_agent)
-
 app.secret_key = 'your_secret_key'
 app.debug = True
 
