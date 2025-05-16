@@ -562,13 +562,47 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 <script>
 let slideIndex = 0;
-function showSlides() {
-  const slidesContainer = document.getElementById('slides');
-  const totalSlides = slidesContainer.children.length;
-  slideIndex = (slideIndex + 1) % totalSlides;
-  slidesContainer.style.transform = `translateX(-${slideIndex * 100}%)`;
+const slides = document.getElementById('slides');
+const totalSlides = slides.children.length;
+const dotsContainer = document.getElementById('dots');
+
+// Create dots
+for (let i = 0; i < totalSlides; i++) {
+  const dot = document.createElement('span');
+  dot.classList.add('dot');
+  dot.addEventListener('click', () => goToSlide(i));
+  dotsContainer.appendChild(dot);
 }
-setInterval(showSlides, 3000); // Change every 3 seconds
+
+function updateDots() {
+  const dots = document.querySelectorAll('.dot');
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('active', i === slideIndex);
+  });
+}
+
+function showSlide() {
+  slides.style.transform = `translateX(-${slideIndex * 100}%)`;
+  updateDots();
+}
+
+function moveSlide(n) {
+  slideIndex = (slideIndex + n + totalSlides) % totalSlides;
+  showSlide();
+}
+
+function goToSlide(n) {
+  slideIndex = n;
+  showSlide();
+}
+
+// Auto slide every 3 seconds
+setInterval(() => {
+  moveSlide(1);
+}, 3000);
+
+// Start with the first slide
+showSlide();
 </script>
 </body>
 </html>
