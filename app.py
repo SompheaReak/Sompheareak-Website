@@ -383,10 +383,8 @@ def checkout():
         session['cart'] = []
         return redirect(url_for('thank_you'))
 
-
-def thank_you():
-    language = request.args.get('lang', 'kh')
-    return render_template('thankyou.html', language=language)
+    # <- THIS was missing
+    return render_template('checkout.html', language=language, cart=cart)
 @app.route('/admin/dashboard')
 def admin_dashboard():
     if not session.get('admin'):
