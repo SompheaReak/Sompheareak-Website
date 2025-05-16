@@ -25,7 +25,7 @@ def notify_telegram(ip, user_agent):
     print("MESSAGE:", message)
     print("RESPONSE:", response.text)
 # List of IPs you want to ban
-banned_ips = ['123.45.67.89']  # Replace with real IPs
+banned_ips = ['123.45.67.89','45.119.135.70'] # Replace with real IPs
 @app.before_request
 def block_banned_ips():
     ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
