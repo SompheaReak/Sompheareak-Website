@@ -91,39 +91,31 @@ document.addEventListener('DOMContentLoaded', function () {
   margin: 15px 0;
 }
 
-.scroll-bar {
-  display: flex;
-  overflow-x: auto;
-  white-space: nowrap;
-  gap: 10px;
-  padding: 10px;
-  scrollbar-width: none; /* Firefox */
-}
+<!-- Categories -->
+<div class="scroll-wrapper">
+  <button class="scroll-btn left" onclick="scrollBar('category-scroll', -200)">‹</button>
+  <div id="category-scroll" class="scroll-bar">
+    <a href="/category/Hot Sale" class="{% if current_category == 'Hot Sale' %}active{% endif %}">Hot Sale</a>
+    <a href="/category/Toy" class="{% if current_category == 'Toy' %}active{% endif %}">Toy</a>
+    <a href="/category/Accessories" class="{% if current_category == 'Accessories' %}active{% endif %}">Accessories</a>
+    <a href="/category/Bracelet" class="{% if current_category == 'Bracelet' %}active{% endif %}">Bracelet</a>
+    <!-- Add more as needed -->
+  </div>
+  <button class="scroll-btn right" onclick="scrollBar('category-scroll', 200)">›</button>
+</div>
 
-.scroll-bar::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
-}
-
-.scroll-bar a {
-  padding: 10px 18px;
-  font-size: 16px;
-  background-color: #007bff;
-  color: white;
-  border-radius: 8px;
-  text-decoration: none;
-  flex-shrink: 0;
-  transition: background-color 0.3s;
-}
-
-.scroll-bar a:hover {
-  background-color: #0056b3;
-}
-
-.scroll-bar a.active {
-  background-color: #ff5722;
-  font-weight: bold;
-}
-.slider {
+<!-- Subcategories -->
+{% if subcategories %}
+<div class="scroll-wrapper">
+  <button class="scroll-btn left" onclick="scrollBar('subcategory-scroll', -200)">‹</button>
+  <div id="subcategory-scroll" class="scroll-bar">
+    {% for sub in subcategories %}
+      <a href="/subcategory/{{ sub }}" class="{% if current_subcategory == sub %}active{% endif %}">{{ sub }}</a>
+    {% endfor %}
+  </div>
+  <button class="scroll-btn right" onclick="scrollBar('subcategory-scroll', 200)">›</button>
+</div>
+{% endif %}.slider {
   width: 100%;
   height: 500px; /* Updated from 180px */
   overflow: hidden;
@@ -429,24 +421,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <!-- Scrollable Categories + Subcategories -->
 <div class="scroll-container">
-  <!-- Categories -->
-  <div class="scroll-bar">
-    <a href="/category/Hot Sale" class="{% if current_category == 'Hot Sale' %}active{% endif %}">ទំនិញពិសេស</a>
-    <a href="/category/Toy" class="{% if current_category == 'Toy' %}active{% endif %}">ប្រដាប់ក្មេងលេង</a>
-    <a href="/category/Keychain" class="{% if current_category == 'Keychain' %}active{% endif %}">បណ្ដោងសោ</a>
-    <a href="/category/LEGO Ninjago" class="{% if current_category == 'LEGO Ninjago' %}active{% endif %}">LEGO Ninjago</a>
-    <a href="/category/Accessories" class="{% if current_category == 'Accessories' %}active{% endif %}">គ្រឿងតែងខ្លួន</a>
+<!-- Categories -->
+<div class="scroll-wrapper">
+  <button class="scroll-btn left" onclick="scrollBar('category-scroll', -200)">‹</button>
+  <div id="category-scroll" class="scroll-bar">
+    <a href="/category/Hot Sale" class="{% if current_category == 'Hot Sale' %}active{% endif %}">Hot Sale</a>
+    <a href="/category/Toy" class="{% if current_category == 'Toy' %}active{% endif %}">Toy</a>
+    <a href="/category/Accessories" class="{% if current_category == 'Accessories' %}active{% endif %}">Accessories</a>
+    <a href="/category/Bracelet" class="{% if current_category == 'Bracelet' %}active{% endif %}">Bracelet</a>
+    <!-- Add more as needed -->
   </div>
+  <button class="scroll-btn right" onclick="scrollBar('category-scroll', 200)">›</button>
+</div>
 
-  <!-- Subcategories -->
-  {% if subcategories %}
-  <div class="scroll-bar">
+<!-- Subcategories -->
+{% if subcategories %}
+<div class="scroll-wrapper">
+  <button class="scroll-btn left" onclick="scrollBar('subcategory-scroll', -200)">‹</button>
+  <div id="subcategory-scroll" class="scroll-bar">
     {% for sub in subcategories %}
       <a href="/subcategory/{{ sub }}" class="{% if current_subcategory == sub %}active{% endif %}">{{ sub }}</a>
     {% endfor %}
   </div>
-  {% endif %}
+  <button class="scroll-btn right" onclick="scrollBar('subcategory-scroll', 200)">›</button>
 </div>
+{% endif %}
 <!-- Product Grid -->
 <div class="product-grid" id="product-grid">
   {% for product in products %}
@@ -613,6 +612,10 @@ document.addEventListener('DOMContentLoaded', function () {
 </script> <!-- This closes the previous script correctly -->
 
 <script>
+function scrollBar(id, amount) {
+  const el = document.getElementById(id);
+  el.scrollBy({ left: amount, behavior: 'smooth' });
+}
 let slideIndex = 0;
 const slides = document.getElementById('slides');
 const totalSlides = slides.children.length;
