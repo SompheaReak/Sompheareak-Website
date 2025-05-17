@@ -118,6 +118,55 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Subcategory highlight fix on "Next Subcategory" click
+    const button = document.getElementById('next-sub-btn');
+    const grid = document.getElementById('product-grid');
+    const currentInput = document.getElementById('current-subcategory');
+    const listInput = document.getElementById('subcategory-list');
+
+    if (button && grid && currentInput && listInput) {
+        button.addEventListener('click', function () {
+            const current = currentInput.value;
+            const list = listInput.value.split(',').map(s => s.trim());
+            const index = list.indexOf(current);
+
+            if (index !== -1 && index < list.length - 1) {
+                const nextSub = list[index + 1];
+
+                fetch(`/subcategory/${encodeURIComponent(nextSub)}?ajax=true`)
+                    .then(response => response.text())
+                    .then(html => {
+                        grid.insertAdjacentHTML('beforeend', html);
+                        currentInput.value = nextSub;
+
+                        // FIX: Update active subcategory styling
+                        document.querySelectorAll('#subcategory-scroll a').forEach(a => {
+                            a.classList.remove('active');
+                            if (a.textContent.trim() === nextSub) {
+                                a.classList.add('active');
+                            }
+                        });
+
+                        if (index + 1 === list.length - 1) {
+                            button.disabled = true;
+                            button.textContent = 'បញ្ចប់ (No More Subcategories)';
+                            button.style.backgroundColor = '#6c757d';
+                            button.style.cursor = 'default';
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Load error:", err);
+                        alert('មានបញ្ហា នៅពេលបង្ហាញបន្ទាប់!');
+                    });
+            } else {
+                button.disabled = true;
+                button.textContent = 'បញ្ចប់ (No More Subcategories)';
+                button.style.backgroundColor = '#6c757d';
+                button.style.cursor = 'default';
+            }
+        });
+    }
+
     setupAutoLoadProducts();
     highlightActiveCategory();
 });
