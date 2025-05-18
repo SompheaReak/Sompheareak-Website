@@ -40,7 +40,7 @@ function showSuccessMessage() {
     }, 1500);
 }
 
-// Auto-load next products when scrolling
+// Auto-load next products when scrolling (optional)
 function setupAutoLoadProducts() {
     const productCards = document.querySelectorAll('.product-card');
     if (!productCards.length) return;
@@ -66,7 +66,7 @@ function loadMoreProducts() {
     });
 }
 
-// Highlight current category or subcategory
+// Highlight current category or subcategory on page load
 function highlightActiveCategory() {
     const currentUrl = window.location.href;
     document.querySelectorAll('.category-box a, .subcategory-box a').forEach(link => {
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Subcategory highlight fix on "Next Subcategory" click
+    // Handle Next Subcategory button
     const button = document.getElementById('next-sub-btn');
     const grid = document.getElementById('product-grid');
     const currentInput = document.getElementById('current-subcategory');
@@ -139,11 +139,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         grid.insertAdjacentHTML('beforeend', html);
                         currentInput.value = nextSub;
 
-                        // FIX: Update active subcategory styling
-                        document.querySelectorAll('#subcategory-scroll a').forEach(a => {
+                        // Highlight next subcategory
+                        const subLinks = document.querySelectorAll('#subcategory-scroll a');
+                        subLinks.forEach(a => {
                             a.classList.remove('active');
                             if (a.textContent.trim() === nextSub) {
                                 a.classList.add('active');
+                                a.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                             }
                         });
 
@@ -156,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     })
                     .catch(err => {
                         console.error("Load error:", err);
-                        alert('មានបញ្ហា នៅពេលបង្ហាញបន្ទាប់!');
+                        alert('មានបញ្ហា នៅពេលបង្ហាញបន្ត!');
                     });
             } else {
                 button.disabled = true;
