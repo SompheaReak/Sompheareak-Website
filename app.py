@@ -24,6 +24,13 @@ def notify_telegram(ip, user_agent):
     print("CHAT ID:", chat_id)
     print("MESSAGE:", message)
     print("RESPONSE:", response.text)
+
+def check_bot_in_group(bot_token, chat_id):
+    url = f"https://api.telegram.org/bot{bot_token}/getChatMember"
+    user_id = int(bot_token.split(":")[0])
+    response = requests.get(url, params={"chat_id": chat_id, "user_id": user_id})
+    print("==> Bot Status Check:")
+    print(response.text)
 # List of IPs you want to ban
 banned_ips = ['123.45.67.89','45.119.135.70'] # Replace with real IPs
 @app.before_request
@@ -432,8 +439,10 @@ def ban_ip():
 def forbidden(e):
     return "Access Denied: Your IP is blocked.", 403
 
-
 if __name__ == '__main__':
-    import os
+    bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
+    chat_id = "-10026600809745"
+    check_bot_in_group(bot_token, chat_id)
+
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
