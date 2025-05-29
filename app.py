@@ -64,6 +64,13 @@ products = [
     {"id": 124, "name_kh": "NINJAGO Season 1 - NRG JAY","price": 7000, "image": "/static/images/njoss1nrgjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 125, "name_kh": "NINJAGO Season 1 - NRG COLE","price": 7000, "image": "/static/images/njoss1nrgcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 126, "name_kh": "NINJAGO Season 1 - NRG LLOYD","price": 7000, "image": "/static/images/njoss1nrglloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+    {"id": 131, "name_kh": "NINJAGO Season 1 - ZX Suits","price": 25000, "image": "/static/images/njoss1zx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+    {"id": 132, "name_kh": "NINJAGO Season 1 - KAI (ZX)","price": 5000, "image": "/static/images/njoss1zxkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+    {"id": 133, "name_kh": "NINJAGO Season 1 - ZANE (ZX)","price": 5000, "image": "/static/images/njoss1zxzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+    {"id": 134, "name_kh": "NINJAGO Season 1 - JAY (ZX)","price": 5000, "image": "/static/images/njoss1zxjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+    {"id": 135, "name_kh": "NINJAGO Season 1 - COLE (ZX)","price": 5000, "image": "/static/images/njoss1zxcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+    {"id": 136, "name_kh": "NINJAGO Season 1 - LLOYD (ZX)","price": 5000, "image": "/static/images/njoss1zxlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+
     {"id": 1916, "name_kh": " Dragon Rising S3 - NOKT","price": 9000, "image": "/static/images/ss3nokt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
     {"id": 1917, "name_kh": " Dragon Rising S3 - ROX","price": 9000, "image": "/static/images/ss3rox.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
     {"id": 1918, "name_kh": " Dragon Rising S3 - DRIX","price": 9000, "image": "/static/images/ss3drix.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
