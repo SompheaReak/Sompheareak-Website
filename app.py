@@ -7,19 +7,19 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 app = Flask(__name__)
 import datetime
 def notify_telegram(ip, user_agent):
-bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
-chat_id = "-4869331200"  # From the screenshot
+    bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
+    chat_id = "-4869331200"  # From the screenshot
 
-message = "✅ Test: This is a test message from the order system."
+    message = "✅ Test: This is a test message from the order system."
 
-url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-payload = {
-    "chat_id": chat_id,
-    "text": message,
-    "parse_mode": "Markdown"
-}
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": "Markdown"
+    }
 
-requests.post(url, data=payload)
+    requests.post(url, data=payload)
     print("==> Visitor Bot Message Sent")
     print("BOT TOKEN:", bot_token)
     print("CHAT ID:", chat_id)
