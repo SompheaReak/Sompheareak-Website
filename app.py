@@ -6,9 +6,11 @@ ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
 app = Flask(__name__)
 def notify_telegram(ip, user_agent):
-    bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
-    chat_id = "-4869331200"
-    message = f"✅ Test: Visitor from IP `{ip}`\nUser Agent: `{user_agent}`"
+    import requests
+    bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"  # your new token
+    chat_id = "-4869331200"  # your Telegram group chat ID
+
+    message = f"📦 New Visitor or Order Attempt\n\nIP: `{ip}`\nDevice: `{user_agent}`"
 
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {
@@ -17,8 +19,11 @@ def notify_telegram(ip, user_agent):
         "parse_mode": "Markdown"
     }
 
-    response = requests.post(url, data=payload)  # <-- Make sure this line exists
-    print("RESPONSE:", response.text)
+    try:
+        response = requests.post(url, data=payload)
+        print("RESPONSE:", response.text)
+    except Exception as e:
+        print("Telegram notify error:", e)
     print("==> Visitor Bot Message Sent")
     print("BOT TOKEN:", bot_token)
     print("CHAT ID:", chat_id)
@@ -298,7 +303,11 @@ def checkout():
     cart = session.get('cart', [])
 
     if request.method == "POST":
+        # ✅ Get IP and User Agent for logging
         ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+        user_agent = request.headers.get('User-Agent')
+
+        # ✅ Telegram Bot Token and Chat ID
         bot_token = "7663680888:AAHhInaDKP8QNxw8l87dQaNPsRTZFQXy1J4"
         chat_id = "-1002660809745"
 
@@ -311,6 +320,7 @@ def checkout():
         delivery_fee = 0
         total = 0
 
+        # ✅ Delivery method mapping
         if delivery_method == "door":
             delivery_text = "ទំនិញដល់ដៃទូទាត់ប្រាក់"
             delivery_fee = 7000
@@ -321,34 +331,40 @@ def checkout():
             delivery_text = "J&T"
             delivery_fee = 7000
 
+        # ✅ Build message
         message = f"🛒 *New Order Received!*\n\n"
         message += f"*Name:* {name}\n*Phone:* {phone}\n*Address:* {address}\n"
         message += f"*Delivery:* {delivery_text} ({delivery_fee}៛)\n"
-        message += f"*IP:* {ip}\n\n*Order Details:*\n"
+        message += f"*IP:* `{ip}`\n*Device:* `{user_agent}`\n\n*Order Details:*\n"
 
         for item in cart:
             p = item['product']
             subtotal = p['price'] * item['quantity']
             total += subtotal
-            name = p.get('name_en', p.get('name_kh', 'Unknown Product'))
-            message += f"{name} x {item['quantity']} = {subtotal:,}៛\n"
+            pname = p.get('name_en', p.get('name_kh', 'Unknown Product'))
+            message += f"- {pname} x {item['quantity']} = {subtotal:,}៛\n"
 
         total += delivery_fee
         message += f"\n*Total with Delivery:* {total:,}៛"
 
+        # ✅ Send Telegram alert
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {
             "chat_id": chat_id,
             "text": message,
             "parse_mode": "Markdown"
         }
-        response = requests.post(url, data=payload)
-        print("Telegram response:", response.text)
+
+        try:
+            response = requests.post(url, data=payload)
+            print("Telegram response:", response.text)
+        except Exception as e:
+            print("Telegram Error:", str(e))
 
         session['cart'] = []
         return redirect(url_for('thank_you'))
-    return render_template('checkout.html', language=language, cart=cart)
 
+    return render_template('checkout.html', language=language, cart=cart)
 @app.route('/thankyou')
 def thank_you():
     language = request.args.get('lang', 'kh')
