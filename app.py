@@ -18,6 +18,7 @@ payload = {
     "text": message,
     "parse_mode": "Markdown"
 }
+
 requests.post(url, data=payload)
     print("==> Visitor Bot Message Sent")
     print("BOT TOKEN:", bot_token)
