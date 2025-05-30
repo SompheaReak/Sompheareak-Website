@@ -5,12 +5,10 @@ ADMIN_USERNAME = 'AdminSompheaReakVitou'
 ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
 app = Flask(__name__)
-import datetime
 def notify_telegram(ip, user_agent):
     bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
-    chat_id = "-4869331200"  # From the screenshot
-
-    message = "✅ Test: This is a test message from the order system."
+    chat_id = "-4869331200"
+    message = f"✅ Test: Visitor from IP `{ip}`\nUser Agent: `{user_agent}`"
 
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {
@@ -19,12 +17,12 @@ def notify_telegram(ip, user_agent):
         "parse_mode": "Markdown"
     }
 
-    requests.post(url, data=payload)
+    response = requests.post(url, data=payload)  # <-- Make sure this line exists
+    print("RESPONSE:", response.text)
     print("==> Visitor Bot Message Sent")
     print("BOT TOKEN:", bot_token)
     print("CHAT ID:", chat_id)
     print("MESSAGE:", message)
-    print("RESPONSE:", response.text)
 
 def check_bot_in_group(bot_token, chat_id):
     url = f"https://api.telegram.org/bot{bot_token}/getChatMember"
