@@ -55,6 +55,7 @@ app.debug = True
 
 # Products data
 products = [
+{"id": 101, "name_kh": "NINJAGO Season 1 - DX Suit","price": 30000, "image": "/static/images/njoss1dx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
 ]
 # --- Subcategories Map ---
 subcategories_map = {
