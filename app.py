@@ -55,6 +55,7 @@ app.debug = True
 
 # Products data
 products = [
+]
 # --- Subcategories Map ---
 subcategories_map = {
     "Accessories": ["Gym Bracelet", "Gem Stone Bracelet","Dragon Bracelet","Bracelet"],
