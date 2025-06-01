@@ -19,7 +19,7 @@ def notify_telegram(ip, user_agent):
 
     bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"  # Confirmed bot token
     chat_id = "-1002654437316"  # Confirmed group chat ID
-    image_url = "https://cdn-icons-png.flaticon.com/512/891/891462.png"  # Replace with your logo if needed
+    image_url = "https://cdn-icons-png.flaticon.com/512/4086/4086679.png"  # Just an example image URL
 
     caption = (
         f"📦 *New Visitor or Order Attempt*\n\n"
@@ -40,7 +40,7 @@ def notify_telegram(ip, user_agent):
         if response.status_code != 200:
             print(f"[❌] Telegram API Error: {response.status_code} - {response.text}")
         else:
-            print("[✅] Telegram photo message sent successfully.")
+            print(f"[✅] Telegram photo message sent successfully.")
         print("Telegram Response:", response.text)
     except Exception as e:
         print("[❌] Telegram notify error:", e)
