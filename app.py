@@ -25,7 +25,7 @@ def notify_telegram(ip, user_agent):
         f"📦 *New Visitor or Order Attempt*\n\n"
         f"*IP:* `{ip}`\n"
         f"*Device:* `{user_agent}`"
-    )
+     )
 
     url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
     payload = {
