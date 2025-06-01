@@ -9,18 +9,20 @@ def notify_telegram(ip, user_agent):
     import requests
 
     bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"  # Confirmed bot token
-    chat_id = "-1002654437316" # Confirmed group chat ID
+    chat_id = "-1002654437316"  # Confirmed group chat ID
+    image_url = "https://yourdomain.com/static/images/logo.jpg"  # Replace with a real image URL
 
-    message = (
+    caption = (
         f"📦 *New Visitor or Order Attempt*\n\n"
         f"*IP:* `{ip}`\n"
         f"*Device:* `{user_agent}`"
     )
 
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
     payload = {
         "chat_id": chat_id,
-        "text": message,
+        "photo": image_url,
+        "caption": caption,
         "parse_mode": "Markdown"
     }
 
@@ -29,7 +31,7 @@ def notify_telegram(ip, user_agent):
         if response.status_code != 200:
             print(f"[❌] Telegram API Error: {response.status_code} - {response.text}")
         else:
-            print(f"[✅] Telegram message sent successfully.")
+            print(f"[✅] Telegram photo message sent successfully.")
         print("Telegram Response:", response.text)
     except Exception as e:
         print("[❌] Telegram notify error:", e)
@@ -37,7 +39,8 @@ def notify_telegram(ip, user_agent):
     print("==> Visitor Bot Message Sent")
     print("BOT TOKEN:", bot_token)
     print("CHAT ID:", chat_id)
-    print("MESSAGE:", message)
+    print("IMAGE URL:", image_url)
+    print("CAPTION:", caption)
 def check_bot_in_group(bot_token, chat_id):
     url = f"https://api.telegram.org/bot{bot_token}/getChatMember"
     user_id = int(bot_token.split(":")[0])
@@ -345,16 +348,24 @@ def checkout():
         message += f"*Delivery:* {delivery_text} ({delivery_fee}៛)\n"
         message += f"*IP:* `{ip}`\n*Device:* `{user_agent}`\n\n*Order Details:*\n"
 
-        for item in cart:
-            p = item['product']
-            subtotal = p['price'] * item['quantity']
-            total += subtotal
-            pname = p.get('name_en', p.get('name_kh', 'Unknown Product'))
-            message += f"- {pname} x {item['quantity']} = {subtotal:,}៛\n"
+for item in cart:
+    p = item['product']
+    image_url = f"https://yourdomain.com{p['image']}"  # Update this if needed
+    pname = p.get('name_en', 'Unknown Product')
+    quantity = item['quantity']
+    subtotal = p['price'] * quantity
 
-        total += delivery_fee
-        message += f"\n*Total with Delivery:* {total:,}៛"
-
+    caption = f"*{pname}*\nx{quantity} = {subtotal:,}៛"
+    
+    requests.post(
+        f"https://api.telegram.org/bot{bot_token}/sendPhoto",
+        data={
+            "chat_id": chat_id,
+            "photo": image_url,
+            "caption": caption,
+            "parse_mode": "Markdown"
+        }
+    )
         # ✅ Send Telegram alert
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
         payload = {
