@@ -17,15 +17,15 @@ CHAT_ID = "-1002654437316"
 def notify_telegram(ip, user_agent):
     import requests
 
-    bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
-    chat_id = "-1002654437316"
-    image_url = "https://cdn-icons-png.flaticon.com/512/891/891462.png"  # Replace with real image URL
+    bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"  # Confirmed bot token
+    chat_id = "-1002654437316"  # Confirmed group chat ID
+    image_url = "https://cdn-icons-png.flaticon.com/512/891/891462.png"  # Replace with your logo if needed
 
     caption = (
         f"📦 *New Visitor or Order Attempt*\n\n"
         f"*IP:* `{ip}`\n"
         f"*Device:* `{user_agent}`"
-     )
+    )
 
     url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
     payload = {
