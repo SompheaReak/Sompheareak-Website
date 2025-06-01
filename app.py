@@ -9,7 +9,7 @@ def notify_telegram(ip, user_agent):
     import requests
 
     bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"  # Confirmed bot token
-    chat_id = "-1002660809745"  # Confirmed group chat ID
+    chat_id = "-1002654437316" # Confirmed group chat ID
 
     message = (
         f"📦 *New Visitor or Order Attempt*\n\n"
@@ -199,7 +199,7 @@ def checkout():
 
         # ✅ Telegram Bot Token and Chat ID
         bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
-        chat_id = "-1002660809745"
+        chat_id = "-1002654437316"
 
         name = request.form['name']
         phone = request.form['phone']
@@ -346,7 +346,7 @@ def forbidden(e):
 
 if __name__ == '__main__':
     bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
-    chat_id = "-10026600809745"
+    chat_id = "-1002654437316"
     check_bot_in_group(bot_token, chat_id)
 
     port = int(os.environ.get('PORT', 5000))
