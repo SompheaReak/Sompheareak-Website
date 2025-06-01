@@ -7,10 +7,15 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 app = Flask(__name__)
 def notify_telegram(ip, user_agent):
     import requests
-    bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"  # your new token
-    chat_id = "-1002660809745"  # your Telegram group chat ID
 
-    message = f"📦 New Visitor or Order Attempt\n\nIP: `{ip}`\nDevice: `{user_agent}`"
+    bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"  # Confirmed bot token
+    chat_id = "-1002660809745"  # Confirmed group chat ID
+
+    message = (
+        f"📦 *New Visitor or Order Attempt*\n\n"
+        f"*IP:* `{ip}`\n"
+        f"*Device:* `{user_agent}`"
+    )
 
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {
@@ -21,14 +26,18 @@ def notify_telegram(ip, user_agent):
 
     try:
         response = requests.post(url, data=payload)
-        print("RESPONSE:", response.text)
+        if response.status_code != 200:
+            print(f"[❌] Telegram API Error: {response.status_code} - {response.text}")
+        else:
+            print(f"[✅] Telegram message sent successfully.")
+        print("Telegram Response:", response.text)
     except Exception as e:
-        print("Telegram notify error:", e)
+        print("[❌] Telegram notify error:", e)
+
     print("==> Visitor Bot Message Sent")
     print("BOT TOKEN:", bot_token)
     print("CHAT ID:", chat_id)
     print("MESSAGE:", message)
-
 def check_bot_in_group(bot_token, chat_id):
     url = f"https://api.telegram.org/bot{bot_token}/getChatMember"
     user_id = int(bot_token.split(":")[0])
