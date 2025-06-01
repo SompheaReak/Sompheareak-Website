@@ -8,7 +8,7 @@ app = Flask(__name__)
 def notify_telegram(ip, user_agent):
     import requests
     bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"  # your new token
-    chat_id = "-4869331200"  # your Telegram group chat ID
+    chat_id = "-1002660809745"  # your Telegram group chat ID
 
     message = f"📦 New Visitor or Order Attempt\n\nIP: `{ip}`\nDevice: `{user_agent}`"
 
