@@ -470,9 +470,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     <img src="{{ product.image }}" alt="{{ product.name_kh }}" onclick="openImageModal(this.src)">
 
-    <div class="price-wrap">
-      <div class="price-khr">តម្លៃគិតជាKHR {{ "{:,}".format(product.price) }}៛</div>
-      <div class="price-usd">តម្លៃគិតជាUSD ${{ "{:.2f}".format(product.price / 4000) }}</div>
+    <!-- ✅ Updated Price Line -->
+    <div class="price-line">
+      {{ "{:,}".format(product.price) }}៛ &nbsp;/&nbsp; ${{ "{:.2f}".format(product.price / 4000) }}
     </div>
 
     <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_en }}{% endif %}</h3>
@@ -490,16 +490,18 @@ document.addEventListener('DOMContentLoaded', function () {
   {% endfor %}
 </div>
 
+<!-- Subcategory Info + Floating Cart Button -->
 <input type="hidden" id="current-subcategory" value="{{ current_subcategory }}">
 <input type="hidden" id="subcategory-list" value="{{ subcategories|join(',') }}">
-<!-- Load Next Subcategory Button -->
+
 <div style="text-align:center; margin-top: 30px;">
   <button id="next-sub-btn" style="padding: 12px 30px; font-size: 18px; border: none; background-color: #ff5722; color: white; border-radius: 8px; cursor: pointer;">
     បង្ហាញបន្ត Subcategory បន្ទាប់
   </button>
-<a href="/cart" class="floating-cart">
-  🛒 ពិនិត្យមើលទំនិញដែលបានជ្រើសរើស (<span id="cart-count">{{ cart|length }}</span>)
-</a>
+  <a href="/cart" class="floating-cart">
+    🛒 ពិនិត្យមើលទំនិញដែលបានជ្រើសរើស (<span id="cart-count">{{ cart|length }}</span>)
+  </a>
+</div>
 <!-- Fullscreen Image Modal -->
 <div id="image-modal" class="image-modal" onclick="closeImageModal(event)">
   <div class="modal-content-wrapper" onclick="event.stopPropagation()">
