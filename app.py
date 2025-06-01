@@ -19,8 +19,7 @@ def notify_telegram(ip, user_agent):
 
     bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
     chat_id = "-1002654437316"
-    
-    image_url = "https://cdn-icons-png.flaticon.com/512/891/891462.png"  # ✅ Example logo/image (you can use your own)
+    image_url = "https://cdn-icons-png.flaticon.com/512/891/891462.png"  # Replace with real image URL
 
     caption = (
         f"📦 *New Visitor or Order Attempt*\n\n"
@@ -47,11 +46,10 @@ def notify_telegram(ip, user_agent):
         print("[❌] Telegram notify error:", e)
 
     print("==> Visitor Bot Message Sent")
-    print("BOT TOKEN:", BOT_TOKEN)
-    print("CHAT ID:", CHAT_ID)
+    print("BOT TOKEN:", bot_token)
+    print("CHAT ID:", chat_id)
     print("IMAGE URL:", image_url)
     print("CAPTION:", caption)
-
 def check_bot_in_group(bot_token, chat_id):
     url = f"https://api.telegram.org/bot{bot_token}/getChatMember"
     user_id = int(bot_token.split(":")[0])
