@@ -97,6 +97,13 @@ products = [
     {"id": 305, "name_kh": "NINJAGO Season 3 - JAY (Techno)","price": 6000, "image": "/static/images/njoss3technojay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
     {"id": 306, "name_kh": "NINJAGO Season 3 - COLE (Techno)","price": 6000, "image": "/static/images/njoss3technocole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
     {"id": 307, "name_kh": "NINJAGO Season 3 - LLOYD (Techno)","price": 6000, "image": "/static/images/njoss3technolloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+    {"id": 311, "name_kh": "NINJAGO Season 3 - Stone Armor","price": 36000, "image": "/static/images/njoss3stone.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+    {"id": 312, "name_kh": "NINJAGO Season 3 - KAI (Stone)","price": 6000, "image": "/static/images/njoss3stonekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+    {"id": 313, "name_kh": "NINJAGO Season 3 - ZANE (Stone)","price": 6000, "image": "/static/images/njoss3stonezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+    {"id": 314, "name_kh": "NINJAGO Season 3 - JAY (Stone)","price": 6000, "image": "/static/images/njoss3stonejay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+    {"id": 315, "name_kh": "NINJAGO Season 3 - COLE (Stone)","price": 6000, "image": "/static/images/njoss3stonecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+    {"id": 316, "name_kh": "NINJAGO Season 3 - NYA(Stone)","price": 6000, "image": "/static/images/njoss3stonenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+    {"id": 317, "name_kh": "NINJAGO Season 3 - LLOYD (Stone)","price": 6000, "image": "/static/images/njoss3stonelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
 
     {"id": 1916, "name_kh": " Dragon Rising S3 - NOKT","price": 9000, "image": "/static/images/ss3nokt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
     {"id": 1917, "name_kh": " Dragon Rising S3 - ROX","price": 9000, "image": "/static/images/ss3rox.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
