@@ -64,7 +64,7 @@ app.debug = True
 
 # Products data
 products = [
-{"id": 101, "name_kh": "NINJAGO Season 1 - DX Suit","price": 30000, "image": "/static/images/njoss1dx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
+    {"id": 101, "name_kh": "NINJAGO Season 1 - DX Suit","price": 30000, "image": "/static/images/njoss1dx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
     {"id": 102, "name_kh": "NINJAGO Season 1 - KAI (DX)","price": 5000, "image": "/static/images/njoss1dxkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
     {"id": 103, "name_kh": "NINJAGO Season 1 - ZANE (DX)","price": 5000, "image": "/static/images/njoss1dxzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 104, "name_kh": "NINJAGO Season 1 - JAY (DX)","price": 5000, "image": "/static/images/njoss1dxjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
@@ -89,6 +89,14 @@ products = [
     {"id": 134, "name_kh": "NINJAGO Season 1 - JAY (ZX)","price": 5000, "image": "/static/images/njoss1zxjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 135, "name_kh": "NINJAGO Season 1 - COLE (ZX)","price": 5000, "image": "/static/images/njoss1zxcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 136, "name_kh": "NINJAGO Season 1 - LLOYD (ZX)","price": 5000, "image": "/static/images/njoss1zxlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+Ninjago Season 3
+    {"id": 301, "name_kh": "NINJAGO Season 3 - Techno Robes","price": 36000, "image": "/static/images/njoss3techno.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+    {"id": 302, "name_kh": "NINJAGO Season 3 - KAI (Techno)","price": 6000, "image": "/static/images/njoss3technokai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+    {"id": 303, "name_kh": "NINJAGO Season 3 - ZANE (Techno)","price": 6000, "image": "/static/images/njoss3technozane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+    {"id": 304, "name_kh": "NINJAGO Season 3 - ZANE (Techno)","price": 6000, "image": "/static/images/njoss3technozane2.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+    {"id": 305, "name_kh": "NINJAGO Season 3 - JAY (Techno)","price": 6000, "image": "/static/images/njoss3technojay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+    {"id": 306, "name_kh": "NINJAGO Season 3 - COLE (Techno)","price": 6000, "image": "/static/images/njoss3technocole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+    {"id": 307, "name_kh": "NINJAGO Season 3 - LLOYD (Techno)","price": 6000, "image": "/static/images/njoss3technolloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
 
     {"id": 1916, "name_kh": " Dragon Rising S3 - NOKT","price": 9000, "image": "/static/images/ss3nokt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
     {"id": 1917, "name_kh": " Dragon Rising S3 - ROX","price": 9000, "image": "/static/images/ss3rox.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
