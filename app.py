@@ -140,6 +140,13 @@ products = [
     {"id": 526, "name_kh": "NINJAGO Season 5 - NYA (Future) ","price": 6500, "image": "/static/images/njoss5futurenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
     {"id": 527, "name_kh": "NINJAGO Season 5 - LLOYD (Future)","price": 6500, "image": "/static/images/njoss5futurelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
 
+    {"id": 601, "name_kh": "NINJAGO Season 6 - Destiny Robes","price": 27000, "image": "/static/images/njoss6destiny.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+    {"id": 602, "name_kh": "NINJAGO Season 6 - KAI (Destiny)","price": 4500, "image": "/static/images/njoss6destinykai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+    {"id": 603, "name_kh": "NINJAGO Season 6 - ZANE (Destiny)","price": 4500, "image": "/static/images/njoss6destinyzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+    {"id": 604, "name_kh": "NINJAGO Season 6 - JAY (Destiny)","price": 4500, "image": "/static/images/njoss6destinyjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+    {"id": 605, "name_kh": "NINJAGO Season 6 - COLE (Destiny)","price": 4500, "image": "/static/images/njoss6destinycole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+    {"id": 606, "name_kh": "NINJAGO Season 6 - NYA (Destiny) ","price": 4500, "image": "/static/images/njoss6destinynya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+    {"id": 607, "name_kh": "NINJAGO Season 6 - LLOYD (Destiny)","price": 4500, "image": "/static/images/njoss6destinylloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
 
     {"id": 1916, "name_kh": " Dragon Rising S3 - NOKT","price": 9000, "image": "/static/images/ss3nokt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
     {"id": 1917, "name_kh": " Dragon Rising S3 - ROX","price": 9000, "image": "/static/images/ss3rox.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
