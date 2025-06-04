@@ -271,7 +271,9 @@ products = [
 # --- Subcategories Map ---
 subcategories_map = {
     "Accessories": ["Gym Bracelet", "Gem Stone Bracelet","Dragon Bracelet","Bracelet"],
-    "LEGO Ninjago": ["New","Building Set","Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8"],
+    "LEGO Ninjago": ["New","Building Set","Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8","Season 9","Season 10","Season 11","Season 12","Season 13",
+                     "Season 14","Season 15"],
+    "LEGO Anime": ["One Piece","Demon Slayer"],
     "Keychain": ["Gun Keychains"],
     "Hot Sale": [],
     "Toy": ["Lego Ninjago", "Lego WWII", "Lego ទាហាន"]
