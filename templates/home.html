@@ -479,19 +479,25 @@ document.addEventListener('DOMContentLoaded', function () {
     <img src="{{ product.image }}" alt="{{ product.name_kh }}" onclick="openImageModal(this.src)">
 
     {% set discount_price = product.price * (1 - (product.discount or 0) / 100) %}
-    <div class="price-line">
-      <div class="price-khr">
-        {% if product.discount %}
-          <span class="original-price">{{ "{:,}".format(product.price) }}៛</span>
-          <span class="discounted">{{ "{:,}".format(discount_price|round|int) }}៛</span>
-        {% else %}
-          {{ "{:,}".format(product.price) }}៛
-        {% endif %}
-      </div>
-      <div class="price-usd">
-        ${{ "{:.2f}".format((discount_price or product.price) / 4000) }}
-      </div>
-    </div>
+<div class="price-line">
+  <div class="price-khr">
+    {% if product.discount %}
+      <span class="discounted" style="font-size: 24px; color: #e60000; font-weight: bold;">
+        {{ "{:,}".format(discount_price|round|int) }}៛
+      </span>
+      <span class="original-price" style="font-size: 18px; color: #888; text-decoration: line-through; margin-left: 10px;">
+        {{ "{:,}".format(product.price) }}៛
+      </span>
+    {% else %}
+      <span class="discounted" style="font-size: 24px; color: #e60000; font-weight: bold;">
+        {{ "{:,}".format(product.price) }}៛
+      </span>
+    {% endif %}
+  </div>
+  <div class="price-usd" style="font-size: 16px; color: #555;">
+    ${{ "{:.2f}".format((discount_price or product.price) / 4000) }}
+  </div>
+</div>
 
     {% if product.discount %}
       <div class="discount-tag">-{{ product.discount }}%</div>
