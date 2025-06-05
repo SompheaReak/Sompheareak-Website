@@ -64,14 +64,14 @@ app.debug = True
 
 # Products data
 products = [
-    {"id": 1, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op01.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},"discount": 20,
-    {"id": 2, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op02.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},"discount": 20,
+    {"id": 1, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op01.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount": 20},
+    {"id": 2, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op02.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount": 20},
     {"id": 3, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op03.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 4, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op04.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},"discount": 20,
+    {"id": 4, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op04.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount": 20},
     {"id": 5, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op05.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
     {"id": 6, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op06.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
     {"id": 7, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op07.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 8, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op08.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},"discount": 20,
+    {"id": 8, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op08.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount": 20},
     {"id": 11, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op11.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
     {"id": 12, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op12.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
     {"id": 13, "name_kh": "One Piece - Sakazuki","price": 7500, "image": "/static/images/op13.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
