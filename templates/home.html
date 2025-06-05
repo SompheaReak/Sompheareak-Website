@@ -437,22 +437,22 @@ document.addEventListener('DOMContentLoaded', function () {
     <a href="/category/Accessories" class="{% if current_category == 'Accessories' %}active{% endif %}">គ្រឿងតែងខ្លួន</a>
 
   </div>
-
-  <!-- Subcategories -->
-  {% if subcategories %}
-  <div id="subcategory-scroll" class="scroll-bar subcategory-bar">
-    {% for sub in subcategories %}
-      <a href="/subcategory/{{ sub }}" class="{% if current_subcategory == sub %}active{% endif %}">
-        {{ sub }}
-      </a>
-    {% endfor %}
-  </div>
-  {% endif %}
+<!-- Subcategories -->
+{% if subcategories %}
+<div id="subcategory-scroll" class="scroll-bar subcategory-bar">
+  {% for sub in subcategories %}
+    <a href="/subcategory/{{ sub }}" class="{% if current_subcategory == sub %}active{% endif %}">
+      {{ sub }}
+    </a>
+  {% endfor %}
 </div>
+{% endif %}
+
 <!-- Product Grid -->
 <div class="product-grid" id="product-grid">
   {% for product in products %}
   <div class="product-card">
+
     <div class="product-labels">
       {% if "Hot Sale" in product.categories %}
         <span class="product-label hot">Hot Sale</span>
@@ -478,14 +478,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
     <img src="{{ product.image }}" alt="{{ product.name_kh }}" onclick="openImageModal(this.src)">
 
-    <!-- ✅ Updated Price Line -->
+    {% set discount_price = product.price * (1 - (product.discount or 0) / 100) %}
     <div class="price-line">
-     <div class="price-khr">{{ "{:,}".format(product.price) }}៛</div>
-     <div class="price-usd">${{ "{:.2f}".format(product.price / 4000) }}</div>
+      <div class="price-khr">
+        {% if product.discount %}
+          <span class="original-price">{{ "{:,}".format(product.price) }}៛</span>
+          <span class="discounted">{{ "{:,}".format(discount_price|round|int) }}៛</span>
+        {% else %}
+          {{ "{:,}".format(product.price) }}៛
+        {% endif %}
+      </div>
+      <div class="price-usd">
+        ${{ "{:.2f}".format((discount_price or product.price) / 4000) }}
+      </div>
     </div>
 
+    {% if product.discount %}
+      <div class="discount-tag">-{{ product.discount }}%</div>
+    {% endif %}
+
+    <!-- Product Name -->
     <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_en }}{% endif %}</h3>
 
+    <!-- Add to Cart Form -->
     <form class="add-to-cart-form">
       <input type="hidden" name="product_id" value="{{ product.id }}">
       <div class="quantity-selector">
@@ -493,20 +508,23 @@ document.addEventListener('DOMContentLoaded', function () {
         <input type="number" name="quantity" value="1" min="1">
         <button type="button" onclick="increaseQuantity(this)">+</button>
       </div>
-      <button type="submit" class="add-cart-button" {% if product.stock == 0 %}disabled{% endif %}>បន្ថែម</button>
+      <button type="submit" class="add-cart-button" {% if product.stock == 0 %}disabled{% endif %}>
+        បន្ថែម
+      </button>
     </form>
-  </div>
+
+  </div> <!-- ✅ CLOSE product-card -->
   {% endfor %}
-</div>
+</div> <!-- ✅ CLOSE product-grid -->
 
 <!-- Subcategory Info + Floating Cart Button -->
 <input type="hidden" id="current-subcategory" value="{{ current_subcategory }}">
 <input type="hidden" id="subcategory-list" value="{{ subcategories|join(',') }}">
 
 <div style="text-align:center; margin-top: 30px;">
-<button id="next-sub-btn" style="padding: 20px 40px; font-size: 22px; border: none; background-color: #ff5722; color: white; border-radius: 10px; cursor: pointer;">
-  បង្ហាញបន្តទៀត
-</button>
+  <button id="next-sub-btn" style="padding: 20px 40px; font-size: 22px; border: none; background-color: #ff5722; color: white; border-radius: 10px; cursor: pointer;">
+    បង្ហាញបន្តទៀត
+  </button>
   <a href="/cart" class="floating-cart">
     🛒 ពិនិត្យមើលទំនិញដែលបានជ្រើសរើស (<span id="cart-count">{{ cart|length }}</span>)
   </a>
