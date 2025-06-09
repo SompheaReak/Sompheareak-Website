@@ -437,8 +437,8 @@ document.addEventListener('DOMContentLoaded', function () {
     <a href="/category/Accessories" class="{% if current_category == 'Accessories' %}active{% endif %}">🧢 គ្រឿងតែងខ្លួន</a>
   </div>
 
-  <!-- Subcategory Bar -->
-  {% if subcategories %}
+<!-- Subcategory Bar -->
+{% if subcategories %}
   <div class="scroll-bar subcategory-bar" id="subcategory-scroll">
     {% for sub in subcategories %}
       <a href="/subcategory/{{ sub }}" class="{% if current_subcategory == sub %}active{% endif %}">
@@ -446,13 +446,18 @@ document.addEventListener('DOMContentLoaded', function () {
       </a>
     {% endfor %}
   </div>
-  {% endif %}
+{% endif %}
 </div>
-<!-- Product Grid -->
-<div class="product-grid" id="product-grid">
+
+<!-- Product Display -->
+{% if current_subcategory == "LEGO WWII" %}
+  <div class="horizontal-scroll-products" id="product-grid">
+{% else %}
+  <div class="product-grid" id="product-grid">
+{% endif %}
+
   {% for product in products %}
   <div class="product-card">
-
     <div class="product-labels">
       {% if "Hot Sale" in product.categories %}
         <span class="product-label hot">Hot Sale</span>
@@ -479,50 +484,22 @@ document.addEventListener('DOMContentLoaded', function () {
     <img src="{{ product.image }}" alt="{{ product.name_kh }}" onclick="openImageModal(this.src)">
 
     {% set discount_price = product.price * (1 - (product.discount or 0) / 100) %}
-<div class="price-line">
-  <div class="price-khr">
-    {% if product.discount %}
-      <span class="discounted" style="font-size: 24px; color: #e60000; font-weight: bold;">
-        {{ "{:,}".format(discount_price|round|int) }}៛
-      </span>
-      <span class="original-price" style="font-size: 18px; color: #888; text-decoration: line-through; margin-left: 10px;">
-        {{ "{:,}".format(product.price) }}៛
-      </span>
-    {% else %}
-      <span class="discounted" style="font-size: 24px; color: #e60000; font-weight: bold;">
-        {{ "{:,}".format(product.price) }}៛
-      </span>
-    {% endif %}
-  </div>
-  <div class="price-usd" style="font-size: 16px; color: #555;">
-    ${{ "{:.2f}".format((discount_price or product.price) / 4000) }}
-  </div>
-</div>
-
-    {% if product.discount %}
-      <div class="discount-tag">-{{ product.discount }}%</div>
-    {% endif %}
-
-    <!-- Product Name -->
-    <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_en }}{% endif %}</h3>
-
-    <!-- Add to Cart Form -->
-    <form class="add-to-cart-form">
-      <input type="hidden" name="product_id" value="{{ product.id }}">
-      <div class="quantity-selector">
-        <button type="button" onclick="decreaseQuantity(this)">-</button>
-        <input type="number" name="quantity" value="1" min="1">
-        <button type="button" onclick="increaseQuantity(this)">+</button>
+    <div class="price-line">
+      <div class="price-khr">
+        {% if product.discount %}
+          <span class="discounted" style="font-size: 24px; color: #e60000; font-weight: bold;">
+            {{ "{:,}".format(discount_price|round|int) }}៛
+          </span>
+          <span class="original-price" style="font-size: 18px; color: #888; text-decoration: line-through; margin-left: 10px;">
+            {{ "{:,}".format(product.price) }}៛
+          </span>
+        {% else %}
+          <span class="discounted" style="font-size: 24px; color: #e60000; font-weight: bold;">
+            {{ "{:,}".format(product.price) }}៛
+          </span>
+        {% endif %}
       </div>
-      <button type="submit" class="add-cart-button" {% if product.stock == 0 %}disabled{% endif %}>
-        បន្ថែម
-      </button>
-    </form>
-
-  </div> <!-- ✅ CLOSE product-card -->
-  {% endfor %}
-</div> <!-- ✅ CLOSE product-grid -->
-
+      <div class="price-usd" style="font-size: 16px; color: #555;">
 <!-- Subcategory Info + Floating Cart Button -->
 <input type="hidden" id="current-subcategory" value="{{ current_subcategory }}">
 <input type="hidden" id="subcategory-list" value="{{ subcategories|join(',') }}">
