@@ -1,25 +1,31 @@
-import os 
+from flask import Flask, request, session, abort
 import requests
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'
+app.debug = True
+
 # Admin login credentials
 ADMIN_USERNAME = 'AdminSompheaReakVitou'
 ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
-app = Flask(__name__)
+
+# Telegram Bot Info
+BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
+CHAT_ID = "-1002654437316"
+
+# Banned IPs
+banned_ips = ['123.45.67.89', '45.119.135.70']
+
+# Notify visitor to Telegram
 def notify_telegram(ip, user_agent):
-    import requests
-
-    bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"  # Confirmed bot token
-    chat_id = "-1002654437316" # Confirmed group chat ID
-
     message = (
         f"📦 *New Visitor or Order Attempt*\n\n"
         f"*IP:* `{ip}`\n"
         f"*Device:* `{user_agent}`"
     )
-
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
-        "chat_id": chat_id,
+        "chat_id": CHAT_ID,
         "text": message,
         "parse_mode": "Markdown"
     }
@@ -27,41 +33,26 @@ def notify_telegram(ip, user_agent):
     try:
         response = requests.post(url, data=payload)
         if response.status_code != 200:
-            print(f"[❌] Telegram API Error: {response.status_code} - {response.text}")
+            print(f"[❌] Telegram Error: {response.status_code} - {response.text}")
         else:
-            print(f"[✅] Telegram message sent successfully.")
-        print("Telegram Response:", response.text)
+            print("[✅] Visitor notification sent.")
     except Exception as e:
-        print("[❌] Telegram notify error:", e)
+        print(f"[❌] Failed to notify Telegram: {e}")
 
-    print("==> Visitor Bot Message Sent")
-    print("BOT TOKEN:", bot_token)
-    print("CHAT ID:", chat_id)
-    print("MESSAGE:", message)
-def check_bot_in_group(bot_token, chat_id):
-    url = f"https://api.telegram.org/bot{bot_token}/getChatMember"
-    user_id = int(bot_token.split(":")[0])
-    response = requests.get(url, params={"chat_id": chat_id, "user_id": user_id})
-    print("==> Bot Status Check:")
-    print(response.text)
-# List of IPs you want to ban
-banned_ips = ['123.45.67.89','45.119.135.70'] # Replace with real IPs
+# Block IPs and log visitor
 @app.before_request
-def block_banned_ips():
+def block_and_notify():
     ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
-    user_agent = request.headers.get('User-Agent')
+    user_agent = request.headers.get('User-Agent', 'Unknown')
 
-    # Block banned IPs
+    # Check and block banned IPs
     if ip in banned_ips:
         abort(403)
 
-    # Only notify once per session
+    # Notify once per session
     if not session.get('notified'):
         notify_telegram(ip, user_agent)
         session['notified'] = True
-app.secret_key = 'your_secret_key'
-app.debug = True
-
 # Products data
 products = [
     {"id": 1, "name_kh": "#OP01 One Piece - Sakazuki","price": 7500, "image": "/static/images/op01.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
