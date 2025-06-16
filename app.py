@@ -168,7 +168,7 @@ products = [
     {"id": 521, "name_kh": "NINJAGO Season 5 - Future Robes","price": 39000, "image": "/static/images/njoss5future.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
     {"id": 522, "name_kh": "NINJAGO Season 5 - KAI (Future)","price": 6500, "image": "/static/images/njoss5futurekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
     {"id": 523, "name_kh": "NINJAGO Season 5 - ZANE (Future)","price": 6500, "image": "/static/images/njoss5futurezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 524, "name_kh": "NINJAGO Season 5 - JAY (Future)","price": 6500, "image": "/static/images/njoss5futurrjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+    {"id": 524, "name_kh": "NINJAGO Season 5 - JAY (Future)","price": 6500, "image": "/static/images/njoss5futurejay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
     {"id": 525, "name_kh": "NINJAGO Season 5 - COLE (Future)","price": 6500, "image": "/static/images/njoss5futurecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
     {"id": 526, "name_kh": "NINJAGO Season 5 - NYA (Future) ","price": 6500, "image": "/static/images/njoss5futurenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
     {"id": 527, "name_kh": "NINJAGO Season 5 - LLOYD (Future)","price": 6500, "image": "/static/images/njoss5futurelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
