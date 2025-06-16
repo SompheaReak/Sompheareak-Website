@@ -115,6 +115,14 @@ products = [
     {"id": 135, "name_kh": "NINJAGO Season 1 - COLE (ZX)","price": 5000, "image": "/static/images/njoss1zxcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 136, "name_kh": "NINJAGO Season 1 - LLOYD (ZX)","price": 5000, "image": "/static/images/njoss1zxlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
 
+    {"id": 201, "name_kh": "NINJAGO Season 2 - Kimono Suit","price": 36000, "image": "/static/images/njoss2kimono.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+    {"id": 202, "name_kh": "NINJAGO Season 2 - KAI (Kimono)","price": 6000, "image": "/static/images/njoss2kimonokai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+    {"id": 203, "name_kh": "NINJAGO Season 2 - ZANE (Kimono)","price": 6000, "image": "/static/images/njoss2kimonozane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+    {"id": 204, "name_kh": "NINJAGO Season 2 - JAY (Kimono)","price": 6000, "image": "/static/images/njoss2kimonojay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+    {"id": 205, "name_kh": "NINJAGO Season 2 - COLE (Kimono)","price": 6000, "image": "/static/images/njoss2kimonocole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+    {"id": 206, "name_kh": "NINJAGO Season 2 - LLOYD  (Kimono)","price": 6000, "image": "/static/images/njoss2kimonolloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+    {"id": 207, "name_kh": "NINJAGO Season 2 - GOLDEN LLOYD (Kimono)","price": 6000, "image": "/static/images/njoss2kimonogoldlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+
     {"id": 301, "name_kh": "NINJAGO Season 3 - Techno Robes","price": 36000, "image": "/static/images/njoss3techno.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
     {"id": 302, "name_kh": "NINJAGO Season 3 - KAI (Techno)","price": 6000, "image": "/static/images/njoss3technokai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
     {"id": 303, "name_kh": "NINJAGO Season 3 - ZANE (Techno)","price": 6000, "image": "/static/images/njoss3technozane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
