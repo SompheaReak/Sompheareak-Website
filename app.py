@@ -1,3 +1,8 @@
+import os 
+import requests
+# Admin login credentials
+ADMIN_USERNAME = 'AdminSompheaReakVitou'
+ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
 from flask import Flask, request, session, abort
 import requests
 
