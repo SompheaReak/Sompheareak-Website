@@ -3,34 +3,23 @@ import requests
 # Admin login credentials
 ADMIN_USERNAME = 'AdminSompheaReakVitou'
 ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
-from flask import Flask, request, session, abort
-import requests
-
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
-app.debug = True
-
-# Admin login credentials
-ADMIN_USERNAME = 'AdminSompheaReakVitou'
-ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
-
-# Telegram Bot Info
-BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
-CHAT_ID = "-1002654437316"
-
-# Banned IPs
-banned_ips = ['123.45.67.89', '45.119.135.70']
-
-# Notify visitor to Telegram
 def notify_telegram(ip, user_agent):
+    import requests
+
+    bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"  # Confirmed bot token
+    chat_id = "-1002654437316" # Confirmed group chat ID
+
     message = (
         f"📦 *New Visitor or Order Attempt*\n\n"
         f"*IP:* `{ip}`\n"
         f"*Device:* `{user_agent}`"
     )
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {
-        "chat_id": CHAT_ID,
+        "chat_id": chat_id,
         "text": message,
         "parse_mode": "Markdown"
     }
@@ -38,26 +27,40 @@ def notify_telegram(ip, user_agent):
     try:
         response = requests.post(url, data=payload)
         if response.status_code != 200:
-            print(f"[❌] Telegram Error: {response.status_code} - {response.text}")
+            print(f"[❌] Telegram API Error: {response.status_code} - {response.text}")
         else:
-            print("[✅] Visitor notification sent.")
+            print(f"[✅] Telegram message sent successfully.")
+        print("Telegram Response:", response.text)
     except Exception as e:
-        print(f"[❌] Failed to notify Telegram: {e}")
+        print("[❌] Telegram notify error:", e)
 
-# Block IPs and log visitor
+    print("==> Visitor Bot Message Sent")
+    print("BOT TOKEN:", bot_token)
+    print("CHAT ID:", chat_id)
+    print("MESSAGE:", message)
+def check_bot_in_group(bot_token, chat_id):
+    url = f"https://api.telegram.org/bot{bot_token}/getChatMember"
+    user_id = int(bot_token.split(":")[0])
+    response = requests.get(url, params={"chat_id": chat_id, "user_id": user_id})
+    print("==> Bot Status Check:")
+    print(response.text)
+# List of IPs you want to ban
+banned_ips = ['123.45.67.89','45.119.135.70'] # Replace with real IPs
 @app.before_request
-def block_and_notify():
+def block_banned_ips():
     ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
-    user_agent = request.headers.get('User-Agent', 'Unknown')
+    user_agent = request.headers.get('User-Agent')
 
-    # Check and block banned IPs
+    # Block banned IPs
     if ip in banned_ips:
         abort(403)
 
-    # Notify once per session
+    # Only notify once per session
     if not session.get('notified'):
         notify_telegram(ip, user_agent)
         session['notified'] = True
+app.secret_key = 'your_secret_key'
+app.debug = True
 # Products data
 products = [
     {"id": 1, "name_kh": "#OP01 One Piece - Sakazuki","price": 7500, "image": "/static/images/op01.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
@@ -88,25 +91,25 @@ products = [
     {"id": 101, "name_kh": "NINJAGO Season 1 - DX Suit","price": 30000, "image": "/static/images/njoss1dx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
     {"id": 102, "name_kh": "NINJAGO Season 1 - KAI (DX)","price": 5000, "image": "/static/images/njoss1dxkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
     {"id": 103, "name_kh": "NINJAGO Season 1 - ZANE (DX)","price": 5000, "image": "/static/images/njoss1dxzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 104, "name_kh": "NINJAGO Season 1 - JAY (DX)","price": 5000, "image": "/static/images/njoss1dxjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 105, "name_kh": "NINJAGO Season 1 - COLE (DX)","price": 5000, "image": "/static/images/njoss1dxcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+    {"id": 104, "name_kh": "NINJAGO Season 1 - JAY (DX)","price": 5000, "image": "/static/images/njoss1dxjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
+    {"id": 105, "name_kh": "NINJAGO Season 1 - COLE (DX)","price": 5000, "image": "/static/images/njoss1dxcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
     {"id": 106, "name_kh": "NINJAGO Season 1 - NYA (DX)","price": 5000, "image": "/static/images/njoss1dxnya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 107, "name_kh": "NINJAGO Season 1 - LLOYD (DX)","price": 5000, "image": "/static/images/njoss1dxlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 111, "name_kh": "NINJAGO Season 1 - Pilot Suit","price": 25000, "image": "/static/images/njoss1pilot.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+    {"id": 111, "name_kh": "NINJAGO Season 1 - Pilot Suit","price": 25000, "image": "/static/images/njoss1pilot.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
     {"id": 112, "name_kh": "NINJAGO Season 1 - KAI (Pilot)","price": 5000, "image": "/static/images/njoss1pilotkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 113, "name_kh": "NINJAGO Season 1 - ZANE (Pilot)","price": 25000, "image": "/static/images/njoss1pilotzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 114, "name_kh": "NINJAGO Season 1 - JAY (Pilot)","price": 5000, "image": "/static/images/njoss1pilotjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 115, "name_kh": "NINJAGO Season 1 - COLE (Pilot)","price": 5000, "image": "/static/images/njoss1pilotcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 116,"name_kh": "NINJAGO Season 1 - LLOYD (Pilot)","price": 5000, "image": "/static/images/njoss1pilotlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+    {"id": 115, "name_kh": "NINJAGO Season 1 - COLE (Pilot)","price": 5000, "image": "/static/images/njoss1pilotcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
+    {"id": 116,"name_kh": "NINJAGO Season 1 - LLOYD (Pilot)","price": 5000, "image": "/static/images/njoss1pilotlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
     {"id": 121, "name_kh": "NINJAGO Season 1 - NRG","price": 35000, "image": "/static/images/njoss1nrg.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 122, "name_kh": "NINJAGO Season 1 - NRG KAI","price": 7000, "image": "/static/images/njoss1nrgkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 123, "name_kh": "NINJAGO Season 1 - NRG ZANE","price": 7000, "image": "/static/images/njoss1nrgzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 124, "name_kh": "NINJAGO Season 1 - NRG JAY","price": 7000, "image": "/static/images/njoss1nrgjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 125, "name_kh": "NINJAGO Season 1 - NRG COLE","price": 7000, "image": "/static/images/njoss1nrgcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 126, "name_kh": "NINJAGO Season 1 - NRG LLOYD","price": 7000, "image": "/static/images/njoss1nrglloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 131, "name_kh": "NINJAGO Season 1 - ZX Suits","price": 25000, "image": "/static/images/njoss1zx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 132, "name_kh": "NINJAGO Season 1 - KAI (ZX)","price": 5000, "image": "/static/images/njoss1zxkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 133, "name_kh": "NINJAGO Season 1 - ZANE (ZX)","price": 5000, "image": "/static/images/njoss1zxzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+    {"id": 126, "name_kh": "NINJAGO Season 1 - NRG LLOYD","price": 7000, "image": "/static/images/njoss1nrglloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
+    {"id": 131, "name_kh": "NINJAGO Season 1 - ZX Suits","price": 25000, "image": "/static/images/njoss1zx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
+    {"id": 132, "name_kh": "NINJAGO Season 1 - KAI (ZX)","price": 5000, "image": "/static/images/njoss1zxkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
+    {"id": 133, "name_kh": "NINJAGO Season 1 - ZANE (ZX)","price": 5000, "image": "/static/images/njoss1zxzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 0},
     {"id": 134, "name_kh": "NINJAGO Season 1 - JAY (ZX)","price": 5000, "image": "/static/images/njoss1zxjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 135, "name_kh": "NINJAGO Season 1 - COLE (ZX)","price": 5000, "image": "/static/images/njoss1zxcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
     {"id": 136, "name_kh": "NINJAGO Season 1 - LLOYD (ZX)","price": 5000, "image": "/static/images/njoss1zxlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
@@ -285,25 +288,35 @@ products = [
     {"id": 91020, "name_kh": "cole Merch", "price": 5000, "image": "/static/images/nj20.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
     {"id": 91021, "name_kh": "idk name ", "price": 5000, "image": "/static/images/nj21.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
 
-    {"id": 2001, "name_kh": "WWII Germany 01","price": 1250, "image": "/static/images/wwii-01.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2002, "name_kh": "WWII Germany 02","price": 1250, "image": "/static/images/wwii-02.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2003, "name_kh": "WWII Germany 03","price": 1250, "image": "/static/images/wwii-03.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2004, "name_kh": "WWII Germany 04","price": 1250, "image": "/static/images/wwii-04.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2005, "name_kh": "WWII Germany 05","price": 1250, "image": "/static/images/wwii-05.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2006, "name_kh": "WWII Germany 06", "name_en": "WWII Germany 06", "price": 1250, "image": "/static/images/wwii-06.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2007, "name_kh": "WWII USA 01", "name_en": "WWII USA 01", "price": 1250, "image": "/static/images/wwii-07.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2008, "name_kh": "WWII USA 02", "name_en": "WWII USA 02", "price": 1250, "image": "/static/images/wwii-08.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2009, "name_kh": "WWII USA 03", "name_en": "WWII USA 03", "price": 1250, "image": "/static/images/wwii-09.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2010, "name_kh": "WWII USA 04", "name_en": "WWII USA 04", "price": 1250, "image": "/static/images/wwii-10.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2011, "name_kh": "WWII USA 05", "name_en": "WWII USA 05", "price": 1250, "image": "/static/images/wwii-11.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2012, "name_kh": "WWII SOVIET 01", "name_en": "WWII SOVIET 01", "price": 1250, "image": "/static/images/wwii-12.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2013, "name_kh": "WWII SOVIET 02", "name_en": "WWII SOVIET 02", "price": 1250, "image": "/static/images/wwii-13.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2014, "name_kh": "WWII SOVIET 03", "name_en": "WWII SOVIET 03", "price": 1250, "image": "/static/images/wwii-14.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2015, "name_kh": "WWII SOVIET 04", "name_en": "WWII SOVIET 04", "price": 1250, "image": "/static/images/wwii-15.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2016, "name_kh": "WWII SOVIET 05", "name_en": "WWII SOVIET 05", "price": 1250, "image": "/static/images/wwii-16.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2017, "name_kh": "WWII SOVIET 06", "name_en": "WWII SOVIET 06", "price": 1250, "image": "/static/images/wwii-17.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2018, "name_kh": "WWII SOVIET 07", "name_en": "WWII SOVIET 07", "price": 1250, "image": "/static/images/wwii-18.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2019, "name_kh": "WWII SOVIET 08", "name_en": "WWII SOVIET 08", "price": 1250, "image": "/static/images/wwii-19.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2001, "name_kh": "WWII - កាំភ្លើងធំ","price": 3500, "image": "/static/images/wwii - biggun.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount": },
+    {"id": 2002, "name_kh": "WWII - កាំភ្លើងធំ6គ្រឿង 02","price": 6000, "image": "/static/images/wwii - gun6x.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount": },
+    {"id": 2003, "name_kh": "WWII -  RPG","price": 500, "image": "/static/images/wwii - rpg.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2004, "name_kh": "WWII -  04","price": 1250, "image": "/static/images/wwii-04.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2005, "name_kh": "WWII ","price": 1250, "image": "/static/images/wwii-05.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2006, "name_kh": "WWII សព្វាវុធ 01", "name_en": "WWII Germany 06", "price": 3000, "image": "/static/images/wwii-06.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
+    {"id": 2007, "name_kh": "WWII សព្វាវុធ 02", "name_en": "WWII USA 01", "price": 3000, "image": "/static/images/wwii-07.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
+    {"id": 2008, "name_kh": "WWII សព្វាវុធ 03", "name_en": "WWII USA 02", "price": 3000, "image": "/static/images/wwii-08.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
+    {"id": 2009, "name_kh": "WWII សព្វាវុធ 04", "name_en": "WWII USA 03", "price": 3000, "image": "/static/images/wwii-09.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
+    {"id": 2010, "name_kh": "WWII សព្វាវុធ 05", "name_en": "WWII USA 04", "price": 3000, "image": "/static/images/wwii-10.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
+    {"id": 2011, "name_kh": "WWII Germany 01","price": 1250, "image": "/static/images/wwii-01.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2012, "name_kh": "WWII Germany 02","price": 1250, "image": "/static/images/wwii-02.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2013, "name_kh": "WWII Germany 03","price": 1250, "image": "/static/images/wwii-03.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2014, "name_kh": "WWII Germany 04","price": 1250, "image": "/static/images/wwii-04.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2015, "name_kh": "WWII Germany 05","price": 1250, "image": "/static/images/wwii-05.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2016, "name_kh": "WWII Germany 06", "name_en": "WWII Germany 06", "price": 1250, "image": "/static/images/wwii-06.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2017, "name_kh": "WWII USA 01", "name_en": "WWII USA 01", "price": 1250, "image": "/static/images/wwii-07.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2018, "name_kh": "WWII USA 02", "name_en": "WWII USA 02", "price": 1250, "image": "/static/images/wwii-08.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2019, "name_kh": "WWII USA 03", "name_en": "WWII USA 03", "price": 1250, "image": "/static/images/wwii-09.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2020, "name_kh": "WWII USA 04", "name_en": "WWII USA 04", "price": 1250, "image": "/static/images/wwii-10.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2021, "name_kh": "WWII USA 05", "name_en": "WWII USA 05", "price": 1250, "image": "/static/images/wwii-11.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2022, "name_kh": "WWII SOVIET 01", "name_en": "WWII SOVIET 01", "price": 1250, "image": "/static/images/wwii-12.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2023, "name_kh": "WWII SOVIET 02", "name_en": "WWII SOVIET 02", "price": 1250, "image": "/static/images/wwii-13.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2024, "name_kh": "WWII SOVIET 03", "name_en": "WWII SOVIET 03", "price": 1250, "image": "/static/images/wwii-14.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2025, "name_kh": "WWII SOVIET 04", "name_en": "WWII SOVIET 04", "price": 1250, "image": "/static/images/wwii-15.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2026, "name_kh": "WWII SOVIET 05", "name_en": "WWII SOVIET 05", "price": 1250, "image": "/static/images/wwii-16.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2027, "name_kh": "WWII SOVIET 06", "name_en": "WWII SOVIET 06", "price": 1250, "image": "/static/images/wwii-17.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2028, "name_kh": "WWII SOVIET 07", "name_en": "WWII SOVIET 07", "price": 1250, "image": "/static/images/wwii-18.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+    {"id": 2029, "name_kh": "WWII SOVIET 08", "name_en": "WWII SOVIET 08", "price": 1250, "image": "/static/images/wwii-19.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
     {"id": 3101, "name_kh": "ខ្សៃដៃ GYM BRACELET - គ្រាប់រលោង(ខ្មៅ)","price": 5000, "image": "/static/images/gymblack1.jpg", "categories": ["Accessories","Hot Sale"], "subcategory": "Gym Bracelet"},
     {"id": 3102, "name_kh": "ខ្សៃដៃ GYM BRACELET - គ្រាប់គ្រើម(ខ្មៅ)","price": 5000, "image": "/static/images/gymblack2.jpg", "categories": ["Accessories","Hot Sale"], "subcategory": "Gym Bracelet"},
     {"id": 3103, "name_kh": "ខ្សៃដៃ GYM BRACELET - គ្រាប់រលោង(ប្រាក់)","price": 5000, "image": "/static/images/gymsilver1.jpg", "categories": ["Accessories","Hot Sale"], "subcategory": "Gym Bracelet"},
