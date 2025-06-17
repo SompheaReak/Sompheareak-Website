@@ -288,8 +288,8 @@ products = [
     {"id": 91020, "name_kh": "cole Merch", "price": 5000, "image": "/static/images/nj20.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
     {"id": 91021, "name_kh": "idk name ", "price": 5000, "image": "/static/images/nj21.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
 
-    {"id": 2001, "name_kh": "WWII - កាំភ្លើងធំ","price": 3500, "image": "/static/images/wwii - biggun.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount": },
-    {"id": 2002, "name_kh": "WWII - កាំភ្លើងធំ6គ្រឿង 02","price": 6000, "image": "/static/images/wwii - gun6x.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount": },
+    {"id": 2001, "name_kh": "WWII - កាំភ្លើងធំ","price": 3500, "image": "/static/images/wwii - biggun.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":0},
+    {"id": 2002, "name_kh": "WWII - កាំភ្លើងធំ6គ្រឿង 02","price": 6000, "image": "/static/images/wwii - gun6x.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":0},
     {"id": 2003, "name_kh": "WWII -  RPG","price": 500, "image": "/static/images/wwii - rpg.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
     {"id": 2004, "name_kh": "WWII -  04","price": 1250, "image": "/static/images/wwii-04.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
     {"id": 2005, "name_kh": "WWII ","price": 1250, "image": "/static/images/wwii-05.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
