@@ -402,11 +402,10 @@ subcategories_map = {
 
 @app.route('/')
 def home():
-    return redirect(url_for('category', category_name='Hot Sale'))
     language = request.args.get('lang', 'kh')
     cart = session.get('cart', [])
+    products = get_all_products()  # Replace with your actual function to get all products
     return render_template('home.html', products=products, language=language, cart=cart, current_category=None, current_subcategory=None, subcategories=[])
-
 @app.route('/category/<category_name>')
 def category(category_name):
     language = request.args.get('lang', 'kh')
