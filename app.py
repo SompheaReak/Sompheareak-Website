@@ -394,7 +394,7 @@ subcategories_map = {
                      "Season 14","Season 15"],
     "LEGO Anime": ["One Piece","Demon Slayer"],
     "Keychain": ["Gun Keychains"],
-    "Hot Sale": ["Bracelet"],
+    "Hot Sale": [""],
     "Toy": ["Lego Ninjago", "One Piece","Lego WWII", "Lego ទាហាន"]
 }
 
