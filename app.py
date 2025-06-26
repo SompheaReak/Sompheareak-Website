@@ -386,6 +386,20 @@ products = [
     {"id": 4004, "name_kh": "AKM - ពណ៌ដើម", "name_en": "AKM - Default", "price": 6000, "image": "/static/images/akm-default.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
     {"id": 4005, "name_kh": "Scar L - ពណ៌ដើម", "name_en": "Scar L - Default", "price": 6000, "image": "/static/images/scarl-default.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
     {"id": 4006, "name_kh": "Scar L - ពណ៌មាស", "name_en": "Scar L - Gold", "price": 6000, "image": "/static/images/scarl-gold.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
+    {"id": 20001, "name_kh": "71049 - 1 RED BULL","price": 24000, "image": "/static/images/lego71049-1.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
+    {"id": 20002, "name_kh": "71049 - 2 MERCEDES","price": 24000, "image": "/static/images/lego71049-2.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
+    {"id": 20003, "name_kh": "71049 - 3 FERRARI","price": 24000, "image": "/static/images/lego71049-3.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+    {"id": 20004, "name_kh": "71049 - 4 MCLAREN","price": 24000, "image": "/static/images/lego71049-4.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
+    {"id": 20005, "name_kh": "71049 - 5 ASTON MARTIN","price": 24000, "image": "/static/images/lego71049-5.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+    {"id": 20006, "name_kh": "71049 - 6 ALPINE","price": 24000, "image": "/static/images/lego71049-6.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+    {"id": 20007, "name_kh": "71049 - 7 WILLIAMS","price": 24000, "image": "/static/images/lego71049-7.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+    {"id": 20008, "name_kh": "71049 - 8 VISA CASH APP","price": 24000, "image": "/static/images/lego71049-8.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
+    {"id": 20009, "name_kh": "71049 - 9 SAUBER","price": 24000, "image": "/static/images/lego71049-9.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+    {"id": 20010, "name_kh": "71049 - 10 HAAS","price": 24000, "image": "/static/images/lego71049-10.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+    {"id": 20011, "name_kh": "71049 - 11 F1 ACADEMY ","price": 24000, "image": "/static/images/lego71049-11.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+    {"id": 20012, "name_kh": "71049 - 12 GENERIC","price": 24000, "image": "/static/images/lego71049-12.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
+
+
 ]
 # --- Subcategories Map ---
 subcategories_map = {
