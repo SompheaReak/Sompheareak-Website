@@ -395,6 +395,7 @@ subcategories_map = {
     "LEGO Anime": ["One Piece","Demon Slayer"],
     "Keychain": ["Gun Keychains"],
     "Hot Sale": [],
+    "LEGO": ["Formula 1"],
     "Toy": ["Lego Ninjago", "One Piece","Lego WWII", "Lego ទាហាន"]
 }
 
