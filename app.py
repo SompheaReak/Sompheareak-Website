@@ -46,14 +46,6 @@ def check_bot_in_group(bot_token, chat_id):
     print(response.text)
 # List of IPs you want to ban
 banned_ips = ['123.45.67.89','45.119.135.70'] # Replace with real IPs
-@app.route('/search')
-def search():
-    query = request.args.get('q', '')
-    # Search your product list or database for matches
-    # Example: filtered_products = [p for p in all_products if query.lower() in p.name.lower()]
-    
-    # Then render the same product page with results
-    return render_template('home.html', products=filtered_products, cart=session.get('cart', []), ...)
 @app.before_request
 def block_banned_ips():
     ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
