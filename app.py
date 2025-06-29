@@ -266,11 +266,20 @@ products = [
     {"id": 1306, "name_kh": "NINJAGO Season 13 - NYA (Hero) ","price": 4500, "image": "/static/images/njoss13heronya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
     {"id": 1307, "name_kh": "NINJAGO Season 13 - LLOYD (Hero)","price": 4500, "image": "/static/images/njoss13herolloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
 
-    {"id": 1916, "name_kh": " Dragon Rising S3 - NOKT","price": 9000, "image": "/static/images/ss3nokt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
-    {"id": 1917, "name_kh": " Dragon Rising S3 - ROX","price": 9000, "image": "/static/images/ss3rox.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
-    {"id": 1918, "name_kh": " Dragon Rising S3 - DRIX","price": 9000, "image": "/static/images/ss3drix.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
-    {"id": 1919, "name_kh": " Dragon Rising S3 - ZARKT","price": 9000, "image": "/static/images/ss3zarkt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
-    {"id": 1920, "name_kh": " Dragon Rising S3 - KUR","price": 9000, "image": "/static/images/ss3kur.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","New"],"stock": 1},
+    {"id": 1901, "name_kh": " Dragon Rising S1 - KAI (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+    {"id": 1902, "name_kh": " Dragon Rising S1 - ZANE (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+    {"id": 1903, "name_kh": " Dragon Rising S1 - JAY (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergejay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+    {"id": 1904, "name_kh": " Dragon Rising S1 - COLE (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+    {"id": 1905, "name_kh": " Dragon Rising S1 - NYA (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+    {"id": 1906, "name_kh": " Dragon Rising S1 - LLOYD (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+    {"id": 1907, "name_kh": " Dragon Rising S1 - ARIN (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergearin.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+    {"id": 1908, "name_kh": " Dragon Rising S1 - SORA (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergesora.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+
+    {"id": 1916, "name_kh": " Dragon Rising S3 - NOKT","price": 9000, "image": "/static/images/ss3nokt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+    {"id": 1917, "name_kh": " Dragon Rising S3 - ROX","price": 9000, "image": "/static/images/ss3rox.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+    {"id": 1918, "name_kh": " Dragon Rising S3 - DRIX","price": 9000, "image": "/static/images/ss3drix.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+    {"id": 1919, "name_kh": " Dragon Rising S3 - ZARKT","price": 9000, "image": "/static/images/ss3zarkt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+    {"id": 1920, "name_kh": " Dragon Rising S3 - KUR","price": 9000, "image": "/static/images/ss3kur.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
 
     {"id": 91101, "name_kh": "Zane's Set", "price": 68000, "image": "/static/images/nj01.jpg", "categories": ["LEGO Ninjago","Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
     {"id": 91102, "name_kh": "Kai Merch", "price": 64000, "image": "/static/images/nj02.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
@@ -404,7 +413,7 @@ products = [
 # --- Subcategories Map ---
 subcategories_map = {
     "Accessories": ["Gym Bracelet", "Gem Stone Bracelet","Dragon Bracelet","Bracelet"],
-    "LEGO Ninjago": ["New","Building Set","Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8","Season 9","Season 10","Season 11","Season 12","Season 13",
+    "LEGO Ninjago": ["Dragon Rising","Building Set","Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8","Season 9","Season 10","Season 11","Season 12","Season 13",
                      "Season 14","Season 15"],
     "LEGO Anime": ["One Piece","Demon Slayer"],
     "Keychain": ["Gun Keychains"],
