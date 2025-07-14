@@ -293,11 +293,11 @@ products = [
     {"id": 1922, "name_kh": " Dragon Rising S3 - JAY ROGUE","price": 8000, "image": "/static/images/njodrgss3jayrogue.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
     {"id": 1923, "name_kh": " Dragon Rising S3 - MORRO","price": 9500, "image": "/static/images/njodrgss3morro.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
 
-    {"id": 1924, "name_kh": " Dragon Rising S3 - NOKT","price": 9000, "image": "/static/images/ss3nokt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1925, "name_kh": " Dragon Rising S3 - ROX","price": 9000, "image": "/static/images/ss3rox.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1926, "name_kh": " Dragon Rising S3 - DRIX","price": 9000, "image": "/static/images/ss3drix.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1927, "name_kh": " Dragon Rising S3 - ZARKT","price": 9000, "image": "/static/images/ss3zarkt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1928, "name_kh": " Dragon Rising S3 - KUR","price": 9000, "image": "/static/images/ss3kur.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+    {"id": 1924, "name_kh": " Dragon Rising S3 - NOKT","price": 9000, "image": "/static/images/ss3nokt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
+    {"id": 1925, "name_kh": " Dragon Rising S3 - ROX","price": 9000, "image": "/static/images/ss3rox.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
+    {"id": 1926, "name_kh": " Dragon Rising S3 - DRIX","price": 9000, "image": "/static/images/ss3drix.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
+    {"id": 1927, "name_kh": " Dragon Rising S3 - ZARKT","price": 9000, "image": "/static/images/ss3zarkt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
+    {"id": 1928, "name_kh": " Dragon Rising S3 - KUR","price": 9000, "image": "/static/images/ss3kur.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
 
     {"id": 91101, "name_kh": "Zane's Set", "price": 68000, "image": "/static/images/nj01.jpg", "categories": ["LEGO Ninjago","Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
     {"id": 91102, "name_kh": "Kai Merch", "price": 64000, "image": "/static/images/nj02.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
