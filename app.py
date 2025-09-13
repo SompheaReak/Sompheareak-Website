@@ -437,8 +437,8 @@ subcategories_map = {
     "Keychain": ["Gun Keychains"],
     "Hot Sale": [],
     "LEGO": ["Formula 1"],
-    "Toy": ["Lego Ninjago", "One Piece","Lego WWII", "Lego ទាហាន"]
-    "Italy Bracelet":["LOGO Brand","Cute","Flag","Chain"]
+    "Toy": ["Lego Ninjago", "One Piece","Lego WWII", "Lego ទាហាន"],
+    "Italy Bracelet":["LOGO Brand","Cute","Flag","Chain"],
 }
 
 # --- Routes ---
