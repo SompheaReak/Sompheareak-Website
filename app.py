@@ -406,9 +406,9 @@ products = [
     {"id": 3308, "name_kh": "ខ្សែដៃ - ក្បាលនាគប្រាក់", "name_en": "Dragon Bracelet - ", "price": 6000, "image": "/static/images/dragon09.jpg", "categories": ["Accessories"], "subcategory": "Dragon Bracelet"},
     {"id": 3309, "name_kh": "ខ្សែដៃ - ក្បាលនាគប្រាក់", "name_en": "Dragon Bracelet - ", "price": 6000, "image": "/static/images/dragon06.jpg", "categories": ["Accessories"], "subcategory": "Dragon Bracelet"},
     {"id": 3310, "name_kh": "ខ្សែដៃ - ក្បាលនាគប្រាក់", "name_en": "Dragon Bracelet - ", "price": 6000, "image": "/static/images/dragon03.jpg", "categories": ["Accessories"], "subcategory": "Dragon Bracelet"},
-     {"id": 3401, "name_kh": "Charm","price": 5000, "image": "/static/images/k001.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
-     {"id": 3402, "name_kh": "Charm","price": 5000, "image": "/static/images/k002.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
-     {"id": 3403, "name_kh": "Charm","price": 5000, "image": "/static/images/k003.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
+     {"id": 3401, "name_kh": "Charm","price": 5000, "image": "/static/images/k001.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 3402, "name_kh": "Charm","price": 5000, "image": "/static/images/k002.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 3403, "name_kh": "Charm","price": 5000, "image": "/static/images/k003.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
      {"id": 3404, "name_kh": "Charm","price": 5000, "image": "/static/images/k004.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
      {"id": 3405, "name_kh": "Charm","price": 5000, "image": "/static/images/k005.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
      {"id": 3406, "name_kh": "Charm","price": 5000, "image": "/static/images/k006.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
@@ -418,6 +418,16 @@ products = [
      {"id": 3410, "name_kh": "Charm","price": 5000, "image": "/static/images/k010.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
      {"id": 3411, "name_kh": "Charm","price": 5000, "image": "/static/images/k011.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
      
+     {"id": 3501, "name_kh": "Charm","price": 5000, "image": "/static/images/k101.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
+     {"id": 3502, "name_kh": "Charm","price": 5000, "image": "/static/images/k102.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
+     {"id": 3503, "name_kh": "Charm","price": 5000, "image": "/static/images/k203.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
+     {"id": 3504, "name_kh": "Charm","price": 5000, "image": "/static/images/k304.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
+     {"id": 3505, "name_kh": "Charm","price": 5000, "image": "/static/images/k305.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
+     {"id": 3506, "name_kh": "Charm","price": 5000, "image": "/static/images/k306.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
+     {"id": 3507, "name_kh": "Charm","price": 5000, "image": "/static/images/k307.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
+     {"id": 3508, "name_kh": "Charm","price": 5000, "image": "/static/images/k308.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
+     {"id": 3509, "name_kh": "Charm","price": 5000, "image": "/static/images/k309.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
+     {"id": 3510, "name_kh": "Charm","price": 5000, "image": "/static/images/k310.jpg", "categories": ["Italy Bracelet"], "subcategory": "All","discount":20 },
 
   
     {"id": 4001, "name_kh": "M416 - ប្រាក់មាស", "name_en": "M416 - Gold Plate", "price": 6000, "image": "/static/images/m416-gold.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
@@ -451,7 +461,7 @@ subcategories_map = {
     "Hot Sale": [],
     "LEGO": ["Formula 1"],
     "Toy": ["Lego Ninjago", "One Piece","Lego WWII", "Lego ទាហាន"],
-    "Italy Bracelet": ["All","LOGO Brand","Cute","Flag","Chain"],
+    "Italy Bracelet": ["All","Football","Gem","Flag","Chain"],
 }
 
 # --- Routes ---
