@@ -406,7 +406,15 @@ products = [
     {"id": 3308, "name_kh": "ខ្សែដៃ - ក្បាលនាគប្រាក់", "name_en": "Dragon Bracelet - ", "price": 6000, "image": "/static/images/dragon09.jpg", "categories": ["Accessories"], "subcategory": "Dragon Bracelet"},
     {"id": 3309, "name_kh": "ខ្សែដៃ - ក្បាលនាគប្រាក់", "name_en": "Dragon Bracelet - ", "price": 6000, "image": "/static/images/dragon06.jpg", "categories": ["Accessories"], "subcategory": "Dragon Bracelet"},
     {"id": 3310, "name_kh": "ខ្សែដៃ - ក្បាលនាគប្រាក់", "name_en": "Dragon Bracelet - ", "price": 6000, "image": "/static/images/dragon03.jpg", "categories": ["Accessories"], "subcategory": "Dragon Bracelet"},
-   
+     {"id": 3401, "name_kh": "Charm","price": 5000, "image": "/static/images/k001.jpg", "categories": ["Italy Bracelet"], "subcategory": "All"},"discount":20 },
+     {"id": 3402, "name_kh": "Charm","price": 5000, "image": "/static/images/k002.jpg", "categories": ["Italy Bracelet"], "subcategory": "All"},"discount":20 },
+     {"id": 3403, "name_kh": "Charm","price": 5000, "image": "/static/images/k003.jpg", "categories": ["Italy Bracelet"], "subcategory": "All"},"discount":20 },
+     {"id": 3404, "name_kh": "Charm","price": 5000, "image": "/static/images/k004.jpg", "categories": ["Italy Bracelet"], "subcategory": "All"},"discount":20 },
+     {"id": 3405, "name_kh": "Charm","price": 5000, "image": "/static/images/k005.jpg", "categories": ["Italy Bracelet"], "subcategory": "All"},"discount":20 },
+     {"id": 3406, "name_kh": "Charm","price": 5000, "image": "/static/images/k006.jpg", "categories": ["Italy Bracelet"], "subcategory": "All"},"discount":20 },
+
+
+  
     {"id": 4001, "name_kh": "M416 - ប្រាក់មាស", "name_en": "M416 - Gold Plate", "price": 6000, "image": "/static/images/m416-gold.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
     {"id": 4002, "name_kh": "M416 - ពណ៌ដើម", "name_en": "M416 - Default", "price": 6000, "image": "/static/images/m416-default.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
     {"id": 4003, "name_kh": "AKM - ប្រាក់មាស", "name_en": "AKM - Gold Plate", "price": 6000, "image": "/static/images/akm-gold.jpg", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
@@ -438,7 +446,7 @@ subcategories_map = {
     "Hot Sale": [],
     "LEGO": ["Formula 1"],
     "Toy": ["Lego Ninjago", "One Piece","Lego WWII", "Lego ទាហាន"],
-    "Italy Bracelet":["LOGO Brand","Cute","Flag","Chain"],
+    "Italy Bracelet":["All","LOGO Brand","Cute","Flag","Chain"],
 }
 
 # --- Routes ---
