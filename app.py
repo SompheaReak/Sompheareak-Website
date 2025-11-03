@@ -519,14 +519,14 @@ def category(category_name):
         current_subcategory=None,
         subcategories=[]
     )
-    @app.route('/custom-bracelet')
+@app.route('/custom-bracelet')
 def custom_bracelet():
     # Example charms to display
     charms = [
-        {"id": 1, "name": "Heart Charm", "image": "/static/images/k001.jpg", "price": 5000},
-        {"id": 2, "name": "Star Charm", "image": "/static/images/k002.jpg", "price": 5000},
-        {"id": 3, "name": "Flower Charm", "image": "/static/images/k003.jpg", "price": 5000},
-        {"id": 4, "name": "Moon Charm", "image": "/static/images/k004.jpg", "price": 5000},
+        {"id": 1, "name": "Heart Charm", "image": "heart.jpg"},
+        {"id": 2, "name": "Star Charm", "image": "star.jpg"},
+        {"id": 3, "name": "Flower Charm", "image": "flower.jpg"},
+        {"id": 4, "name": "Moon Charm", "image": "moon.jpg"}
     ]
     return render_template('custom_bracelet.html', charms=charms)
 @app.route('/subcategory/<subcategory_name>')
