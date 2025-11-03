@@ -225,60 +225,95 @@
       </div>
     {% endfor %}
   </div>
+script>
+  const preview = document.getElementById("bracelet-preview");
+  const totalPriceDisplay = document.getElementById("totalPrice");
+  const charmGallery = document.getElementById("charmGallery");
+  let totalPrice = 0;
 
-  <script>
-    const preview = document.getElementById("bracelet-preview");
-    const totalPriceDisplay = document.getElementById("totalPrice");
-    let totalPrice = 0;
+  // Store all charms in JS for filtering
+  const allCharms = [
+    {% for charm in charms %}
+    {
+      name: "{{ charm.name }}",
+      image: "{{ charm.image }}",
+      price: {{ charm.price }},
+      subcategory: "{{ charm.subcategory }}"
+    },
+    {% endfor %}
+  ];
 
-    function addCharm(imgSrc, name, price) {
-      if (preview.innerText.includes('No charms')) preview.innerHTML = '';
-
-      const wrapper = document.createElement('div');
-      wrapper.className = 'preview-charm';
-
-      const img = document.createElement('img');
-      img.src = imgSrc;
-      img.title = name;
-
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'remove-btn';
-      removeBtn.innerText = 'X';
-      removeBtn.onclick = () => {
-        wrapper.remove();
-        totalPrice -= price;
-        updatePrice();
-      };
-
-      wrapper.appendChild(img);
-      wrapper.appendChild(removeBtn);
-      preview.appendChild(wrapper);
-
-      totalPrice += price;
-      updatePrice();
+  function renderCharms(list) {
+    charmGallery.innerHTML = "";
+    if (list.length === 0) {
+      charmGallery.innerHTML = "<p>No charms available in this category.</p>";
+      return;
     }
-
-    function updatePrice() {
-      totalPriceDisplay.innerText = "Total: " + totalPrice + "៛";
-      if (preview.children.length === 0)
-        preview.innerText = "No charms selected yet.";
-    }
-
-    function confirmOrder() {
-      alert("Your custom bracelet has been added to cart!");
-    }
-
-    function filterCharms(category) {
-      alert("Filter charms for: " + category);
-      // You can add real filtering logic here
-    }
-
-    document.getElementById("cancelSelection").addEventListener("click", () => {
-      if (confirm("Cancel your bracelet customization?")) {
-        window.location.href = "/";
-      }
+    list.forEach(charm => {
+      const div = document.createElement("div");
+      div.className = "charm-item";
+      div.innerHTML = `
+        <img src="${charm.image}" alt="${charm.name}">
+        <p>${charm.name}</p>
+        <p><strong>${charm.price}៛</strong></p>
+      `;
+      div.onclick = () => addCharm(charm.image, charm.name, charm.price);
+      charmGallery.appendChild(div);
     });
-  </script>
+  }
 
+  function addCharm(imgSrc, name, price) {
+    if (preview.innerText.includes("No charms")) preview.innerHTML = "";
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "preview-charm";
+
+    const img = document.createElement("img");
+    img.src = imgSrc;
+    img.title = name;
+
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "remove-btn";
+    removeBtn.innerText = "X";
+    removeBtn.onclick = () => {
+      wrapper.remove();
+      totalPrice -= price;
+      updatePrice();
+    };
+
+    wrapper.appendChild(img);
+    wrapper.appendChild(removeBtn);
+    preview.appendChild(wrapper);
+
+    totalPrice += price;
+    updatePrice();
+  }
+
+  function updatePrice() {
+    totalPriceDisplay.innerText = "Total: " + totalPrice + "៛";
+    if (preview.children.length === 0)
+      preview.innerText = "No charms selected yet.";
+  }
+
+  function confirmOrder() {
+    alert("Your custom bracelet has been added to cart!");
+  }
+
+  // 🧠 Real Filtering Logic
+  function filterCharms(category) {
+    const filtered = allCharms.filter(c => c.subcategory === category);
+    renderCharms(filtered);
+  }
+
+  // Default: show all charms
+  renderCharms(allCharms);
+
+  // Cancel button
+  document.getElementById("cancelSelection").addEventListener("click", () => {
+    if (confirm("Cancel your bracelet customization?")) {
+      window.location.href = "/";
+    }
+  });
+</script>
 </body>
 </html>
