@@ -556,6 +556,33 @@ def custom_bracelet():
      {"id": 1234513, "name_kh": "Charm","price": 5000, "image": "/static/images/cf13.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
      {"id": 1234514, "name_kh": "Charm","price": 5000, "image": "/static/images/cf14.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
      {"id": 1234515, "name_kh": "Charm","price": 5000, "image": "/static/images/cf15.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 1234516, "name_kh": "Charm","price": 5000, "image": "/static/images/cf16.jpg", "categories": ["Italy Bracelet"], "subcategory": ["Flag","Football"],"discount":20 },
+     {"id": 1234517, "name_kh": "Charm","price": 5000, "image": "/static/images/cf17.jpg", "categories": ["Italy Bracelet"], "subcategory": ["Flag","Football"],"discount":20 },
+     {"id": 1234518, "name_kh": "Charm","price": 5000, "image": "/static/images/cf18.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 1234519, "name_kh": "Charm","price": 5000, "image": "/static/images/cf19.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+
+     {"id": 123501, "name_kh": "Charm","price": 5000, "image": "/static/images/cg01.jpg", "categories": ["Italy Bracelet"], "subcategory": ["Car Logo",],"discount":20 },
+     {"id": 123502, "name_kh": "Charm","price": 5000, "image": "/static/images/cg02.jpg", "categories": ["Car Logo"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123503, "name_kh": "Charm","price": 5000, "image": "/static/images/cg03.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123504, "name_kh": "Charm","price": 5000, "image": "/static/images/cg04.jpg", "categories": ["Car Logo"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123505, "name_kh": "Charm","price": 5000, "image": "/static/images/cg05.jpg", "categories": ["Car Logo"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123506, "name_kh": "Charm","price": 5000, "image": "/static/images/cg06.jpg", "categories": ["Italy Bracelet"], "subcategory": ["Car Logo"],"discount":20 },
+     {"id": 123507, "name_kh": "Charm","price": 5000, "image": "/static/images/cg07.jpg", "categories": ["Italy Bracelet"], "subcategory": ["Car Logo"],"discount":20 },
+     {"id": 123508, "name_kh": "Charm","price": 5000, "image": "/static/images/cg08.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123509, "name_kh": "Charm","price": 5000, "image": "/static/images/cg09.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123510, "name_kh": "Charm","price": 5000, "image": "/static/images/cg10.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123511, "name_kh": "Charm","price": 5000, "image": "/static/images/cg11.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123512, "name_kh": "Charm","price": 5000, "image": "/static/images/cg12.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123513, "name_kh": "Charm","price": 5000, "image": "/static/images/cg13.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123514, "name_kh": "Charm","price": 5000, "image": "/static/images/cg14.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123515, "name_kh": "Charm","price": 5000, "image": "/static/images/cg15.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123516, "name_kh": "Charm","price": 5000, "image": "/static/images/cg16.jpg", "categories": ["Italy Bracelet"], "subcategory": ["Car Logo"],"discount":20 },
+     {"id": 123517, "name_kh": "Charm","price": 5000, "image": "/static/images/cg17.jpg", "categories": ["Italy Bracelet"], "subcategory": ["Car Logo"],"discount":20 },
+     {"id": 123518, "name_kh": "Charm","price": 5000, "image": "/static/images/cg18.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123519, "name_kh": "Charm","price": 5000, "image": "/static/images/cg19.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123520, "name_kh": "Charm","price": 5000, "image": "/static/images/cg20.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+
+
 
 ]
     return render_template('custom_bracelet.html', charms=charms)
