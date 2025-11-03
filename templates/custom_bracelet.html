@@ -8,7 +8,7 @@
       font-family: Arial, sans-serif;
       background: #fafafa;
       margin: 0;
-      padding-top: 100px;
+      padding-top: 20px;
       text-align: center;
     }
 
@@ -69,12 +69,13 @@
       display: none;
     }
 
-    .preview-charm {
+    .bracelet-charm {
       position: relative;
       display: inline-block;
+      margin: 0 5px;
     }
 
-    .preview-charm img {
+    .bracelet-charm img {
       width: 90px;
       height: 150px;
       object-fit: cover;
@@ -93,6 +94,23 @@
       height: 22px;
       font-size: 14px;
       cursor: pointer;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      margin-top: 5px;
+      gap: 5px;
+    }
+
+    .move-left, .move-right {
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 5px;
+      cursor: pointer;
+      font-size: 12px;
     }
 
     /* Total & Confirm */
@@ -114,36 +132,6 @@
       font-weight: bold;
     }
 
-    /* Subcategory Grid */
-    .subcategory-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      padding: 10px;
-      text-align: center;
-      background: #fff;
-    }
-
-    .subcategory-item {
-      background: #f9f9f9;
-      border-radius: 10px;
-      padding: 10px;
-      transition: 0.3s;
-      cursor: pointer;
-    }
-
-    .subcategory-item:hover {
-      background: #007bff;
-      color: #fff;
-    }
-
-    .subcategory-item img {
-      width: 100%;
-      aspect-ratio: 1/1;
-      border-radius: 8px;
-      object-fit: cover;
-    }
-
     /* Charm Grid */
     .charm-gallery {
       display: grid;
@@ -159,6 +147,7 @@
       text-align: center;
       cursor: pointer;
       transition: 0.3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
     .charm-item:hover {
@@ -190,40 +179,52 @@
 
     <div class="order-row">
       <span id="totalPrice">Total: 0៛</span>
-      <button class="confirm-btn" onclick="confirmOrder()">✅ Confirm Order</button>
+      <button class="confirm-btn">✅ Confirm Order</button>
     </div>
-  </div>
-
-  <!-- Sticky Top Buttons -->
-  <div class="top-buttons">
-    <a href="/" class="back-home">🏠 Back to Home</a>
-    <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
   </div>
 
   <h2 class="title">✨ Choose Your Charms ✨</h2>
 
   <!-- Charm Gallery -->
   <div class="charm-gallery">
-    {% for charm in charms %}
-      <div class="charm-item" onclick="addCharm('{{ charm.image }}', '{{ charm.name }}')">
-        <img src="{{ charm.image }}" alt="{{ charm.name }}">
-        <p>{{ charm.name }}</p>
-        <p><strong>{{ charm.price }}៛</strong></p>
-      </div>
-    {% endfor %}
+    <!-- Sample charms - replace with your actual charm data -->
+    <div class="charm-item" onclick="addCharm('/charm1.jpg', 'Charm 1', 10)">
+      <img src="/charm1.jpg" alt="Charm 1">
+      <p>Charm 1</p>
+      <p><strong>10៛</strong></p>
+    </div>
+    <div class="charm-item" onclick="addCharm('/charm2.jpg', 'Charm 2', 15)">
+      <img src="/charm2.jpg" alt="Charm 2">
+      <p>Charm 2</p>
+      <p><strong>15៛</strong></p>
+    </div>
+    <div class="charm-item" onclick="addCharm('/charm3.jpg', 'Charm 3', 20)">
+      <img src="/charm3.jpg" alt="Charm 3">
+      <p>Charm 3</p>
+      <p><strong>20៛</strong></p>
+    </div>
+    <div class="charm-item" onclick="addCharm('/charm4.jpg', 'Charm 4', 25)">
+      <img src="/charm4.jpg" alt="Charm 4">
+      <p>Charm 4</p>
+      <p><strong>25៛</strong></p>
+    </div>
   </div>
-
-  <!-- Bracelet Preview (Sticky Bottom) -->
-  <div id="bracelet-preview">🪄 Your bracelet will appear here!</div>
-
-  <button class="checkout" onclick="checkout()">🛒 Add to Cart</button>
 
   <script>
     const preview = document.getElementById('bracelet-preview');
+    const totalPriceElement = document.getElementById('totalPrice');
     let charms = [];
+    let totalPrice = 0;
 
     function renderBracelet() {
       preview.innerHTML = '';
+      
+      if (charms.length === 0) {
+        preview.textContent = 'No charms selected yet.';
+        totalPriceElement.textContent = 'Total: 0៛';
+        return;
+      }
+
       charms.forEach((charm, index) => {
         const container = document.createElement('div');
         container.className = 'bracelet-charm';
@@ -238,13 +239,13 @@
         preview.appendChild(container);
       });
 
-      if (charms.length === 0) {
-        preview.textContent = '🪄 Your bracelet will appear here!';
-      }
+      // Update total price
+      totalPrice = charms.reduce((sum, charm) => sum + charm.price, 0);
+      totalPriceElement.textContent = `Total: ${totalPrice}៛`;
     }
 
-    function addCharm(image, name) {
-      charms.push({ image, name });
+    function addCharm(image, name, price) {
+      charms.push({ image, name, price });
       renderBracelet();
     }
 
@@ -267,13 +268,17 @@
       }
     }
 
-    function checkout() {
+    function confirmOrder() {
       if (charms.length === 0) {
-        alert('Please select at least one charm before adding to cart!');
+        alert('Please select at least one charm before confirming your order!');
       } else {
-        alert(`✅ You have added ${charms.length} charms to your bracelet!`);
+        alert(`✅ Order confirmed! Your bracelet with ${charms.length} charms (Total: ${totalPrice}៛) has been added to cart.`);
+        // Here you would typically send the order to your backend
       }
     }
+
+    // Add event listener to confirm button
+    document.querySelector('.confirm-btn').addEventListener('click', confirmOrder);
 
     document.getElementById("cancelSelection").addEventListener("click", () => {
       if (confirm("Are you sure you want to cancel your bracelet design?")) {
@@ -281,6 +286,9 @@
         renderBracelet();
       }
     });
+
+    // Initial render
+    renderBracelet();
   </script>
 
 </body>
