@@ -3,69 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <title>Customize Your Italy Bracelet</title>
-
   <style>
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
       background: #fafafa;
       margin: 0;
-      padding: 0;
+      padding-top: 100px; /* to make room for sticky buttons */
+      text-align: center;
     }
 
+    /* Sticky top bar */
     .top-buttons {
+      position: sticky;
+      top: 0;
+      background: white;
+      padding: 10px 0;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 25px;
-      background: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      justify-content: center;
+      gap: 15px;
+      z-index: 1000;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     .back-home, .cancel-btn {
-      background: #007BFF;
-      color: white;
-      padding: 10px 20px;
-      text-decoration: none;
+      padding: 10px 18px;
       border-radius: 8px;
       border: none;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.3s;
+      text-decoration: none;
+      color: white;
+      font-size: 15px;
     }
 
-    .cancel-btn {
-      background: #e63946;
-    }
+    .back-home { background: #007bff; }
+    .cancel-btn { background: #ff4c4c; }
 
-    .back-home:hover {
-      background: #0056b3;
-    }
-
-    .cancel-btn:hover {
-      background: #b31d2d;
-    }
-
-    h1 {
-      color: #333;
+    h2.title {
       margin-top: 20px;
+      color: #333;
     }
 
+    /* Charm Grid */
     .charm-gallery {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap: 15px;
-      margin: 20px auto;
-      max-width: 900px;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
     }
 
     .charm-item {
+      background: white;
       border: 2px solid #ddd;
       border-radius: 10px;
       padding: 10px;
-      width: 120px;
-      background: white;
       cursor: pointer;
       transition: 0.2s;
     }
@@ -76,72 +69,84 @@
     }
 
     .charm-item img {
-      width: 90px;
-      height: 150px;
+      width: 100px;
+      height: 100px;
       object-fit: cover;
       border-radius: 10px;
     }
 
+    /* Bracelet Preview */
     #bracelet-preview {
       position: sticky;
-      border: 2px solid #007bff;
-      min-height: 150px;
-      background: #fff;
-      padding: 10px;
-      border-radius: 10px;
-      margin: 10px auto;
+      bottom: 0;
+      background: white;
+      border-top: 3px solid #007bff;
+      padding: 15px;
       display: flex;
       justify-content: center;
       align-items: center;
-      flex-wrap: wrap;
       gap: 10px;
-      max-width: 600px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      min-height: 130px;
+      z-index: 999;
     }
 
-    #bracelet-preview img {
-      width: 90px;
-      height: 150px;
-      border-radius: 8px;
+    .bracelet-charm {
+      position: relative;
+      display: inline-block;
     }
-            .bottom-fixed-categories {
-  position: sticky;
-  top: 0;
-  background-color: white;
-  z-index: 1000;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
 
-    button.checkout {
-      background: #007bff;
+    .bracelet-charm img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 2px solid #ddd;
+    }
+
+    .remove-btn, .move-left, .move-right {
+      position: absolute;
+      top: 2px;
+      background: rgba(0,0,0,0.6);
       color: white;
       border: none;
-      padding: 12px 24px;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .remove-btn { right: 2px; }
+    .move-left { left: 2px; top: 30px; }
+    .move-right { right: 2px; top: 30px; }
+
+    button.checkout {
+      margin-top: 30px;
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 20px;
       border-radius: 6px;
       cursor: pointer;
       font-size: 16px;
-      transition: 0.3s;
     }
 
-    button.checkout:hover {
-      background: #0056b3;
-    }
   </style>
 </head>
 <body>
 
-  <!-- 🏠 Navigation Buttons -->
+  <!-- Sticky Top Buttons -->
   <div class="top-buttons">
     <a href="/" class="back-home">🏠 Back to Home</a>
     <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
   </div>
 
-  <!-- 🪄 Title Section -->
-  <h1>🪄 Build Your Own Italy Bracelet</h1>
-  <p>Select charms to add to your bracelet!</p>
+  <h2 class="title">✨ Choose Your Charms ✨</h2>
 
-  <!-- ✨ Charm Selection Area -->
+  <!-- Charm Gallery -->
   <div class="charm-gallery">
     {% for charm in charms %}
       <div class="charm-item" onclick="addCharm('{{ charm.image }}', '{{ charm.name }}')">
@@ -152,32 +157,70 @@
     {% endfor %}
   </div>
 
-  <!-- 💎 Bracelet Preview -->
-  <h2>Your Bracelet</h2>
-  <div id="bracelet-preview">No charms selected yet.</div>
+  <!-- Bracelet Preview (Sticky Bottom) -->
+  <div id="bracelet-preview">🪄 Your bracelet will appear here!</div>
 
-  <!-- 🛒 Checkout -->
   <button class="checkout" onclick="checkout()">🛒 Add to Cart</button>
 
-  <!-- ⚙️ JavaScript -->
   <script>
     const preview = document.getElementById('bracelet-preview');
+    let charms = [];
 
-    function addCharm(imgSrc, name) {
-      if (preview.innerText.includes('No charms')) preview.innerHTML = '';
-      const img = document.createElement('img');
-      img.src = imgSrc;
-      img.title = name;
-      preview.appendChild(img);
+    function renderBracelet() {
+      preview.innerHTML = '';
+      charms.forEach((charm, index) => {
+        const container = document.createElement('div');
+        container.className = 'bracelet-charm';
+        container.innerHTML = `
+          <img src="${charm.image}" alt="${charm.name}">
+          <button class="remove-btn" onclick="removeCharm(${index})">❌</button>
+          <button class="move-left" onclick="moveLeft(${index})">⬅️</button>
+          <button class="move-right" onclick="moveRight(${index})">➡️</button>
+        `;
+        preview.appendChild(container);
+      });
+
+      if (charms.length === 0) {
+        preview.textContent = '🪄 Your bracelet will appear here!';
+      }
+    }
+
+    function addCharm(image, name) {
+      charms.push({ image, name });
+      renderBracelet();
+    }
+
+    function removeCharm(index) {
+      charms.splice(index, 1);
+      renderBracelet();
+    }
+
+    function moveLeft(index) {
+      if (index > 0) {
+        [charms[index - 1], charms[index]] = [charms[index], charms[index - 1]];
+        renderBracelet();
+      }
+    }
+
+    function moveRight(index) {
+      if (index < charms.length - 1) {
+        [charms[index + 1], charms[index]] = [charms[index], charms[index + 1]];
+        renderBracelet();
+      }
     }
 
     function checkout() {
-      alert('Your bracelet customization has been saved!');
+      if (charms.length === 0) {
+        alert('Please select at least one charm before adding to cart!');
+      } else {
+        alert(`✅ You have added ${charms.length} charms to your bracelet!`);
+      }
     }
 
     document.getElementById("cancelSelection").addEventListener("click", () => {
-      if (confirm("Are you sure you want to cancel your custom bracelet?")) {
-        window.location.href = "/";
+      if (confirm("Are you sure you want to cancel your bracelet design?")) {
+        charms = [];
+        renderBracelet();
       }
     });
   </script>
