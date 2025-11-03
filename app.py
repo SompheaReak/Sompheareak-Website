@@ -523,6 +523,11 @@ def category(category_name):
 def custom_bracelet():
     # Example charms to display
     charms = [
+     {"id": 123401, "name_kh": "Charm","price": 5000, "image": "/static/images/test1.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123402, "name_kh": "Charm","price": 5000, "image": "/static/images/test2.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123403, "name_kh": "Charm","price": 5000, "image": "/static/images/test3.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+
+    
      {"id": 3401, "name_kh": "Charm","price": 5000, "image": "/static/images/k001.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
      {"id": 3402, "name_kh": "Charm","price": 5000, "image": "/static/images/k002.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
      {"id": 3403, "name_kh": "Charm","price": 5000, "image": "/static/images/k003.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
