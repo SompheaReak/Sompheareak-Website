@@ -113,135 +113,86 @@
       cursor: pointer;
       font-weight: bold;
     }
+
+    /* Subcategory Grid */
+    .subcategory-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 10px;
+      text-align: center;
+      background: #fff;
+    }
+
+    .subcategory-item {
+      background: #f9f9f9;
+      border-radius: 10px;
+      padding: 10px;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    .subcategory-item:hover {
+      background: #007bff;
+      color: #fff;
+    }
+
+    .subcategory-item img {
+      width: 100%;
+      aspect-ratio: 1/1;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
     /* Charm Grid */
     .charm-gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 15px;
-      padding: 20px;
-      max-width: 800px;
-      margin: 0 auto;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      padding: 10px;
     }
 
     .charm-item {
       background: white;
-      border: 2px solid #eee;
       border-radius: 10px;
       padding: 10px;
+      text-align: center;
       cursor: pointer;
-      transition: 0.2s;
+      transition: 0.3s;
     }
 
     .charm-item:hover {
-      border-color: #007bff;
       transform: scale(1.05);
+      border: 2px solid #007bff;
     }
 
     .charm-item img {
-      width: 90px;
-      height: 150px;
+      width: 100%;
+      height: 120px;
       object-fit: cover;
       border-radius: 10px;
     }
-
-    /* Bracelet Preview */
-    #bracelet-preview {
-      position: sticky;
-      bottom: 0;
-      background: white;
-      padding: 30px 10px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: flex-start;
-      overflow-x: auto;
-      scroll-behavior: smooth;
-      min-height: 160px;
-      z-index: 999;
-      border-top: 1px solid #ddd;
-    }
-
-    .bracelet-charm {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: 0;
-      position: relative;
-    }
-
-    .remove-btn {
-      background: #ff4c4c;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      font-size: 14px;
-      cursor: pointer;
-      margin-bottom: 5px;
-    }
-
-    .bracelet-charm img {
-      width: 90px;
-      height: 150px;
-      object-fit: cover;
-      border: none;
-      margin: 0;
-    }
-
-    .controls {
-      display: flex;
-      gap: 5px;
-      margin-top: 5px;
-    }
-
-    .move-left, .move-right {
-      border: none;
-      background: rgba(0,0,0,0.4);
-      color: white;
-      border-radius: 4px;
-      font-size: 14px;
-      padding: 2px 6px;
-      cursor: pointer;
-    }
-
-    button.checkout {
-      margin-top: 30px;
-      background: #28a745;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
   </style>
 </head>
 <body>
 
-  <!-- Sticky Top Buttons -->
-  <div class="top-buttons">
-    <a href="/" class="back-home">🏠 Back to Home</a>
-    <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
+  <!-- ✅ Sticky Section -->
+  <div class="sticky-top">
+    <div class="top-buttons">
+      <a href="/" class="back-home">🏠 Back to Home</a>
+      <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
+    </div>
+
+    <div class="preview-container">
+      <h3>🪄 Preview Bracelet</h3>
+      <div id="bracelet-preview">No charms selected yet.</div>
+    </div>
+
+    <div class="order-row">
+      <span id="totalPrice">Total: 0៛</span>
+      <button class="confirm-btn" onclick="confirmOrder()">✅ Confirm Order</button>
+    </div>
   </div>
-
-  <h2 class="title">✨ Choose Your Charms ✨</h2>
-
-  <!-- Charm Gallery -->
-  <div class="charm-gallery">
-    {% for charm in charms %}
-      <div class="charm-item" onclick="addCharm('{{ charm.image }}', '{{ charm.name }}')">
-        <img src="{{ charm.image }}" alt="{{ charm.name }}">
-        <p>{{ charm.name }}</p>
-        <p><strong>{{ charm.price }}៛</strong></p>
-      </div>
-    {% endfor %}
-  </div>
-
-  <!-- Bracelet Preview (Sticky Bottom) -->
-  <div id="bracelet-preview">🪄 Your bracelet will appear here!</div>
-
-  <button class="checkout" onclick="checkout()">🛒 Add to Cart</button>
 
   <script>
     const preview = document.getElementById('bracelet-preview');
