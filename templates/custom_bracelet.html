@@ -3,36 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <title>Customize Your Italy Bracelet</title>
-  <div class="top-buttons">
-  <a href="/" class="back-home">🏠 Back to Home</a>
-  <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
-</div>
-<h2 class="title">✨ Choose Your Charms ✨</h2>
 
-<div class="charm-grid">
-  {% for charm in charms %}
-    <div class="charm-item">
-      <img src="{{ charm.image }}" alt="{{ charm.name }}">
-      <p>{{ charm.name }}</p>
-    </div>
-  {% endfor %}
-</div>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; background: #fafafa; }
-    h1 { color: #333; }
-    .charm-gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px; }
-    .charm-item { border: 2px solid #ddd; border-radius: 10px; padding: 10px; width: 120px; background: white; cursor: pointer; transition: 0.2s; }
-    .charm-item:hover { border-color: #007bff; transform: scale(1.05); }
-    .charm-item img { width: 100px; height: 100px; object-fit: cover; border-radius: 10px; }
-    #bracelet-preview { border: 2px solid #007bff; min-height: 150px; background: #fff; padding: 10px; border-radius: 10px; margin-top: 20px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px; }
-    #bracelet-preview img { width: 80px; height: 80px; border-radius: 8px; }
-    button { margin-top: 20px; background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 16px; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #fafafa;
+      margin: 0;
+      padding: 0;
+    }
+
+    .top-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 25px;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .back-home, .cancel-btn {
+      background: #007BFF;
+      color: white;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .cancel-btn {
+      background: #e63946;
+    }
+
+    .back-home:hover {
+      background: #0056b3;
+    }
+
+    .cancel-btn:hover {
+      background: #b31d2d;
+    }
+
+    h1 {
+      color: #333;
+      margin-top: 20px;
+    }
+
+    .charm-gallery {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px auto;
+      max-width: 900px;
+    }
+
+    .charm-item {
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 10px;
+      width: 120px;
+      background: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .charm-item:hover {
+      border-color: #007bff;
+      transform: scale(1.05);
+    }
+
+    .charm-item img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    #bracelet-preview {
+      border: 2px solid #007bff;
+      min-height: 150px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      margin: 20px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      max-width: 600px;
+    }
+
+    #bracelet-preview img {
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+    }
+
+    button.checkout {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+
+    button.checkout:hover {
+      background: #0056b3;
+    }
   </style>
 </head>
 <body>
+
+  <!-- 🏠 Navigation Buttons -->
+  <div class="top-buttons">
+    <a href="/" class="back-home">🏠 Back to Home</a>
+    <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
+  </div>
+
+  <!-- 🪄 Title Section -->
   <h1>🪄 Build Your Own Italy Bracelet</h1>
   <p>Select charms to add to your bracelet!</p>
 
+  <!-- ✨ Charm Selection Area -->
   <div class="charm-gallery">
     {% for charm in charms %}
       <div class="charm-item" onclick="addCharm('{{ charm.image }}', '{{ charm.name }}')">
@@ -43,13 +142,17 @@
     {% endfor %}
   </div>
 
+  <!-- 💎 Bracelet Preview -->
   <h2>Your Bracelet</h2>
   <div id="bracelet-preview">No charms selected yet.</div>
 
-  <button onclick="checkout()">🛒 Add to Cart</button>
+  <!-- 🛒 Checkout -->
+  <button class="checkout" onclick="checkout()">🛒 Add to Cart</button>
 
+  <!-- ⚙️ JavaScript -->
   <script>
     const preview = document.getElementById('bracelet-preview');
+
     function addCharm(imgSrc, name) {
       if (preview.innerText.includes('No charms')) preview.innerHTML = '';
       const img = document.createElement('img');
@@ -57,16 +160,17 @@
       img.title = name;
       preview.appendChild(img);
     }
+
     function checkout() {
       alert('Your bracelet customization has been saved!');
     }
+
+    document.getElementById("cancelSelection").addEventListener("click", () => {
+      if (confirm("Are you sure you want to cancel your custom bracelet?")) {
+        window.location.href = "/";
+      }
+    });
   </script>
-  <script>
-document.getElementById("cancelSelection").addEventListener("click", () => {
-  if (confirm("Are you sure you want to cancel your custom bracelet?")) {
-    window.location.href = "/";
-  }
-});
-</script>
+
 </body>
 </html>
