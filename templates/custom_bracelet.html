@@ -130,7 +130,6 @@
       cursor: pointer;
     }
 
-    /* Total price and buttons */
     .total-box {
       margin-top: 10px;
       text-align: center;
@@ -175,17 +174,86 @@
       transform: scale(1.05);
     }
 
-    /* Charm Grid */
-    .charm-gallery {
+    /* Category Grid */
+    .category-gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 15px;
-      padding: 20px;
-      max-width: 900px;
-      margin: 0 auto;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      max-width: 800px;
+      margin: 20px auto;
     }
 
-    .charm-item {
+    .category-item {
+      background: white;
+      border: 2px solid #eee;
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .category-item:hover {
+      border-color: #ff9800;
+      transform: scale(1.05);
+    }
+
+    .category-item img {
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    /* Charm Grid (Modal) */
+    .charm-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .recommended-item img {
+      width: 90px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .recommended-item {
       background: white;
       border: 2px solid #eee;
       border-radius: 10px;
@@ -194,91 +262,19 @@
       transition: 0.2s;
     }
 
-    .charm-item:hover {
+    .recommended-item:hover {
       border-color: #007bff;
       transform: scale(1.05);
-    }
-
-    .charm-item img {
-      width: 90px;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 10px;
-    }
-
-    /* Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 2000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.6);
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal-content {
-      background: #fff;
-      padding: 20px 30px;
-      border-radius: 12px;
-      max-width: 700px;
-      width: 90%;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      text-align: center;
-      position: relative;
-    }
-
-    .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      cursor: pointer;
-      font-size: 20px;
-      color: #ff4c4c;
-      font-weight: bold;
-    }
-
-    .recommended-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
-    }
-
-    .recommended-item {
-      background: #fff;
-      border: 2px solid #eee;
-      border-radius: 10px;
-      padding: 10px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .recommended-item:hover {
-      border-color: #ff9800;
-      transform: scale(1.05);
-    }
-
-    .recommended-item img {
-      width: 90px;
-      height: 140px;
-      object-fit: cover;
-      border-radius: 8px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Sticky Header -->
   <div class="header">
     <a href="/" class="back-home">🏠 Back to Home</a>
     <h3>Customize Your Bracelet</h3>
   </div>
 
-  <!-- Bracelet Preview Box -->
   <div class="preview-box" id="previewBox">
     <div class="preview-header">
       <h3>🪄 Preview Bracelet</h3>
@@ -291,60 +287,70 @@
       <p>Total: <span id="totalPrice">0៛</span></p>
       <div class="action-buttons">
         <button class="screenshot-btn" onclick="takeScreenshot()">📸 Take Screenshot</button>
-        <button class="add-recommended-btn" onclick="openRecommendedModal()">✨ Add Recommended Charm</button>
+        <button class="add-recommended-btn" onclick="addRecommendedCharm()">✨ Add Recommended Charm</button>
       </div>
     </div>
   </div>
 
-  <!-- Recommended Charms Modal -->
-  <div id="recommendedModal" class="modal">
+  <h2 class="title">🪄 Choose a Category 🪄</h2>
+  <div class="category-gallery" id="categoryGallery"></div>
+
+  <!-- Charm Modal -->
+  <div id="charmModal" class="modal">
     <div class="modal-content">
-      <span class="close-btn" onclick="closeRecommendedModal()">✖</span>
-      <h3>🌟 Choose a Recommended Charm</h3>
-      <div class="recommended-grid">
-        <div class="recommended-item" onclick="addRecommendedCharm('/static/images/italy_flag_charm.jpg', 'Italy Flag Charm 🇮🇹', 12000)">
-          <img src="/static/images/italy_flag_charm.jpg" alt="Italy Flag Charm">
-          <p>Italy Flag 🇮🇹</p>
-          <p><strong>12,000៛</strong></p>
-        </div>
-
-        <div class="recommended-item" onclick="addRecommendedCharm('/static/images/colosseum_charm.jpg', 'Colosseum Charm 🏛️', 15000)">
-          <img src="/static/images/colosseum_charm.jpg" alt="Colosseum Charm">
-          <p>Colosseum 🏛️</p>
-          <p><strong>15,000៛</strong></p>
-        </div>
-
-        <div class="recommended-item" onclick="addRecommendedCharm('/static/images/pizza_charm.jpg', 'Pizza Charm 🍕', 10000)">
-          <img src="/static/images/pizza_charm.jpg" alt="Pizza Charm">
-          <p>Pizza 🍕</p>
-          <p><strong>10,000៛</strong></p>
-        </div>
-
-        <div class="recommended-item" onclick="addRecommendedCharm('/static/images/venice_charm.jpg', 'Venice Charm 🚤', 13000)">
-          <img src="/static/images/venice_charm.jpg" alt="Venice Charm">
-          <p>Venice 🚤</p>
-          <p><strong>13,000៛</strong></p>
-        </div>
-      </div>
+      <span class="close-btn" onclick="closeCharmModal()">✖</span>
+      <h3 id="modalTitle">🌟 Choose a Charm</h3>
+      <div class="charm-grid" id="charmGrid"></div>
     </div>
-  </div>
-
-  <!-- Charm Selection -->
-  <h2 class="title">✨ Choose Your Charms ✨</h2>
-  <div class="charm-gallery">
-    {% for charm in charms %}
-      <div class="charm-item" onclick="addCharm('{{ charm.image }}', '{{ charm.name }}', {{ charm.price }})">
-        <img src="{{ charm.image }}" alt="{{ charm.name }}">
-        <p>{{ charm.name }}</p>
-        <p><strong>{{ charm.price }}៛</strong></p>
-      </div>
-    {% endfor %}
   </div>
 
   <script>
     const preview = document.getElementById('bracelet-preview');
     const totalPrice = document.getElementById('totalPrice');
     let charms = [];
+
+    // Example charm data (replace with backend data)
+    const allCharms = [
+      {"id": 12301, "name_kh": "Charm A", "price": 5000, "image": "/static/images/cc01.jpg", "categories": ["Italy Bracelet"]},
+      {"id": 12302, "name_kh": "Charm B", "price": 5000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"]},
+      {"id": 12303, "name_kh": "Charm C", "price": 5000, "image": "/static/images/cc03.jpg", "categories": ["Flag"]},
+      {"id": 12304, "name_kh": "Charm D", "price": 5000, "image": "/static/images/cc04.jpg", "categories": ["Football"]},
+    ];
+
+    const categories = [...new Set(allCharms.flatMap(ch => ch.categories))];
+    const categoryGallery = document.getElementById("categoryGallery");
+
+    categoryGallery.innerHTML = categories.map(cat => `
+      <div class="category-item" onclick="openCharmModal('${cat}')">
+        <img src="${getCategoryImage(cat)}" alt="${cat}">
+        <p>${cat}</p>
+      </div>
+    `).join('');
+
+    function getCategoryImage(cat) {
+      const found = allCharms.find(c => c.categories.includes(cat));
+      return found ? found.image : '/static/images/default.jpg';
+    }
+
+    function openCharmModal(category) {
+      document.getElementById("modalTitle").textContent = `✨ ${category} Charms ✨`;
+      const grid = document.getElementById("charmGrid");
+      const charmsInCategory = allCharms.filter(ch => ch.categories.includes(category));
+
+      grid.innerHTML = charmsInCategory.map(ch => `
+        <div class="recommended-item" onclick="addCharm('${ch.image}', '${ch.name_kh}', ${ch.price})">
+          <img src="${ch.image}" alt="${ch.name_kh}">
+          <p>${ch.name_kh}</p>
+          <p><strong>${ch.price.toLocaleString()}៛</strong></p>
+        </div>
+      `).join('');
+
+      document.getElementById("charmModal").style.display = "flex";
+    }
+
+    function closeCharmModal() {
+      document.getElementById("charmModal").style.display = "none";
+    }
 
     function renderBracelet() {
       preview.innerHTML = '';
@@ -372,6 +378,7 @@
     function addCharm(image, name, price) {
       charms.push({ image, name, price });
       renderBracelet();
+      closeCharmModal();
     }
 
     function removeCharm(index) {
@@ -410,18 +417,9 @@
       });
     }
 
-    function openRecommendedModal() {
-      document.getElementById("recommendedModal").style.display = "flex";
-    }
-
-    function closeRecommendedModal() {
-      document.getElementById("recommendedModal").style.display = "none";
-    }
-
-    function addRecommendedCharm(image, name, price) {
-      charms.push({ image, name, price });
-      renderBracelet();
-      closeRecommendedModal();
+    function addRecommendedCharm() {
+      const randomCharm = allCharms[Math.floor(Math.random() * allCharms.length)];
+      addCharm(randomCharm.image, randomCharm.name_kh, randomCharm.price);
     }
   </script>
 
