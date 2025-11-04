@@ -641,6 +641,9 @@ def custom_bracelet():
      {"id": 123711, "name_kh": "Charm","price": 5000, "image": "/static/images/cw11.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
      {"id": 123712, "name_kh": "Charm","price": 5000, "image": "/static/images/cw12.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
      {"id": 123713, "name_kh": "Charm","price": 5000, "image": "/static/images/cw13.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123714, "name_kh": "Charm","price": 5000, "image": "/static/images/cw14.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123715, "name_kh": "Charm","price": 5000, "image": "/static/images/cw15.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
+     {"id": 123716, "name_kh": "Charm","price": 5000, "image": "/static/images/cw16.jpg", "categories": ["Italy Bracelet"], "subcategory": ["All","Football"],"discount":20 },
 
 
 ]
