@@ -523,8 +523,8 @@ def category(category_name):
 def custom_bracelet():
     # Example charms to display
     charms = [
-       {"id": 12301, "name_kh": "Charm A", "price": 5000, "image": "/static/images/cc01.jpg", categories : [Italy Bracelet]},
-     { id: 12301, name_kh : "Charm", price : 5000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"],
+     {"id": 12301, "name_kh": "Charm A", "price": 5000, "image": "/static/images/cc01.jpg", categories : [Italy Bracelet]},
+     {"id": 12301, name_kh : "Charm", price : 5000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"],
      {"id": 12302, "name_kh": "Charm","price": 5000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"],
      {"id": 12303, "name_kh": "Charm","price": 5000, "image": "/static/images/cc03.jpg", "categories": ["Car Logo"], 
      {"id": 12304, "name_kh": "Charm","price": 5000, "image": "/static/images/cc04.jpg", "categories": ["Car Logo"], 
