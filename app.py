@@ -522,6 +522,9 @@ def category(category_name):
 def custom_bracelet():
     # Example charms to display
     charms = [
+    {"id": 1, "name_kh": "","price": 3000, "image": "/static/images/cc01.jpg", "categories": ["LEGO Anime", "Toy"]},
+    {"id": 2, "name_kh": "e","price": 3000, "image": "/static/images/cc01.jpg", "categories": ["LEGO Anime", "Toy"]},
+ 
   ]
     return render_template('custom_bracelet.html', charms=charms)
 @app.route('/subcategory/<subcategory_name>')
