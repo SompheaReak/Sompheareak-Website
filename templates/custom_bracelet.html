@@ -3,115 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <title>Customize Your Italy Bracelet</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #fafafa;
       margin: 0;
-      padding: 0;
+      padding-top: 100px;
       text-align: center;
     }
 
-    /* Sticky header */
-    .header {
+    /* Sticky top bar */
+    .top-buttons {
       position: sticky;
       top: 0;
       background: white;
+      padding: 10px 0;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      justify-content: center;
+      gap: 15px;
       z-index: 1000;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-    .back-home {
-      background: #007bff;
-      color: white;
+    .back-home, .cancel-btn {
       padding: 10px 18px;
       border-radius: 8px;
-      text-decoration: none;
+      border: none;
       font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      color: white;
+      font-size: 15px;
     }
+
+    .back-home { background: #007bff; }
+    .cancel-btn { background: #ff4c4c; }
 
     h2.title {
       margin-top: 20px;
       color: #333;
     }
 
-    /* Bracelet Preview Box */
-    .preview-box {
-      position: sticky;
-      top: 60px;
-      background: #fff;
-      border: 2px solid #ddd;
-      border-radius: 12px;
-      margin: 20px auto;
+    /* Charm Grid */
+    .charm-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 15px;
       padding: 20px;
-      width: 90%;
-      max-width: 900px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      max-width: 800px;
+      margin: 0 auto;
     }
 
-    .preview-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .cancel-btn {
-      background: #ff4c4c;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    #bracelet-preview {
-      display: flex;
-      justify-content: flex-start;
-      align-items: flex-start;
-      overflow-x: auto;
-      gap: 5px;
+    .charm-item {
+      background: white;
+      border: 2px solid #eee;
+      border-radius: 10px;
       padding: 10px;
-      min-height: 160px;
-    }
-
-    .bracelet-charm {
-      position: relative;
-      margin: 0;
-    }
-
-    .remove-btn {
-      position: absolute;
-      top: -15px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: red;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      font-size: 14px;
-      width: 26px;
-      height: 26px;
       cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       transition: 0.2s;
     }
 
-    .remove-btn:hover {
-      background: #cc0000;
-      transform: translateX(-50%) scale(1.1);
+    .charm-item:hover {
+      border-color: #007bff;
+      transform: scale(1.05);
+    }
+
+    .charm-item img {
+      width: 90px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    /* Bracelet Preview */
+    #bracelet-preview {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      padding: 30px 10px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      min-height: 160px;
+      z-index: 999;
+      border-top: 1px solid #ddd;
+    }
+
+    .bracelet-charm {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      position: relative;
+    }
+
+    .remove-btn {
+      background: #ff4c4c;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-bottom: 5px;
     }
 
     .bracelet-charm img {
       width: 90px;
       height: 150px;
       object-fit: cover;
+      border: none;
+      margin: 0;
     }
 
     .controls {
@@ -130,297 +135,73 @@
       cursor: pointer;
     }
 
-    .total-box {
-      margin-top: 10px;
-      text-align: center;
-    }
-
-    .total-box p {
-      font-size: 18px;
-      font-weight: bold;
-      margin: 5px 0;
-    }
-
-    .action-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .screenshot-btn {
+    button.checkout {
+      margin-top: 30px;
       background: #28a745;
       color: white;
       border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
       font-size: 16px;
-      cursor: pointer;
-    }
-
-    .add-recommended-btn {
-      background: #ff9800;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .add-recommended-btn:hover {
-      background: #e68900;
-      transform: scale(1.05);
-    }
-
-    /* Category grid */
-    .category-gallery {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
-      padding: 20px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .category-item {
-      background: white;
-      border: 2px solid #eee;
-      border-radius: 10px;
-      padding: 10px;
-      cursor: pointer;
-      transition: 0.2s;
-      text-align: center;
-    }
-
-    .category-item:hover {
-      border-color: #007bff;
-      transform: scale(1.05);
-    }
-
-    .category-item img {
-      width: 100px;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-
-    /* Modal */
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.4);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 10000;
-    }
-
-    .modal-content {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 90%;
-      max-height: 90%;
-      overflow-y: auto;
-      text-align: center;
-    }
-
-    .charm-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 15px;
-      margin-top: 10px;
-    }
-
-    .recommended-item {
-      background: white;
-      border: 2px solid #eee;
-      border-radius: 10px;
-      padding: 10px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .recommended-item:hover {
-      border-color: #007bff;
-      transform: scale(1.05);
-    }
-
-    .recommended-item img {
-      width: 90px;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 10px;
-    }
-
-    .close-modal-btn {
-      margin-top: 15px;
-      background: #ff4c4c;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
-      cursor: pointer;
     }
 
   </style>
 </head>
 <body>
 
-  <div class="header">
+  <!-- Sticky Top Buttons -->
+  <div class="top-buttons">
     <a href="/" class="back-home">🏠 Back to Home</a>
-    <h3>Customize Your Bracelet</h3>
+    <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
   </div>
 
-  <div class="preview-box" id="previewBox">
-    <div class="preview-header">
-      <h3>🪄 Preview Bracelet</h3>
-      <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
-    </div>
+  <h2 class="title">✨ Choose Your Charms ✨</h2>
 
-    <div id="bracelet-preview">Your charms will appear here...</div>
-
-    <div class="total-box">
-      <p>Total: <span id="totalPrice">0៛</span></p>
-      <div class="action-buttons">
-        <button class="screenshot-btn" onclick="takeScreenshot()">📸 Take Screenshot</button>
-        <button class="add-recommended-btn" onclick="addRecommendedCharm()">✨ Add Recommended Charm</button>
+  <!-- Charm Gallery -->
+  <div class="charm-gallery">
+    {% for charm in charms %}
+      <div class="charm-item" onclick="addCharm('{{ charm.image }}', '{{ charm.name }}')">
+        <img src="{{ charm.image }}" alt="{{ charm.name }}">
+        <p>{{ charm.name }}</p>
+        <p><strong>{{ charm.price }}៛</strong></p>
       </div>
-    </div>
+    {% endfor %}
   </div>
 
-  <h2 class="title">🪄 Choose a Category 🪄</h2>
-  <div id="categoryGallery" class="category-gallery"></div>
+  <!-- Bracelet Preview (Sticky Bottom) -->
+  <div id="bracelet-preview">🪄 Your bracelet will appear here!</div>
 
-  <div id="charmModal" class="modal">
-    <div class="modal-content">
-      <h3 id="modalTitle"></h3>
-      <div id="charmGrid" class="charm-grid"></div>
-      <button onclick="closeCharmModal()" class="close-modal-btn">Close</button>
-    </div>
-  </div>
+  <button class="checkout" onclick="checkout()">🛒 Add to Cart</button>
 
   <script>
     const preview = document.getElementById('bracelet-preview');
-    const totalPrice = document.getElementById('totalPrice');
     let charms = [];
-
-    const allCharms = [
-     const charmsData = [
-  // Italy Bracelet
-  { id: 12301, name_kh: "Charm A", price: 5000, image: "/static/images/cc01.jpg", categories: ["Italy Bracelet"] },
-
-  // Car Logo
-  { id: 12302, name_kh: "Charm", price: 5000, image: "/static/images/cc02.jpg", categories: ["Car Logo"] },
-  { id: 12303, name_kh: "Charm", price: 5000, image: "/static/images/cc03.jpg", categories: ["Car Logo"] },
-  { id: 12304, name_kh: "Charm", price: 5000, image: "/static/images/cc04.jpg", categories: ["Car Logo"] },
-  { id: 12305, name_kh: "Charm", price: 5000, image: "/static/images/cc05.jpg", categories: ["Car Logo"] },
-  { id: 12306, name_kh: "Charm", price: 5000, image: "/static/images/cc06.jpg", categories: ["Car Logo"] },
-  { id: 12307, name_kh: "Charm", price: 5000, image: "/static/images/cc07.jpg", categories: ["Car Logo"] },
-  { id: 12308, name_kh: "Charm", price: 5000, image: "/static/images/cc08.jpg", categories: ["Car Logo"] },
-  { id: 12309, name_kh: "Charm", price: 5000, image: "/static/images/cc09.jpg", categories: ["Car Logo"] },
-  { id: 12310, name_kh: "Charm", price: 5000, image: "/static/images/cc10.jpg", categories: ["Car Logo"] },
-  { id: 12311, name_kh: "Charm", price: 5000, image: "/static/images/cc11.jpg", categories: ["Car Logo"] },
-  { id: 12312, name_kh: "Charm", price: 5000, image: "/static/images/cc12.jpg", categories: ["Car Logo"] },
-  { id: 12313, name_kh: "Charm", price: 5000, image: "/static/images/cc13.jpg", categories: ["Car Logo"] },
-  { id: 12314, name_kh: "Charm", price: 5000, image: "/static/images/cc14.jpg", categories: ["Car Logo"] },
-  { id: 12315, name_kh: "Charm", price: 5000, image: "/static/images/cc15.jpg", categories: ["Car Logo"] },
-
-  // Flag
-  { id: 1234501, name_kh: "Charm", price: 5000, image: "/static/images/cf01.jpg", categories: ["Flag"], subcategory: ["All","Football"], discount: 20 },
-  { id: 1234502, name_kh: "Charm", price: 5000, image: "/static/images/cf02.jpg", categories: ["Flag"], subcategory: ["Flag","Football"], discount: 20 },
-  { id: 1234503, name_kh: "Charm", price: 5000, image: "/static/images/cf03.jpg", categories: ["Flag"], subcategory: ["All","Football"], discount: 20 },
-  { id: 1234504, name_kh: "Charm", price: 5000, image: "/static/images/cf04.jpg", categories: ["Flag"], subcategory: ["Flag","Football"], discount: 20 },
-  { id: 1234505, name_kh: "Charm", price: 5000, image: "/static/images/cf05.jpg", categories: ["Flag"], subcategory: ["Flag","Football"], discount: 20 },
-  { id: 1234506, name_kh: "Charm", price: 5000, image: "/static/images/cf06.jpg", categories: ["Flag"], subcategory: ["Flag","Football"], discount: 20 },
-
-  // Gemstone
-  { id: 123501, name_kh: "Charm", price: 5000, image: "/static/images/cg01.jpg", categories: ["Gemstone"], subcategory: ["Car Logo"], discount: 20 },
-  { id: 123502, name_kh: "Charm", price: 5000, image: "/static/images/cg02.jpg", categories: ["Gemstone"], subcategory: ["All","Football"], discount: 20 },
-  { id: 123503, name_kh: "Charm", price: 5000, image: "/static/images/cg03.jpg", categories: ["Gemstone"], subcategory: ["All","Football"], discount: 20 },
-
-  // Letter
-  { id: 234501, name_kh: "Charm", price: 1000, image: "/static/images/a.jpg", categories: ["Letter"], subcategory: ["All","Football"], discount: 20 },
-  { id: 234502, name_kh: "Charm", price: 1000, image: "/static/images/b.jpg", categories: ["Letter"], subcategory: ["Flag","Football"], discount: 20 },
-  { id: 234503, name_kh: "Charm", price: 1000, image: "/static/images/c.jpg", categories: ["Letter"], subcategory: ["All","Football"], discount: 20 },
-
-  // Steav
-  { id: 123601, name_kh: "Charm", price: 5000, image: "/static/images/cm01.jpg", categories: ["Steav"], subcategory: ["Car Logo"], discount: 20 },
-  { id: 123602, name_kh: "Charm", price: 5000, image: "/static/images/cm02.jpg", categories: ["Steav"], subcategory: ["All","Football"], discount: 20 },
-
-  // Cutie
-  { id: 123701, name_kh: "Charm", price: 5000, image: "/static/images/cw01.jpg", categories: ["Cutie"], subcategory: ["Car Logo"], discount: 20 },
-  { id: 123702, name_kh: "Charm", price: 5000, image: "/static/images/cw02.jpg", categories: ["Cutie"], subcategory: ["All","Football"], discount: 20 },
-  { id: 123703, name_kh: "Charm", price: 5000, image: "/static/images/cw03.jpg", categories: ["Cutie"], subcategory: ["All","Football"], discount: 20 }
- ];
-
-    const categories = [...new Set(allCharms.flatMap(ch => ch.categories))];
-    const categoryGallery = document.getElementById("categoryGallery");
-
-    categoryGallery.innerHTML = categories.map(cat => `
-      <div class="category-item" onclick="openCharmModal('${cat}')">
-        <img src="${getCategoryImage(cat)}" alt="${cat}">
-        <p>${cat}</p>
-      </div>
-    `).join('');
-
-    function getCategoryImage(cat) {
-      const found = allCharms.find(c => c.categories.includes(cat));
-      return found ? found.image : '/static/images/default.jpg';
-    }
-
-    function openCharmModal(category) {
-      document.getElementById("modalTitle").textContent = `✨ ${category} Charms ✨`;
-      const grid = document.getElementById("charmGrid");
-      const charmsInCategory = allCharms.filter(ch => ch.categories.includes(category));
-
-      grid.innerHTML = charmsInCategory.map(ch => `
-        <div class="recommended-item" onclick="addCharm('${ch.image}', '${ch.name_kh}', ${ch.price})">
-          <img src="${ch.image}" alt="${ch.name_kh}">
-          <p>${ch.name_kh}</p>
-          <p><strong>${ch.price.toLocaleString()}៛</strong></p>
-        </div>
-      `).join('');
-
-      document.getElementById("charmModal").style.display = "flex";
-    }
-
-    function closeCharmModal() {
-      document.getElementById("charmModal").style.display = "none";
-    }
 
     function renderBracelet() {
       preview.innerHTML = '';
-      let total = 0;
-
       charms.forEach((charm, index) => {
-        total += charm.price;
-        const div = document.createElement('div');
-        div.className = 'bracelet-charm';
-        div.innerHTML = `
-          <button class="remove-btn" onclick="removeCharm(${index})">✖</button>
+        const container = document.createElement('div');
+        container.className = 'bracelet-charm';
+        container.innerHTML = `
+          <button class="remove-btn" onclick="removeCharm(${index})">❌</button>
           <img src="${charm.image}" alt="${charm.name}">
           <div class="controls">
             <button class="move-left" onclick="moveLeft(${index})">⬅️</button>
             <button class="move-right" onclick="moveRight(${index})">➡️</button>
           </div>
         `;
-        preview.appendChild(div);
+        preview.appendChild(container);
       });
 
-      totalPrice.textContent = total.toLocaleString() + "៛";
-      if (charms.length === 0) preview.textContent = "Your charms will appear here...";
+      if (charms.length === 0) {
+        preview.textContent = '🪄 Your bracelet will appear here!';
+      }
     }
 
-    function addCharm(image, name, price) {
-      charms.push({ image, name, price });
+    function addCharm(image, name) {
+      charms.push({ image, name });
       renderBracelet();
-      closeCharmModal();
     }
 
     function removeCharm(index) {
@@ -442,27 +223,24 @@
       }
     }
 
+    function checkout() {
+      if (charms.length === 0) {
+        alert('Please select at least one charm before adding to cart!');
+      } else {
+        alert(`✅ You have added ${charms.length} charms to your bracelet!`);
+      }
+    }
+
     document.getElementById("cancelSelection").addEventListener("click", () => {
       if (confirm("Are you sure you want to cancel your bracelet design?")) {
         charms = [];
         renderBracelet();
       }
     });
-
-    function takeScreenshot() {
-      const element = document.getElementById("previewBox");
-      html2canvas(element).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "bracelet_design.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-      });
-    }
-
-    function addRecommendedCharm() {
-      const randomCharm = allCharms[Math.floor(Math.random() * allCharms.length)];
-      addCharm(randomCharm.image, randomCharm.name_kh, randomCharm.price);
-    }
   </script>
+
 </body>
 </html>
+Here is my current code what I want is Back to home button on top 
+Make a box for preview bracelet and cancel selection button on top preview bracelet 
+Total in bottom box of preview bracelet  and finally I would like a screenshot bottom that allow they can take a screenshot 
