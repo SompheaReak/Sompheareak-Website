@@ -519,35 +519,44 @@ def category(category_name):
         current_subcategory=None,
         subcategories=[]
     )
-from flask import Flask, render_template
-
-app = Flask(__name__)
-
-@app.route('/custom_bracelet')
+@app.route('/custom-bracelet')
 def custom_bracelet():
-    # Define your categories
-    categories = [
-        {"name": "Hot Sale", "image": "/static/images/hot_sale.jpg"},
-        {"name": "Animals", "image": "/static/images/animals.jpg"},
-        {"name": "Love", "image": "/static/images/love.jpg"},
-        {"name": "Travel", "image": "/static/images/travel.jpg"},
-    ]
+    # Example charms to display
+    [
+  {"id": 12301, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"]},
+  {"id": 12302, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"]},
+  {"id": 12303, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc03.jpg", "categories": ["Car Logo"]},
+  {"id": 12304, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc04.jpg", "categories": ["Car Logo"]},
+  {"id": 12305, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc05.jpg", "categories": ["Car Logo"]},
+  {"id": 12306, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc06.jpg", "categories": ["Car Logo"]},
+  {"id": 12307, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc07.jpg", "categories": ["Car Logo"]},
+  {"id": 12308, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc08.jpg", "categories": ["Car Logo"]},
+  {"id": 12309, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc09.jpg", "categories": ["Car Logo"]},
+  {"id": 12310, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc10.jpg", "categories": ["Car Logo"]},
+  {"id": 12311, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc11.jpg", "categories": ["Car Logo"]},
+  {"id": 12312, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc12.jpg", "categories": ["Car Logo"]},
+  {"id": 12313, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc13.jpg", "categories": ["Car Logo"]},
+  {"id": 12314, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc14.jpg", "categories": ["Car Logo"]},
+  {"id": 12315, "name_kh": "Charm", "price": 5000, "image": "/static/images/cc15.jpg", "categories": ["Car Logo"]},
 
-    # Define your charms (each must have a 'category' field)
-    charms = [
-        {"name": "Heart Charm", "image": "/static/charms/heart.png", "price": 5000, "category": "Love"},
-        {"name": "Cat Charm", "image": "/static/charms/cat.png", "price": 6000, "category": "Animals"},
-        {"name": "Dog Charm", "image": "/static/charms/dog.png", "price": 6000, "category": "Animals"},
-        {"name": "Plane Charm", "image": "/static/charms/plane.png", "price": 7000, "category": "Travel"},
-        {"name": "Star Charm", "image": "/static/charms/star.png", "price": 8000, "category": "Hot Sale"},
-    ]
+  {"id": 1234501, "name_kh": "Charm", "price": 5000, "image": "/static/images/cf01.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+  {"id": 1234502, "name_kh": "Charm", "price": 5000, "image": "/static/images/cf02.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+  {"id": 1234503, "name_kh": "Charm", "price": 5000, "image": "/static/images/cf03.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+  {"id": 1234504, "name_kh": "Charm", "price": 5000, "image": "/static/images/cf04.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+  {"id": 1234505, "name_kh": "Charm", "price": 5000, "image": "/static/images/cf05.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
 
-    # Pass both lists to your HTML
-    return render_template('custom_bracelet.html', categories=categories, charms=charms)
+  {"id": 123501, "name_kh": "Charm", "price": 5000, "image": "/static/images/cg01.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
+  {"id": 123502, "name_kh": "Charm", "price": 5000, "image": "/static/images/cg02.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
 
+  {"id": 234501, "name_kh": "Charm", "price": 1000, "image": "/static/images/a.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+  {"id": 234502, "name_kh": "Charm", "price": 1000, "image": "/static/images/b.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
 
-if __name__ == '__main__':
-    app.run(debug=True)
+  {"id": 123601, "name_kh": "Charm", "price": 5000, "image": "/static/images/cm01.jpg", "categories": ["Steav"], "subcategory": ["Car Logo"], "discount": 20},
+  {"id": 123602, "name_kh": "Charm", "price": 5000, "image": "/static/images/cm02.jpg", "categories": ["Steav"], "subcategory": ["All","Football"], "discount": 20},
+
+  {"id": 123701, "name_kh": "Charm", "price": 5000, "image": "/static/images/cw01.jpg", "categories": ["Cutie"], "subcategory": ["Car Logo"], "discount": 20},
+  {"id": 123702, "name_kh": "Charm", "price": 5000, "image": "/static/images/cw02.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20}
+]
     return render_template('custom_bracelet.html', charms=charms)
 @app.route('/subcategory/<subcategory_name>')
 def subcategory(subcategory_name):
