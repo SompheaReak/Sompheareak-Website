@@ -1,543 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Customize Your Italy Bracelet</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #fafafa;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
-
-    /* Sticky header */
-    .header {
-      position: sticky;
-      top: 0;
-      background: white;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      z-index: 1000;
-    }
-
-    .back-home {
-      background: #007bff;
-      color: white;
-      padding: 10px 18px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    h2.title {
-      margin-top: 20px;
-      color: #333;
-    }
-
-    /* Bracelet Preview Box */
-    .preview-box {
-      position: sticky;
-      top: 60px;
-      background: #fff;
-      border: 2px solid #ddd;
-      border-radius: 12px;
-      margin: 20px auto;
-      padding: 20px;
-      width: 90%;
-      max-width: 900px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-
-    .preview-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .cancel-btn {
-      background: #ff4c4c;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    #bracelet-preview {
-      display: flex;
-      justify-content: flex-start;
-      align-items: flex-start;
-      overflow-x: auto;
-      gap: 5px;
-      padding: 10px;
-      min-height: 160px;
-    }
-
-    .bracelet-charm {
-      position: relative;
-      margin: 0;
-    }
-
-    .remove-btn {
-      position: absolute;
-      top: -15px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: red;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      font-size: 14px;
-      width: 26px;
-      height: 26px;
-      cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      transition: 0.2s;
-    }
-
-    .remove-btn:hover {
-      background: #cc0000;
-      transform: translateX(-50%) scale(1.1);
-    }
-
-    .bracelet-charm img {
-      width: 90px;
-      height: 150px;
-      object-fit: cover;
-    }
-
-    .controls {
-      display: flex;
-      gap: 5px;
-      margin-top: 5px;
-    }
-
-    .move-left, .move-right {
-      border: none;
-      background: rgba(0,0,0,0.4);
-      color: white;
-      border-radius: 4px;
-      font-size: 14px;
-      padding: 2px 6px;
-      cursor: pointer;
-    }
-
-    .total-box {
-      margin-top: 10px;
-      text-align: center;
-    }
-
-    .total-box p {
-      font-size: 18px;
-      font-weight: bold;
-      margin: 5px 0;
-    }
-
-    .action-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .screenshot-btn {
-      background: #28a745;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .add-recommended-btn {
-      background: #ff9800;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .add-recommended-btn:hover {
-      background: #e68900;
-      transform: scale(1.05);
-    }
-
-    /* Category grid */
-    .category-gallery {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
-      padding: 20px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .category-item {
-      background: white;
-      border: 2px solid #eee;
-      border-radius: 10px;
-      padding: 10px;
-      cursor: pointer;
-      transition: 0.2s;
-      text-align: center;
-    }
-
-    .category-item:hover {
-      border-color: #007bff;
-      transform: scale(1.05);
-    }
-
-    .category-item img {
-      width: 100px;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-
-    /* Modal */
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.4);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 10000;
-    }
-
-    .modal-content {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 90%;
-      max-height: 90%;
-      overflow-y: auto;
-      text-align: center;
-    }
-
-    .charm-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 15px;
-      margin-top: 10px;
-    }
-
-    .recommended-item {
-      background: white;
-      border: 2px solid #eee;
-      border-radius: 10px;
-      padding: 10px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .recommended-item:hover {
-      border-color: #007bff;
-      transform: scale(1.05);
-    }
-
-    .recommended-item img {
-      width: 90px;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 10px;
-    }
-
-    .close-modal-btn {
-      margin-top: 15px;
-      background: #ff4c4c;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-  </style>
+<meta charset="UTF-8">
+<title>Customize Your Bracelet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; background:#fafafa; text-align:center; margin:0; padding:0; }
+  .header { position:sticky; top:0; background:#fff; display:flex; justify-content:space-between; align-items:center; padding:10px 20px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+  .back-home { background:#007bff; color:white; padding:8px 15px; border-radius:8px; text-decoration:none; font-weight:bold; }
+  .preview-box { background:#fff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.05); padding:20px; width:90%; max-width:900px; margin:20px auto; }
+  .cancel-btn { background:#ff4c4c; color:white; border:none; padding:8px 14px; border-radius:6px; font-weight:bold; cursor:pointer; }
+  #bracelet-preview { display:flex; justify-content:flex-start; gap:5px; overflow-x:auto; min-height:160px; align-items:flex-start; padding:10px; }
+  .bracelet-charm img { width:90px; height:150px; object-fit:cover; }
+  .remove-btn { position:absolute; top:-15px; left:50%; transform:translateX(-50%); background:red; color:white; border:none; border-radius:50%; width:25px; height:25px; cursor:pointer; }
+  .controls { display:flex; justify-content:center; gap:5px; margin-top:5px; }
+  .total-box p { font-weight:bold; font-size:18px; }
+  .action-buttons { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:10px; }
+  .screenshot-btn { background:#28a745; color:white; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; }
+  .add-recommended-btn { background:#ff9800; color:white; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; }
+  .category-gallery { display:grid; grid-template-columns:repeat(2,1fr); gap:15px; padding:20px; max-width:600px; margin:auto; }
+  .category-item { background:#fff; border:2px solid #eee; border-radius:10px; padding:10px; cursor:pointer; transition:0.2s; }
+  .category-item:hover { border-color:#007bff; transform:scale(1.05); }
+  .category-item img { width:100px; height:150px; object-fit:cover; border-radius:8px; }
+  .modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:9999; }
+  .modal-content { background:#fff; padding:20px; border-radius:10px; max-width:90%; max-height:90%; overflow-y:auto; }
+  .charm-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:15px; }
+  .recommended-item { background:white; border:2px solid #eee; border-radius:10px; padding:10px; cursor:pointer; transition:0.2s; }
+  .recommended-item:hover { border-color:#007bff; transform:scale(1.05); }
+  .recommended-item img { width:90px; height:150px; object-fit:cover; }
+</style>
 </head>
 <body>
 
-  <div class="header">
-    <a href="/" class="back-home">🏠 Back to Home</a>
-    <h3>Customize Your Bracelet</h3>
+<div class="header">
+  <a href="#" class="back-home">🏠 Back to Home</a>
+  <h3>Customize Your Bracelet</h3>
+</div>
+
+<div class="preview-box" id="previewBox">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <h3>🪄 Preview Bracelet</h3>
+    <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
   </div>
-
-  <div class="preview-box" id="previewBox">
-    <div class="preview-header">
-      <h3>🪄 Preview Bracelet</h3>
-      <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
-    </div>
-
-    <div id="bracelet-preview">Your charms will appear here...</div>
-
-    <div class="total-box">
-      <p>Total: <span id="totalPrice">0៛</span></p>
-      <div class="action-buttons">
-        <button class="screenshot-btn" onclick="takeScreenshot()">📸 Take Screenshot</button>
-        <button class="add-recommended-btn" onclick="addRecommendedCharm()">✨ Add Recommended Charm</button>
-      </div>
+  <div id="bracelet-preview">Your charms will appear here...</div>
+  <div class="total-box">
+    <p>Total: <span id="totalPrice">0៛</span></p>
+    <div class="action-buttons">
+      <button id="screenshotBtn" class="screenshot-btn">📸 Take Screenshot</button>
+      <button id="recommendedBtn" class="add-recommended-btn">✨ Add Recommended Charm</button>
     </div>
   </div>
+</div>
 
-  <h2 class="title">🪄 Choose a Category 🪄</h2>
-  <div id="categoryGallery" class="category-gallery"></div>
+<h2>🪄 Choose a Category 🪄</h2>
+<div id="categoryGallery" class="category-gallery"></div>
 
-  <div id="charmModal" class="modal">
-    <div class="modal-content">
-      <h3 id="modalTitle"></h3>
-      <div id="charmGrid" class="charm-grid"></div>
-      <button onclick="closeCharmModal()" class="close-modal-btn">Close</button>
-    </div>
+<div id="charmModal" class="modal">
+  <div class="modal-content">
+    <h3 id="modalTitle"></h3>
+    <div id="charmGrid" class="charm-grid"></div>
+    <button id="closeModalBtn" class="cancel-btn">Close</button>
   </div>
+</div>
 
-  <script>
-    const preview = document.getElementById('bracelet-preview');
-    const totalPrice = document.getElementById('totalPrice');
-    let charms = [];
+<script>
+// ======== DATA =========
+const allCharms = [
+  { id:1, name_kh:"Italy Charm 1", price:5000, image:"/static/images/cc01.jpg", categories:["Italy Bracelet"] },
+  { id:2, name_kh:"Italy Charm 2", price:5000, image:"/static/images/cc02.jpg", categories:["Italy Bracelet"] },
+  { id:3, name_kh:"Car Charm 1", price:4500, image:"/static/images/cf01.jpg", categories:["Car Logo"] },
+  { id:4, name_kh:"Car Charm 2", price:4500, image:"/static/images/cf02.jpg", categories:["Car Logo"] },
+  { id:5, name_kh:"Flag Charm 1", price:4800, image:"/static/images/cf03.jpg", categories:["Flag"] },
+  { id:6, name_kh:"Gemstone 1", price:6000, image:"/static/images/cg01.jpg", categories:["Gemstone"] },
+  { id:7, name_kh:"Letter A", price:1000, image:"/static/images/a.jpg", categories:["Letter"] },
+  { id:8, name_kh:"Letter B", price:1000, image:"/static/images/b.jpg", categories:["Letter"] },
+];
 
-    const allCharms = [
-      {"id": 12301, "name_kh": "Charm A", "price": 5000, "image": "/static/images/cc01.jpg", "categories": ["Italy Bracelet"]},
-     {"id": 12301, "name_kh": "Charm","price": 5000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"],
-     {"id": 12302, "name_kh": "Charm","price": 5000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"],
-     {"id": 12303, "name_kh": "Charm","price": 5000, "image": "/static/images/cc03.jpg", "categories": ["Car Logo"], 
-     {"id": 12304, "name_kh": "Charm","price": 5000, "image": "/static/images/cc04.jpg", "categories": ["Car Logo"], 
-     {"id": 12305, "name_kh": "Charm","price": 5000, "image": "/static/images/cc05.jpg", "categories": ["Car Logo"],
-     {"id": 12306, "name_kh": "Charm","price": 5000, "image": "/static/images/cc06.jpg", "categories": ["Car Logo"], 
-     {"id": 12307, "name_kh": "Charm","price": 5000, "image": "/static/images/cc07.jpg", "categories": ["Car Lego"],
-     {"id": 12308, "name_kh": "Charm","price": 5000, "image": "/static/images/cc08.jpg", "categories": ["Car Logo"],
-     {"id": 12309, "name_kh": "Charm","price": 5000, "image": "/static/images/cc09.jpg", "categories": ["Car Logo"],
-     {"id": 12310, "name_kh": "Charm","price": 5000, "image": "/static/images/cc10.jpg", "categories": ["Car Logo"], 
-     {"id": 12311, "name_kh": "Charm","price": 5000, "image": "/static/images/cc11.jpg", "categories": ["Car Logo"], 
-     {"id": 12312, "name_kh": "Charm","price": 5000, "image": "/static/images/cc12.jpg", "categories": ["Car Logo"], 
-     {"id": 12313, "name_kh": "Charm","price": 5000, "image": "/static/images/cc13.jpg", "categories": ["Car Logo"], 
-     {"id": 12314, "name_kh": "Charm","price": 5000, "image": "/static/images/cc14.jpg", "categories": ["Car Logo"], 
-     {"id": 12315, "name_kh": "Charm","price": 5000, "image": "/static/images/cc15.jpg", "categories": ["Car Logo"],
+// ======== DOM =========
+const preview = document.getElementById('bracelet-preview');
+const totalPrice = document.getElementById('totalPrice');
+const categoryGallery = document.getElementById('categoryGallery');
+const charmModal = document.getElementById('charmModal');
+const charmGrid = document.getElementById('charmGrid');
+const modalTitle = document.getElementById('modalTitle');
+const closeModalBtn = document.getElementById('closeModalBtn');
 
+let charms = [];
 
-     {"id": 1234501, "name_kh": "Charm","price": 5000, "image": "/static/images/cf01.jpg", "categories": ["Flag"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 1234502, "name_kh": "Charm","price": 5000, "image": "/static/images/cf02.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 1234503, "name_kh": "Charm","price": 5000, "image": "/static/images/cf03.jpg", "categories": ["Flag"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 1234504, "name_kh": "Charm","price": 5000, "image": "/static/images/cf04.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 1234505, "name_kh": "Charm","price": 5000, "image": "/static/images/cf05.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 1234506, "name_kh": "Charm","price": 5000, "image": "/static/images/cf06.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 1234507, "name_kh": "Charm","price": 5000, "image": "/static/images/cf07.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 1234508, "name_kh": "Charm","price": 5000, "image": "/static/images/cf08.jpg", "categories": ["Flag"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 1234509, "name_kh": "Charm","price": 5000, "image": "/static/images/cf09.jpg", "categories": ["Flag"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 1234510, "name_kh": "Charm","price": 5000, "image": "/static/images/cf10.jpg", "categories": ["Flag"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 1234511, "name_kh": "Charm","price": 5000, "image": "/static/images/cf11.jpg", "categories": ["Flag"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 1234512, "name_kh": "Charm","price": 5000, "image": "/static/images/cf12.jpg", "categories": ["Flag"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 1234513, "name_kh": "Charm","price": 5000, "image": "/static/images/cf13.jpg", "categories": ["Flag"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 1234514, "name_kh": "Charm","price": 5000, "image": "/static/images/cf14.jpg", "categories": ["Flag"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 1234515, "name_kh": "Charm","price": 5000, "image": "/static/images/cf15.jpg", "categories": ["Flag"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 1234516, "name_kh": "Charm","price": 5000, "image": "/static/images/cf16.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 1234517, "name_kh": "Charm","price": 5000, "image": "/static/images/cf17.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 1234518, "name_kh": "Charm","price": 5000, "image": "/static/images/cf18.jpg", "categories": ["Flag"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 1234519, "name_kh": "Charm","price": 5000, "image": "/static/images/cf19.jpg", "categories": ["Flag"], "subcategory": ["All","Football"],"discount":20 },
+// ======== FUNCTIONS =========
+function getUniqueCategories() {
+  const set = new Set();
+  allCharms.forEach(c => c.categories.forEach(cat => set.add(cat)));
+  return Array.from(set);
+}
 
-     {"id": 123501, "name_kh": "Charm","price": 5000, "image": "/static/images/cg01.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo",],"discount":20 },
-     {"id": 123502, "name_kh": "Charm","price": 5000, "image": "/static/images/cg02.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123503, "name_kh": "Charm","price": 5000, "image": "/static/images/cg03.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123504, "name_kh": "Charm","price": 5000, "image": "/static/images/cg04.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123505, "name_kh": "Charm","price": 5000, "image": "/static/images/cg05.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123506, "name_kh": "Charm","price": 5000, "image": "/static/images/cg06.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"],"discount":20 },
-     {"id": 123507, "name_kh": "Charm","price": 5000, "image": "/static/images/cg07.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"],"discount":20 },
-     {"id": 123508, "name_kh": "Charm","price": 5000, "image": "/static/images/cg08.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123509, "name_kh": "Charm","price": 5000, "image": "/static/images/cg09.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123510, "name_kh": "Charm","price": 5000, "image": "/static/images/cg10.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123511, "name_kh": "Charm","price": 5000, "image": "/static/images/cg11.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123512, "name_kh": "Charm","price": 5000, "image": "/static/images/cg12.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123513, "name_kh": "Charm","price": 5000, "image": "/static/images/cg13.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123514, "name_kh": "Charm","price": 5000, "image": "/static/images/cg14.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123515, "name_kh": "Charm","price": 5000, "image": "/static/images/cg15.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123516, "name_kh": "Charm","price": 5000, "image": "/static/images/cg16.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"],"discount":20 },
-     {"id": 123517, "name_kh": "Charm","price": 5000, "image": "/static/images/cg17.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"],"discount":20 },
-     {"id": 123518, "name_kh": "Charm","price": 5000, "image": "/static/images/cg18.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123519, "name_kh": "Charm","price": 5000, "image": "/static/images/cg19.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123520, "name_kh": "Charm","price": 5000, "image": "/static/images/cg20.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123521, "name_kh": "Charm","price": 5000, "image": "/static/images/cg21.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo",],"discount":20 },
-     {"id": 123522, "name_kh": "Charm","price": 5000, "image": "/static/images/cg22.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123523, "name_kh": "Charm","price": 5000, "image": "/static/images/cg23.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123524, "name_kh": "Charm","price": 5000, "image": "/static/images/cg24.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"],"discount":20 },
+function renderCategories() {
+  const cats = getUniqueCategories();
+  categoryGallery.innerHTML = '';
+  cats.forEach(cat => {
+    const img = allCharms.find(c => c.categories.includes(cat))?.image || '/static/images/default.jpg';
+    const div = document.createElement('div');
+    div.className = 'category-item';
+    div.innerHTML = `<img src="${img}" alt="${cat}"><p>${cat}</p>`;
+    div.onclick = () => openCharmModal(cat);
+    categoryGallery.appendChild(div);
+  });
+}
 
+function openCharmModal(category) {
+  modalTitle.textContent = `✨ ${category} Charms ✨`;
+  const charmsInCat = allCharms.filter(c => c.categories.includes(category));
+  charmGrid.innerHTML = '';
+  charmsInCat.forEach(ch => {
+    const div = document.createElement('div');
+    div.className = 'recommended-item';
+    div.innerHTML = `
+      <img src="${ch.image}" alt="${ch.name_kh}">
+      <p>${ch.name_kh}</p>
+      <p><strong>${ch.price.toLocaleString()}៛</strong></p>`;
+    div.onclick = () => addCharm(ch.image, ch.name_kh, ch.price);
+    charmGrid.appendChild(div);
+  });
+  charmModal.style.display = 'flex';
+}
 
-     {"id": 234501, "name_kh": "Charm","price": 1000, "image": "/static/images/a.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234502, "name_kh": "Charm","price": 1000, "image": "/static/images/b.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 234503, "name_kh": "Charm","price": 1000, "image": "/static/images/c.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234504, "name_kh": "Charm","price": 1000, "image": "/static/images/d.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 234505, "name_kh": "Charm","price": 5000, "image": "/static/images/e.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 234506, "name_kh": "Charm","price": 5000, "image": "/static/images/f.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 234507, "name_kh": "Charm","price": 5000, "image": "/static/images/g.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 234508, "name_kh": "Charm","price": 5000, "image": "/static/images/h.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234509, "name_kh": "Charm","price": 5000, "image": "/static/images/i.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234510, "name_kh": "Charm","price": 5000, "image": "/static/images/j.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234511, "name_kh": "Charm","price": 5000, "image": "/static/images/k.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234512, "name_kh": "Charm","price": 5000, "image": "/static/images/l.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234513, "name_kh": "Charm","price": 5000, "image": "/static/images/m.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234514, "name_kh": "Charm","price": 5000, "image": "/static/images/n.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234515, "name_kh": "Charm","price": 5000, "image": "/static/images/o.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234516, "name_kh": "Charm","price": 5000, "image": "/static/images/p.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 234517, "name_kh": "Charm","price": 5000, "image": "/static/images/q.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 234518, "name_kh": "Charm","price": 5000, "image": "/static/images/r.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234519, "name_kh": "Charm","price": 5000, "image": "/static/images/s.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234520, "name_kh": "Charm","price": 5000, "image": "/static/images/t.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234521, "name_kh": "Charm","price": 5000, "image": "/static/images/u.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234522, "name_kh": "Charm","price": 5000, "image": "/static/images/v.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234523, "name_kh": "Charm","price": 5000, "image": "/static/images/w.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 234524, "name_kh": "Charm","price": 5000, "image": "/static/images/x.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"],"discount":20 },
-     {"id": 234525, "name_kh": "Charm","price": 5000, "image": "/static/images/y.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 234526, "name_kh": "Charm","price": 5000, "image": "/static/images/z.jpg", "categories": ["Letter"], "subcategory": ["All","Football"],"discount":20 },
+function closeCharmModal() {
+  charmModal.style.display = 'none';
+}
 
-     {"id": 123601, "name_kh": "Charm","price": 5000, "image": "/static/images/cm01.jpg", "categories": ["Steav"], "subcategory": ["Car Logo",],"discount":20 },
-     {"id": 123602, "name_kh": "Charm","price": 5000, "image": "/static/images/cm02.jpg", "categories": ["Steav"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123603, "name_kh": "Charm","price": 5000, "image": "/static/images/cm03.jpg", "categories": ["Steav"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123604, "name_kh": "Charm","price": 5000, "image": "/static/images/cm04.jpg", "categories": ["Steav"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123605, "name_kh": "Charm","price": 5000, "image": "/static/images/cm05.jpg", "categories": ["Steav"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123606, "name_kh": "Charm","price": 5000, "image": "/static/images/cm06.jpg", "categories": ["Steav"], "subcategory": ["Car Logo"],"discount":20 },
-     {"id": 123607, "name_kh": "Charm","price": 5000, "image": "/static/images/cm07.jpg", "categories": ["Steav"], "subcategory": ["Car Logo"],"discount":20 },
-     {"id": 123608, "name_kh": "Charm","price": 5000, "image": "/static/images/cm08.jpg", "categories": ["Steav"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123609, "name_kh": "Charm","price": 5000, "image": "/static/images/cm09.jpg", "categories": ["Steav"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123610, "name_kh": "Charm","price": 5000, "image": "/static/images/cm10.jpg", "categories": ["Steav"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123611, "name_kh": "Charm","price": 5000, "image": "/static/images/cm11.jpg", "categories": ["Steav"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123612, "name_kh": "Charm","price": 5000, "image": "/static/images/cm12.jpg", "categories": ["Steav"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123613, "name_kh": "Charm","price": 5000, "image": "/static/images/cm13.jpg", "categories": ["Steav"], "subcategory": ["All","Football"],"discount":20 },
+closeModalBtn.onclick = closeCharmModal;
+charmModal.onclick = e => { if (e.target === charmModal) closeCharmModal(); };
 
-     {"id": 123701, "name_kh": "Charm","price": 5000, "image": "/static/images/cw01.jpg", "categories": ["Cutie"], "subcategory": ["Car Logo",],"discount":20 },
-     {"id": 123702, "name_kh": "Charm","price": 5000, "image": "/static/images/cw02.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123703, "name_kh": "Charm","price": 5000, "image": "/static/images/cw03.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123704, "name_kh": "Charm","price": 5000, "image": "/static/images/cw04.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123705, "name_kh": "Charm","price": 5000, "image": "/static/images/cw05.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123706, "name_kh": "Charm","price": 5000, "image": "/static/images/cw06.jpg", "categories": ["Cutie"], "subcategory": ["Car Logo"],"discount":20 },
-     {"id": 123707, "name_kh": "Charm","price": 5000, "image": "/static/images/cw07.jpg", "categories": ["Cutie"], "subcategory": ["Car Logo"],"discount":20 },
-     {"id": 123708, "name_kh": "Charm","price": 5000, "image": "/static/images/cw08.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123709, "name_kh": "Charm","price": 5000, "image": "/static/images/cw09.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123710, "name_kh": "Charm","price": 5000, "image": "/static/images/cw10.jpg", "categories": ["Cutiet"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123711, "name_kh": "Charm","price": 5000, "image": "/static/images/cw11.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123712, "name_kh": "Charm","price": 5000, "image": "/static/images/cw12.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123713, "name_kh": "Charm","price": 5000, "image": "/static/images/cw13.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123714, "name_kh": "Charm","price": 5000, "image": "/static/images/cw14.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123715, "name_kh": "Charm","price": 5000, "image": "/static/images/cw15.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-     {"id": 123716, "name_kh": "Charm","price": 5000, "image": "/static/images/cw16.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-    ];
+function renderBracelet() {
+  preview.innerHTML = '';
+  if (charms.length === 0) {
+    preview.textContent = 'Your charms will appear here...';
+    totalPrice.textContent = '0៛';
+    return;
+  }
+  let total = 0;
+  charms.forEach((c, i) => {
+    total += c.price;
+    const div = document.createElement('div');
+    div.style.position = 'relative';
+    div.innerHTML = `
+      <button class="remove-btn" data-index="${i}">✖</button>
+      <img src="${c.image}" alt="${c.name}">
+      <div class="controls">
+        <button onclick="moveLeft(${i})">⬅️</button>
+        <button onclick="moveRight(${i})">➡️</button>
+      </div>`;
+    div.querySelector('.remove-btn').onclick = () => removeCharm(i);
+    preview.appendChild(div);
+  });
+  totalPrice.textContent = total.toLocaleString() + '៛';
+}
 
-    const categories = [...new Set(allCharms.flatMap(ch => ch.categories))];
-    const categoryGallery = document.getElementById("categoryGallery");
+function addCharm(image, name, price) {
+  charms.push({ image, name, price });
+  renderBracelet();
+}
 
-    categoryGallery.innerHTML = categories.map(cat => `
-      <div class="category-item" onclick="openCharmModal('${cat}')">
-        <img src="${getCategoryImage(cat)}" alt="${cat}">
-        <p>${cat}</p>
-      </div>
-    `).join('');
+function removeCharm(i) {
+  charms.splice(i, 1);
+  renderBracelet();
+}
+function moveLeft(i) {
+  if (i > 0) [charms[i-1], charms[i]] = [charms[i], charms[i-1]];
+  renderBracelet();
+}
+function moveRight(i) {
+  if (i < charms.length - 1) [charms[i+1], charms[i]] = [charms[i], charms[i+1]];
+  renderBracelet();
+}
 
-    function getCategoryImage(cat) {
-      const found = allCharms.find(c => c.categories.includes(cat));
-      return found ? found.image : '/static/images/default.jpg';
-    }
+document.getElementById('cancelSelection').onclick = () => {
+  if (confirm('Clear all charms?')) { charms = []; renderBracelet(); }
+};
 
-    function openCharmModal(category) {
-      document.getElementById("modalTitle").textContent = `✨ ${category} Charms ✨`;
-      const grid = document.getElementById("charmGrid");
-      const charmsInCategory = allCharms.filter(ch => ch.categories.includes(category));
+document.getElementById('screenshotBtn').onclick = () => {
+  html2canvas(document.getElementById('previewBox')).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'bracelet_design.png';
+    link.href = canvas.toDataURL();
+    link.click();
+  });
+};
 
-      grid.innerHTML = charmsInCategory.map(ch => `
-        <div class="recommended-item" onclick="addCharm('${ch.image}', '${ch.name_kh}', ${ch.price})">
-          <img src="${ch.image}" alt="${ch.name_kh}">
-          <p>${ch.name_kh}</p>
-          <p><strong>${ch.price.toLocaleString()}៛</strong></p>
-        </div>
-      `).join('');
+document.getElementById('recommendedBtn').onclick = () => {
+  const random = allCharms[Math.floor(Math.random()*allCharms.length)];
+  addCharm(random.image, random.name_kh, random.price);
+};
 
-      document.getElementById("charmModal").style.display = "flex";
-    }
-
-    function closeCharmModal() {
-      document.getElementById("charmModal").style.display = "none";
-    }
-
-    function renderBracelet() {
-      preview.innerHTML = '';
-      let total = 0;
-
-      charms.forEach((charm, index) => {
-        total += charm.price;
-        const div = document.createElement('div');
-        div.className = 'bracelet-charm';
-        div.innerHTML = `
-          <button class="remove-btn" onclick="removeCharm(${index})">✖</button>
-          <img src="${charm.image}" alt="${charm.name}">
-          <div class="controls">
-            <button class="move-left" onclick="moveLeft(${index})">⬅️</button>
-            <button class="move-right" onclick="moveRight(${index})">➡️</button>
-          </div>
-        `;
-        preview.appendChild(div);
-      });
-
-      totalPrice.textContent = total.toLocaleString() + "៛";
-      if (charms.length === 0) preview.textContent = "Your charms will appear here...";
-    }
-
-    function addCharm(image, name, price) {
-      charms.push({ image, name, price });
-      renderBracelet();
-      closeCharmModal();
-    }
-
-    function removeCharm(index) {
-      charms.splice(index, 1);
-      renderBracelet();
-    }
-
-    function moveLeft(index) {
-      if (index > 0) {
-        [charms[index - 1], charms[index]] = [charms[index], charms[index - 1]];
-        renderBracelet();
-      }
-    }
-
-    function moveRight(index) {
-      if (index < charms.length - 1) {
-        [charms[index + 1], charms[index]] = [charms[index], charms[index + 1]];
-        renderBracelet();
-      }
-    }
-
-    document.getElementById("cancelSelection").addEventListener("click", () => {
-      if (confirm("Are you sure you want to cancel your bracelet design?")) {
-        charms = [];
-        renderBracelet();
-      }
-    });
-
-    function takeScreenshot() {
-      const element = document.getElementById("previewBox");
-      html2canvas(element).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "bracelet_design.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-      });
-    }
-
-    function addRecommendedCharm() {
-      const randomCharm = allCharms[Math.floor(Math.random() * allCharms.length)];
-      addCharm(randomCharm.image, randomCharm.name_kh, randomCharm.price);
-    }
-  </script>
+// ======== INIT =========
+renderCategories();
+renderBracelet();
+</script>
 </body>
 </html>
