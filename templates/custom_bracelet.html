@@ -44,37 +44,6 @@
       color: #333;
     }
 
-    /* Category Grid */
-    .category-gallery {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
-      padding: 20px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .category-item {
-      background: white;
-      border: 2px solid #eee;
-      border-radius: 10px;
-      padding: 15px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .category-item:hover {
-      border-color: #007bff;
-      transform: scale(1.05);
-    }
-
-    .category-item img {
-      width: 120px;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 10px;
-    }
-
     /* Charm Grid */
     .charm-gallery {
       display: grid;
@@ -177,22 +146,6 @@
       font-size: 16px;
     }
 
-    .total-price {
-      font-weight: bold;
-      margin-top: 10px;
-      font-size: 18px;
-    }
-
-    .back-to-categories {
-      margin-top: 10px;
-      background: #007bff;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
   </style>
 </head>
 <body>
@@ -203,46 +156,31 @@
     <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
   </div>
 
-  <h2 class="title" id="main-title">✨ Choose a Category ✨</h2>
+  <h2 class="title">✨ Choose Your Charms ✨</h2>
 
-  <!-- Category List -->
-  <div class="category-gallery" id="categoryGallery">
-    {% for category in categories %}
-      <div class="category-item" onclick="showCategory('{{ category.name }}')">
-        <img src="{{ category.image }}" alt="{{ category.name }}">
-        <p><strong>{{ category.name }}</strong></p>
+  <!-- Charm Gallery -->
+  <div class="charm-gallery">
+    {% for charm in charms %}
+      <div class="charm-item" onclick="addCharm('{{ charm.image }}', '{{ charm.name }}')">
+        <img src="{{ charm.image }}" alt="{{ charm.name }}">
+        <p>{{ charm.name }}</p>
+        <p><strong>{{ charm.price }}៛</strong></p>
       </div>
     {% endfor %}
   </div>
 
-  <!-- Charm List (hidden until category clicked) -->
-  <div class="charm-gallery" id="charmGallery" style="display:none;">
-    <button class="back-to-categories" onclick="backToCategories()">⬅️ Back to Categories</button>
-    <div id="charmList"></div>
-  </div>
-
-  <!-- Bracelet Preview -->
+  <!-- Bracelet Preview (Sticky Bottom) -->
   <div id="bracelet-preview">🪄 Your bracelet will appear here!</div>
-  <p class="total-price">Total: <span id="totalPrice">0៛</span></p>
+
   <button class="checkout" onclick="checkout()">🛒 Add to Cart</button>
 
   <script>
     const preview = document.getElementById('bracelet-preview');
-    const totalPriceEl = document.getElementById('totalPrice');
-    const categoryGallery = document.getElementById('categoryGallery');
-    const charmGallery = document.getElementById('charmGallery');
-    const charmList = document.getElementById('charmList');
-    const mainTitle = document.getElementById('main-title');
-
     let charms = [];
-    let allCharms = {{ charms|tojson }};
-    let currentCategory = '';
 
     function renderBracelet() {
       preview.innerHTML = '';
-      let total = 0;
       charms.forEach((charm, index) => {
-        total += charm.price;
         const container = document.createElement('div');
         container.className = 'bracelet-charm';
         container.innerHTML = `
@@ -259,39 +197,10 @@
       if (charms.length === 0) {
         preview.textContent = '🪄 Your bracelet will appear here!';
       }
-      totalPriceEl.textContent = total.toLocaleString() + "៛";
     }
 
-    function showCategory(category) {
-      currentCategory = category;
-      mainTitle.textContent = "✨ " + category + " Charms ✨";
-      categoryGallery.style.display = "none";
-      charmGallery.style.display = "block";
-      charmList.innerHTML = '';
-
-      const filtered = allCharms.filter(c => c.category === category);
-      filtered.forEach(charm => {
-        const div = document.createElement('div');
-        div.className = 'charm-item';
-        div.innerHTML = `
-          <img src="${charm.image}" alt="${charm.name}">
-          <p>${charm.name}</p>
-          <p><strong>${charm.price}៛</strong></p>
-        `;
-        div.onclick = () => addCharm(charm.image, charm.name, charm.price);
-        charmList.appendChild(div);
-      });
-    }
-
-    function backToCategories() {
-      currentCategory = '';
-      charmGallery.style.display = "none";
-      categoryGallery.style.display = "grid";
-      mainTitle.textContent = "✨ Choose a Category ✨";
-    }
-
-    function addCharm(image, name, price) {
-      charms.push({ image, name, price });
+    function addCharm(image, name) {
+      charms.push({ image, name });
       renderBracelet();
     }
 
@@ -329,5 +238,6 @@
       }
     });
   </script>
+
 </body>
 </html>
