@@ -522,21 +522,21 @@ def category(category_name):
 def custom_bracelet():
     # Example charms to display
     charms = [
-         {"id": 12301, name_kh : "Charm", price : 5000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"],
-     {"id": 12302, "name_kh": "Charm","price": 5000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"],
-     {"id": 12303, "name_kh": "Charm","price": 5000, "image": "/static/images/cc03.jpg", "categories": ["Car Logo"], 
-     {"id": 12304, "name_kh": "Charm","price": 5000, "image": "/static/images/cc04.jpg", "categories": ["Car Logo"], 
-     {"id": 12305, "name_kh": "Charm","price": 5000, "image": "/static/images/cc05.jpg", "categories": ["Car Logo"],
-     {"id": 12306, "name_kh": "Charm","price": 5000, "image": "/static/images/cc06.jpg", "categories": ["Car Logo"], 
-     {"id": 12307, "name_kh": "Charm","price": 5000, "image": "/static/images/cc07.jpg", "categories": ["Car Lego"],
-     {"id": 12308, "name_kh": "Charm","price": 5000, "image": "/static/images/cc08.jpg", "categories": ["Car Logo"],
-     {"id": 12309, "name_kh": "Charm","price": 5000, "image": "/static/images/cc09.jpg", "categories": ["Car Logo"],
-     {"id": 12310, "name_kh": "Charm","price": 5000, "image": "/static/images/cc10.jpg", "categories": ["Car Logo"], 
-     {"id": 12311, "name_kh": "Charm","price": 5000, "image": "/static/images/cc11.jpg", "categories": ["Car Logo"], 
-     {"id": 12312, "name_kh": "Charm","price": 5000, "image": "/static/images/cc12.jpg", "categories": ["Car Logo"], 
-     {"id": 12313, "name_kh": "Charm","price": 5000, "image": "/static/images/cc13.jpg", "categories": ["Car Logo"], 
-     {"id": 12314, "name_kh": "Charm","price": 5000, "image": "/static/images/cc14.jpg", "categories": ["Car Logo"], 
-     {"id": 12315, "name_kh": "Charm","price": 5000, "image": "/static/images/cc15.jpg", "categories": ["Car Logo"],
+     {"id": 12301, name_kh : "Charm", price : 5000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"]},
+     {"id": 12302, "name_kh": "Charm","price": 5000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"]},
+     {"id": 12303, "name_kh": "Charm","price": 5000, "image": "/static/images/cc03.jpg", "categories": ["Car Logo"]},
+     {"id": 12304, "name_kh": "Charm","price": 5000, "image": "/static/images/cc04.jpg", "categories": ["Car Logo"]},
+     {"id": 12305, "name_kh": "Charm","price": 5000, "image": "/static/images/cc05.jpg", "categories": ["Car Logo"]},
+     {"id": 12306, "name_kh": "Charm","price": 5000, "image": "/static/images/cc06.jpg", "categories": ["Car Logo"]},
+     {"id": 12307, "name_kh": "Charm","price": 5000, "image": "/static/images/cc07.jpg", "categories": ["Car Lego"]},
+     {"id": 12308, "name_kh": "Charm","price": 5000, "image": "/static/images/cc08.jpg", "categories": ["Car Logo"]},
+     {"id": 12309, "name_kh": "Charm","price": 5000, "image": "/static/images/cc09.jpg", "categories": ["Car Logo"]},
+     {"id": 12310, "name_kh": "Charm","price": 5000, "image": "/static/images/cc10.jpg", "categories": ["Car Logo"]},
+     {"id": 12311, "name_kh": "Charm","price": 5000, "image": "/static/images/cc11.jpg", "categories": ["Car Logo"]},
+     {"id": 12312, "name_kh": "Charm","price": 5000, "image": "/static/images/cc12.jpg", "categories": ["Car Logo"]},
+     {"id": 12313, "name_kh": "Charm","price": 5000, "image": "/static/images/cc13.jpg", "categories": ["Car Logo"]},
+     {"id": 12314, "name_kh": "Charm","price": 5000, "image": "/static/images/cc14.jpg", "categories": ["Car Logo"]},
+     {"id": 12315, "name_kh": "Charm","price": 5000, "image": "/static/images/cc15.jpg", "categories": ["Car Logo"]},
 
 
      {"id": 1234501, "name_kh": "Charm","price": 5000, "image": "/static/images/cf01.jpg", "categories": [Flag]}, "subcategory": ["All","Football"],"discount":20 },
@@ -642,7 +642,6 @@ def custom_bracelet():
      {"id": 123714, "name_kh": "Charm","price": 5000, "image": "/static/images/cw14.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
      {"id": 123715, "name_kh": "Charm","price": 5000, "image": "/static/images/cw15.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
      {"id": 123716, "name_kh": "Charm","price": 5000, "image": "/static/images/cw16.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-
 ]
     return render_template('custom_bracelet.html', charms=charms)
 @app.route('/subcategory/<subcategory_name>')
