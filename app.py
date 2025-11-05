@@ -523,7 +523,6 @@ def category(category_name):
 def custom_bracelet():
     # Example charms to display
     charms = [
-     {"id": 12301, "name_kh": "Charm A", "price": 5000, "image": "/static/images/cc01.jpg", categories : [Italy Bracelet]},
      {"id": 12301, name_kh : "Charm", price : 5000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"],
      {"id": 12302, "name_kh": "Charm","price": 5000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"],
      {"id": 12303, "name_kh": "Charm","price": 5000, "image": "/static/images/cc03.jpg", "categories": ["Car Logo"], 
@@ -541,7 +540,7 @@ def custom_bracelet():
      {"id": 12315, "name_kh": "Charm","price": 5000, "image": "/static/images/cc15.jpg", "categories": ["Car Logo"],
 
 
-     {id : 1234501, name_kh : "Charm", price : 5000, "image": "/static/images/cf01.jpg", "categories": [Flag]}, "subcategory": ["All","Football"],"discount":20 },
+     {"id": 1234501, "name_kh": "Charm","price": 5000, "image": "/static/images/cf01.jpg", "categories": [Flag]}, "subcategory": ["All","Football"],"discount":20 },
      {"id": 1234502, "name_kh": "Charm","price": 5000, "image": "/static/images/cf02.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"],"discount":20 },
      {"id": 1234503, "name_kh": "Charm","price": 5000, "image": "/static/images/cf03.jpg", "categories": ["Flag"], "subcategory": ["All","Football"],"discount":20 },
      {"id": 1234504, "name_kh": "Charm","price": 5000, "image": "/static/images/cf04.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"],"discount":20 },
