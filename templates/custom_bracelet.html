@@ -13,7 +13,7 @@
       text-align: center;
     }
 
-    /* Sticky header with back button */
+    /* Sticky header */
     .header {
       position: sticky;
       top: 0;
@@ -141,6 +141,13 @@
       margin: 5px 0;
     }
 
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
     .screenshot-btn {
       background: #28a745;
       color: white;
@@ -149,13 +156,6 @@
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
-    }
-
-    .action-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
     }
 
     .add-recommended-btn {
@@ -174,83 +174,67 @@
       transform: scale(1.05);
     }
 
-    /* Category Grid */
+    /* Category grid */
     .category-gallery {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-      max-width: 800px;
-      margin: 20px auto;
+      gap: 15px;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
     }
 
     .category-item {
       background: white;
       border: 2px solid #eee;
-      border-radius: 12px;
+      border-radius: 10px;
       padding: 10px;
-      text-align: center;
       cursor: pointer;
-      transition: 0.3s;
+      transition: 0.2s;
+      text-align: center;
     }
 
     .category-item:hover {
-      border-color: #ff9800;
+      border-color: #007bff;
       transform: scale(1.05);
     }
 
     .category-item img {
       width: 100px;
-      height: 100px;
-      border-radius: 8px;
+      height: 150px;
       object-fit: cover;
-    }
-
-    /* Charm Grid (Modal) */
-    .charm-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
+      border-radius: 8px;
     }
 
     /* Modal */
     .modal {
-      display: none;
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.4);
+      display: none;
       justify-content: center;
       align-items: center;
-      z-index: 2000;
+      z-index: 10000;
     }
 
     .modal-content {
-      background: #fff;
-      border-radius: 12px;
+      background: white;
       padding: 20px;
-      width: 90%;
-      max-width: 800px;
-      max-height: 90vh;
-      overflow-y: auto;
-      position: relative;
-    }
-
-    .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 24px;
-      cursor: pointer;
-    }
-
-    .recommended-item img {
-      width: 90px;
-      height: 150px;
-      object-fit: cover;
       border-radius: 10px;
+      max-width: 90%;
+      max-height: 90%;
+      overflow-y: auto;
+      text-align: center;
+    }
+
+    .charm-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 15px;
+      margin-top: 10px;
     }
 
     .recommended-item {
@@ -266,6 +250,24 @@
       border-color: #007bff;
       transform: scale(1.05);
     }
+
+    .recommended-item img {
+      width: 90px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .close-modal-btn {
+      margin-top: 15px;
+      background: #ff4c4c;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
   </style>
 </head>
 <body>
@@ -293,14 +295,13 @@
   </div>
 
   <h2 class="title">🪄 Choose a Category 🪄</h2>
-  <div class="category-gallery" id="categoryGallery"></div>
+  <div id="categoryGallery" class="category-gallery"></div>
 
-  <!-- Charm Modal -->
   <div id="charmModal" class="modal">
     <div class="modal-content">
-      <span class="close-btn" onclick="closeCharmModal()">✖</span>
-      <h3 id="modalTitle">🌟 Choose a Charm</h3>
-      <div class="charm-grid" id="charmGrid"></div>
+      <h3 id="modalTitle"></h3>
+      <div id="charmGrid" class="charm-grid"></div>
+      <button onclick="closeCharmModal()" class="close-modal-btn">Close</button>
     </div>
   </div>
 
@@ -309,7 +310,6 @@
     const totalPrice = document.getElementById('totalPrice');
     let charms = [];
 
-    // Example charm data (replace with backend data)
     const allCharms = [
       {"id": 12301, "name_kh": "Charm A", "price": 5000, "image": "/static/images/cc01.jpg", "categories": ["Italy Bracelet"]},
      {"id": 12301, "name_kh": "Charm","price": 5000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"],
@@ -432,7 +432,6 @@
      {"id": 123714, "name_kh": "Charm","price": 5000, "image": "/static/images/cw14.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
      {"id": 123715, "name_kh": "Charm","price": 5000, "image": "/static/images/cw15.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
      {"id": 123716, "name_kh": "Charm","price": 5000, "image": "/static/images/cw16.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"],"discount":20 },
-
     ];
 
     const categories = [...new Set(allCharms.flatMap(ch => ch.categories))];
@@ -540,6 +539,5 @@
       addCharm(randomCharm.image, randomCharm.name_kh, randomCharm.price);
     }
   </script>
-
 </body>
 </html>
