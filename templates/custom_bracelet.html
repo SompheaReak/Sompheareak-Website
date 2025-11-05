@@ -1,206 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Customize Your Italy Bracelet</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #fafafa;
-      margin: 0;
-      padding-top: 100px;
-      text-align: center;
-    }
+    body { font-family: Arial, sans-serif; background: #fafafa; margin: 0; padding: 0; text-align: center; }
+    .header { position: sticky; top: 0; background: white; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); z-index: 1000; }
+    .back-home { background: #007bff; color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+    h2.title { margin-top: 20px; color: #333; }
 
-    /* Sticky top bar */
-    .top-buttons {
-      position: sticky;
-      top: 0;
-      background: white;
-      padding: 10px 0;
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      z-index: 1000;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
+    .preview-box { position: sticky; top: 60px; background: #fff; border: 2px solid #ddd; border-radius: 12px; margin: 20px auto; padding: 20px; width: 90%; max-width: 900px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .preview-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .cancel-btn { background: #ff4c4c; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer; }
+    #bracelet-preview { display:flex; justify-content:flex-start; align-items:flex-start; overflow-x:auto; gap:5px; padding:10px; min-height:160px; }
+    .bracelet-charm { position:relative; margin:0; }
+    .remove-btn { position:absolute; top:-15px; left:50%; transform:translateX(-50%); background:red; color:white; border:none; border-radius:50%; font-size:14px; width:26px; height:26px; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2); transition:0.2s; }
+    .remove-btn:hover { background:#cc0000; transform:translateX(-50%) scale(1.1); }
+    .bracelet-charm img { width:90px; height:150px; object-fit:cover; }
+    .controls { display:flex; gap:5px; margin-top:5px; }
+    .move-left, .move-right { border:none; background:rgba(0,0,0,0.4); color:white; border-radius:4px; font-size:14px; padding:2px 6px; cursor:pointer; }
 
-    .back-home, .cancel-btn {
-      padding: 10px 18px;
-      border-radius: 8px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      text-decoration: none;
-      color: white;
-      font-size: 15px;
-    }
+    .total-box { margin-top:10px; text-align:center; }
+    .total-box p { font-size:18px; font-weight:bold; margin:5px 0; }
+    .action-buttons { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+    .screenshot-btn { background:#28a745; color:white; border:none; padding:10px 18px; border-radius:8px; font-size:16px; cursor:pointer; }
+    .add-recommended-btn { background:#ff9800; color:white; border:none; padding:10px 18px; border-radius:8px; font-size:16px; cursor:pointer; transition:0.2s; }
+    .add-recommended-btn:hover { background:#e68900; transform:scale(1.05); }
 
-    .back-home { background: #007bff; }
-    .cancel-btn { background: #ff4c4c; }
+    /* Category grid */
+    .category-gallery { display:grid; grid-template-columns: repeat(2, 1fr); gap:15px; padding:20px; max-width:600px; margin:0 auto; }
+    .category-item { background:white; border:2px solid #eee; border-radius:10px; padding:10px; cursor:pointer; transition:0.2s; text-align:center; }
+    .category-item:hover { border-color:#007bff; transform:scale(1.05); }
+    .category-item img { width:100px; height:150px; object-fit:cover; border-radius:8px; }
 
-    h2.title {
-      margin-top: 20px;
-      color: #333;
-    }
-
-    /* Charm Grid */
-    .charm-gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 15px;
-      padding: 20px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .charm-item {
-      background: white;
-      border: 2px solid #eee;
-      border-radius: 10px;
-      padding: 10px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .charm-item:hover {
-      border-color: #007bff;
-      transform: scale(1.05);
-    }
-
-    .charm-item img {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
-      border-radius: 10px;
-    }
-
-    /* Bracelet Preview */
-    #bracelet-preview {
-      position: sticky;
-      bottom: 0;
-      background: white;
-      padding: 30px 10px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: flex-start;
-      overflow-x: auto;
-      scroll-behavior: smooth;
-      min-height: 160px;
-      z-index: 999;
-      border-top: 1px solid #ddd;
-    }
-
-    .bracelet-charm {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: 0;
-      position: relative;
-    }
-
-    .remove-btn {
-      background: #ff4c4c;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      font-size: 14px;
-      cursor: pointer;
-      margin-bottom: 5px;
-    }
-
-    .bracelet-charm img {
-      width: 90px;
-      height: 150px;
-      object-fit: cover;
-      border: none;
-      margin: 0;
-    }
-
-    .controls {
-      display: flex;
-      gap: 5px;
-      margin-top: 5px;
-    }
-
-    .move-left, .move-right {
-      border: none;
-      background: rgba(0,0,0,0.4);
-      color: white;
-      border-radius: 4px;
-      font-size: 14px;
-      padding: 2px 6px;
-      cursor: pointer;
-    }
-
-    button.checkout {
-      margin-top: 30px;
-      background: #28a745;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
+    /* Modal */
+    .modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:10000; }
+    .modal-content { background:white; padding:20px; border-radius:10px; max-width:90%; max-height:90%; overflow-y:auto; text-align:center; }
+    .charm-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap:15px; margin-top:10px; }
+    .recommended-item { background:white; border:2px solid #eee; border-radius:10px; padding:10px; cursor:pointer; transition:0.2s; }
+    .recommended-item:hover { border-color:#007bff; transform:scale(1.05); }
+    .recommended-item img { width:90px; height:150px; object-fit:cover; border-radius:10px; }
+    .close-modal-btn { margin-top:15px; background:#ff4c4c; color:white; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; }
   </style>
 </head>
 <body>
 
-  <!-- Sticky Top Buttons -->
-  <div class="top-buttons">
+  <div class="header">
     <a href="/" class="back-home">🏠 Back to Home</a>
-    <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
+    <h3>Customize Your Bracelet</h3>
   </div>
 
-  <h2 class="title">✨ Choose Your Charms ✨</h2>
+  <div class="preview-box" id="previewBox">
+    <div class="preview-header">
+      <h3>🪄 Preview Bracelet</h3>
+      <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
+    </div>
 
-  <!-- Charm Gallery -->
-  <div class="charm-gallery">
-    {% for charm in charms %}
-      <div class="charm-item" onclick="addCharm('{{ charm.image }}', '{{ charm.name }}')">
-        <img src="{{ charm.image }}" alt="{{ charm.name }}">
-        <p>{{ charm.name }}</p>
-        <p><strong>{{ charm.price }}៛</strong></p>
+    <div id="bracelet-preview">Your charms will appear here...</div>
+
+    <div class="total-box">
+      <p>Total: <span id="totalPrice">0៛</span></p>
+      <div class="action-buttons">
+        <button class="screenshot-btn" id="screenshotBtn">📸 Take Screenshot</button>
+        <button class="add-recommended-btn" id="recommendedBtn">✨ Add Recommended Charm</button>
       </div>
-    {% endfor %}
+    </div>
   </div>
 
-  <!-- Bracelet Preview (Sticky Bottom) -->
-  <div id="bracelet-preview">🪄 Your bracelet will appear here!</div>
+  <h2 class="title">🪄 Choose a Category 🪄</h2>
+  <div id="categoryGallery" class="category-gallery"></div>
 
-  <button class="checkout" onclick="checkout()">🛒 Add to Cart</button>
+  <div id="charmModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <h3 id="modalTitle"></h3>
+      <div id="charmGrid" class="charm-grid"></div>
+      <button id="closeModalBtn" class="close-modal-btn">Close</button>
+    </div>
+  </div>
 
   <script>
+    // DOM refs
     const preview = document.getElementById('bracelet-preview');
-    let charms = [];
+    const totalPrice = document.getElementById('totalPrice');
+    const categoryGallery = document.getElementById('categoryGallery');
+    const charmModal = document.getElementById('charmModal');
+    const charmGrid = document.getElementById('charmGrid');
+    const modalTitle = document.getElementById('modalTitle');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const screenshotBtn = document.getElementById('screenshotBtn');
+    const recommendedBtn = document.getElementById('recommendedBtn');
 
-    function renderBracelet() {
-      preview.innerHTML = '';
-      charms.forEach((charm, index) => {
-        const container = document.createElement('div');
-        container.className = 'bracelet-charm';
-        container.innerHTML = `
-          <button class="remove-btn" onclick="removeCharm(${index})">❌</button>
-          <img src="${charm.image}" alt="${charm.name}">
-          <div class="controls">
-            <button class="move-left" onclick="moveLeft(${index})">⬅️</button>
-            <button class="move-right" onclick="moveRight(${index})">➡️</button>
-          </div>
-        `;
-        preview.appendChild(container);
+    let charms = []; // current preview charms
+
+    // ---- Your charms data (replace with server data if available) ----
+    const allCharms = [
+   // ... add remaining charms here (or render from server)
+    ];
+    // -----------------------------------------------------------------
+
+    // Build unique categories (order preserved by first appearance)
+    const categories = Array.from(allCharms.reduce((s, ch) => {
+      ch.categories.forEach(cat => { if (!s.has(cat)) s.add(cat); });
+      return s;
+    }, new Set()));
+
+    // Render category tiles
+    function renderCategories() {
+      categoryGallery.innerHTML = '';
+      categories.forEach(cat => {
+        const item = document.createElement('div');
+        item.className = 'category-item';
+        item.tabIndex = 0;
+        item.dataset.category = cat;
+
+        const imgSrc = getCategoryImage(cat);
+        item.innerHTML = `<img src="${imgSrc}" alt="${escapeHtml(cat)}"><p>${escapeHtml(cat)}</p>`;
+        item.addEventListener('click', () => openCharmModal(cat));
+        item.addEventListener('keydown', (e) => { if (e.key === 'Enter') openCharmModal(cat); });
+
+        categoryGallery.appendChild(item);
       });
-
-      if (charms.length === 0) {
-        preview.textContent = '🪄 Your bracelet will appear here!';
-      }
     }
 
-    function addCharm(image, name) {
-      charms.push({ image, name });
+    // Get an image for a category (first charm image in that category)
+    function getCategoryImage(cat) {
+      const found = allCharms.find(c => c.categories.includes(cat));
+      return found ? found.image : '/static/images/default.jpg';
+    }
+
+    // Open modal and populate charms for the chosen category
+    function openCharmModal(category) {
+      modalTitle.textContent = `✨ ${category} Charms ✨`;
+      charmGrid.innerHTML = '';
+
+      const charmsInCategory = allCharms.filter(ch => ch.categories.includes(category));
+      if (charmsInCategory.length === 0) {
+        charmGrid.innerHTML = `<p>No charms in this category.</p>`;
+      } else {
+        charmsInCategory.forEach(ch => {
+          const div = document.createElement('div');
+          div.className = 'recommended-item';
+          div.dataset.image = ch.image;
+          div.dataset.name = ch.name_kh;
+          div.dataset.price = ch.price;
+          div.innerHTML = `
+            <img src="${ch.image}" alt="${escapeHtml(ch.name_kh)}">
+            <p>${escapeHtml(ch.name_kh)}</p>
+            <p><strong>${Number(ch.price).toLocaleString()}៛</strong></p>
+          `;
+          div.addEventListener('click', () => {
+            addCharm(ch.image, ch.name_kh, ch.price);
+            // keep modal open so user can add several; remove the next line if you prefer it to close:
+            // closeCharmModal();
+          });
+          charmGrid.appendChild(div);
+        });
+      }
+
+      charmModal.style.display = 'flex';
+      charmModal.setAttribute('aria-hidden','false');
+    }
+
+    function closeCharmModal() {
+      charmModal.style.display = 'none';
+      charmModal.setAttribute('aria-hidden','true');
+    }
+
+    // Renders the bracelet preview and total price
+    function renderBracelet() {
+      preview.innerHTML = '';
+      if (charms.length === 0) {
+        preview.textContent = 'Your charms will appear here...';
+        totalPrice.textContent = '0៛';
+        return;
+      }
+
+      let total = 0;
+      charms.forEach((charm, idx) => {
+        total += Number(charm.price);
+        const div = document.createElement('div');
+        div.className = 'bracelet-charm';
+        div.innerHTML = `
+          <button class="remove-btn" data-index="${idx}" title="Remove">✖</button>
+          <img src="${charm.image}" alt="${escapeHtml(charm.name)}">
+          <div class="controls">
+            <button class="move-left" data-index="${idx}" title="Move left">⬅️</button>
+            <button class="move-right" data-index="${idx}" title="Move right">➡️</button>
+          </div>
+        `;
+        preview.appendChild(div);
+      });
+
+      totalPrice.textContent = total.toLocaleString() + '៛';
+
+      // attach listeners for remove / move buttons (delegation would also work)
+      preview.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const i = Number(btn.dataset.index);
+          removeCharm(i);
+        });
+      });
+      preview.querySelectorAll('.move-left').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const i = Number(btn.dataset.index);
+          moveLeft(i);
+        });
+      });
+      preview.querySelectorAll('.move-right').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const i = Number(btn.dataset.index);
+          moveRight(i);
+        });
+      });
+    }
+
+    // Add / remove / move
+    function addCharm(image, name, price) {
+      charms.push({ image, name, price: Number(price) });
       renderBracelet();
     }
 
@@ -211,33 +228,90 @@
 
     function moveLeft(index) {
       if (index > 0) {
-        [charms[index - 1], charms[index]] = [charms[index], charms[index - 1]];
+        [charms[index-1], charms[index]] = [charms[index], charms[index-1]];
         renderBracelet();
       }
     }
 
     function moveRight(index) {
       if (index < charms.length - 1) {
-        [charms[index + 1], charms[index]] = [charms[index], charms[index + 1]];
+        [charms[index+1], charms[index]] = [charms[index], charms[index+1]];
         renderBracelet();
       }
     }
 
-    function checkout() {
-      if (charms.length === 0) {
-        alert('Please select at least one charm before adding to cart!');
-      } else {
-        alert(`✅ You have added ${charms.length} charms to your bracelet!`);
-      }
-    }
-
-    document.getElementById("cancelSelection").addEventListener("click", () => {
-      if (confirm("Are you sure you want to cancel your bracelet design?")) {
+    // Cancel selection
+    document.getElementById('cancelSelection').addEventListener('click', () => {
+      if (confirm('Are you sure you want to cancel your bracelet design?')) {
         charms = [];
         renderBracelet();
       }
     });
-  </script>
 
+    // screenshot
+    screenshotBtn.addEventListener('click', () => {
+      const element = document.getElementById('previewBox');
+      html2canvas(element).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'bracelet_design.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    });
+
+    // recommended (random) charm
+    recommendedBtn.addEventListener('click', () => {
+      if (allCharms.length === 0) return;
+      const random = allCharms[Math.floor(Math.random()*allCharms.length)];
+      addCharm(random.image, random.name_kh, random.price);
+    });
+
+    // modal close button
+    closeModalBtn.addEventListener('click', closeCharmModal);
+    // also close modal when clicking outside content
+    charmModal.addEventListener('click', (e) => {
+      if (e.target === charmModal) closeCharmModal();
+    });
+
+    // helper to escape text for safe insertion
+    function escapeHtml(str) {
+      if (!str && str !== 0) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    // initial render
+    renderCategories();
+    renderBracelet();
+
+    // expose renderCategories so we can call it after updating `allCharms` dynamically
+    function renderCategories() { renderCategoriesImpl(); }
+    function renderCategoriesImpl() {
+      categoryGallery.innerHTML = '';
+      categories.forEach(cat => {
+        const item = document.createElement('div');
+        item.className = 'category-item';
+        item.tabIndex = 0;
+        item.dataset.category = cat;
+        const imgSrc = getCategoryImage(cat);
+        item.innerHTML = `<img src="${imgSrc}" alt="${escapeHtml(cat)}"><p>${escapeHtml(cat)}</p>`;
+        item.addEventListener('click', () => openCharmModal(cat));
+        item.addEventListener('keydown', (e) => { if (e.key === 'Enter') openCharmModal(cat); });
+        categoryGallery.appendChild(item);
+      });
+    }
+
+    // If you want to add categories dynamically later (from server),
+    // update allCharms array and then recalc categories & call renderCategoriesImpl():
+    //
+    // Example:
+    // allCharms.push({ id:999, name_kh:'New', price:2000, image:'/static/images/new.jpg', categories:['NewCat'] });
+    // categories.push('NewCat'); // or recompute unique set
+    // renderCategoriesImpl();
+
+  </script>
 </body>
 </html>
