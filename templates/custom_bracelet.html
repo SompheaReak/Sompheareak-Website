@@ -19,7 +19,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow-y: auto; /* Allows the main content (categories) to scroll */
+    overflow-y: auto; 
 }
 
 .header { 
@@ -53,9 +53,9 @@ h2.title {
     font-size: 1.8rem;
 }
 
-/* ---------- PREVIEW BOX (Sticky at the top) ---------- */
+/* ---------- PREVIEW BOX (Sticky at the top - FIX APPLIED HERE) ---------- */
 .preview-box { 
-    /* NEW FIX: Make the entire box sticky right below the header */
+    /* FIX: Make the entire box sticky right below the header */
     position: sticky;
     top: 54px; /* Adjust based on header height (~54px) */
     z-index: 900; 
@@ -168,6 +168,7 @@ h2.title {
     box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
     transition: background 0.2s;
 }
+.remove-btn:hover { background: #c82333; }
 
 /* Total and Action Buttons (Sticky total) */
 .total-box {
@@ -195,24 +196,26 @@ h2.title {
     font-weight: bold;
     transition: background 0.2s;
 }
+.action-buttons button:hover { background: #1f7a36; }
 .screenshot-btn { background: #6c757d; } 
+.screenshot-btn:hover { background: #5a6268; } 
 
 
-/* ---------- CATEGORY SELECTION (2 charms per row) ---------- */
+/* ---------- CATEGORY SELECTION (3 charms per row - FIX APPLIED HERE) ---------- */
 .category-gallery { 
     margin: 10px 5% 20px; 
     
     display: grid; 
-    /* FIX: Set 2 columns for categories (2,1row requested) */
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 20px;
+    /* FIX: Set 3 columns for categories (3 per row requested) */
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 15px; /* Reduced gap slightly for 3 columns */
     padding: 20px;
     
     height: auto; 
     overflow-y: visible; 
 
     width: 90%; 
-    max-width: 500px; /* Reduced max-width for the 2-column look on desktop */
+    max-width: 650px; /* ADJUSTED max-width for the 3-column look on desktop */
     border-radius: 14px; 
     background: #ffffff; 
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
@@ -223,11 +226,11 @@ h2.title {
     background: #f8f9fa;
     border: 1px solid #ddd;
     border-radius: 12px; 
-    padding: 15px; 
+    padding: 10px; /* Reduced padding */
     cursor: pointer; 
     transition: all 0.2s; 
     text-align: center; 
-    font-size: 1.1rem; 
+    font-size: 1rem; /* Slightly smaller font */
     font-weight: 600;
 }
 .category-item:hover { 
@@ -236,15 +239,19 @@ h2.title {
     transform: translateY(-2px); 
 }
 
-/* Image scaling for category previews (should look good in a 2-column grid) */
+/* FIX: Image scaling for category previews (made smaller and square) */
 .category-item img { 
-    width: 100%;
-    max-width: 120px; 
-    height: 180px; 
+    width: 100px; /* Fixed smaller width */
+    height: 100px; /* Fixed smaller height (square) */
+    max-width: 100%;
     object-fit: cover; 
     border-radius: 8px; 
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
+.category-item p {
+    margin: 0;
+}
+
 
 /* ---------- MODAL (Charm Selection - 6 charms per row) ---------- */
 .modal { 
@@ -267,7 +274,7 @@ h2.title {
     text-align: center;
     position: relative;
     width: 100%; 
-    max-width: 1200px; /* Wider modal for 6 columns */
+    max-width: 1200px; 
     margin-left: auto;
     margin-right: auto;
     
@@ -283,22 +290,44 @@ h2.title {
     display: flex;
     flex-direction: column;
 }
+.close-modal-btn {
+    position: sticky;
+    top: 0;
+    align-self: flex-end;
+    background: #ffc107;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 10001;
+}
 
 .charm-grid { 
     flex-grow: 1; 
     display: grid; 
-    /* FIX: Set 6 columns for charm selection (6,row requested) */
+    /* Set 6 columns for charm selection */
     grid-template-columns: repeat(6, 1fr); 
     gap: 15px; 
     padding: 10px 0;
 }
 
 /* Charm selection item scaling */
+.recommended-item {
+    padding: 10px;
+    background: #f8f8f8;
+    border-radius: 8px;
+    transition: transform 0.1s;
+    cursor: pointer;
+}
+.recommended-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
 .recommended-item img { 
     width: 100%;
-    /* Maintain 900x1500 (1:1.66) ratio for consistency */
-    height: 1.66 * (100% / 6); /* This is tricky in CSS, fixed height is safer */
-    height: 180px; /* Use a good fixed height that fits the 6-column layout */
+    /* Use a fixed height that fits the 6-column layout with the 1:1.66 ratio */
+    height: 150px; 
     object-fit: cover; 
     border-radius: 10px; 
 }
@@ -314,12 +343,16 @@ h2.title {
         border-radius: 0; 
         top: 48px; /* Adjusted sticky position for mobile header */
     }
+    .cancel-selection-btn {
+        right: 10px;
+    }
 
     /* Categories - force back to 2 columns on mobile */
     .category-gallery { 
         grid-template-columns: repeat(2, 1fr);
         max-width: 100%;
         padding: 10px;
+        max-width: 450px; /* Tighter 2-column layout */
     }
 
     /* Charm Grid - reduce to 3 columns on tablet/small desktop */
@@ -376,7 +409,7 @@ h2.title {
   </div>
 
   <script>
-    // --- JS CODE REMAINS THE SAME AS THE PREVIOUS VERSION, NO LOGIC CHANGES NEEDED ---
+    // --- JS CODE REMAINS THE SAME ---
     const preview = document.getElementById('bracelet-preview');
     const totalPrice = document.getElementById('totalPrice');
     const categoryGallery = document.getElementById('categoryGallery');
@@ -399,7 +432,7 @@ h2.title {
       {"id": 12304, "name_kh": "Car Charm 04", "price": 5000, "image": "/static/images/cc04.jpg", "categories": ["Car Logo"]},
       {"id": 12305, "name_kh": "Car Charm 05", "price": 5000, "image": "/static/images/cc05.jpg", "categories": ["Car Logo"]},
       {"id": 12306, "name_kh": "Car Charm 06", "price": 5000, "image": "/static/images/cc06.jpg", "categories": ["Car Logo"]},
-      {"id": 12307, "name_kh": "Car Charm 07", "price": 5000, "image": "/static/images/cc07.jpg", "categories": ["Car Logo"]}, // Corrected typo: "Car Lego"
+      {"id": 12307, "name_kh": "Car Charm 07", "price": 5000, "image": "/static/images/cc07.jpg", "categories": ["Car Logo"]}, 
       {"id": 12308, "name_kh": "Car Charm 08", "price": 5000, "image": "/static/images/cc08.jpg", "categories": ["Car Logo"]},
       {"id": 12309, "name_kh": "Car Charm 09", "price": 5000, "image": "/static/images/cc09.jpg", "categories": ["Car Logo"]},
       {"id": 12310, "name_kh": "Car Charm 10", "price": 5000, "image": "/static/images/cc10.jpg", "categories": ["Car Logo"]},
@@ -644,6 +677,7 @@ h2.title {
     });
 
     screenshotBtn.addEventListener('click', () => {
+      // Capture only the preview box
       html2canvas(previewBox).then(canvas => {
         const link = document.createElement('a');
         link.download = 'bracelet_design.png';
