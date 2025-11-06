@@ -6,254 +6,187 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
 <style>
-    body { 
-        font-family: Arial, sans-serif; 
-        background: #fafafa; 
-        margin: 0; 
-        padding: 0; 
-        text-align: center; 
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
+/* ---------- GLOBAL ---------- */
+body { 
+    font-family: Arial, sans-serif; 
+    background: #fafafa; 
+    margin: 0; 
+    padding: 0; 
+    text-align: center; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
-    .header { 
-        position: sticky; 
-        top: 0; 
-        background: white; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        padding: 10px 20px; 
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
-        z-index: 1000; 
-        width: 100%; 
-    }
+.header { 
+    position: sticky; 
+    top: 0; 
+    background: white; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 10px 20px; 
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
+    z-index: 1000; 
+    width: 100%; 
+}
 
-    .back-home { 
-        background: #007bff; 
-        color: white; 
-        padding: 10px 18px; 
-        border-radius: 8px; 
-        text-decoration: none; 
-        font-weight: bold; 
-    }
+.back-home { 
+    background: #007bff; 
+    color: white; 
+    padding: 10px 18px; 
+    border-radius: 8px; 
+    text-decoration: none; 
+    font-weight: bold; 
+}
 
-    h2.title { 
-        margin-top: 20px; 
-        color: #333; 
-    }
+h2.title { 
+    margin-top: 20px; 
+    color: #333; 
+}
 
-    /* PREVIEW BOX */
-    .preview-box { 
-        position: sticky; 
-        top: 60px; 
-        background: #fff; 
-        border: 2px solid #ddd; 
-        border-radius: 12px; 
-        margin: 20px auto; 
-        padding: 40px 20px 20px 20px; /* extra top padding for X button space */
-        width: 90%; 
-        max-width: 900px; 
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
-    }
+/* ---------- PREVIEW BOX ---------- */
+.preview-box { 
+    position: sticky; 
+    top: 60px; 
+    background: #fff; 
+    border: 2px solid #ddd; 
+    border-radius: 12px; 
+    margin: 40px auto; 
+    padding: 50px 20px 20px 20px; 
+    width: 90%; 
+    max-width: 900px; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+}
 
-    .preview-header { 
-        display: flex; 
-        justify-content: center; 
-        align-items: center; 
-        margin-bottom: 10px; 
-        position: relative;
-    }
+/* Title area for “Preview Bracelet” */
+.preview-header { 
+    position: relative; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    margin-bottom: 10px; 
+    padding-top: 20px; 
+}
 
-    /* Centered cancel button, not overlapping image */
-    .cancel-btn { 
-        position: absolute; 
-        top: 10px; 
-        left: 50%; 
-        transform: translateX(-50%); 
-        background: #ff4c4c; 
-        color: white; 
-        border: none; 
-        padding: 8px 16px; 
-        border-radius: 6px; 
-        font-weight: bold; 
-        cursor: pointer; 
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
-    }
+/* 🔴 Cancel Selection button — clean, centered above box */
+.cancel-selection-btn {
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff4c4c;
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    font-size: 16px;
+}
 
-    #bracelet-preview { 
-        display: flex; 
-        justify-content: flex-start; 
-        align-items: flex-start; 
-        overflow-x: auto; 
-        gap: 5px; 
-        padding: 10px; 
-        min-height: 160px; 
-    }
+/* Bracelet charms area — centered and touching */
+#bracelet-preview { 
+    display: flex; 
+    justify-content: center;   /* center all charms */
+    align-items: flex-start; 
+    overflow-x: auto; 
+    gap: 0;                    /* no spacing between charms */
+    padding: 0;
+    min-height: 160px; 
+}
 
-    .bracelet-charm { position: relative; margin: 0; }
-    .bracelet-charm img { width: 90px; height: 150px; object-fit: cover; }
+.bracelet-charm { 
+    position: relative; 
+    margin: 0; 
+}
 
-    .controls { display: flex; gap: 5px; margin-top: 5px; }
-    .move-left, .move-right { 
-        border: none; 
-        background: rgba(0,0,0,0.4); 
-        color: white; 
-        border-radius: 4px; 
-        font-size: 14px; 
-        padding: 2px 6px; 
-        cursor: pointer; 
-    }
+.bracelet-charm img { 
+    width: 90px; 
+    height: 150px; 
+    object-fit: cover; 
+    display: block; 
+}
 
-    .total-box { 
-        margin-top: 10px; 
-        text-align: center; 
-    }
+/* X button for each charm */
+.remove-btn { 
+    position: absolute; 
+    top: -15px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    background: red; 
+    color: white; 
+    border: none; 
+    border-radius: 50%; 
+    font-size: 14px; 
+    width: 26px; 
+    height: 26px; 
+    cursor: pointer; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+    transition: 0.2s; 
+}
+.remove-btn:hover { background: #cc0000; transform: translateX(-50%) scale(1.1); }
 
-    .total-box p { 
-        font-size: 18px; 
-        font-weight: bold; 
-        margin: 5px 0; 
-    }
+/* ---------- CATEGORY SELECTION ---------- */
+.category-gallery { 
+    display: grid; 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 20px; 
+    padding: 20px; 
+    width: 90%; 
+    max-width: 600px; 
+    height: 50vh;           /* 50% of screen height */
+    margin: 20px auto 60px; 
+    overflow-y: auto; 
+    border-radius: 14px; 
+    background: #ffffff; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
 
-    .action-buttons { 
-        display: flex; 
-        justify-content: center; 
-        gap: 10px; 
-        flex-wrap: wrap; 
-    }
+/* Larger, touch-friendly category items */
+.category-item { 
+    background: white; 
+    border: 2px solid #eee; 
+    border-radius: 12px; 
+    padding: 35px 15px; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    text-align: center; 
+    font-size: 1.6rem; 
+}
 
-    .screenshot-btn { 
-        background: #28a745; 
-        color: white; 
-        border: none; 
-        padding: 10px 18px; 
-        border-radius: 8px; 
-        font-size: 16px; 
-        cursor: pointer; 
-    }
+/* Middle item slightly emphasized */
+.category-item:nth-child(2) { 
+    transform: scale(1.15); 
+    z-index: 2; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+}
 
-    .add-recommended-btn { 
-        background: #ff9800; 
-        color: white; 
-        border: none; 
-        padding: 10px 18px; 
-        border-radius: 8px; 
-        font-size: 16px; 
-        cursor: pointer; 
-        transition: 0.2s; 
-    }
+/* Larger category images */
+.category-item img { 
+    width: 120px; 
+    height: 180px; 
+    object-fit: cover; 
+    border-radius: 8px; 
+    margin-bottom: 10px;
+}
 
-    .add-recommended-btn:hover { 
-        background: #e68900; 
-        transform: scale(1.05); 
+/* Mobile adjustments */
+@media (max-width: 600px) {
+    .category-gallery {
+        grid-template-columns: repeat(2, 1fr);
+        height: 50vh;
     }
-
-    /* CATEGORY GRID (half screen width) */
-    .category-gallery { 
-        display: grid; 
-        grid-template-columns: repeat(3, 1fr); 
-        gap: 20px; 
-        padding: 20px; 
-        max-width: 50vw; 
-        width: 50vw; 
-        margin: 0 auto; 
+    .category-item img {
+        width: 100px;
+        height: 150px;
     }
-
-    .category-item { 
-        background: white; 
-        border: 2px solid #eee; 
-        border-radius: 10px; 
-        padding: 30px 20px; 
-        cursor: pointer; 
-        transition: 0.2s; 
-        text-align: center; 
-        font-size: 1.4rem; 
-        margin: 5px; 
+    .category-item {
+        font-size: 1.3rem;
+        padding: 25px 10px;
     }
-
-    /* Make the middle category bigger */
-    .category-item:nth-child(2) { 
-        transform: scale(1.2); 
-        z-index: 2; 
-        border-color: #ccc; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-    }
-
-    .category-item img { 
-        width: 100px; 
-        height: 150px; 
-        object-fit: cover; 
-        border-radius: 8px; 
-    }
-
-    /* MODAL */
-    .modal { 
-        position: fixed; 
-        top: 0; 
-        left: 0; 
-        width: 100%; 
-        height: 100%; 
-        background: transparent; 
-        display: none; 
-        justify-content: center; 
-        align-items: flex-end; 
-        z-index: 10000; 
-    }
-
-    .modal-content { 
-        background: white; 
-        padding: 20px; 
-        border-radius: 10px 10px 0 0; 
-        width: 100%; 
-        max-height: 80vh; 
-        overflow-y: auto; 
-        text-align: center; 
-        position: relative; 
-    }
-
-    .charm-grid { 
-        display: grid; 
-        grid-template-columns: repeat(5, 1fr); 
-        gap: 15px; 
-    }
-
-    .recommended-item { 
-        background: white; 
-        border: 2px solid #eee; 
-        border-radius: 10px; 
-        padding: 10px; 
-        cursor: pointer; 
-        transition: 0.2s; 
-        text-align: center; 
-    }
-
-    .recommended-item:hover { 
-        border-color: #007bff; 
-        transform: scale(1.05); 
-    }
-
-    .recommended-item img { 
-        width: 90px; 
-        height: 150px; 
-        object-fit: cover; 
-        border-radius: 10px; 
-    }
-
-    /* CLOSE BUTTON TOP-RIGHT */
-    .close-modal-btn { 
-        background: #ff4c4c; 
-        color: white; 
-        border: none; 
-        padding: 8px 14px; 
-        border-radius: 4px; 
-        cursor: pointer; 
-        position: absolute; 
-        top: 10px; 
-        right: 10px; 
-        z-index: 10001; 
-    }
+}
 </style>
 </head>
 <body>
