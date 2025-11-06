@@ -19,8 +19,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* Disable scrolling on the main page */
-    overflow-y: hidden;
+    overflow-y: hidden; /* Prevent page scrolling */
 }
 
 .header { 
@@ -46,28 +45,29 @@ body {
 }
 
 h2.title { 
-    margin: 10px 0; /* Reduced margin */
+    margin: 10px 0; 
     color: #333; 
 }
 
-/* ---------- PREVIEW BOX (Stable Top Section) ---------- */
+/* ---------- PREVIEW BOX (30% of Screen Height) ---------- */
 .preview-box { 
-    /* NEW: Takes up the remaining vertical space above the Category Gallery */
-    flex-grow: 1; 
+    /* NEW FIX: Sets a maximum height of 30% of the viewport */
+    max-height: 30vh; 
+    height: 30vh; /* Ensures it takes exactly 30% */
+    
+    /* Ensure the bracelet can scroll horizontally */
+    overflow-x: auto;
     
     background: #fff; 
     border-radius: 12px; 
-    margin: 20px auto 0; /* Adjusted margin to avoid overlap */
+    margin: 20px auto 10px; /* Reduced bottom margin */
     padding: 50px 20px 20px 20px; 
     width: 90%; 
     max-width: 900px; 
     box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
     
-    /* NEW: Allows the bracelet container to scroll if needed, but not the whole box */
-    overflow-y: auto; 
-    
-    /* Ensure height is managed by flex-grow */
-    min-height: 100px; 
+    /* NEW: Removed flex-grow to rely on fixed height */
+    flex-shrink: 0;
 }
 
 /* Title area for “Preview Bracelet” */
@@ -77,7 +77,7 @@ h2.title {
     justify-content: center; 
     align-items: center; 
     margin-bottom: 10px; 
-    padding-top: 20px; 
+    padding-top: 0; /* Adjusted padding */
 }
 
 /* Cancel Selection button */
@@ -139,42 +139,30 @@ h2.title {
 }
 .remove-btn:hover { background: #cc0000; transform: translateX(-50%) scale(1.1); }
 
-/* ---------- CATEGORY SELECTION (Non-Scrollable) ---------- */
-.category-gallery { 
-    position: relative; /* Changed from fixed to flow naturally below preview */
-    margin: 20px 0; /* Add margin to separate from preview */
-    
-    /* NEW: Center the content of the gallery */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    
-    /* NEW: Use a fixed height (adjust as needed, 20vh is a good starting point) */
-    height: 25vh; /* Fixed height for categories */
-    
-    /* FIX: Make it NON-SCROLLABLE */
-    overflow-y: hidden; 
 
-    width: 90%; /* Ensure it spans the width */
-    max-width: 50vw; /* Keep the half-screen width */
-    padding: 20px; 
+/* ---------- CATEGORY SELECTION (Minimal Space & Non-Scrollable) ---------- */
+.category-gallery { 
+    position: relative; 
+    margin: 10px 0 20px; /* Adjusted margin */
+    
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 20px;
+    padding: 20px;
+    
+    /* FIX: Reduced height to take up minimal space */
+    height: auto; 
+    max-height: 30vh; 
+    
+    overflow-y: hidden; /* NON-SCROLLABLE */
+
+    width: 90%; 
+    max-width: 50vw; 
     border-radius: 14px; 
     background: #ffffff; 
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     z-index: 500;
 }
-
-/* Category grid items are now flex items inside the gallery */
-.category-gallery {
-    /* If you still want the grid layout, you might need an inner container. 
-       For simplicity, let's keep it grid but center it nicely. */
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
-    gap: 20px;
-    padding: 20px;
-    margin: 0 auto; 
-}
-
 
 /* Larger, touch-friendly category items */
 .category-item { 
@@ -188,13 +176,6 @@ h2.title {
     font-size: 1.4rem; 
 }
 
-/* Remove special styling on middle item */
-.category-item:nth-child(2) { 
-    transform: none; 
-    z-index: auto; 
-    box-shadow: none; 
-}
-
 /* Larger category images */
 .category-item img { 
     width: 120px; 
@@ -204,7 +185,7 @@ h2.title {
     margin-bottom: 10px;
 }
 
-/* ---------- MODAL (Charm Selection - Scrollable) ---------- */
+/* ---------- MODAL (Charm Selection - 50% from bottom & Scrollable) ---------- */
 .modal { 
     position: fixed; 
     top: 0;
@@ -223,11 +204,11 @@ h2.title {
     width: 100%; 
     max-width: none; 
     
-    /* Height is fixed and large */
-    max-height: 80vh; 
+    /* NEW FIX: Sets the height to 50% of the viewport */
+    max-height: 50vh; 
+    height: 50vh; 
     
-    /* FIX: This is the part that scrolls, keeping the preview stable */
-    overflow-y: auto; 
+    overflow-y: auto; /* Charm list scrolls */
     
     background: #fff; 
     border-radius: 12px 12px 0 0;
@@ -267,7 +248,7 @@ h2.title {
 @media (max-width: 600px) {
     .category-gallery {
         grid-template-columns: repeat(2, 1fr);
-        max-width: 90%; /* Adjust width for mobile */
+        max-width: 90%; 
     }
     .category-item img {
         width: 100px;
