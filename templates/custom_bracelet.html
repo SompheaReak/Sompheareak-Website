@@ -6,21 +6,20 @@
   <title>Customize Your Italy Bracelet</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-/* ---------- GLOBAL ---------- */
+/* ---------- GLOBAL & BODY SETUP (Scrollable) ---------- */
 html, body { 
     height: 100%;
     margin: 0;
 }
 body { 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Slightly nicer font */
-    background: #f5f5f5; /* Lighter background */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f5f5;
     padding: 0; 
     text-align: center; 
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* FIX: Allow vertical scrolling on the body for content below the category gallery */
-    overflow-y: auto; 
+    overflow-y: auto; /* Allows the main content (categories) to scroll */
 }
 
 .header { 
@@ -30,7 +29,7 @@ body {
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    padding: 10px 5%; /* Use percentage for better spacing */
+    padding: 10px 5%; 
     box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
     z-index: 1000; 
     width: 90%; 
@@ -49,19 +48,21 @@ body {
 .back-home:hover { background: #0056b3; }
 
 h2.title { 
-    margin: 30px 0 20px; /* Increased top margin for separation */
+    margin: 30px 0 20px;
     color: #1a1a1a; 
     font-size: 1.8rem;
 }
 
-/* ---------- PREVIEW BOX (30% of Screen Height) ---------- */
+/* ---------- PREVIEW BOX (Sticky at the top) ---------- */
 .preview-box { 
-    /* Max-height is good for large screens, but 30vh is often too short. 
-       Let's use a min-height and let content determine final height, 
-       but keep a height hint. */
-    min-height: 250px; 
-    max-height: 40vh; /* Increased max-height slightly for better display */
+    /* NEW FIX: Make the entire box sticky right below the header */
+    position: sticky;
+    top: 54px; /* Adjust based on header height (~54px) */
+    z-index: 900; 
     
+    /* Dimensions & Appearance */
+    min-height: 220px; 
+    max-height: 40vh; 
     background: #fff; 
     border-radius: 12px; 
     margin: 20px 5% 10px; 
@@ -71,11 +72,10 @@ h2.title {
     box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
     flex-shrink: 0;
     
-    display: flex; /* Added flex to structure header, preview, and total box */
+    display: flex;
     flex-direction: column;
 }
 
-/* Title area for “Preview Bracelet” */
 .preview-header { 
     position: relative; 
     display: flex; 
@@ -84,13 +84,13 @@ h2.title {
     margin-bottom: 20px; 
 }
 
-/* Cancel Selection button */
+/* Cancel Selection button - positioned absolute inside sticky box */
 .cancel-selection-btn {
     position: absolute;
     top: 50%;
-    right: 0; /* Positioned to the right of the title */
+    right: 0;
     transform: translateY(-50%);
-    background: #dc3545; /* Bootstrap-like danger color */
+    background: #dc3545;
     color: white;
     border: none;
     padding: 8px 16px;
@@ -103,20 +103,17 @@ h2.title {
 }
 .cancel-selection-btn:hover { background: #c82333; }
 
-/* Bracelet charms area — centered and touching */
+/* Bracelet charms area */
 #bracelet-preview { 
-    /* Takes up all remaining space in the preview-box */
     flex-grow: 1; 
-    
     display: flex; 
-    align-items: center; /* Vertically center charms */
+    align-items: center; 
     overflow-x: auto;
-    overflow-y: hidden; /* Hide vertical scrollbar */
+    overflow-y: hidden;
     gap: 0;                    
     padding: 0;
-    min-height: 160px; /* Ensures a minimum visible area */
+    min-height: 160px;
 }
-/* Style for when the preview is empty */
 #bracelet-preview:empty::before {
     content: 'Click a category and select your first charm!';
     font-size: 1.2rem;
@@ -124,71 +121,55 @@ h2.title {
     margin: auto;
 }
 
-
 .bracelet-charm { 
     position: relative; 
     margin: 0; 
-    flex-shrink: 0; /* Important: Prevents charms from squeezing */
+    flex-shrink: 0;
 }
 
+/* Image scaling based on your 900x1500 source images (1:1.66 ratio) */
 .bracelet-charm img { 
-    width: 90px; 
-    height: 150px; 
+    width: 90px; /* Base width */
+    height: 150px; /* 90 * 1.66 = 149.4 (Close to 150px) */
     object-fit: cover; 
     display: block; 
 }
 
-/* Charm Controls Container */
+/* Controls (Move/Remove) */
 .controls {
     position: absolute;
-    bottom: -10px; /* Positioned below the charm */
+    bottom: -10px; 
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     gap: 5px;
     opacity: 0;
     transition: opacity 0.2s;
-    pointer-events: none; /* Invisible to mouse when opacity is 0 */
+    pointer-events: none;
 }
 .bracelet-charm:hover .controls {
     opacity: 1;
-    pointer-events: auto; /* Enable mouse interaction on hover */
+    pointer-events: auto;
 }
-
-/* X button for each charm */
-.remove-btn, .move-left, .move-right { 
-    background: #ff4c4c; 
-    color: white; 
-    border: none; 
-    border-radius: 50%; 
-    font-size: 1rem; 
-    width: 28px; 
-    height: 28px; 
-    cursor: pointer; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
-    transition: background 0.2s; 
-}
-
-/* Specific styling for control buttons */
 .remove-btn { 
     position: absolute; 
     top: -15px; 
     left: 50%; 
     transform: translateX(-50%); 
     z-index: 10;
+    background: #ff4c4c;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1rem;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+    transition: background 0.2s;
 }
-.move-left, .move-right {
-    background: #007bff;
-    font-size: 0.8rem;
-    line-height: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.move-left:hover, .move-right:hover { background: #0056b3; }
-.remove-btn:hover { background: #cc0000; }
 
-/* Total and Action Buttons */
+/* Total and Action Buttons (Sticky total) */
 .total-box {
     margin-top: 15px;
     padding-top: 15px;
@@ -204,7 +185,7 @@ h2.title {
     margin: 0;
 }
 .action-buttons button {
-    background: #28a745; /* Green for action */
+    background: #28a745; 
     color: white;
     border: none;
     padding: 10px 20px;
@@ -214,27 +195,24 @@ h2.title {
     font-weight: bold;
     transition: background 0.2s;
 }
-.screenshot-btn { background: #6c757d; } /* Grey for screenshot */
-.screenshot-btn:hover { background: #5a6268; }
-.add-recommended-btn:hover { background: #218838; }
+.screenshot-btn { background: #6c757d; } 
 
 
-/* ---------- CATEGORY SELECTION (Minimal Space & Non-Scrollable) ---------- */
+/* ---------- CATEGORY SELECTION (2 charms per row) ---------- */
 .category-gallery { 
     margin: 10px 5% 20px; 
     
     display: grid; 
-    /* FIX: Use auto-fit to make the grid responsive */
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+    /* FIX: Set 2 columns for categories (2,1row requested) */
+    grid-template-columns: repeat(2, 1fr); 
     gap: 20px;
     padding: 20px;
     
     height: auto; 
-    max-height: none; /* Removed max-height to let categories expand naturally */
     overflow-y: visible; 
 
     width: 90%; 
-    max-width: 900px; /* Increased max-width */
+    max-width: 500px; /* Reduced max-width for the 2-column look on desktop */
     border-radius: 14px; 
     background: #ffffff; 
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
@@ -242,8 +220,8 @@ h2.title {
 }
 
 .category-item { 
-    background: #f8f9fa; /* Slight off-white background */
-    border: 1px solid #ddd; /* Finer border */
+    background: #f8f9fa;
+    border: 1px solid #ddd;
     border-radius: 12px; 
     padding: 15px; 
     cursor: pointer; 
@@ -258,8 +236,9 @@ h2.title {
     transform: translateY(-2px); 
 }
 
+/* Image scaling for category previews (should look good in a 2-column grid) */
 .category-item img { 
-    width: 100%; /* Make image fill container width */
+    width: 100%;
     max-width: 120px; 
     height: 180px; 
     object-fit: cover; 
@@ -267,19 +246,18 @@ h2.title {
     margin-bottom: 10px;
 }
 
-/* ---------- MODAL (Charm Selection - 50% from bottom & Scrollable) ---------- */
+/* ---------- MODAL (Charm Selection - 6 charms per row) ---------- */
 .modal { 
     position: fixed; 
     top: 0;
     left: 0; 
     width: 100%; 
     height: 100%; 
-    background: rgba(0, 0, 0, 0.4); /* Darker overlay */
+    background: rgba(0, 0, 0, 0.6); 
     display: none; 
     justify-content: center; 
     align-items: flex-end; 
     z-index: 10000; 
-    transition: background 0.3s;
 }
 .modal[aria-hidden="false"] {
     display: flex;
@@ -289,11 +267,11 @@ h2.title {
     text-align: center;
     position: relative;
     width: 100%; 
-    max-width: 1000px; /* Set a max width for modal content on desktop */
+    max-width: 1200px; /* Wider modal for 6 columns */
     margin-left: auto;
     margin-right: auto;
     
-    max-height: 70vh; /* Increased height for better charm visibility */
+    max-height: 70vh; 
     height: 70vh; 
     
     overflow-y: auto; 
@@ -302,110 +280,64 @@ h2.title {
     border-radius: 12px 12px 0 0;
     padding: 20px;
     box-shadow: 0 -4px 15px rgba(0,0,0,0.2);
-    display: flex; /* Added flex for content structure */
+    display: flex;
     flex-direction: column;
 }
 
 .charm-grid { 
-    flex-grow: 1; /* Allow grid to take up space */
+    flex-grow: 1; 
     display: grid; 
-    /* FIX: Use auto-fit for responsive charm grid */
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+    /* FIX: Set 6 columns for charm selection (6,row requested) */
+    grid-template-columns: repeat(6, 1fr); 
     gap: 15px; 
     padding: 10px 0;
 }
-.recommended-item {
-    padding: 10px;
-    border-radius: 8px;
-    transition: background 0.2s;
-    cursor: pointer;
-}
-.recommended-item:hover { background: #eee; }
+
+/* Charm selection item scaling */
 .recommended-item img { 
-    width: 100%; 
-    height: 150px; 
+    width: 100%;
+    /* Maintain 900x1500 (1:1.66) ratio for consistency */
+    height: 1.66 * (100% / 6); /* This is tricky in CSS, fixed height is safer */
+    height: 180px; /* Use a good fixed height that fits the 6-column layout */
     object-fit: cover; 
     border-radius: 10px; 
 }
-.recommended-item p { margin: 5px 0 0; font-size: 0.9rem; }
-.recommended-item strong { color: #007bff; }
 
-/* Close modal button top right */
-.close-modal-btn {
-    position: sticky; /* Keep it visible at the top */
-    top: 0;
-    align-self: flex-end;
-    margin: -10px -10px 10px 0;
-    padding: 8px 16px;
-    font-size: 1rem;
-    background: #ff4c4c;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    z-index: 10001;
-    transition: background 0.2s;
-}
-.close-modal-btn:hover { background: #cc0000; }
 
-/* Mobile adjustments */
+/* Mobile adjustments (Overrides for smaller screens) */
 @media (max-width: 900px) {
-    .header { width: 100%; padding: 10px 10px; }
-    .preview-box { width: 100%; margin: 20px 0 10px; border-radius: 0; }
-    .category-gallery { 
-        width: 90%;
-        max-width: 100%;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        padding: 10px;
+    /* Main Layout */
+    .header { width: 100%; padding: 10px; }
+    .preview-box { 
+        width: 100%; 
+        margin: 10px 0; 
+        border-radius: 0; 
+        top: 48px; /* Adjusted sticky position for mobile header */
     }
-    .category-item {
-        font-size: 1rem;
-        padding: 10px;
-    }
-    .category-item img {
-        height: 120px;
-    }
-    .cancel-selection-btn {
-        position: static;
-        transform: none;
-        margin-top: 10px;
-        width: 100%;
-    }
-    .preview-header {
-        flex-direction: column;
-        margin-bottom: 10px;
-    }
-    .total-box {
-        flex-direction: column;
-    }
-    .action-buttons {
-        margin-top: 10px;
-        display: flex;
-        width: 100%;
-    }
-    .action-buttons button {
-        flex-grow: 1;
-        margin-left: 0;
-    }
-    .screenshot-btn { margin-right: 5px; }
 
+    /* Categories - force back to 2 columns on mobile */
+    .category-gallery { 
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 100%;
+        padding: 10px;
+    }
+
+    /* Charm Grid - reduce to 3 columns on tablet/small desktop */
     .charm-grid { 
-        grid-template-columns: repeat(2, 1fr); 
+        grid-template-columns: repeat(3, 1fr); 
         gap: 10px;
     }
 }
-@media (max-width: 480px) {
-    .category-gallery {
+@media (max-width: 600px) {
+    /* Charm Grid - reduce to 2 columns on phones */
+    .charm-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    .action-buttons {
-        flex-direction: column;
+    .modal-content {
+        max-height: 90vh; /* Allow modal to take up more space on phone */
+        height: 90vh;
     }
-    .screenshot-btn { margin-right: 0; margin-bottom: 5px;}
-    .add-recommended-btn { margin-top: 5px; }
 }
-
 </style>
 </head>
 <body>
@@ -444,6 +376,7 @@ h2.title {
   </div>
 
   <script>
+    // --- JS CODE REMAINS THE SAME AS THE PREVIOUS VERSION, NO LOGIC CHANGES NEEDED ---
     const preview = document.getElementById('bracelet-preview');
     const totalPrice = document.getElementById('totalPrice');
     const categoryGallery = document.getElementById('categoryGallery');
@@ -454,11 +387,10 @@ h2.title {
     const screenshotBtn = document.getElementById('screenshotBtn');
     const recommendedBtn = document.getElementById('recommendedBtn');
     const cancelSelectionBtn = document.getElementById('cancelSelection');
-    const previewBox = document.getElementById('previewBox'); // Added to fix screenshot
+    const previewBox = document.getElementById('previewBox'); 
 
     let charms = [];
 
-    // All charms array - unchanged as data structure is good
     const allCharms = [
       // --- CAR LOGOS (cc01 - cc15) ---
       {"id": 12301, "name_kh": "Car Charm 01", "price": 5000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"]},
@@ -590,7 +522,7 @@ h2.title {
       ch.categories.forEach(cat => { if (!s.has(cat)) s.add(cat); });
       return s;
     }, new Set()));
-    // --- END CHARM DATA ---
+    // --- END CHARM DATA & Categories ---
 
     function renderCategories() {
       categoryGallery.innerHTML = '';
@@ -599,19 +531,18 @@ h2.title {
         item.className = 'category-item';
         item.tabIndex = 0;
         item.dataset.category = cat;
-        // Find the first charm in the category to use as the thumbnail
         const firstCharm = allCharms.find(c => c.categories.includes(cat));
         const imgSrc = firstCharm ? firstCharm.image : '/static/images/default.jpg';
         
         item.innerHTML = `<img src="${imgSrc}" alt="${escapeHtml(cat)} Category Image"><p>${escapeHtml(cat)}</p>`;
         item.addEventListener('click', () => openCharmModal(cat));
-        item.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') openCharmModal(cat); e.preventDefault(); }); // Prevent scroll on spacebar
+        item.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') openCharmModal(cat); e.preventDefault(); });
         categoryGallery.appendChild(item);
       });
     }
 
     function openCharmModal(category) {
-      modalTitle.textContent = `Select ${category} Charm`; // Updated title
+      modalTitle.textContent = `Select ${category} Charm`;
       charmGrid.innerHTML = '';
       const charmsInCategory = allCharms.filter(ch => ch.categories.includes(category));
       
@@ -621,7 +552,6 @@ h2.title {
         charmsInCategory.forEach(ch => {
           const div = document.createElement('div');
           div.className = 'recommended-item';
-          // Use a function to format the price for display
           const formattedPrice = Number(ch.price).toLocaleString() + '៛';
           
           div.innerHTML = `
@@ -631,7 +561,7 @@ h2.title {
           `;
           div.addEventListener('click', () => {
             addCharm(ch.image, ch.name_kh, ch.price);
-            closeCharmModal(); // Auto-close modal after selection
+            closeCharmModal();
           });
           charmGrid.appendChild(div);
         });
@@ -646,7 +576,6 @@ h2.title {
     function renderBracelet() {
       preview.innerHTML = '';
       if (charms.length === 0) {
-        // Empty message is now handled by pure CSS :empty::before pseudo-element.
         totalPrice.textContent = '0៛';
         return;
       }
@@ -667,7 +596,6 @@ h2.title {
         preview.appendChild(div);
       });
 
-      // Added price formatting function here as well for consistency
       totalPrice.textContent = Number(total).toLocaleString() + '៛'; 
 
       preview.querySelectorAll('.remove-btn').forEach(btn => {
@@ -680,16 +608,13 @@ h2.title {
         btn.addEventListener('click', () => moveRight(Number(btn.dataset.index)));
       });
 
-      // Original scroll logic is good, but added a check for the center of the viewport
       if (preview.scrollWidth > preview.clientWidth) {
-         // Calculate scroll position to center the *entire* bracelet list
         const centerScroll = (preview.scrollWidth - preview.clientWidth) / 2;
         preview.scrollTo({ left: centerScroll, behavior: 'smooth' });
       }
     }
 
     function addCharm(image, name, price) {
-      // Ensure the price is treated as a number
       charms.push({ image, name, price: Number(price) });
       renderBracelet();
     }
@@ -710,7 +635,6 @@ h2.title {
     }
 
     cancelSelectionBtn.addEventListener('click', () => {
-      // Updated message for clarity
       if (charms.length > 0 && confirm('Are you sure you want to clear your current bracelet design?')) {
         charms = [];
         renderBracelet();
@@ -720,7 +644,6 @@ h2.title {
     });
 
     screenshotBtn.addEventListener('click', () => {
-      // FIX: Use previewBox for a cleaner screenshot without header or category selection
       html2canvas(previewBox).then(canvas => {
         const link = document.createElement('a');
         link.download = 'bracelet_design.png';
@@ -736,7 +659,6 @@ h2.title {
     });
 
     closeModalBtn.addEventListener('click', closeCharmModal);
-    // Use the `aria-hidden` attribute for modal toggling
     charmModal.addEventListener('click', (e) => { 
         if (e.target === charmModal) closeCharmModal(); 
     });
