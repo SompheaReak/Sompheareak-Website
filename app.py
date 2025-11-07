@@ -1,5 +1,3 @@
-App.py
-
 import os 
 import requests
 # Admin login credentials
