@@ -1,5 +1,67 @@
 <!-- This template contains the self-contained game logic -->
 <script src="https://cdn.tailwindcss.com"></script> 
+
+<!-- Firebase SDK Imports (Mandatory for Firestore and Auth) -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, onSnapshot, setDoc, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Global variables provided by the Canvas environment
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    // Global Firebase instances
+    window.db = null;
+    window.auth = null;
+    window.currentUserId = null;
+    window.gameInitializationComplete = false;
+    
+    // Paths
+    window.getDrawCountPath = (uid) => `artifacts/${appId}/users/${uid}/drawCounts/main`;
+    window.getCodeDoc = (code) => doc(db, `artifacts/${appId}/public/codes/${code}`);
+
+    async function initializeFirebase() {
+        if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
+            console.error("Firebase config is missing.");
+            return;
+        }
+
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        window.auth = getAuth(app);
+        
+        // 1. Authenticate User
+        try {
+            if (initialAuthToken) {
+                await signInWithCustomToken(auth, initialAuthToken);
+            } else {
+                await signInAnonymously(auth);
+            }
+        } catch (error) {
+            console.error("Firebase authentication failed:", error);
+            await signInAnonymously(auth); // Fallback to anonymous sign-in
+        }
+        
+        // 2. Set up Auth Listener and complete game initialization
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.currentUserId = user.uid;
+                // Only proceed to run the game logic once we have a user ID
+                if (!window.gameInitializationComplete) {
+                    window.initGame();
+                    window.gameInitializationComplete = true;
+                }
+            } else {
+                console.warn("User is not signed in.");
+            }
+        });
+    }
+
+    initializeFirebase();
+</script>
+
 <style>
     :root {
         --lego-yellow: #FFC300;
@@ -70,7 +132,7 @@
         <!-- Draw Count Info -->
         <div class="flex justify-between items-center mb-6 p-3 rounded-lg bg-gray-700 shadow-inner">
             <span class="text-lg font-semibold text-gray-300">Draws Available:</span>
-            <span id="draw-count" class="text-3xl font-extrabold text-red-500">3</span>
+            <span id="draw-count" class="text-3xl font-extrabold text-red-500">...</span>
         </div>
 
         <!-- Result Area (dynamically filled by JS) -->
@@ -82,24 +144,35 @@
         </div>
 
         <!-- Draw Button -->
-        <button id="draw-button" class="w-full py-4 text-xl font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg transition duration-200 uppercase mt-6">
-            Open Blind Box (1 Draw)
+        <button id="draw-button" class="w-full py-4 text-xl font-bold bg-gray-500 text-white rounded-xl shadow-lg uppercase mt-6" disabled>
+            Loading...
         </button>
 
-        <!-- Placeholder for obtaining more draws -->
-        <button id="get-more-button" class="w-full py-3 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-xl shadow transition duration-200 mt-3">
-            Get More Draws (Reset for Demo)
-        </button>
+        <hr class="border-gray-700 my-6">
+
+        <!-- Code Redemption Area -->
+        <h2 class="text-xl font-bold text-yellow-500 mb-3">Redeem Draw Code</h2>
+        <div class="flex flex-col space-y-3">
+            <input type="text" id="code-input" placeholder="Enter your secret code..." class="p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-yellow-500 focus:outline-none placeholder-gray-400">
+            <button id="redeem-button" class="w-full py-3 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-xl shadow transition duration-200">
+                Verify & Redeem
+            </button>
+            <p id="redeem-message" class="text-center text-sm min-h-6"></p>
+        </div>
+        
     </div>
     
     <!-- Minifigure List Display (for reference) -->
     <div class="w-full max-w-sm mt-8 p-4 bg-gray-800 rounded-xl border border-gray-700">
         <h2 class="text-xl font-bold text-yellow-500 mb-3 border-b border-yellow-500 pb-2">Available Minifigures <span id="fig-count-title"></span></h2>
-        <!-- 💥 THIS IS THE NEW 5-COLUMN GRID CONTAINER 💥 -->
+        <!-- 💥 5-COLUMN GRID CONTAINER 💥 -->
         <div id="minifigure-list" class="grid grid-cols-5 gap-2">
             <!-- Images will be populated by JS -->
         </div>
     </div>
+    
+    <!-- Display User ID for debugging/sharing -->
+    <p class="text-xs text-gray-500 mt-4">User ID: <span id="user-id-display">N/A (Loading...)</span></p>
 </div>
 
 <!-- Game Logic -->
@@ -120,15 +193,24 @@
     ];
     // ----------------------------------------
     
-    // Global array for figures (populated on load)
+    // Global state
     let MINIFIGURES = [];
-    
+    let currentDraws = 0;
+    let isLoading = false;
+    let unsubscribeDraws = null; // To hold the Firestore snapshot listener
+
+    // UI Elements
+    const drawCountElement = document.getElementById('draw-count');
+    const drawButton = document.getElementById('draw-button');
+    const resultArea = document.getElementById('result-area');
+    const redeemButton = document.getElementById('redeem-button');
+    const codeInput = document.getElementById('code-input');
+    const redeemMessage = document.getElementById('redeem-message');
+    const userIdDisplay = document.getElementById('user-id-display');
+
     // --- Utility Functions ---
-    
-    // Parses the user's simplified string format into a usable JS object
     function parseFigureString(str) {
         const figure = {};
-        // Regex to find key:"value" patterns
         const regex = /(\w+):"([^"]+)"/g;
         let match;
         while ((match = regex.exec(str)) !== null) {
@@ -168,7 +250,6 @@
     }
     
     function drawMinifigure() {
-        // ... (Weighted logic remains the same)
         const weightedList = [];
         MINIFIGURES.forEach(fig => {
             let weight = 0;
@@ -178,7 +259,6 @@
             else if (fig.rarity === "Super Rare") weight = 10;
             else if (fig.rarity === "Ultra Rare") weight = 5;
             
-            // Add the figure to the weighted list based on its weight
             for (let i = 0; i < weight; i++) {
                 weightedList.push(fig);
             }
@@ -193,19 +273,72 @@
         return weightedList[randomIndex];
     }
     
-    // --- Draw Count Logic ---
-    const DRAW_COUNT_KEY = 'minifigure_draw_count';
-    const initialDraws = 3;
-    let currentDraws = 0;
+    // --- Firestore Draw Count Management ---
+
+    function listenForDrawCount() {
+        if (unsubscribeDraws) unsubscribeDraws();
+        
+        const drawCountRef = doc(db, getDrawCountPath(currentUserId));
+        
+        // Listen for real-time changes
+        unsubscribeDraws = onSnapshot(drawCountRef, (docSnap) => {
+            if (docSnap.exists()) {
+                currentDraws = docSnap.data().count || 0;
+            } else {
+                // Initialize if document doesn't exist
+                currentDraws = 0;
+                setDoc(drawCountRef, { count: 0 }).catch(console.error);
+            }
+            updateDrawCountUI();
+        }, (error) => {
+            console.error("Error listening to draw count:", error);
+            updateDrawCountUI(); // Show current local count on error
+        });
+    }
+
+    async function decrementDrawCount() {
+        const drawCountRef = doc(db, getDrawCountPath(currentUserId));
+        
+        try {
+            await runTransaction(db, async (transaction) => {
+                const docSnap = await transaction.get(drawCountRef);
+                if (!docSnap.exists()) {
+                    throw "Draw count document does not exist!";
+                }
+                const newCount = (docSnap.data().count || 0) - 1;
+                if (newCount < 0) {
+                    throw "Not enough draws.";
+                }
+                transaction.update(drawCountRef, { count: newCount });
+            });
+            return true;
+        } catch (e) {
+            console.error("Transaction failed:", e);
+            return false;
+        }
+    }
     
-    const drawCountElement = document.getElementById('draw-count');
-    const drawButton = document.getElementById('draw-button');
-    const getMoreButton = document.getElementById('get-more-button');
-    const resultArea = document.getElementById('result-area');
-    
-    function updateDrawCount(newCount) {
-        currentDraws = Math.max(0, newCount);
-        localStorage.setItem(DRAW_COUNT_KEY, currentDraws);
+    async function increaseDrawCount(amount) {
+        const drawCountRef = doc(db, getDrawCountPath(currentUserId));
+        
+        try {
+            await runTransaction(db, async (transaction) => {
+                const docSnap = await transaction.get(drawCountRef);
+                const currentCount = docSnap.exists() ? (docSnap.data().count || 0) : 0;
+                const newCount = currentCount + amount;
+                
+                transaction.set(drawCountRef, { count: newCount }, { merge: true });
+            });
+            return true;
+        } catch (e) {
+            console.error("Failed to increase draw count:", e);
+            return false;
+        }
+    }
+
+    // --- UI Update ---
+
+    function updateDrawCountUI() {
         if (drawCountElement) {
             drawCountElement.textContent = currentDraws;
         }
@@ -224,41 +357,104 @@
             }
         }
     }
+
+    function resetButtonState() {
+        // Since we are using an onSnapshot listener, the UI update is automatic
+        // after the transaction commits, so we only need to reset the loading state.
+        isLoading = false;
+    }
     
-    function loadDrawCount() {
-        const storedCount = localStorage.getItem(DRAW_COUNT_KEY);
-        if (storedCount === null) {
-            updateDrawCount(initialDraws);
-        } else {
-            updateDrawCount(parseInt(storedCount, 10));
+    // --- Code Redemption Logic ---
+
+    async function handleRedeemCode() {
+        if (!currentUserId || isLoading) return;
+        
+        const code = codeInput.value.trim().toUpperCase();
+        if (code.length === 0) {
+            displayRedeemMessage('Please enter a code.', 'text-yellow-400');
+            return;
+        }
+        
+        isLoading = true;
+        redeemButton.disabled = true;
+        redeemButton.textContent = 'Verifying...';
+        displayRedeemMessage('');
+
+        try {
+            const codeRef = getCodeDoc(code);
+            const codeSnap = await getDoc(codeRef);
+
+            if (!codeSnap.exists()) {
+                displayRedeemMessage('Invalid code. Please check your entry.', 'text-red-400');
+                return;
+            }
+
+            const codeData = codeSnap.data();
+
+            if (codeData.redeemed) {
+                displayRedeemMessage('Code already used.', 'text-red-400');
+                return;
+            }
+            
+            const drawsToAdd = codeData.count || 5; // Default to 5 if count is missing
+
+            // 1. Mark the code as redeemed (Critical atomic step)
+            await updateDoc(codeRef, { redeemed: true, redeemedBy: currentUserId, redeemedAt: new Date().toISOString() });
+            
+            // 2. Increase the user's draw count
+            const success = await increaseDrawCount(drawsToAdd);
+
+            if (success) {
+                displayRedeemMessage(`Success! Added ${drawsToAdd} draws to your account.`, 'text-green-400');
+                codeInput.value = '';
+            } else {
+                // If draw count update failed, try to revert the redeemed status (best effort)
+                await updateDoc(codeRef, { redeemed: false, redeemedBy: null, redeemedAt: null });
+                displayRedeemMessage('Verification failed. Please try again.', 'text-red-400');
+            }
+
+        } catch (error) {
+            console.error("Redemption error:", error);
+            displayRedeemMessage('An error occurred during verification.', 'text-red-400');
+        } finally {
+            isLoading = false;
+            redeemButton.disabled = false;
+            redeemButton.textContent = 'Verify & Redeem';
         }
     }
 
-    // --- Main Game Logic ---
+    function displayRedeemMessage(message, colorClass) {
+        redeemMessage.textContent = message;
+        redeemMessage.className = `text-center text-sm min-h-6 ${colorClass}`;
+    }
 
-    // Function to handle the actual drawing and animation
-    function handleDrawClick() {
+    // --- Main Draw Logic ---
+    async function handleDrawClick() {
         if (isLoading || currentDraws <= 0) return;
         
-        // Decrement count immediately
-        updateDrawCount(currentDraws - 1);
+        // 1. Try to decrement count via transaction (secure)
+        const decrementSuccess = await decrementDrawCount();
+        if (!decrementSuccess) {
+            displayRedeemMessage('Draw failed. You might have 0 draws left.', 'text-red-400');
+            return;
+        }
         
+        // Count successfully decremented in Firestore, proceed with animation
         let isLoading = true;
         drawButton.disabled = true;
         drawButton.textContent = 'Testing Luck...';
         drawButton.classList.remove('bg-red-600', 'hover:bg-red-700');
         drawButton.classList.add('bg-gray-500', 'cursor-not-allowed');
 
-        // 1. Start Loading Animation (The "Mystery Box")
+        // Start Loading Animation
         resultArea.innerHTML = `
             <div id="mystery-box" class="loading-animation w-32 h-32 rounded-lg flex items-center justify-center shadow-inner">
                 <span class="text-6xl" role="img" aria-label="Mystery Box">❓</span>
             </div>
         `;
 
-        // 2. Wait for suspense (3 seconds)
+        // Wait for suspense (3 seconds)
         setTimeout(() => {
-            // 3. Draw the figure
             const figure = drawMinifigure();
             if (!figure) {
                 resultArea.innerHTML = `<p class="text-red-400">Error: Could not draw a figure.</p>`;
@@ -266,13 +462,10 @@
                 return;
             }
 
-            // Determine border color class
             const borderColorClass = figure.color ? `border-${figure.color}` : 'border-yellow-500';
-            
-            // Determine rarity badge class
             const rarityClass = `rarity-${figure.rarity.toLowerCase().replace(' ', '-')}`;
 
-            // 4. Stop animation and reveal result
+            // Reveal result
             resultArea.innerHTML = `
                 <div id="reveal-card" class="reveal-card flex flex-col items-center p-6 bg-gray-800 rounded-xl shadow-2xl w-full max-w-xs border-b-8 ${borderColorClass}">
                     <div class="text-8xl mb-4 p-2 bg-gray-700 rounded-full shadow-lg border-2 border-yellow-500 overflow-hidden w-28 h-28 flex items-center justify-center">
@@ -286,57 +479,42 @@
                 </div>
             `;
 
-            // Add the 'revealed' class after a slight delay to trigger the CSS transition
             setTimeout(() => {
                 document.getElementById('reveal-card')?.classList.add('revealed');
             }, 50);
 
-            // 5. Reset button
+            // Reset button state is handled by the onSnapshot listener from Firestore
             isLoading = false;
-            resetButtonState();
-
-        }, 3000); // 3-second suspense timer
-    }
-    
-    function resetButtonState() {
-        if (currentDraws > 0) {
-            drawButton.disabled = false;
-            drawButton.textContent = 'Open Blind Box (1 Draw)';
-            drawButton.classList.remove('bg-gray-500', 'cursor-not-allowed');
-            drawButton.classList.add('bg-red-600', 'hover:bg-red-700');
-        } else {
-            // State remains "No Draws Left!"
-            drawButton.disabled = true;
-        }
+        }, 3000); 
     }
     
     // --- Initialization ---
 
-    // This runs when the script loads
-    function initGame() {
-        if (drawButton && getMoreButton) {
-            // Load initial data and draw count
-            initializeMinifigures();
-            loadDrawCount();
-            
-            // Event Listeners
-            drawButton.addEventListener('click', handleDrawClick);
-            
-            // Simple demo reset button
-            getMoreButton.addEventListener('click', () => {
-                updateDrawCount(initialDraws);
-            });
-        } else {
-            console.error("Game UI elements not found.");
+    // Exposed globally for the module script to call after authentication
+    window.initGame = function() {
+        if (!window.db || !window.currentUserId) {
+            console.error("Firebase not initialized or user ID missing.");
+            return;
         }
-    }
 
-    // Use window.onload or DOMContentLoaded to ensure elements exist
-    document.addEventListener('DOMContentLoaded', initGame);
+        // Display user ID for debugging
+        if (userIdDisplay) {
+            userIdDisplay.textContent = window.currentUserId;
+        }
+
+        // Initialize Minifigures list (only needs to run once)
+        initializeMinifigures();
+        
+        // Start listening to the user's draw count in real-time
+        listenForDrawCount();
+        
+        // Event Listeners
+        if (drawButton) {
+            drawButton.addEventListener('click', handleDrawClick);
+        }
+        if (redeemButton) {
+            redeemButton.addEventListener('click', handleRedeemCode);
+        }
+    };
 </script>
-
-Next Steps: Adding Figures
-Now that the display is ready for a large collection, you can easily add all 100 of your minifigures.
-Just remember to edit the FIGURE_STRINGS array in the <script> tag, ensuring you use the correct format for each one:
-'name:"Figure Name", rarity:"Rarity Type", color:"tailwind-color", image_url:"static/images/your_file.jpg"',
 
