@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Product Generator (Khmer)</title>
+    <!-- Load Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#f97316', // Orange-500
+                        accent: '#1d4ed8', // Blue-700
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom spinner animation for a professional loading state */
+        .spinner {
+            border-top-color: #f97316;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans p-4 flex items-center justify-center">
+
+    <!-- Main Application Card (Responsive and Centered) -->
+    <div class="w-full max-w-xl mx-auto bg-white rounded-2xl shadow-2xl p-6 md:p-8 transform transition-all duration-300">
+        <h1 class="text-3xl font-extrabold text-center text-accent mb-2">
+            Featured Product Randomizer
+        </h1>
+        <p class="text-center text-gray-500 mb-8">
+            Click the button below to randomly select a featured product.
+        </p>
+
+        <!-- Product Display Area -->
+        <div id="productDisplay" class="border border-gray-200 rounded-xl overflow-hidden shadow-lg p-4 bg-white transition-all duration-500">
+            <!-- Product Image Container -->
+            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4 relative flex items-center justify-center">
+                <!-- Fallback/Placeholder Image -->
+                <img id="productImage" src="https://placehold.co/400x400/94A3B8/FFFFFF?text=Click+to+Start" alt="Product Image" class="w-full h-full object-cover transition-opacity duration-300 opacity-100">
+                <!-- Loading Indicator -->
+                <div id="loadingIndicator" class="hidden absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div class="spinner w-12 h-12 border-4 border-gray-200 border-solid rounded-full"></div>
+                </div>
+            </div>
+
+            <!-- Product Details -->
+            <h2 id="productNameKhmer" class="text-3xl font-bold text-gray-800 text-center mb-1">
+                Awaiting Selection...
+            </h2>
+            <p id="productDescription" class="text-center text-gray-600 text-sm">
+                Hit the button below to see the lucky item! (ID: <span id="productId">--</span>)
+            </p>
+        </div>
+
+        <!-- Randomize Button -->
+        <button id="randomizeButton" class="w-full mt-8 py-4 text-xl font-bold bg-primary text-white rounded-xl shadow-xl hover:bg-orange-600 transition duration-150 transform hover:scale-[1.01] active:scale-95 disabled:bg-gray-400" onclick="displayRandomProduct()">
+            PICK RANDOM PRODUCT
+        </button>
+
+        <p class="text-sm text-gray-400 mt-4 text-center">
+            Total Products: <span id="productCount">0</span>
+        </p>
+
+    </div>
+
+    <script type="text/javascript">
+        // --- IMPORTANT: Paste your full list of products here ---
+        // Replace the sample products below with your 200 items.
+        // Each item must have: id (number), name_kh (string), and image (string/URL).
+        const products = [
+            { id: 1, name_kh: "Lego", image: "https://placehold.co/400x400/1d4ed8/FFFFFF?text=Lego+Toy" },
+            { id: 2, name_kh: "ស្បែកជើង (Shoes)", image: "https://placehold.co/400x400/059669/FFFFFF?text=Green+Shoes" },
+            { id: 3, name_kh: "ទូរស័ព្ទ (Phone)", image: "https://placehold.co/400x400/f97316/FFFFFF?text=Smart+Phone" },
+            { id: 4, name_kh: "កាមេរ៉ា (Camera)", image: "https://placehold.co/400x400/7c3aed/FFFFFF?text=Camera+Kit" },
+            { id: 5, name_kh: "សៀវភៅ (Book)", image: "https://placehold.co/400x400/db2777/FFFFFF?text=Khmer+Book" },
+            // Example of how to add more:
+            // { id: 6, name_kh: "កុំព្យូទ័រ (Computer)", image: "https://placehold.co/400x400/6b7280/FFFFFF?text=Desktop" },
+        ];
+
+        // Global variables for DOM elements
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const productImage = document.getElementById('productImage');
+        const productNameKhmer = document.getElementById('productNameKhmer');
+        const productIdElement = document.getElementById('productId');
+        const randomizeButton = document.getElementById('randomizeButton');
+        const productCountElement = document.getElementById('productCount');
+
+
+        // --- Core Logic for Random Selection ---
+
+        function displayRandomProduct() {
+            if (products.length === 0) {
+                productNameKhmer.textContent = "Error: No products loaded.";
+                return;
+            }
+
+            // Set loading state
+            randomizeButton.disabled = true;
+            randomizeButton.textContent = 'Selecting...';
+            productImage.style.opacity = '0';
+            loadingIndicator.classList.remove('hidden');
+
+            // Simulate a brief delay for better user experience
+            setTimeout(() => {
+                // 1. Randomly select an index
+                const randomIndex = Math.floor(Math.random() * products.length);
+                const selectedProduct = products[randomIndex];
+
+                // 2. Function to restore the UI state after image load/error
+                const restoreState = () => {
+                    loadingIndicator.classList.add('hidden');
+                    productImage.style.opacity = '1';
+                    randomizeButton.disabled = false;
+                    randomizeButton.textContent = 'PICK RANDOM PRODUCT';
+                };
+
+                // 3. Update the DOM elements with the new product data
+                productImage.src = selectedProduct.image;
+                productNameKhmer.textContent = selectedProduct.name_kh;
+                productIdElement.textContent = selectedProduct.id;
+                
+                // Set up event listeners to restore state
+                productImage.onload = restoreState;
+                
+                // Handle image errors gracefully
+                productImage.onerror = () => {
+                    productImage.src = "https://placehold.co/400x400/EF4444/FFFFFF?text=Image+Not+Found";
+                    console.error(`Failed to load image for ID ${selectedProduct.id}: ${selectedProduct.image}`);
+                    restoreState(); // Restore buttons even on error
+                };
+
+                // Check if the image is cached and complete (i.e., onload won't fire)
+                if (productImage.complete && productImage.naturalWidth !== 0) {
+                    restoreState();
+                }
+
+            }, 500); // 500ms simulation delay
+        }
+
+        // --- Initialization ---
+
+        window.onload = () => {
+            // Update the total count displayed on the page
+            productCountElement.textContent = products.length;
+        };
+    </script>
+</body>
+</html>
+
