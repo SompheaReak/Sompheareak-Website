@@ -1,10 +1,11 @@
-<!-- This template contains the self-contained game logic -->
+<!-- This template contains the self-contained game logic, using localStorage for a simple demo. -->
 <script src="https://cdn.tailwindcss.com"></script> 
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bungee+Inline&family=Inter:wght@100..900&display=swap');
+    
     :root {
         --lego-yellow: #FFC300;
         --lego-red: #C80815;
-        --dark-blue: #1A202C;
     }
     
     body {
@@ -14,28 +15,29 @@
     /* Keyframes for the shaking/loading animation */
     @keyframes shake {
         0% { transform: translate(1px, 1px) rotate(0deg); }
-        10% { transform: translate(-1px, -2px) rotate(-1deg); }
-        20% { transform: translate(-3px, 0px) rotate(1deg); }
-        30% { transform: translate(3px, 2px) rotate(0deg); }
-        40% { transform: translate(1px, -1px) rotate(1deg); }
-        50% { transform: translate(-1px, 2px) rotate(-1deg); }
-        60% { transform: translate(-3px, 1px) rotate(0deg); }
-        70% { transform: translate(3px, 1px) rotate(-1deg); }
-        80% { transform: translate(-1px, -1px) rotate(1deg); }
-        90% { transform: translate(1px, 2px) rotate(0deg); }
-        100% { transform: translate(1px, -2px) rotate(-1deg); }
+        10% { transform: translate(-2px, -3px) rotate(-1deg); }
+        20% { transform: translate(3px, 0px) rotate(1deg); }
+        30% { transform: translate(-3px, 2px) rotate(0deg); }
+        40% { transform: translate(2px, -1px) rotate(1deg); }
+        50% { transform: translate(-1px, 3px) rotate(-1deg); }
+        60% { transform: translate(3px, 1px) rotate(0deg); }
+        70% { transform: translate(-2px, -2px) rotate(-1deg); }
+        80% { transform: translate(1px, 0px) rotate(1deg); }
+        90% { transform: translate(-3px, 3px) rotate(0deg); }
+        100% { transform: translate(1px, -1px) rotate(-1deg); }
     }
 
     .loading-animation {
-        animation: shake 0.2s infinite;
+        animation: shake 0.15s infinite;
         background-color: var(--lego-yellow);
+        box-shadow: 0 0 20px rgba(255, 195, 0, 0.7);
     }
 
     .reveal-card {
-        transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+        transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
     }
     .reveal-card:not(.revealed) {
-        transform: scale(0.8) translateY(20px);
+        transform: scale(0.5) translateY(50px);
         opacity: 0;
     }
     .reveal-card.revealed {
@@ -44,10 +46,52 @@
     }
     
     /* Custom style for the rarity badge background */
-    .rarity-common { background-color: #3b82f6; } /* Blue */
-    .rarity-rare { background-color: #f59e0b; } /* Amber */
-    .rarity-super-rare { background-color: #ef4444; } /* Red */
-    .rarity-ultra-rare { background-color: #a855f7; } /* Purple */
+    .rarity-common { background-color: #3b82f6; color: white; } /* Blue */
+    .rarity-rare { background-color: #f59e0b; color: #333; } /* Amber */
+    .rarity-super-rare { background-color: #ef4444; color: white; } /* Red */
+    .rarity-ultra-rare { background-color: #a855f7; color: white; } /* Purple */
+
+    .draw-button-style {
+        box-shadow: 0 5px 0 0 #A80008;
+        transform: translateY(0);
+        transition: all 0.1s ease-out;
+    }
+    .draw-button-style:active:not(:disabled) {
+        transform: translateY(5px);
+        box-shadow: 0 0 0 0 #A80008;
+    }
+    
+    /* Styles for the Collection grid items */
+    .collection-item {
+        cursor: pointer;
+        transition: transform 0.1s;
+    }
+    .collection-item:hover {
+        transform: scale(1.05);
+    }
+    .collected {
+        filter: none;
+        opacity: 1;
+        border: 2px solid var(--lego-yellow);
+    }
+    .missing {
+        filter: grayscale(100%) brightness(50%);
+        opacity: 0.6;
+        border: 2px dashed #4B5563;
+        position: relative;
+        cursor: default; /* Not clickable */
+    }
+    .missing:after {
+        content: '?';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2rem;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+    }
 </style>
 
 <!-- Main Game Container -->
@@ -60,74 +104,117 @@
         Back to Home
     </a>
     
-    <div id="minifigure-app" class="w-full max-w-sm bg-gray-800 border-4 border-yellow-500 shadow-2xl p-6 rounded-xl">
+    <div id="minifigure-app" class="w-full max-w-sm bg-gray-800 border-4 border-yellow-500 shadow-2xl p-6 rounded-xl relative overflow-hidden">
         
         <!-- Header -->
-        <h1 class="text-3xl font-black text-yellow-500 text-center mb-4 uppercase tracking-wider">
-            Mystery Blind Box
+        <h1 class="text-3xl font-black text-yellow-500 text-center mb-4 uppercase tracking-wider font-['Bungee_Inline']">
+            Mystery Draw!
         </h1>
 
         <!-- Draw Count Info -->
-        <div class="flex justify-between items-center mb-6 p-3 rounded-lg bg-gray-700 shadow-inner">
+        <div class="flex justify-between items-center mb-4 p-3 rounded-lg bg-gray-700 shadow-inner border border-gray-600">
             <span class="text-lg font-semibold text-gray-300">Draws Available:</span>
-            <span id="draw-count" class="text-3xl font-extrabold text-red-500">3</span>
+            <span id="draw-count" class="text-3xl font-extrabold text-red-500 drop-shadow-lg">...</span>
+        </div>
+        
+        <!-- Cambodia Date & Time Display -->
+        <div id="datetime-display" class="mb-6 p-2 text-center rounded-lg bg-gray-700 border border-gray-600">
+            <!-- Content filled by JavaScript -->
+            <p class="text-sm font-semibold text-gray-400">Loading Cambodia Time...</p>
         </div>
 
         <!-- Result Area (dynamically filled by JS) -->
         <div id="result-area" class="mt-4 min-h-[250px] flex items-center justify-center">
             <div class="text-center p-4 text-gray-400">
-                <p class="mb-2 text-lg font-semibold">Ready to test your luck?</p>
-                <p class="text-sm">Press the button below to open a brand new blind box!</p>
+                <p class="mb-2 text-lg font-semibold">Will you find the Ultra Rare?</p>
+                <p class="text-sm">Click the button to open your new blind box!</p>
             </div>
         </div>
 
         <!-- Draw Button -->
-        <button id="draw-button" class="w-full py-4 text-xl font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg transition duration-200 uppercase mt-6">
-            Open Blind Box (1 Draw)
+        <button id="draw-button" class="w-full py-4 text-xl font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl transition duration-150 uppercase mt-6 draw-button-style" disabled>
+            Loading...
         </button>
 
-        <!-- Refill Draws Button (using localStorage) -->
-        <button id="refill-button" class="w-full py-3 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-xl shadow transition duration-200 mt-3">
-            Refill 5 Free Draws (Demo Mode)
+        <!-- Refill Draws Button (using localStorage - DEMO WARNING) -->
+        <button id="refill-button" class="w-full py-2 text-xs font-semibold bg-gray-700 hover:bg-gray-600 text-gray-400 rounded-xl shadow transition duration-200 mt-3 border border-gray-600">
+            [DEMO MODE] Reset Draws to 5
+        </button>
+
+        <!-- Reset Collection Button (New) -->
+        <button id="reset-collection-button" class="w-full py-2 text-xs font-semibold bg-gray-700 hover:bg-gray-600 text-gray-400 rounded-xl shadow transition duration-200 mt-2 border border-gray-600">
+            [DEMO MODE] Reset Collection
         </button>
     </div>
     
-    <!-- Minifigure List Display (for reference) -->
+    <!-- Minifigure Collection Display -->
     <div class="w-full max-w-sm mt-8 p-4 bg-gray-800 rounded-xl border border-gray-700">
-        <h2 class="text-xl font-bold text-yellow-500 mb-3 border-b border-yellow-500 pb-2">Available Minifigures <span id="fig-count-title"></span></h2>
+        <h2 class="text-xl font-bold text-yellow-500 mb-3 border-b border-yellow-500 pb-2">
+            Your Collection (<span id="collected-count">0</span> / <span id="total-count">0</span>)
+        </h2>
         <!-- 💥 5-COLUMN GRID CONTAINER 💥 -->
-        <div id="minifigure-list" class="grid grid-cols-5 gap-2">
-            <!-- Images will be populated by JS -->
+        <div id="collection-list" class="grid grid-cols-5 gap-2">
+            <!-- Figures will be populated by JS, showing found/missing status -->
         </div>
     </div>
 </div>
 
+<!-- Full-Screen Modal for Viewing Figure Details (New Feature) -->
+<div id="figure-modal" class="hidden fixed inset-0 z-50 bg-gray-900 bg-opacity-95 flex items-center justify-center p-4" onclick="document.getElementById('figure-modal').classList.add('hidden')">
+    <div class="bg-gray-800 p-6 rounded-xl border-4 border-yellow-500 shadow-2xl max-w-xs sm:max-w-sm w-full relative" onclick="event.stopPropagation()">
+        <button onclick="document.getElementById('figure-modal').classList.add('hidden')" class="absolute top-2 right-2 text-white bg-red-600 rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold hover:bg-red-700 transition">
+            &times;
+        </button>
+        <h3 id="modal-title" class="text-2xl font-bold text-yellow-500 mb-4 text-center"></h3>
+        <!-- Image display area -->
+        <div class="aspect-square w-full bg-gray-700 rounded-lg overflow-hidden border-4 border-gray-600">
+            <img id="modal-image" src="" alt="" class="w-full h-full object-contain">
+        </div>
+        <div class="mt-4 text-center">
+             <span id="modal-rarity" class="px-4 py-1 text-xs font-bold rounded-full text-gray-900 shadow-md"></span>
+        </div>
+    </div>
+</div>
+
+
 <!-- Game Logic -->
 <script>
-    // --- 💥 ADD YOUR MINIFIGURES HERE 💥 ---
-    // Format: name:"Name", rarity:"Rarity", color:"tailwind-color-code", image_url:"static/images/filename.jpg"
-    // Rarity options for weighting: "Common", "Rare", "Super Rare", "Ultra Rare"
+    // --- 💥 CUSTOM MINIFIGURE WEIGHTS 💥 ---
+    // The 'weight' property now defines the chance score. Higher weight = higher chance.
+    // This implements the user's requested odds: Nya (10), Kai (20), Jay (30), Zane (50).
+    // The total weight is 160. Zane is 50/160 (~31%) of all draws.
     const FIGURE_STRINGS = [
-        'name:"Kai", rarity:"Rare", color:"red-600", image_url:"static/images/luckydraw-01.jpg"',
-        'name:"Zane", rarity:"Common", color:"blue-500", image_url:"static/images/luckydraw-02.jpg"',
-        'name:"Jay", rarity:"Rare", color:"red-600", image_url:"static/images/luckydraw-03.jpg"',
-           ];
+        'name:"Kai", rarity:"Rare", weight:20, color:"red-600", image_url:"static/images/lucky-01.jpg"',
+        'name:"Zane", rarity:"Common", weight:50, color:"blue-500", image_url:"static/images/lucky-02.jpg"',
+        'name:"Jay", rarity:"Rare", weight:30, color:"red-600", image_url:"static/images/lucky-03.jpg"',
+        'name:"Cole", rarity:"Super Rare", weight:15, color:"gray-600", image_url:"static/images/lucky-04.jpg"',
+        'name:"Nya", rarity:"Ultra Rare", weight:10, color:"cyan-500", image_url:"static/images/lucky-05.jpg"',
+        'name:"Sensei Wu", rarity:"Common", weight:15, color:"yellow-400", image_url:"static/images/lucky-06.jpg"',
+        'name:"Skylor", rarity:"Rare", weight:15, color:"orange-500", image_url:"static/images/lucky-07.jpg"',
+    ];
     // ----------------------------------------
     
     // Global state
     let MINIFIGURES = [];
     let currentDraws = 0;
     let isLoading = false;
+    let collectedFigures = []; // Stores names of collected figures
 
     // UI Elements
     const drawCountElement = document.getElementById('draw-count');
     const drawButton = document.getElementById('draw-button');
     const resultArea = document.getElementById('result-area');
     const refillButton = document.getElementById('refill-button');
+    const resetCollectionButton = document.getElementById('reset-collection-button'); // New button
+    const collectionListElement = document.getElementById('collection-list');
+    const collectedCountElement = document.getElementById('collected-count');
+    const totalCountElement = document.getElementById('total-count');
 
-    // Draw Count Key for localStorage
+
+    // localStorage Keys
     const DRAW_COUNT_KEY = 'minifigure_draw_count_simple';
-    const INITIAL_DRAWS = 3;
+    const COLLECTION_KEY = 'minifigure_collection_list';
+    const INITIAL_DRAWS = 5;
 
     // --- Utility Functions ---
     function parseFigureString(str) {
@@ -142,44 +229,21 @@
     
     function initializeMinifigures() {
         MINIFIGURES = FIGURE_STRINGS.map(parseFigureString);
-        
-        const listElement = document.getElementById('minifigure-list');
-        const figCountTitle = document.getElementById('fig-count-title');
-        
-        if (figCountTitle) {
-            figCountTitle.textContent = `(${MINIFIGURES.length})`;
-        }
-
-        if (listElement) {
-             listElement.innerHTML = MINIFIGURES.map(fig => 
-                `
-                <div class="relative group w-full flex flex-col items-center justify-center p-0.5 bg-gray-700 rounded-lg overflow-hidden transition duration-150 hover:bg-yellow-600 cursor-help">
-                    <img src="/${fig.image_url}" 
-                         alt="${fig.name}" 
-                         class="w-full h-auto object-contain p-0.5" 
-                         title="${fig.name} (${fig.rarity})" 
-                         onerror="this.onerror=null; this.src='https://placehold.co/40x40/4A5568/FFFFFF?text=?'"/>
-                    
-                    <!-- Name/Rarity Tooltip on hover -->
-                    <span class="absolute bottom-0 left-0 right-0 bg-gray-900 bg-opacity-90 text-white text-[9px] font-semibold text-center py-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                        ${fig.name}
-                    </span>
-                </div>
-                `
-             ).join('');
+        if (totalCountElement) {
+            totalCountElement.textContent = MINIFIGURES.length;
         }
     }
     
-    function drawMinifigure() {
+    /**
+     * Draws a minifigure based on the custom 'weight' property from the ENTIRE list,
+     * regardless of collection status.
+     */
+    function weightedDraw() {
         const weightedList = [];
         MINIFIGURES.forEach(fig => {
-            let weight = 0;
-            // Rarity weighting
-            if (fig.rarity === "Common") weight = 40;
-            else if (fig.rarity === "Rare") weight = 25;
-            else if (fig.rarity === "Super Rare") weight = 10;
-            else if (fig.rarity === "Ultra Rare") weight = 5;
+            const weight = parseInt(fig.weight, 10) || 1; 
             
+            // Add the figure to the list 'weight' number of times
             for (let i = 0; i < weight; i++) {
                 weightedList.push(fig);
             }
@@ -193,8 +257,66 @@
         const randomIndex = Math.floor(Math.random() * weightedList.length);
         return weightedList[randomIndex];
     }
+
+    // --- Cambodia Time Logic ---
+
+    function getOrdinal(d) {
+        // Function to get the ordinal suffix (st, nd, rd, th)
+        if (d > 3 && d < 21) return 'th'; 
+        switch (d % 10) {
+            case 1: return "st";
+            case 2: return "nd";
+            case 3: return "rd";
+            default: return "th";
+        }
+    }
     
-    // --- Local Draw Count Management ---
+    function updateCambodiaTime() {
+        const now = new Date();
+        const options = {
+            timeZone: 'Asia/Phnom_Penh',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit', // Use 2-digit format for easy padding later
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        };
+
+        // Use Intl.DateTimeFormat for reliable timezone conversion
+        const formatter = new Intl.DateTimeFormat('en-US', options);
+        const parts = formatter.formatToParts(now);
+
+        let day, month, year, hour, minute, second;
+
+        parts.forEach(part => {
+            if (part.type === 'day') day = part.value;
+            if (part.type === 'month') month = part.value;
+            if (part.type === 'year') year = part.value;
+            // Note: Intl formatter may return time components as strings with leading zero
+            if (part.type === 'hour') hour = part.value; 
+            if (part.type === 'minute') minute = part.value;
+            if (part.type === 'second') second = part.value;
+        });
+
+        const dayInt = parseInt(day, 10);
+        // Date format: Dth/MonthName/YYYY
+        const formattedDate = `${dayInt}${getOrdinal(dayInt)}/${month}/${year}`;
+        
+        // Time format: Hhour/Mminute/Ssecond
+        const formattedTime = `${hour}hour/${minute}minute/${second}second`;
+        
+        const datetimeDisplay = document.getElementById('datetime-display');
+        if (datetimeDisplay) {
+            datetimeDisplay.innerHTML = `
+                <p class="text-sm font-semibold text-gray-400">Date: ${formattedDate}</p>
+                <p class="text-sm font-semibold text-gray-400">Time: ${formattedTime}</p>
+            `;
+        }
+    }
+    
+    // --- Local Storage Management ---
 
     function updateDrawCount(newCount) {
         currentDraws = Math.max(0, newCount);
@@ -204,13 +326,73 @@
     
     function loadDrawCount() {
         const storedCount = localStorage.getItem(DRAW_COUNT_KEY);
-        if (storedCount === null) {
+        if (storedCount === null || isNaN(parseInt(storedCount, 10))) {
             updateDrawCount(INITIAL_DRAWS);
         } else {
             currentDraws = parseInt(storedCount, 10);
             updateDrawCountUI();
         }
     }
+    
+    function loadCollection() {
+        const storedCollection = localStorage.getItem(COLLECTION_KEY);
+        try {
+            collectedFigures = storedCollection ? JSON.parse(storedCollection) : [];
+        } catch (e) {
+            console.error("Error parsing collection data, resetting:", e);
+            collectedFigures = [];
+        }
+        updateCollectionUI();
+    }
+    
+    function saveCollection(figureName) {
+        if (!collectedFigures.includes(figureName)) {
+            collectedFigures.push(figureName);
+            localStorage.setItem(COLLECTION_KEY, JSON.stringify(collectedFigures));
+            // Only update collection UI if a new figure was added
+            updateCollectionUI();
+            return true;
+        }
+        return false;
+    }
+    
+    function resetCollection() {
+        collectedFigures = [];
+        localStorage.removeItem(COLLECTION_KEY);
+        updateCollectionUI();
+        // Provide 2 bonus draws when resetting the collection
+        updateDrawCount(currentDraws + 2);
+        // Reset the result area message
+        resultArea.innerHTML = `
+            <div class="text-center p-4 text-gray-400">
+                <p class="mb-2 text-lg font-semibold text-yellow-500">Collection Reset!</p>
+                <p class="text-sm">You received +2 bonus draws for your courage!</p>
+            </div>
+        `;
+    }
+
+    // --- Modal Function ---
+    window.showFigureDetails = function(figureName) {
+        const figure = MINIFIGURES.find(f => f.name === figureName);
+        if (!figure) return;
+        
+        const modal = document.getElementById('figure-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalImage = document.getElementById('modal-image');
+        const modalRarity = document.getElementById('modal-rarity');
+        
+        const rarityClass = `rarity-${figure.rarity.toLowerCase().replace(' ', '-')}`;
+
+        modalTitle.textContent = figure.name;
+        modalImage.src = `/${figure.image_url}`;
+        modalImage.alt = figure.name;
+        
+        modalRarity.textContent = figure.rarity.toUpperCase();
+        modalRarity.className = `px-4 py-1 text-xs font-bold rounded-full text-gray-900 shadow-md ${rarityClass}`;
+        
+        modal.classList.remove('hidden');
+    }
+
 
     // --- UI Update ---
 
@@ -220,60 +402,139 @@
         }
         
         if (drawButton) {
-            if (currentDraws <= 0) {
+            const noDraws = currentDraws <= 0;
+            
+            if (noDraws) {
                 drawButton.disabled = true;
-                drawButton.textContent = 'No Draws Left!';
-                drawButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+                drawButton.classList.remove('bg-red-600', 'hover:bg-red-700', 'draw-button-style');
                 drawButton.classList.add('bg-gray-500', 'cursor-not-allowed');
+                drawButton.textContent = 'No Draws Left!';
             } else {
                 drawButton.disabled = false;
                 drawButton.textContent = 'Open Blind Box (1 Draw)';
                 drawButton.classList.remove('bg-gray-500', 'cursor-not-allowed');
-                drawButton.classList.add('bg-red-600', 'hover:bg-red-700');
+                drawButton.classList.add('bg-red-600', 'hover:bg-red-700', 'draw-button-style');
             }
         }
     }
+    
+    function updateCollectionUI() {
+        if (!collectionListElement) return;
+        
+        const collectedNames = new Set(collectedFigures);
+        
+        if (collectedCountElement) {
+            collectedCountElement.textContent = collectedNames.size;
+        }
+
+        collectionListElement.innerHTML = MINIFIGURES.map(fig => {
+            const isCollected = collectedNames.has(fig.name);
+            const statusClass = isCollected ? 'collected collection-item' : 'missing';
+            const rarityClass = `rarity-${fig.rarity.toLowerCase().replace(' ', '-')}`;
+            
+            // Placeholder generation for missing/error images
+            const firstLetter = fig.name.substring(0, 1);
+            const placeholderColor = fig.color.split('-')[0] === 'yellow' ? '555' : 'FFF';
+            const placeholderBackground = fig.color.split('-')[0] === 'yellow' ? 'F0A000' : '4A5568';
+            const placeholderUrl = `https://placehold.co/40x40/${placeholderBackground}/${placeholderColor}?text=${firstLetter}`;
+            
+            // Add click handler only if collected
+            const clickHandler = isCollected ? `onclick="showFigureDetails('${fig.name}')"` : '';
+
+            return `
+                <div class="relative w-full aspect-square rounded-lg overflow-hidden transition duration-150 p-0.5 ${statusClass}"
+                     title="${fig.name} (${isCollected ? 'Found - Click to View' : 'Missing'})" ${clickHandler}>
+                    <img src="/${fig.image_url}" 
+                         alt="${fig.name}" 
+                         class="w-full h-full object-contain rounded-md" 
+                         onerror="this.onerror=null; this.src='${placeholderUrl}'; this.style.backgroundColor='#${placeholderBackground}'"/>
+                    
+                    <!-- Rarity indicator dot -->
+                    <span class="absolute top-1 right-1 w-2 h-2 rounded-full shadow-lg ${rarityClass}"></span>
+                </div>
+            `;
+        }).join('');
+
+        updateDrawCountUI(); 
+    }
+
 
     // --- Main Draw Logic ---
     function handleDrawClick() {
         if (isLoading || currentDraws <= 0) return;
         
-        // Decrement count immediately
+        // Decrement count immediately (draw is always consumed)
         updateDrawCount(currentDraws - 1);
         
         isLoading = true;
         drawButton.disabled = true;
-        drawButton.textContent = 'Testing Luck...';
-        drawButton.classList.remove('bg-red-600', 'hover:bg-red-700');
-        drawButton.classList.add('bg-gray-500', 'cursor-not-allowed');
+        drawButton.textContent = 'Shaking Box...';
+        drawButton.classList.remove('draw-button-style');
 
         // Start Loading Animation
         resultArea.innerHTML = `
-            <div id="mystery-box" class="loading-animation w-32 h-32 rounded-lg flex items-center justify-center shadow-inner">
-                <span class="text-6xl" role="img" aria-label="Mystery Box">❓</span>
+            <div id="mystery-box" class="loading-animation w-32 h-32 rounded-xl flex items-center justify-center shadow-inner border-4 border-white">
+                <span class="text-6xl text-gray-900" role="img" aria-label="Mystery Box">📦</span>
             </div>
         `;
 
-        // Wait for suspense (3 seconds)
+        // Wait for suspense (1.5 seconds)
         setTimeout(() => {
-            const figure = drawMinifigure();
+            // Draw a figure from the entire weighted pool
+            const figure = weightedDraw(); 
+            
             if (!figure) {
-                resultArea.innerHTML = `<p class="text-red-400">Error: Could not draw a figure.</p>`;
-                resetButtonState();
+                resultArea.innerHTML = `<p class="text-red-400 font-bold text-xl">Error: No figures defined!</p>`;
+                isLoading = false;
+                updateDrawCountUI();
                 return;
             }
+            
+            const isCollected = collectedFigures.includes(figure.name);
+            const isNewFigure = saveCollection(figure.name); // Attempts to save, returns true if successful/new.
 
             const borderColorClass = figure.color ? `border-${figure.color}` : 'border-yellow-500';
             const rarityClass = `rarity-${figure.rarity.toLowerCase().replace(' ', '-')}`;
+            
+            // Placeholder generation for drawn figure
+            const firstLetter = figure.name.substring(0, 1);
+            const placeholderColor = figure.color.split('-')[0] === 'yellow' ? '555' : 'FFF';
+            const placeholderBackground = figure.color.split('-')[0] === 'yellow' ? 'F0A000' : '4A5568';
+            const placeholderUrl = `https://placehold.co/96x96/${placeholderBackground}/${placeholderColor}?text=${firstLetter}`;
 
-            // Reveal result
+            let titleText;
+            let titleClass;
+            let subtitleText;
+
+            if (isCollected) {
+                // Out of Stock Scenario
+                titleText = 'OUT OF STOCK!';
+                titleClass = 'text-red-500';
+                subtitleText = `You already own this one! Try again.`;
+            } else {
+                // New Figure Scenario
+                titleText = 'New Figure Unlocked!';
+                titleClass = 'text-green-400';
+                subtitleText = `Added to your collection!`;
+            }
+
+            // Reveal result - Updated for Square Box Look
             resultArea.innerHTML = `
                 <div id="reveal-card" class="reveal-card flex flex-col items-center p-6 bg-gray-800 rounded-xl shadow-2xl w-full max-w-xs border-b-8 ${borderColorClass}">
-                    <div class="text-8xl mb-4 p-2 bg-gray-700 rounded-full shadow-lg border-2 border-yellow-500 overflow-hidden w-28 h-28 flex items-center justify-center">
-                        <img src="/${figure.image_url}" alt="${figure.name}" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='https://placehold.co/96x96/4A5568/FFFFFF?text=?'"/>
+                    
+                    <!-- Title reflecting success or failure -->
+                    <p class="font-bold mb-2 uppercase tracking-widest ${titleClass}">${titleText}</p>
+
+                    <!-- Square Box for the Drawn Item -->
+                    <div class="w-full aspect-square p-2 mb-4 bg-gray-700 rounded-xl shadow-inner border-2 border-yellow-500 flex items-center justify-center">
+                        <img src="/${figure.image_url}" 
+                             alt="${figure.name}" 
+                             class="w-full h-full object-contain p-2" 
+                             onerror="this.onerror=null; this.src='${placeholderUrl}'; this.style.backgroundColor='#${placeholderBackground}'"/>
                     </div>
+                    
                     <h2 class="text-3xl font-extrabold text-white text-center mb-1">${figure.name}</h2>
-                    <p class="text-sm font-semibold mb-3 text-gray-400">Series Collection</p>
+                    <p class="text-sm font-semibold mb-3 text-gray-400">${subtitleText}</p>
                     <span class="px-4 py-1 text-xs font-bold rounded-full text-gray-900 shadow-md ${rarityClass}">
                         ${figure.rarity.toUpperCase()}
                     </span>
@@ -295,20 +556,31 @@
     function initGame() {
         initializeMinifigures();
         loadDrawCount();
+        loadCollection(); 
+        
+        // Start the real-time clock update
+        updateCambodiaTime();
+        setInterval(updateCambodiaTime, 1000); // Update every second
         
         if (drawButton) {
             drawButton.addEventListener('click', handleDrawClick);
         }
         
-        // Refill button functionality (re-adding 5 draws for the demo)
+        // Refill button functionality 
         if (refillButton) {
             refillButton.addEventListener('click', () => {
-                updateDrawCount(currentDraws + 5);
+                updateDrawCount(INITIAL_DRAWS);
             });
         }
+        
+        // Reset collection button functionality
+        if (resetCollectionButton) {
+            resetCollectionButton.addEventListener('click', resetCollection);
+        }
+
+        updateDrawCountUI();
     }
 
-    // Use window.onload or DOMContentLoaded to ensure elements exist
     document.addEventListener('DOMContentLoaded', initGame);
 </script>
 
