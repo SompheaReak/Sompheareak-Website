@@ -1,3 +1,5 @@
+App.py
+
 import os 
 import requests
 # Admin login credentials
@@ -566,56 +568,6 @@ def custom_bracelet():
 
   ]
     return render_template('custom_bracelet.html', charms=charms)
-    
-@app.route('/random_product_picker.html')
-def random_product_picker.html():
-    # Example charms to display
-    charms = [
-    {"id": 1, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc01.jpg", "categories": [""]},
-    {"id": 2, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc02.jpg", "categories": [""]},
-    {"id": 3, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc03.jpg", "categories": [""]},
-    {"id": 4, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc04.jpg", "categories": [""]},
-    {"id": 5, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc05.jpg", "categories": [""]},
-    {"id": 6, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc06.jpg", "categories": [""]},
-    {"id": 7, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc07.jpg", "categories": [""]},
-    {"id": 8, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc08.jpg", "categories": [""]},
-    {"id": 9, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc09.jpg", "categories": [""]},
-    {"id": 10, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc10.jpg", "categories": [""]},
-    {"id": 11, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc11.jpg", "categories": [""]},
-    {"id": 12, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc12.jpg", "categories": [""]},
-    {"id": 13, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc13.jpg", "categories": [""]},
-    {"id": 14, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc14.jpg", "categories": [""]},
-    {"id": 15, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc15.jpg", "categories": [""]},
-    {"id": 16, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc16.jpg", "categories": [""]},
-    {"id": 17, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc17.jpg", "categories": [""]},
-    {"id": 18, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc18.jpg", "categories": [""]},
-    {"id": 19, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc19.jpg", "categories": [""]},
-    {"id": 20, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc20.jpg", "categories": [""]},
-
-    {"id": 101, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg01.jpg", "categories": [""]},
-    {"id": 102, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg02.jpg", "categories": [""]},
-    {"id": 103, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg03.jpg", "categories": [""]},
-    {"id": 104, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg04.jpg", "categories": [""]},
-    {"id": 105, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg05.jpg", "categories": [""]},
-    {"id": 106, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg06.jpg", "categories": [""]},
-    {"id": 107, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg07.jpg", "categories": [""]},
-    {"id": 108, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg08.jpg", "categories": [""]},
-    {"id": 109, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg09.jpg", "categories": [""]},
-    {"id": 110, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg10.jpg", "categories": [""]},
-    {"id": 111, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg11.jpg", "categories": [""]},
-    {"id": 112, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg12.jpg", "categories": [""]},
-    {"id": 113, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg13.jpg", "categories": [""]},
-    {"id": 114, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg14.jpg", "categories": [""]},
-    {"id": 115, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg15.jpg", "categories": [""]},
-    {"id": 116, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg16.jpg", "categories": [""]},
-    {"id": 117, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg17.jpg", "categories": [""]},
-    {"id": 118, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg18.jpg", "categories": [""]},
-    {"id": 119, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg19.jpg", "categories": [""]},
-    {"id": 120, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cg20.jpg", "categories": [""]},
-
-  ]
-    return render_template('custom_bracelet.html', charms=charms)
-
 @app.route('/subcategory/<subcategory_name>')
 def subcategory(subcategory_name):
     language = request.args.get('lang', 'kh')
