@@ -1,0 +1,178 @@
+<!-- This template contains the self-contained game logic -->
+<style>
+    :root {
+        --lego-yellow: #FFC300;
+        --lego-red: #C80815;
+        --dark-blue: #1A202C;
+    }
+    /* Note: If your main site already uses Tailwind, you can put this custom CSS 
+       in your main CSS file or keep it here for simplicity. */
+
+    /* Keyframes for the shaking/loading animation */
+    @keyframes shake {
+        0% { transform: translate(1px, 1px) rotate(0deg); }
+        10% { transform: translate(-1px, -2px) rotate(-1deg); }
+        20% { transform: translate(-3px, 0px) rotate(1deg); }
+        30% { transform: translate(3px, 2px) rotate(0deg); }
+        40% { transform: translate(1px, -1px) rotate(1deg); }
+        50% { transform: translate(-1px, 2px) rotate(-1deg); }
+        60% { transform: translate(-3px, 1px) rotate(0deg); }
+        70% { transform: translate(3px, 1px) rotate(-1deg); }
+        80% { transform: translate(-1px, -1px) rotate(1deg); }
+        90% { transform: translate(1px, 2px) rotate(0deg); }
+        100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+
+    .loading-animation {
+        animation: shake 0.2s infinite;
+        background-color: var(--lego-yellow);
+    }
+
+    .reveal-card {
+        transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+    }
+    .reveal-card:not(.revealed) {
+        transform: scale(0.8) translateY(20px);
+        opacity: 0;
+    }
+    .reveal-card.revealed {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+</style>
+
+<!-- Main Game Container -->
+<div class="p-4 flex justify-center items-center">
+    <!-- Ensure Tailwind is loaded on your main site for these classes to work -->
+    <script src="https://cdn.tailwindcss.com"></script> 
+    
+    <div id="minifigure-app" class="w-full max-w-sm bg-gray-900 shadow-2xl p-6 rounded-xl border-4 border-yellow-500">
+        <!-- Header -->
+        <h1 class="text-3xl font-black text-yellow-500 text-center mb-6 uppercase tracking-wider">
+            Mystery Minifigure Draw
+        </h1>
+
+        <!-- Result Area (dynamically filled by JS) -->
+        <div id="result-area" class="mt-6 min-h-[250px] flex items-center justify-center">
+            <div class="text-center p-4 text-gray-400">
+                <p class="mb-2 text-lg font-semibold">Ready to find your next Minifigure?</p>
+                <p class="text-sm">Press the button to open your lucky blind bag and reveal a surprise figure!</p>
+            </div>
+        </div>
+
+        <!-- Draw Button (dynamically created by JS) -->
+        <button id="draw-button" class="w-full py-4 text-xl font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg transition duration-200 uppercase mt-4">
+            Open Lucky Bag!
+        </button>
+    </div>
+</div>
+
+<!-- Game Logic -->
+<script>
+    // Data for the Minifigure collection
+    const MINIFIGURES = [
+        { name: "Classic Astronaut", emoji: "👨‍🚀", rarity: "Common", color: "blue-500" },
+        { name: "Pirate Captain Redbeard", emoji: "🏴‍☠️", rarity: "Rare", color: "red-600" },
+        { name: "Forest Elf Warrior", emoji: "🏹", rarity: "Common", color: "green-500" },
+        { name: "Dinosaur Suit Guy", emoji: "🦖", rarity: "Rare", color: "lime-500" },
+        { name: "Deep Sea Diver", emoji: "🤿", rarity: "Common", color: "cyan-400" },
+        { name: "Interstellar Robot", emoji: "🤖", rarity: "Super Rare", color: "gray-300" },
+        { name: "Unicorn Girl", emoji: "🦄", rarity: "Ultra Rare", color: "pink-500" },
+        { name: "Hot Dog Vendor", emoji: "🌭", rarity: "Common", color: "orange-500" },
+        { name: "Mummy Pharaoh", emoji: "🧟", rarity: "Rare", color: "yellow-200" },
+        { name: "Viking Berserker", emoji: "🪓", rarity: "Super Rare", color: "amber-600" }
+    ];
+
+    function drawMinifigure() {
+        const weightedList = [];
+        MINIFIGURES.forEach(fig => {
+            let weight = 0;
+            if (fig.rarity === "Common") weight = 4;
+            else if (fig.rarity === "Rare") weight = 3;
+            else if (fig.rarity === "Super Rare") weight = 2;
+            else if (fig.rarity === "Ultra Rare") weight = 1;
+
+            for (let i = 0; i < weight; i++) {
+                weightedList.push(fig);
+            }
+        });
+
+        const randomIndex = Math.floor(Math.random() * weightedList.length);
+        return weightedList[randomIndex];
+    }
+
+    // Get UI Elements
+    const resultArea = document.getElementById('result-area');
+    const drawButton = document.getElementById('draw-button');
+
+    // Check if the elements exist before adding listeners
+    if (resultArea && drawButton) {
+        let isLoading = false;
+
+        drawButton.addEventListener('click', () => {
+            if (isLoading) return;
+            isLoading = true;
+            drawButton.disabled = true;
+            drawButton.textContent = 'Testing Luck...';
+            drawButton.classList.remove('bg-red-600', 'hover:bg-red-700');
+            drawButton.classList.add('bg-gray-500', 'cursor-not-allowed');
+
+            // 1. Start Loading Animation (The "Mystery Box")
+            resultArea.innerHTML = `
+                <div id="mystery-box" class="loading-animation w-32 h-32 rounded-lg flex items-center justify-center shadow-inner">
+                    <span class="text-6xl" role="img" aria-label="Mystery Box">❓</span>
+                </div>
+            `;
+
+            // 2. Wait for suspense (3 seconds)
+            setTimeout(() => {
+                // 3. Draw the figure
+                const figure = drawMinifigure();
+
+                // 4. Stop animation and reveal result
+                // Use a class name that is safe and guaranteed to exist (e.g., bg-red-600) as the border color
+                let borderColorClass;
+                switch(figure.color) {
+                    case "blue-500": borderColorClass = "border-blue-500"; break;
+                    case "red-600": borderColorClass = "border-red-600"; break;
+                    case "green-500": borderColorClass = "border-green-500"; break;
+                    case "lime-500": borderColorClass = "border-lime-500"; break;
+                    case "cyan-400": borderColorClass = "border-cyan-400"; break;
+                    case "gray-300": borderColorClass = "border-gray-300"; break;
+                    case "pink-500": borderColorClass = "border-pink-500"; break;
+                    case "orange-500": borderColorClass = "border-orange-500"; break;
+                    case "yellow-200": borderColorClass = "border-yellow-200"; break;
+                    case "amber-600": borderColorClass = "border-amber-600"; break;
+                    default: borderColorClass = "border-yellow-500";
+                }
+
+                resultArea.innerHTML = `
+                    <div id="reveal-card" class="reveal-card flex flex-col items-center p-6 bg-gray-800 rounded-xl shadow-2xl w-full max-w-xs border-b-8 ${borderColorClass}">
+                        <div class="text-8xl mb-4 p-2 bg-gray-700 rounded-full shadow-lg border-2 border-yellow-500">
+                            ${figure.emoji}
+                        </div>
+                        <h2 class="text-3xl font-extrabold text-white text-center mb-1">${figure.name}</h2>
+                        <p class="text-sm font-semibold mb-3 text-gray-400">Minifigure Series 1-100</p>
+                        <span class="px-4 py-1 text-xs font-bold rounded-full bg-yellow-500 text-gray-900 shadow-md">
+                            Rarity: ${figure.rarity.toUpperCase()}
+                        </span>
+                    </div>
+                `;
+
+                // Add the 'revealed' class after a slight delay to trigger the CSS transition
+                setTimeout(() => {
+                    document.getElementById('reveal-card')?.classList.add('revealed');
+                }, 50);
+
+                // 5. Reset button
+                isLoading = false;
+                drawButton.disabled = false;
+                drawButton.textContent = 'Draw Again!';
+                drawButton.classList.remove('bg-gray-500', 'cursor-not-allowed');
+                drawButton.classList.add('bg-red-600', 'hover:bg-red-700');
+
+            }, 3000); // 3-second suspense timer
+        });
+    }
+</script>
+
