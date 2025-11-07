@@ -83,12 +83,16 @@ subcategories_map = {
     "LEGO": ["Formula 1"],
     "Toy": ["Lego Ninjago", "One Piece","Lego WWII", "Lego ទាហាន"],
     "Italy Bracelet": ["All","Football","Gem","Flag","Chain"],
+    # ADDED: Special entry for the Lucky Draw game
+    "Lucky Draw": ["/lucky-draw"], 
 }
 
 # --- Routes ---
 
 @app.route('/')
 def home():
+    # If your home.html renders navigation using subcategories_map.keys(),
+    # this route remains fine since it redirects to 'Hot Sale'
     return redirect(url_for('category', category_name='Hot Sale'))
     language = request.args.get('lang', 'kh')
     cart = session.get('cart', [])
@@ -97,10 +101,16 @@ def home():
 @app.route('/category/<category_name>')
 def category(category_name):
     language = request.args.get('lang', 'kh')
+    
+    # 💥 NEW LOGIC: Check if it's the special 'Lucky Draw' link 💥
+    if category_name == 'Lucky Draw':
+        # Redirect directly to the game route
+        return redirect(url_for('lucky_draw'))
+
     subs = subcategories_map.get(category_name, [])
     
     # If subcategories exist, redirect to first one
-    if subs:
+    if subs and subs[0] != "/lucky-draw": # Added check to ensure we don't treat the /lucky-draw URL as a subcategory
         return redirect(url_for('subcategory', subcategory_name=subs[0]))
 
     # If no subcategories, show all products in that category
