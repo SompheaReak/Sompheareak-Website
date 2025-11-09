@@ -119,6 +119,12 @@
             Mystery Draw!
         </h1>
 
+        <!-- User ID Display (Now 4-digit) -->
+        <div class="mb-4 p-2 rounded-lg bg-gray-700 shadow-inner border border-gray-600 text-center">
+            <span class="text-sm font-semibold text-gray-300">Your Player ID:</span>
+            <code id="user-id-display" class="text-3xl font-mono font-extrabold text-red-400 block tracking-widest">...</code>
+        </div>
+
         <!-- Draw Count Info -->
         <div class="flex justify-between items-center mb-4 p-3 rounded-lg bg-gray-700 shadow-inner border border-gray-600">
             <span class="text-lg font-semibold text-gray-300">Draws Available:</span>
@@ -134,12 +140,12 @@
         <!-- Result Area (dynamically filled by JS) -->
         <div id="result-area" class="mt-4 min-h-[150px] flex items-center justify-center">
             <div id="initial-message" class="text-center p-4 text-gray-400">
-                <p class="mb-2 text-lg font-semibold">Will you find the Ultra Rare?</p>
-                <p class="text-sm">Click a button to open your new blind box!</p>
+                <p class="mb-2 text-lg font-semibold">Welcome!</p>
+                <p class="text-sm">You currently have 0 draws. Use the refill button below to begin!</p>
             </div>
         </div>
 
-        <!-- NEW Draw Buttons Container -->
+        <!-- Draw Buttons Container -->
         <div class="flex space-x-3 mt-6">
             <button id="draw-1x-button" class="w-1/2 py-4 text-xl font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl transition duration-150 uppercase draw-button-style" disabled>
                 Open 1x (1 Draw)
@@ -151,7 +157,7 @@
 
         <!-- Refill Draws Button (using localStorage - DEMO WARNING) -->
         <button id="refill-button" class="w-full py-2 text-xs font-semibold bg-gray-700 hover:bg-gray-600 text-gray-400 rounded-xl shadow transition duration-200 mt-3 border border-gray-600">
-            [DEMO MODE] Reset Draws to 5
+            [DEMO MODE] Add 5 Draws
         </button>
 
         <!-- Reset Collection Button -->
@@ -165,7 +171,7 @@
         <h2 class="text-xl font-bold text-yellow-500 mb-3 border-b border-yellow-500 pb-2">
             Your Collection (<span id="collected-count">0</span> / <span id="total-count">0</span>)
         </h2>
-        <!-- 💥 5-COLUMN GRID CONTAINER 💥 -->
+        <!-- 5-COLUMN GRID CONTAINER -->
         <div id="collection-list" class="grid grid-cols-5 gap-2">
             <!-- Figures will be populated by JS, showing found/missing status -->
         </div>
@@ -194,6 +200,7 @@
 <script>
     // --- 💥 CUSTOM MINIFIGURE WEIGHTS 💥 ---
     // The 'weight' property defines the chance score.
+    // Total weight is 109. Rarity distribution is now meaningful.
     const FIGURE_STRINGS = [ 
   'name:"Kai", rarity:"Rare", weight:20, color:"red-600", image_url:"static/images/lucky-01.jpg"',
   'name:"Zane", rarity:"Rare", weight:20, color:"red-600", image_url:"static/images/lucky-02.jpg"', 
@@ -222,8 +229,7 @@
   'name:"Cole", rarity:"Rare", weight:20, color:"red-600", image_url:"static/images/lucky-34.jpg"',
   'name:"Lloyd", rarity:"Rare", weight:20, color:"red-600", image_url:"static/images/lucky-35.jpg"',
   'name:"Nya", rarity:"Rare", weight:20, color:"red-600", image_url:"static/images/lucky-36.jpg"',
-
-                                ];
+   ];
     // ----------------------------------------
     
     // Global state
@@ -231,11 +237,12 @@
     let currentDraws = 0;
     let isLoading = false;
     let collectedFigures = []; // Stores names of collected figures
+    let USER_ID = null; // Global variable to store the simple Player ID
 
     // UI Elements
     const drawCountElement = document.getElementById('draw-count');
-    const draw1xButton = document.getElementById('draw-1x-button'); // NEW
-    const draw5xButton = document.getElementById('draw-5x-button'); // NEW
+    const draw1xButton = document.getElementById('draw-1x-button'); 
+    const draw5xButton = document.getElementById('draw-5x-button');
     const resultArea = document.getElementById('result-area');
     const refillButton = document.getElementById('refill-button');
     const resetCollectionButton = document.getElementById('reset-collection-button');
@@ -243,17 +250,59 @@
     const collectedCountElement = document.getElementById('collected-count');
     const totalCountElement = document.getElementById('total-count');
     const initialMessage = document.getElementById('initial-message');
-
+    const userIdDisplay = document.getElementById('user-id-display');
 
     // localStorage Keys
-    const DRAW_COUNT_KEY = 'minifigure_draw_count_simple';
-    const COLLECTION_KEY = 'minifigure_collection_list';
-    const INITIAL_DRAWS = 5;
+    const USER_ID_KEY = 'minifigure_user_id'; 
+    const BASE_DRAW_COUNT_KEY = 'minifigure_draw_count_simple';
+    const BASE_COLLECTION_KEY = 'minifigure_collection_list';
+    const INITIAL_DRAWS = 0; // Starting draws are 0
+
+    // --- User ID Management (Simple 4-Digit ID) ---
+    
+    /**
+     * Generates a new random 4-digit padded ID (e.g., "0784").
+     */
+    function generateSimpleID() {
+        // Generate a number between 1 and 9999
+        const num = Math.floor(Math.random() * 9999) + 1;
+        // Pad with leading zeros to ensure 4 digits
+        return String(num).padStart(4, '0');
+    }
+
+    /**
+     * Loads the existing user ID from localStorage or generates a new one.
+     */
+    function getUserID() {
+        let id = localStorage.getItem(USER_ID_KEY);
+        if (!id) {
+            id = generateSimpleID();
+            localStorage.setItem(USER_ID_KEY, id);
+        }
+        USER_ID = id;
+        if (userIdDisplay) {
+            userIdDisplay.textContent = USER_ID;
+        }
+    }
+
+    /**
+     * Generates a unique key for draw counts based on the current USER_ID.
+     */
+    function getDrawCountKey() {
+        return `${USER_ID}_${BASE_DRAW_COUNT_KEY}`;
+    }
+    
+    /**
+     * Generates a unique key for the collection based on the current USER_ID.
+     */
+    function getCollectionKey() {
+        return `${USER_ID}_${BASE_COLLECTION_KEY}`;
+    }
 
     // --- Utility Functions ---
     function parseFigureString(str) {
         const figure = {};
-        const regex = /(\w+):"([^"]+)"/g;
+        const regex = /(\w+):"([^"]+)"/g; 
         let match;
         while ((match = regex.exec(str)) !== null) {
             figure[match[1]] = match[2];
@@ -268,15 +317,10 @@
         }
     }
     
-    /**
-     * Draws a minifigure based on the custom 'weight' property from the ENTIRE list.
-     */
     function weightedDraw() {
         const weightedList = [];
         MINIFIGURES.forEach(fig => {
             const weight = parseInt(fig.weight, 10) || 1; 
-            
-            // Add the figure to the list 'weight' number of times
             for (let i = 0; i < weight; i++) {
                 weightedList.push(fig);
             }
@@ -292,7 +336,6 @@
     }
 
     // --- Cambodia Time Logic ---
-
     function getOrdinal(d) {
         if (d > 3 && d < 21) return 'th'; 
         switch (d % 10) {
@@ -346,16 +389,17 @@
         }
     }
     
-    // --- Local Storage Management ---
+    // --- Local Storage Management (Updated to use Simple ID Keys) ---
 
     function updateDrawCount(newCount) {
         currentDraws = Math.max(0, newCount);
-        localStorage.setItem(DRAW_COUNT_KEY, currentDraws);
+        localStorage.setItem(getDrawCountKey(), currentDraws);
         updateDrawCountUI();
     }
     
     function loadDrawCount() {
-        const storedCount = localStorage.getItem(DRAW_COUNT_KEY);
+        const storedCount = localStorage.getItem(getDrawCountKey());
+        // If storedCount is null/invalid, set it to the INITIAL_DRAWS value (which is now 0)
         if (storedCount === null || isNaN(parseInt(storedCount, 10))) {
             updateDrawCount(INITIAL_DRAWS);
         } else {
@@ -365,7 +409,7 @@
     }
     
     function loadCollection() {
-        const storedCollection = localStorage.getItem(COLLECTION_KEY);
+        const storedCollection = localStorage.getItem(getCollectionKey());
         try {
             collectedFigures = storedCollection ? JSON.parse(storedCollection) : [];
         } catch (e) {
@@ -375,15 +419,10 @@
         updateCollectionUI();
     }
     
-    /**
-     * Attempts to save a figure name to the collection.
-     * @param {string} figureName - The name of the figure.
-     * @returns {boolean} True if the figure was newly added, false if it was a duplicate.
-     */
     function saveCollection(figureName) {
         if (!collectedFigures.includes(figureName)) {
             collectedFigures.push(figureName);
-            localStorage.setItem(COLLECTION_KEY, JSON.stringify(collectedFigures));
+            localStorage.setItem(getCollectionKey(), JSON.stringify(collectedFigures));
             return true; // NEW
         }
         return false; // DUPLICATE
@@ -391,15 +430,13 @@
     
     function resetCollection() {
         collectedFigures = [];
-        localStorage.removeItem(COLLECTION_KEY);
+        localStorage.removeItem(getCollectionKey());
         updateCollectionUI();
-        // Provide 2 bonus draws when resetting the collection
-        updateDrawCount(currentDraws + 2);
-        // Reset the result area message
+        // Reset the result area message 
         resultArea.innerHTML = `
             <div class="text-center p-4 text-gray-400">
                 <p class="mb-2 text-lg font-semibold text-yellow-500">Collection Reset!</p>
-                <p class="text-sm">You received +2 bonus draws for your courage!</p>
+                <p class="text-sm">All collected figures have been cleared.</p>
             </div>
         `;
     }
@@ -417,8 +454,7 @@
         const rarityClass = `rarity-${figure.rarity.toLowerCase().replace(' ', '-')}`;
 
         modalTitle.textContent = figure.name;
-        // Use an absolute path / to ensure it works in all environments
-        modalImage.src = `/${figure.image_url}`;
+        modalImage.src = figure.image_url; 
         modalImage.alt = figure.name;
         
         modalRarity.textContent = figure.rarity.toUpperCase();
@@ -438,21 +474,22 @@
         if (draw1xButton && draw5xButton) {
             const noDraws = currentDraws <= 0;
             const notEnoughFor5x = currentDraws < 5;
+            const disableButtons = isLoading;
             
             // 1X Button
-            draw1xButton.disabled = noDraws || isLoading;
-            draw1xButton.textContent = isLoading ? 'Drawing...' : (noDraws ? 'No Draws Left!' : 'Open 1x (1 Draw)');
-            draw1xButton.classList.toggle('bg-gray-500', noDraws || isLoading);
-            draw1xButton.classList.toggle('bg-red-600', !noDraws && !isLoading);
-            draw1xButton.classList.toggle('hover:bg-red-700', !noDraws && !isLoading);
+            draw1xButton.disabled = noDraws || disableButtons;
+            draw1xButton.textContent = disableButtons ? 'Drawing...' : (noDraws ? 'No Draws Left!' : 'Open 1x (1 Draw)');
+            draw1xButton.classList.toggle('bg-gray-500', noDraws || disableButtons);
+            draw1xButton.classList.toggle('bg-red-600', !noDraws && !disableButtons);
+            draw1xButton.classList.toggle('hover:bg-red-700', !noDraws && !disableButtons);
 
 
             // 5X Button
-            draw5xButton.disabled = noDraws || notEnoughFor5x || isLoading;
-            draw5xButton.textContent = isLoading ? 'Drawing...' : (notEnoughFor5x ? 'Need 5 Draws' : 'Open 5x (5 Draws)');
-            draw5xButton.classList.toggle('bg-gray-500', notEnoughFor5x || isLoading);
-            draw5xButton.classList.toggle('bg-red-700', !notEnoughFor5x && !isLoading);
-            draw5xButton.classList.toggle('hover:bg-red-800', !notEnoughFor5x && !isLoading);
+            draw5xButton.disabled = noDraws || notEnoughFor5x || disableButtons;
+            draw5xButton.textContent = disableButtons ? 'Drawing...' : (notEnoughFor5x ? 'Need 5 Draws' : 'Open 5x (5 Draws)');
+            draw5xButton.classList.toggle('bg-gray-500', notEnoughFor5x || disableButtons);
+            draw5xButton.classList.toggle('bg-red-700', !notEnoughFor5x && !disableButtons);
+            draw5xButton.classList.toggle('hover:bg-red-800', !notEnoughFor5x && !disableButtons);
 
         }
     }
@@ -468,22 +505,18 @@
 
         collectionListElement.innerHTML = MINIFIGURES.map(fig => {
             const isCollected = collectedNames.has(fig.name);
-            const statusClass = isCollected ? 'collected collection-item' : 'missing';
+            const isCollectionFull = collectedNames.size >= MINIFIGURES.length;
+            const statusClass = isCollected || isCollectionFull ? 'collected collection-item' : 'missing';
             
-            // Placeholder generation for missing/error images
-            const firstLetter = fig.name.substring(0, 1);
-            const [baseColor, shade] = fig.color.split('-');
-            const placeholderColor = baseColor === 'yellow' ? '555' : 'FFF';
-            const placeholderBackground = baseColor === 'yellow' ? 'F0A000' : '4A5568';
-            const placeholderUrl = `https://placehold.co/40x40/${placeholderBackground}/${placeholderColor}?text=${firstLetter}`;
+            const placeholderUrl = fig.image_url.replace(/96x96/g, '40x40'); 
+            const placeholderBackground = fig.image_url.split('/')[3].split('?')[0]; 
             
-            // Add click handler only if collected
-            const clickHandler = isCollected ? `onclick="showFigureDetails('${fig.name}')"` : '';
+            const clickHandler = isCollected || isCollectionFull ? `onclick="showFigureDetails('${fig.name}')"` : '';
 
             return `
                 <div class="relative w-full aspect-square rounded-lg overflow-hidden transition duration-150 p-0.5 ${statusClass}"
                      title="${fig.name} (${isCollected ? 'Found - Click to View' : 'Missing'})" ${clickHandler}>
-                    <img src="/${fig.image_url}" 
+                    <img src="${fig.image_url}" 
                          alt="${fig.name}" 
                          class="w-full h-full object-contain rounded-md" 
                          onerror="this.onerror=null; this.src='${placeholderUrl}'; this.style.backgroundColor='#${placeholderBackground}'"/>
@@ -501,71 +534,70 @@
     // --- Main Draw Logic ---
 
     function displayDrawResults(results) {
-        // Remove the initial message
         if(initialMessage) initialMessage.remove();
 
         const isMultiDraw = results.length > 1;
         
+        // ** NEW: Distinct title for the draw results **
+        const resultTitle = isMultiDraw 
+            ? `RESULTS (${results.length} FIGURES DRAWN)` 
+            : 'YOUR NEW MINIFIGURE';
+        
         let containerClass = "flex flex-col items-center justify-center p-4 w-full";
+        // Use a slightly larger border/shadow for better distinction in single draw
         let cardClass = "result-card p-4 bg-gray-800 rounded-xl shadow-2xl w-full max-w-xs border-b-8";
         
         if (isMultiDraw) {
-            // For 5x draw, use a responsive grid
             containerClass = "grid grid-cols-2 md:grid-cols-3 gap-3 p-2 w-full";
             cardClass = "result-card flex flex-col items-center p-2 bg-gray-800 rounded-xl shadow-md border-b-4 text-xs";
         }
 
-        resultArea.innerHTML = `<div id="results-grid" class="${containerClass}"></div>`;
+        // Inject the title and the grid container
+        resultArea.innerHTML = `
+            <div class="w-full">
+                <h3 class="text-xl font-extrabold text-white text-center mb-4 border-b-2 border-yellow-500 pb-2">${resultTitle}</h3>
+                <div id="results-grid" class="${containerClass}"></div>
+            </div>
+        `;
         const resultsGrid = document.getElementById('results-grid');
 
         results.forEach((result, index) => {
             const figure = result.figure;
             const isNewFigure = result.isNew;
             
-            // Calculate figure-specific styling
             const borderColorClass = figure.color ? `border-${figure.color}` : 'border-yellow-500';
-            const rarityClass = `rarity-${figure.rarity.toLowerCase().replace(' ', '-')}`;
+            const rarityClass = `rarity-${figure.rarity.toLowerCase().replace(' ', '-')} `;
             
-            // Placeholder generation for drawn figure
-            const firstLetter = figure.name.substring(0, 1);
-            const [baseColor, shade] = figure.color.split('-');
-            const placeholderColor = baseColor === 'yellow' ? '555' : 'FFF';
-            const placeholderBackground = baseColor === 'yellow' ? 'F0A000' : '4A5568';
-            const placeholderUrl = `https://placehold.co/96x96/${placeholderBackground}/${placeholderColor}?text=${firstLetter}`;
+            const figureImageUrl = figure.image_url;
 
             let titleText;
             let titleClass;
             let subtitleText;
 
-            if (!isNewFigure) {
-                // Duplicate Scenario (This is what the user got when collection is full)
-                titleText = 'COLLECTION FULL!';
-                titleClass = 'text-yellow-500';
-                subtitleText = isMultiDraw ? 'Owned!' : 'You already own this one!';
-            } else {
-                // New Figure Scenario
+            if (isNewFigure) {
                 titleText = 'NEW!';
                 titleClass = 'text-green-400';
                 subtitleText = isMultiDraw ? 'New!' : 'Added to your collection!';
                 
-                // Special message if a free re-draw occurred
                 if (result.wasFreeRedraw) {
                     titleText = 'FREE RE-ROLL SUCCESS!';
                     titleClass = 'text-green-400';
                     subtitleText = 'Duplicate found, but you got a free chance!';
                 }
+            } else {
+                const isCollectionFull = collectedFigures.length >= MINIFIGURES.length;
+                titleText = isCollectionFull ? 'COLLECTION COMPLETE!' : 'DUPLICATE!';
+                titleClass = isCollectionFull ? 'text-yellow-500' : 'text-red-400';
+                subtitleText = isMultiDraw ? 'Owned!' : 'You already own this one!';
             }
             
-            // Generate the HTML for one result card
             const cardHtml = `
                 <div style="animation-delay: ${index * 50}ms;" class="${cardClass} ${borderColorClass} draw-animation">
                     ${isMultiDraw ? 
-                        // Simplified view for 5x draw
                         `
                         <p class="font-bold mb-1 uppercase tracking-widest ${titleClass}">${titleText}</p>
                         <div class="w-16 h-16 p-1 mb-1 bg-gray-700 rounded-lg shadow-inner border border-yellow-500 flex items-center justify-center">
-                            <img src="/${figure.image_url}" alt="${figure.name}" class="w-full h-full object-contain p-1"
-                                 onerror="this.onerror=null; this.src='${placeholderUrl}'; this.style.backgroundColor='#${placeholderBackground}'"/>
+                            <img src="${figureImageUrl}" alt="${figure.name}" class="w-full h-full object-contain p-1"/>
                         </div>
                         <h4 class="font-bold text-white text-center truncate w-full">${figure.name}</h4>
                         <span class="mt-1 px-2 py-0.5 text-[10px] font-bold rounded-full text-gray-900 shadow-md ${rarityClass}">
@@ -573,12 +605,10 @@
                         </span>
                         `
                         :
-                        // Detailed view for 1x draw
                         `
                         <p class="font-bold mb-2 uppercase tracking-widest ${titleClass}">${titleText}</p>
-                        <div class="w-full aspect-square p-2 mb-4 bg-gray-700 rounded-xl shadow-inner border-2 border-yellow-500 flex items-center justify-center">
-                            <img src="/${figure.image_url}" alt="${figure.name}" class="w-full h-full object-contain p-2"
-                                 onerror="this.onerror=null; this.src='${placeholderUrl}'; this.style.backgroundColor='#${placeholderBackground}'"/>
+                        <div class="w-full aspect-square p-4 mb-4 bg-gray-700 rounded-xl shadow-inner border-4 border-yellow-500 flex items-center justify-center">
+                            <img src="${figureImageUrl}" alt="${figure.name}" class="w-full h-full object-contain p-2"/>
                         </div>
                         <h2 class="text-3xl font-extrabold text-white text-center mb-1">${figure.name}</h2>
                         <p class="text-sm font-semibold mb-3 text-gray-400">${subtitleText}</p>
@@ -592,24 +622,17 @@
             resultsGrid.insertAdjacentHTML('beforeend', cardHtml);
         });
 
-        // After all draws are displayed, update the collection list visually
         updateCollectionUI();
     }
 
 
-    /**
-     * Handles the drawing mechanism for 1x or 5x, implementing the free re-draw rule.
-     * @param {number} count - The number of draws (1 or 5).
-     */
     function handleDraw(count) {
         if (isLoading || currentDraws < count) return;
         
-        // Disable buttons and set loading state
         isLoading = true;
         updateDrawCountUI(); 
         
-        // Remove old results/initial message and start animation
-        if(initialMessage) initialMessage.remove(); // Ensure initial message is removed
+        if(initialMessage) initialMessage.remove(); 
 
         resultArea.innerHTML = `
             <div id="mystery-box" class="loading-animation w-32 h-32 rounded-xl flex items-center justify-center shadow-inner border-4 border-white">
@@ -624,48 +647,41 @@
         setTimeout(() => {
             const drawResults = [];
 
+            // Execute the requested number of draws
             for (let i = 0; i < count; i++) {
                 let finalDrawnFigure = null;
                 let isNew = false;
                 let wasFreeRedraw = false;
-                let attempts = 0;
-                const maxFreeAttempts = 50;
+                const maxFreeAttempts = MINIFIGURES.length * 2; 
 
                 // 1. Initial Draw (Paid Slot)
                 let drawnFigure = weightedDraw();
-                isNew = saveCollection(drawnFigure.name); // Attempts to save/checks if new
-                finalDrawnFigure = drawnFigure;
                 
-                // 2. Re-draw loop if duplicate AND collection is not full
-                if (!isNew && collectedFigures.length < MINIFIGURES.length) {
-                    wasFreeRedraw = true; // Mark that a free chance was given
-                    attempts = 0;
+                let initialIsNew = saveCollection(drawnFigure.name);
+                finalDrawnFigure = drawnFigure;
+                isNew = initialIsNew;
 
-                    // Keep re-drawing until a NEW figure is found, or we hit max attempts/collection is full
+                // 2. Re-draw logic if duplicate AND collection is not full (The Free Re-Roll)
+                if (!initialIsNew && collectedFigures.length < MINIFIGURES.length) {
+                    wasFreeRedraw = true; 
+                    let attempts = 0;
+                    let reDrawnFigure;
+
                     do {
                         attempts++;
-                        let reDrawnFigure = weightedDraw();
-                        isNew = saveCollection(reDrawnFigure.name); // This updates global collectedFigures
+                        reDrawnFigure = weightedDraw();
+                        isNew = saveCollection(reDrawnFigure.name); 
+                        finalDrawnFigure = reDrawnFigure; 
                         
-                        if (isNew) {
-                            finalDrawnFigure = reDrawnFigure; // Success: show the NEW figure
+                        if (isNew || collectedFigures.length >= MINIFIGURES.length || attempts >= maxFreeAttempts) {
                             break;
                         }
-
-                        // Check if the collection is now full due to concurrent draws
-                        if (collectedFigures.length >= MINIFIGURES.length) {
-                            finalDrawnFigure = reDrawnFigure; // The result is the last duplicate, collection is full
-                            isNew = false;
-                            break;
-                        }
-                        
-                        // Safety break
-                        if (attempts >= maxFreeAttempts) {
-                            console.warn("Free draw loop failed to find a new figure.");
-                            isNew = false;
-                            break;
-                        }
-                    } while (!isNew);
+                    } while (true);
+                    
+                    if (!isNew && collectedFigures.length < MINIFIGURES.length) {
+                        isNew = false;
+                        finalDrawnFigure = reDrawnFigure;
+                    }
                 }
 
                 // 3. Log the result for display
@@ -676,7 +692,6 @@
                 });
             }
             
-            // Display all the results
             displayDrawResults(drawResults);
 
             // Reset loading state
@@ -689,6 +704,7 @@
     // --- Initialization ---
 
     function initGame() {
+        getUserID(); 
         initializeMinifigures();
         loadDrawCount();
         loadCollection(); 
@@ -697,7 +713,7 @@
         updateCambodiaTime();
         setInterval(updateCambodiaTime, 1000); // Update every second
         
-        // Attach event listeners to the new buttons
+        // Attach event listeners
         if (draw1xButton) {
             draw1xButton.addEventListener('click', () => handleDraw(1));
         }
@@ -708,7 +724,9 @@
         // Refill button functionality 
         if (refillButton) {
             refillButton.addEventListener('click', () => {
-                updateDrawCount(INITIAL_DRAWS);
+                // When refilling, we are setting a baseline for the user to start drawing
+                const refillAmount = 5; 
+                updateDrawCount(currentDraws + refillAmount);
             });
         }
         
