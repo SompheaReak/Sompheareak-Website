@@ -2,637 +2,178 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Customize Your Italy Bracelet</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    /* ------------------------------------------------ */
-    /* GLOBAL & TYPOGRAPHY */
-    /* ------------------------------------------------ */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-    
-    :root {
-        --primary-color: #0066cc; /* Deep Blue */
-        --secondary-color: #ff9800; /* Orange/Gold Accent */
-        --success-color: #28a745;
-        --danger-color: #dc3545;
-        --background-light: #f7f9fc;
-        --text-dark: #212529;
-        --text-light: #6c757d;
-        --border-color: #e0e0e0;
-        --radius: 12px;
-    }
-
+<style>
     body { 
-        font-family: 'Inter', sans-serif; 
-        background: var(--background-light); 
-        color: var(--text-dark);
+        font-family: Arial, sans-serif; 
+        background: #fafafa; 
         margin: 0; 
         padding: 0; 
+        text-align: center; 
         display: flex;
         flex-direction: column;
         align-items: center;
-        min-height: 100vh;
+    }
+    .header { position: sticky; top: 0; background: white; display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); z-index: 1000; width: 100%; }
+    .back-home { background: #007bff; color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+    h2.title { margin-top: 20px; color: #333; }
+
+    .preview-box { position: sticky; top: 60px; background: #fff; border: 2px solid #ddd; border-radius: 12px; margin: 20px auto; padding: 20px; width: 90%; max-width: 900px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .preview-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .cancel-btn { background: #ff4c4c; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer; }
+    #bracelet-preview { display:flex; justify-content:flex-start; align-items:flex-start; overflow-x:auto; gap:5px; padding:10px; min-height:160px; }
+    .bracelet-charm { position:relative; margin:0; }
+    .remove-btn { position:absolute; top:-15px; left:50%; transform:translateX(-50%); background:red; color:white; border:none; border-radius:50%; font-size:14px; width:26px; height:26px; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2); transition:0.2s; }
+    .remove-btn:hover { background:#cc0000; transform:translateX(-50%) scale(1.1); }
+    .bracelet-charm img { width:90px; height:150px; object-fit:cover; }
+    .controls { display:flex; gap:5px; margin-top:5px; }
+    .move-left, .move-right { border:none; background:rgba(0,0,0,0.4); color:white; border-radius:4px; font-size:14px; padding:2px 6px; cursor:pointer; }
+
+    .total-box { margin-top:10px; text-align:center; }
+    .total-box p { font-size:18px; font-weight:bold; margin:5px 0; }
+    .action-buttons { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+    .screenshot-btn { background:#28a745; color:white; border:none; padding:10px 18px; border-radius:8px; font-size:16px; cursor:pointer; }
+    .add-recommended-btn { background:#ff9800; color:white; border:none; padding:10px 18px; border-radius:8px; font-size:16px; cursor:pointer; transition:0.2s; }
+    .add-recommended-btn:hover { background:#e68900; transform:scale(1.05); }
+
+    /* Category grid - FIX CENTERING AND INCREASE OVERALL SIZE */
+    .category-gallery { 
+        display:grid; 
+        grid-template-columns: repeat(3, 1fr); 
+        gap:20px; /* Increased gap */
+        padding:20px; /* Reduced padding on top/bottom */
+        max-width: 600px; /* Increased max-width to make the whole grid bigger */
+        width: 90%; /* Ensure it uses width within the max-width */
+        margin:0 auto; 
+    }
+    .category-item { 
+        background:white; 
+        border:2px solid #eee; 
+        border-radius:10px; 
+        padding: 30px 20px; /* GREATLY INCREASED PADDING for height/size */
+        cursor:pointer; 
+        transition:0.2s; 
+        text-align:center; 
+        font-size: 1.4rem; /* INCREASED FONT SIZE */
+        margin: 5px; 
+        opacity: 1 !important; 
+    }
+    /* Hover effects removed */
+    .category-item:hover { 
+        border-color:#eee; 
+        transform: none; 
     }
     
-    h2.title { 
-        margin: 30px 0 20px; 
-        color: var(--primary-color); 
-        font-weight: 800; 
-        font-size: 1.8rem;
+    .category-item img { width:100px; height:150px; object-fit:cover; border-radius:8px; }
+
+    /* Modal - NO BACKGROUND OVERLAY (CLEAN SCREEN) */
+  /* Modal - UPDATED FOR 50% HEIGHT BOTTOM SLIDE-UP */
+.modal { 
+    position:fixed; 
+    top:0; 
+    left:0; 
+    width:100%; 
+    height:100%; 
+    background: rgba(0,0,0,0.5); /* Added a slight overlay for better focus */
+    display:none; 
+    justify-content:center; 
+    align-items:flex-end; /* ALIGNS MODAL CONTENT TO THE BOTTOM */
+    z-index:10000; 
+    backdrop-filter: none; 
+}
+.modal-content { 
+    background:white; 
+    padding:20px; 
+    border-radius:10px 10px 0 0; 
+    width: 100%; 
+    max-width: none; 
+    /* The key change: set max-height to 50% of the viewport height (vh) */
+    max-height: 50vh; 
+    height: auto; /* Allow content to dictate initial height up to max-height */
+    overflow-y: auto; 
+    text-align:center; 
+    position: relative; 
+    bottom: 0;
+    left: 0; 
+    transform: none; 
+}
+    /* Charm Grid inside Modal - BIGGER IMAGES */
+    .charm-grid { 
+        display:grid; 
+        grid-template-columns: repeat(5, 1fr); 
+        gap: 15px; 
+    }
+    
+    .recommended-item { 
+        background:white; 
+        border:2px solid #eee; 
+        border-radius:10px; 
+        padding:10px; 
+        cursor:pointer; 
+        transition:0.2s; 
         text-align: center;
-        width: 100%;
-        padding: 0 1rem;
-        box-sizing: border-box;
     }
-
-    /* Helper for hiding the detail view */
-    .hidden-detail { display: none !important; }
-
-    /* ------------------------------------------------ */
-    /* HEADER & NAVIGATION */
-    /* ------------------------------------------------ */
-    .header { 
-        position: sticky; 
-        top: 0; 
-        background: white; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        padding: 12px 1rem; /* Mobile padding */
-        box-shadow: 0 4px 8px rgba(0,0,0,0.05); 
-        z-index: 1000; 
-        width: 100%; 
-        box-sizing: border-box; 
-    }
-    .back-home { 
-        background: var(--primary-color); 
-        color: white; 
-        padding: 8px 16px; 
-        border-radius: var(--radius); 
-        text-decoration: none; 
-        font-weight: 600; 
-        transition: background 0.2s;
-        font-size: 0.9rem;
-    }
-    .back-home:hover { background: #0056b3; }
-    .header h3 { font-size: 1rem; font-weight: 600; margin: 0; }
-    @media (min-width: 640px) {
-        .header { padding: 12px 5%; }
-        .header h3 { font-size: 1.2rem; }
-    }
-
-    /* ------------------------------------------------ */
-    /* PREVIEW CARD */
-    /* ------------------------------------------------ */
-    .main-container {
-        width: 100%;
-        max-width: 1000px;
-        padding: 0 1rem;
-        box-sizing: border-box;
-    }
-
-    .preview-box { 
-        background: white; 
-        border: 1px solid var(--border-color); 
-        border-radius: var(--radius); 
-        margin: 30px 0; 
-        padding: 20px; 
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-        text-align: left;
-    }
-
-    .preview-header { 
-        display:flex; 
-        justify-content:space-between; 
-        align-items:center; 
-        margin-bottom:15px; 
-        flex-wrap: wrap; /* Wrap on small screens */
-    }
-    .preview-header h3 { color: var(--text-dark); margin: 0; font-weight: 700; font-size: 1.1rem; }
-    .cancel-btn { 
-        background: var(--danger-color); 
+    .recommended-item:hover { border-color:#007bff; transform:scale(1.05); }
+    .recommended-item img { width:90px; height:150px; object-fit:cover; border-radius:10px; }
+    
+    /* CLOSE BUTTON TOP-RIGHT */
+    .close-modal-btn { 
+        margin-top:0; 
+        background:#ff4c4c; 
         color:white; 
         border:none; 
         padding:8px 14px; 
-        border-radius: var(--radius); 
-        font-weight: 600; 
+        border-radius:4px; 
         cursor:pointer; 
-        transition: background 0.2s;
-        margin-top: 10px;
-    }
-    .cancel-btn:hover { background: #c82333; }
-
-    /* Bracelet Container */
-    #bracelet-preview { 
-        display:flex; 
-        justify-content:flex-start; 
-        align-items:flex-start; 
-        overflow-x:auto; 
-        gap: 12px; 
-        padding: 15px 10px; 
-        min-height: 160px; 
-        border: 1px dashed var(--border-color); 
-        border-radius: var(--radius);
-        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-    }
-    .bracelet-charm { 
-        position:relative; 
-        flex-shrink: 0; 
-        padding: 5px; 
-        border-radius: var(--radius);
-        background: #fcfcfc;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-    .bracelet-charm img { 
-        width: 80px; 
-        height: 120px; 
-        object-fit:cover; 
-        border-radius: 6px; 
-        display: block;
-    }
-
-    /* Charm Controls (Move/Remove) */
-    .remove-btn { 
-        position:absolute; 
-        top: -8px; 
-        right: -8px; 
-        background: var(--danger-color); 
-        color:white; 
-        border:2px solid white; 
-        border-radius:50%; 
-        font-size: 12px; 
-        width: 24px; 
-        height: 24px; 
-        cursor:pointer; 
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3); 
-        transition: background 0.2s, transform 0.2s; 
-        line-height: 1;
-        padding: 0;
-    }
-    .remove-btn:hover { background:#cc0000; transform: scale(1.1); }
-    .controls { display:flex; gap:3px; margin-top:8px; justify-content: space-between; }
-    .move-left, .move-right { 
-        border:none; 
-        background: var(--text-light); 
-        color:white; 
-        border-radius: 6px; 
-        font-size: 14px; 
-        padding: 4px 8px; 
-        cursor:pointer;
-        transition: background 0.2s;
-        flex-grow: 1;
-    }
-    .move-left:hover, .move-right:hover { background: var(--primary-color); }
-
-    .total-box { 
-        margin-top: 20px; 
-        padding-top: 15px;
-        border-top: 1px solid var(--border-color);
-        text-align:center; 
-    }
-    .total-box p { 
-        font-size: 1.5rem; 
-        font-weight: 800; 
-        margin: 5px 0 15px; 
-        color: var(--primary-color);
-    }
-    .action-buttons { 
-        display:flex; 
-        justify-content:center; 
-        gap:15px; 
-        flex-wrap:wrap; 
-    }
-    .screenshot-btn, .add-recommended-btn { 
-        color:white; 
-        border:none; 
-        padding:12px 24px; 
-        border-radius: var(--radius); 
-        font-size: 1rem; 
-        font-weight: 600;
-        cursor:pointer; 
-        transition: 0.2s;
-        min-width: 180px;
-        margin-top: 10px;
-    }
-    .screenshot-btn { 
-        background: var(--success-color); 
-        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
-    }
-    .screenshot-btn:hover { background: #1e7e34; transform: translateY(-2px); }
-
-    .add-recommended-btn { 
-        background: var(--secondary-color); 
-        box-shadow: 0 4px 8px rgba(255, 152, 0, 0.2);
-    }
-    .add-recommended-btn:hover { background: #e68900; transform: translateY(-2px); }
-
-    /* ------------------------------------------------ */
-    /* CATEGORY GALLERY */
-    /* ------------------------------------------------ */
-    .category-gallery { 
-        display:grid; 
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
-        gap: 15px; 
-        padding: 20px 0; 
-        width: 100%; 
-    }
-    
-    .category-item { 
-        background:white; 
-        border:1px solid var(--border-color); 
-        border-radius: var(--radius); 
-        padding: 20px 10px; 
-        cursor:pointer; 
-        transition: 0.2s; 
-        text-align:center; 
-        font-size: 1rem; 
-        font-weight: 600;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-    }
-    .category-item:hover { 
-        border-color: var(--primary-color);
-        box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-        transform: translateY(-2px);
-    }
-    
-    .category-item img { 
-        width: 80px; 
-        height: 120px; 
-        object-fit:cover; 
-        border-radius: 6px; 
-        margin-bottom: 10px;
-    }
-
-    /* ------------------------------------------------ */
-    /* MODAL & CHARM GRID */
-    /* ------------------------------------------------ */
-    .modal { 
-        position:fixed; 
-        top:0; 
-        left:0; 
-        width:100%; 
-        height:100%; 
-        background: rgba(0,0,0,0.6); 
-        display:none; 
-        justify-content:center; 
-        align-items:flex-end; 
-        z-index:10000; 
-    }
-    .modal-content { 
-        background:white; 
-        padding: 20px; 
-        border-radius: 12px 12px 0 0; 
-        width: 100%; 
-        max-width: 1000px;
-        max-height: 85vh; 
-        height: auto; 
-        overflow-y: auto; 
-        text-align:center; 
-        position: relative; 
-        animation: slideUp 0.3s ease-out; 
-    }
-    
-    @keyframes slideUp {
-        from { transform: translateY(100%); }
-        to { transform: translateY(0); }
-    }
-
-    #modalTitle { 
-        color: var(--primary-color); 
-        margin-top: 0; 
-        font-size: 1.5rem;
-        padding-bottom: 10px;
-        border-bottom: 1px solid var(--border-color);
-        margin-bottom: 20px;
-    }
-
-    .charm-grid { 
-        display:grid; 
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 15px; 
-    }
-    
-    .charm-list-item { 
-        background:var(--background-light); 
-        border:1px solid var(--border-color); 
-        border-radius: var(--radius); 
-        padding: 10px 5px; 
-        cursor:pointer; 
-        transition: 0.2s; 
-        text-align: center;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-    .charm-list-item:hover { 
-        border-color:var(--secondary-color); 
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(255, 152, 0, 0.1);
-    }
-    .charm-list-item img { 
-        width: 80px; 
-        height: 120px; 
-        object-fit:cover; 
-        border-radius: 8px; 
-    }
-    .charm-list-item p { margin: 5px 0 0; font-size: 0.9rem; }
-    .charm-list-item strong { color: var(--text-dark); }
-    
-    .close-modal-btn { 
-        background: var(--text-light); 
-        color:white; 
-        border:none; 
-        padding: 8px 16px; 
-        border-radius: var(--radius); 
-        cursor:pointer; 
+        
         position: absolute;
-        top: 15px;
-        right: 15px;
+        top: 10px;
+        right: 10px;
         z-index: 10001; 
-        transition: background 0.2s;
-        font-weight: 600;
     }
-    .close-modal-btn:hover { background: var(--text-dark); }
-
-    /* --- CHARM DETAIL VIEW STYLES --- */
-    .detail-view {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-        padding: 20px;
-    }
-    .detail-view img {
-        width: 150px;
-        height: 220px;
-        object-fit: cover;
-        border-radius: var(--radius);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        border: 4px solid var(--border-color);
-    }
-    .detail-info {
-        text-align: center;
-    }
-    .detail-info h4 {
-        font-size: 1.8rem;
-        font-weight: 700;
-        margin-bottom: 5px;
-        color: var(--primary-color);
-    }
-    .detail-info p {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: var(--secondary-color);
-        margin: 0;
-    }
-    .detail-actions {
-        display: flex;
-        gap: 15px;
-        margin-top: 20px;
-        width: 100%;
-        max-width: 400px;
-    }
-    .add-charm-btn, .back-btn {
-        flex-grow: 1;
-        padding: 12px;
-        border: none;
-        border-radius: var(--radius);
-        font-weight: 700;
-        cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .add-charm-btn {
-        background: var(--success-color);
-        color: white;
-    }
-    .add-charm-btn:hover {
-        background: #1e7e34;
-        transform: translateY(-1px);
-    }
-    .back-btn {
-        background: var(--background-light);
-        color: var(--text-dark);
-        border: 1px solid var(--border-color);
-    }
-    .back-btn:hover {
-        background: #e9ecef;
-        transform: translateY(-1px);
-    }
-
-    /* ------------------------------------------------ */
-    /* NOTIFICATION CENTER */
-    /* ------------------------------------------------ */
-    #notification-center {
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        z-index: 100000;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        max-width: 90%;
-    }
-    .notification {
-        background-color: var(--success-color);
-        color: white;
-        padding: 12px 18px;
-        border-radius: var(--radius);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        opacity: 0;
-        transition: opacity 0.5s, transform 0.5s;
-        transform: translateY(20px);
-        font-weight: 600;
-        font-size: 0.9rem;
-    }
-    .notification.show {
-        opacity: 1;
-        transform: translateY(0);
-    }
-  </style>
+</style>
 </head>
 <body>
-    <!-- Notification Center HTML Element -->
-    <div id="notification-center"></div>
 
   <div class="header">
     <a href="/" class="back-home">🏠 Back to Home</a>
     <h3>Customize Your Bracelet</h3>
   </div>
-  
-  <div class="main-container">
 
-    <div class="preview-box" id="previewBox">
-      <div class="preview-header">
-        <h3>🪄 Preview Bracelet (Saved Live)</h3>
-        <button id="cancelSelection" class="cancel-btn">❌ Clear Design</button>
-      </div>
-
-      <!-- Bracelet preview area with scroll for mobile -->
-      <div id="bracelet-preview">Add your first charm from the categories below!</div>
-
-      <div class="total-box">
-        <p>Total: <span id="totalPrice">...</span></p>
-        <div class="action-buttons">
-          <button class="screenshot-btn" id="screenshotBtn">📸 Take Screenshot</button>
-          <button class="add-recommended-btn" id="recommendedBtn">✨ Add Recommended Charm</button>
-        </div>
-      </div>
+  <div class="preview-box" id="previewBox">
+    <div class="preview-header">
+      <h3>🪄 Preview Bracelet</h3>
+      <button id="cancelSelection" class="cancel-btn">❌ Cancel Selection</button>
     </div>
 
-    <h2 class="title">🪄 Choose a Category 🪄</h2>
-    <div id="categoryGallery" class="category-gallery"></div>
+    <div id="bracelet-preview">Your charms will appear here...</div>
+
+    <div class="total-box">
+      <p>Total: <span id="totalPrice">0៛</span></p>
+      <div class="action-buttons">
+        <button class="screenshot-btn" id="screenshotBtn">📸 Take Screenshot</button>
+        <button class="add-recommended-btn" id="recommendedBtn">✨ Add Recommended Charm</button>
+      </div>
+    </div>
   </div>
 
+  <h2 class="title">🪄 Choose a Category 🪄</h2>
+  <div id="categoryGallery" class="category-gallery"></div>
 
   <div id="charmModal" class="modal" aria-hidden="true">
     <div class="modal-content">
       <h3 id="modalTitle"></h3>
+      <div id="charmGrid" class="charm-grid"></div>
       <button id="closeModalBtn" class="close-modal-btn">Close</button>
-      
-      <!-- List View -->
-      <div id="charmListView">
-        <div id="charmGrid" class="charm-grid"></div>
-      </div>
-
-      <!-- Detail View (Initially hidden) -->
-      <div id="charmDetailView" class="detail-view hidden-detail">
-        <!-- Content will be populated by JS -->
-      </div>
-      
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    setLogLevel('Debug');
-
-    // --- FIREBASE SETUP ---
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-    let db;
-    let auth;
-    let userId = null;
-    let isAuthReady = false;
-
-    let charms = []; 
-    let currentCategoryCharms = []; // Store charms for the currently open category
-
-    // Initialize Firebase and Authentication
-    if (Object.keys(firebaseConfig).length > 0) {
-      const app = initializeApp(firebaseConfig);
-      db = getFirestore(app);
-      auth = getAuth(app);
-
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          userId = user.uid;
-          console.log("Firebase: User signed in with UID:", userId);
-          isAuthReady = true;
-          loadDesign();
-        } else {
-          if (!isAuthReady) {
-            try {
-              if (initialAuthToken) {
-                const credential = await signInWithCustomToken(auth, initialAuthToken);
-                userId = credential.user.uid;
-                console.log("Firebase: Signed in with custom token. UID:", userId);
-              } else {
-                const credential = await signInAnonymously(auth);
-                userId = credential.user.uid;
-                console.log("Firebase: Signed in anonymously. UID:", userId);
-              }
-            } catch (error) {
-              console.error("Firebase Auth Error:", error);
-              userId = 'anonymous_' + crypto.randomUUID();
-            }
-            isAuthReady = true;
-            loadDesign();
-          }
-        }
-      });
-    } else {
-      console.warn("Firebase config not available. Running without persistence.");
-      isAuthReady = true;
-      renderBracelet(); 
-    }
-
-    // --- FIRESTORE FUNCTIONS ---
-
-    // Custom notification function (replaces alert/confirm)
-    function showNotification(message, isError = false) {
-        const center = document.getElementById('notification-center');
-        const note = document.createElement('div');
-        note.className = 'notification';
-        if (isError) {
-            note.style.backgroundColor = '#d9534f'; 
-        }
-        note.textContent = message;
-
-        center.appendChild(note);
-
-        setTimeout(() => note.classList.add('show'), 10);
-
-        setTimeout(() => {
-            note.classList.remove('show');
-            setTimeout(() => center.removeChild(note), 500); 
-        }, 3000);
-    }
-
-    async function saveDesign() {
-      if (!isAuthReady || !db || !userId) {
-        if (isAuthReady) console.warn("Cannot save: Persistence not configured.");
-        return;
-      }
-      
-      const docRef = doc(db, `artifacts/${appId}/users/${userId}/bracelets`, 'current_design');
-      
-      try {
-        await setDoc(docRef, { 
-          charms: charms,
-          updatedAt: new Date().toISOString()
-        });
-        showNotification('Design saved automatically!');
-      } catch (e) {
-        console.error("Error saving document: ", e);
-        showNotification('Error saving design!', true);
-      }
-    }
-
-    function loadDesign() {
-      if (!isAuthReady || !db || !userId) return;
-
-      const docRef = doc(db, `artifacts/${appId}/users/${userId}/bracelets`, 'current_design');
-      
-      onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const loadedData = docSnap.data().charms;
-          if (loadedData) {
-            if (JSON.stringify(charms) !== JSON.stringify(loadedData)) {
-                charms = loadedData;
-                renderBracelet();
-                showNotification('Your last design loaded!');
-            }
-          }
-        } else {
-            console.log("No saved design found, starting new bracelet.");
-            if (charms.length === 0) renderBracelet();
-        }
-      }, (error) => {
-        console.error("Error listening to document:", error);
-        showNotification('Error loading design!', true);
-        renderBracelet();
-      });
-    }
-
-    // --- CORE APPLICATION LOGIC ---
-
+  <script>
     // DOM refs
     const preview = document.getElementById('bracelet-preview');
-    const totalPriceSpan = document.getElementById('totalPrice');
+    const totalPrice = document.getElementById('totalPrice');
     const categoryGallery = document.getElementById('categoryGallery');
     const charmModal = document.getElementById('charmModal');
     const charmGrid = document.getElementById('charmGrid');
@@ -640,71 +181,228 @@
     const closeModalBtn = document.getElementById('closeModalBtn');
     const screenshotBtn = document.getElementById('screenshotBtn');
     const recommendedBtn = document.getElementById('recommendedBtn');
-    const cancelSelectionBtn = document.getElementById('cancelSelection');
-    const charmListView = document.getElementById('charmListView');
-    const charmDetailView = document.getElementById('charmDetailView');
 
-    // Charm Data (Same as before)
+    let charms = []; // current preview charms
+
     const allCharms = [
-      {"id": 1, "name_kh": "Silver Charm", "price": 400, "image": "https://placehold.co/90x150/d3d3d3/555?text=Base+Charm", "categories": ["Charm"]},
-      {"id": 12301, "name_kh": "Car Charm 01", "price": 3000, "image": "https://placehold.co/90x150/0066cc/ffffff?text=Car+01", "categories": ["Car Logo"]},
-      {"id": 12302, "name_kh": "Car Charm 02", "price": 3000, "image": "https://placehold.co/90x150/cc0000/ffffff?text=Car+02", "categories": ["Car Logo"]},
-      {"id": 12303, "name_kh": "Car Charm 03", "price": 3000, "image": "https://placehold.co/90x150/339966/000000?text=Car+03", "categories": ["Car Logo"]},
-      {"id": 12307, "name_kh": "Car Charm 07", "price": 3000, "image": "https://placehold.co/90x150/ff8800/ffffff?text=Car+07", "categories": ["Car Logo"]}, 
-      {"id": 12315, "name_kh": "Car Charm 15", "price": 3000, "image": "https://placehold.co/90x150/00cccc/000000?text=Car+15", "categories": ["Car Logo"]},
-      {"id": 1234501, "name_kh": "Flag Charm Cambodia", "price": 3000, "image": "https://placehold.co/90x150/000080/ffffff?text=🇰🇭", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-      {"id": 1234502, "name_kh": "Flag Charm Italy", "price": 3000, "image": "https://placehold.co/90x150/009246/f4f5f0?text=🇮🇹", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
-      {"id": 1234503, "name_kh": "Flag Charm Brazil", "price": 3000, "image": "https://placehold.co/90x150/009739/ffd933?text=🇧🇷", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-      {"id": 1234519, "name_kh": "Flag Charm France", "price": 3000, "image": "https://placehold.co/90x150/0055a4/ffffff?text=🇫🇷", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-      {"id": 123501, "name_kh": "Ruby Gemstone", "price": 3500, "image": "https://placehold.co/90x150/dc143c/ffffff?text=💎+Ruby", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
-      {"id": 123506, "name_kh": "Sapphire Gemstone", "price": 3500, "image": "https://placehold.co/90x150/0f52ba/ffffff?text=💎+Sapphire", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
-      {"id": 123521, "name_kh": "Diamond Gemstone", "price": 5000, "image": "https://placehold.co/90x150/b9f2ff/000000?text=💎+Diamond", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
-      {"id": 234501, "name_kh": "Letter Charm A", "price": 1200, "image": "https://placehold.co/90x150/f0f0f0/000000?text=A", "categories": ["Letter"], "discount": 20},
-      {"id": 234509, "name_kh": "Letter Charm I", "price": 1200, "image": "https://placehold.co/90x150/f0f0f0/000000?text=I", "categories": ["Letter"], "discount": 20},
-      {"id": 234520, "name_kh": "Letter Charm T", "price": 1200, "image": "https://placehold.co/90x150/f0f0f0/000000?text=T", "categories": ["Letter"], "discount": 20},
-      {"id": 234525, "name_kh": "Letter Charm Y", "price": 1200, "image": "https://placehold.co/90x150/f0f0f0/000000?text=Y", "categories": ["Letter"], "discount": 20},
-      {"id": 123601, "name_kh": "Steav Charm 01", "price": 3000, "image": "https://placehold.co/90x150/000000/ffffff?text=🤖+S-01", "categories": ["Steav"], "discount": 20},
-      {"id": 123613, "name_kh": "Steav Charm 13", "price": 4000, "image": "https://placehold.co/90x150/800080/ffffff?text=🤖+S-13", "categories": ["Steav"], "discount": 20},
-      {"id": 123701, "name_kh": "Cute Dog Charm", "price": 3000, "image": "https://placehold.co/90x150/f08080/ffffff?text=🐕+Cute", "categories": ["Cutie"], "discount": 20},
-      {"id": 123716, "name_kh": "Cute Cat Charm", "price": 4000, "image": "https://placehold.co/90x150/dda0dd/000000?text=🐈+Cute", "categories": ["Cutie"], "discount": 20}
-    ]; 
+      // --- Charm
+    {"id": 1, "name_kh": "Silver Charm", "price": 400, "image": "/static/images/c01.jpg", "categories": ["Charm"]},
+    // --- CAR LOGOS (cc01 - cc15) ---
+    {"id": 12301, "name_kh": "Car Charm 01", "price": 3000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"]},
+    {"id": 12302, "name_kh": "Car Charm 02", "price": 3000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"]},
+    {"id": 12303, "name_kh": "Car Charm 03", "price": 3000, "image": "/static/images/cc03.jpg", "categories": ["Car Logo"]},
+    {"id": 12304, "name_kh": "Car Charm 04", "price": 3000, "image": "/static/images/cc04.jpg", "categories": ["Car Logo"]},
+    {"id": 12305, "name_kh": "Car Charm 05", "price": 3000, "image": "/static/images/cc05.jpg", "categories": ["Car Logo"]},
+    {"id": 12306, "name_kh": "Car Charm 06", "price": 3000, "image": "/static/images/cc06.jpg", "categories": ["Car Logo"]},
+    {"id": 12307, "name_kh": "Car Charm 07", "price": 3000, "image": "/static/images/cc07.jpg", "categories": ["Car Logo"]}, // Corrected typo: "Car Lego"
+    {"id": 12308, "name_kh": "Car Charm 08", "price": 3000, "image": "/static/images/cc08.jpg", "categories": ["Car Logo"]},
+    {"id": 12309, "name_kh": "Car Charm 09", "price": 3000, "image": "/static/images/cc09.jpg", "categories": ["Car Logo"]},
+    {"id": 12310, "name_kh": "Car Charm 10", "price": 3000, "image": "/static/images/cc10.jpg", "categories": ["Car Logo"]},
+    {"id": 12311, "name_kh": "Car Charm 11", "price": 3000, "image": "/static/images/cc11.jpg", "categories": ["Car Logo"]},
+    {"id": 12312, "name_kh": "Car Charm 12", "price": 3000, "image": "/static/images/cc12.jpg", "categories": ["Car Logo"]},
+    {"id": 12313, "name_kh": "Car Charm 13", "price": 3000, "image": "/static/images/cc13.jpg", "categories": ["Car Logo"]},
+    {"id": 12314, "name_kh": "Car Charm 14", "price": 3000, "image": "/static/images/cc14.jpg", "categories": ["Car Logo"]},
+    {"id": 12315, "name_kh": "Car Charm 15", "price": 3000, "image": "/static/images/cc15.jpg", "categories": ["Car Logo"]},
 
-    // Build unique categories
+    // --- FLAGS (cf01 - cf19) ---
+    {"id": 1234501, "name_kh": "Flag Charm 01", "price": 3000, "image": "/static/images/cf01.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1234502, "name_kh": "Flag Charm 02", "price": 3000, "image": "/static/images/cf02.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1234503, "name_kh": "Flag Charm 03", "price": 3000, "image": "/static/images/cf03.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1234504, "name_kh": "Flag Charm 04", "price": 3000, "image": "/static/images/cf04.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1234505, "name_kh": "Flag Charm 05", "price": 3000, "image": "/static/images/cf05.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1234506, "name_kh": "Flag Charm 06", "price": 3000, "image": "/static/images/cf06.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1234507, "name_kh": "Flag Charm 07", "price": 3000, "image": "/static/images/cf07.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1234508, "name_kh": "Flag Charm 08", "price": 3000, "image": "/static/images/cf08.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1234509, "name_kh": "Flag Charm 09", "price": 3000, "image": "/static/images/cf09.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1234510, "name_kh": "Flag Charm 10", "price": 3000, "image": "/static/images/cf10.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1234511, "name_kh": "Flag Charm 11", "price": 3000, "image": "/static/images/cf11.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1234512, "name_kh": "Flag Charm 12", "price": 3000, "image": "/static/images/cf12.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1234513, "name_kh": "Flag Charm 13", "price": 3000, "image": "/static/images/cf13.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1234514, "name_kh": "Flag Charm 14", "price": 3000, "image": "/static/images/cf14.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1234515, "name_kh": "Flag Charm 15", "price": 3000, "image": "/static/images/cf15.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1234516, "name_kh": "Flag Charm 16", "price": 3000, "image": "/static/images/cf16.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1234517, "name_kh": "Flag Charm 17", "price": 3000, "image": "/static/images/cf17.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1234518, "name_kh": "Flag Charm 18", "price": 3000, "image": "/static/images/cf18.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1234519, "name_kh": "Flag Charm 19", "price": 3000, "image": "/static/images/cf19.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+
+    // --- GEMSTONES (cg01 - cg24) ---
+    {"id": 123501, "name_kh": "Gemstone Charm 01", "price": 3500, "image": "/static/images/cg01.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
+    {"id": 123502, "name_kh": "Gemstone Charm 02", "price": 3500, "image": "/static/images/cg02.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123503, "name_kh": "Gemstone Charm 03", "price": 3500, "image": "/static/images/cg03.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123504, "name_kh": "Gemstone Charm 04", "price": 3500, "image": "/static/images/cg04.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123505, "name_kh": "Gemstone Charm 05", "price": 3500, "image": "/static/images/cg05.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123506, "name_kh": "Gemstone Charm 06", "price": 3500, "image": "/static/images/cg06.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
+    {"id": 123507, "name_kh": "Gemstone Charm 07", "price": 3500, "image": "/static/images/cg07.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
+    {"id": 123508, "name_kh": "Gemstone Charm 08", "price": 3500, "image": "/static/images/cg08.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123509, "name_kh": "Gemstone Charm 09", "price": 3500, "image": "/static/images/cg09.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123510, "name_kh": "Gemstone Charm 10", "price": 3500, "image": "/static/images/cg10.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123511, "name_kh": "Gemstone Charm 11", "price": 3500, "image": "/static/images/cg11.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123512, "name_kh": "Gemstone Charm 12", "price": 3500, "image": "/static/images/cg12.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123513, "name_kh": "Gemstone Charm 13", "price": 3500, "image": "/static/images/cg13.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123514, "name_kh": "Gemstone Charm 14", "price": 3500, "image": "/static/images/cg14.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123515, "name_kh": "Gemstone Charm 15", "price": 3500, "image": "/static/images/cg15.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123516, "name_kh": "Gemstone Charm 16", "price": 3500, "image": "/static/images/cg16.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
+    {"id": 123517, "name_kh": "Gemstone Charm 17", "price": 3500, "image": "/static/images/cg17.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
+    {"id": 123518, "name_kh": "Gemstone Charm 18", "price": 3500, "image": "/static/images/cg18.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123519, "name_kh": "Gemstone Charm 19", "price": 3500, "image": "/static/images/cg19.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123520, "name_kh": "Gemstone Charm 20", "price": 3500, "image": "/static/images/cg20.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123521, "name_kh": "Gemstone Charm 21", "price": 5000, "image": "/static/images/cg21.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
+    {"id": 123522, "name_kh": "Gemstone Charm 22", "price": 5000, "image": "/static/images/cg22.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123523, "name_kh": "Gemstone Charm 23", "price": 5000, "image": "/static/images/cg23.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123524, "name_kh": "Gemstone Charm 24", "price": 5000, "image": "/static/images/cg24.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
+    // --- Football Club 
+    {"id": 123, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/cs01.jpg", "categories": ["Football Club Logo"]},
+    // --- LETTERS (a - z) ---
+    {"id": 12, "name_kh": "Letter Charm A", "price": 1200, "image": "/static/images/ap.jpg", "categories": ["Letter (Pink)"]},
+
+    // --- LETTERS (a - z) ---
+    {"id": 234501, "name_kh": "Letter Charm A", "price": 1200, "image": "/static/images/a.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234502, "name_kh": "Letter Charm B", "price": 1200, "image": "/static/images/b.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 234503, "name_kh": "Letter Charm C", "price": 1200, "image": "/static/images/c.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234504, "name_kh": "Letter Charm D", "price": 1200, "image": "/static/images/d.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 234505, "name_kh": "Letter Charm E", "price": 1200, "image": "/static/images/e.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 234506, "name_kh": "Letter Charm F", "price": 1200, "image": "/static/images/f.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 234507, "name_kh": "Letter Charm G", "price": 1200, "image": "/static/images/g.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 234508, "name_kh": "Letter Charm H", "price": 1200, "image": "/static/images/h.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234509, "name_kh": "Letter Charm I", "price": 1200, "image": "/static/images/i.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234510, "name_kh": "Letter Charm J", "price": 1200, "image": "/static/images/j.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234511, "name_kh": "Letter Charm K", "price": 1200, "image": "/static/images/k.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234512, "name_kh": "Letter Charm L", "price": 1200, "image": "/static/images/l.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234513, "name_kh": "Letter Charm M", "price": 1200, "image": "/static/images/m.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234514, "name_kh": "Letter Charm N", "price": 1200, "image": "/static/images/n.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234515, "name_kh": "Letter Charm O", "price": 1200, "image": "/static/images/o.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234516, "name_kh": "Letter Charm P", "price": 1200, "image": "/static/images/p.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 234517, "name_kh": "Letter Charm Q", "price": 1200, "image": "/static/images/q.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 234518, "name_kh": "Letter Charm R", "price": 1200, "image": "/static/images/r.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234519, "name_kh": "Letter Charm S", "price": 1200, "image": "/static/images/s.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234520, "name_kh": "Letter Charm T", "price": 1200, "image": "/static/images/t.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234521, "name_kh": "Letter Charm U", "price": 1200, "image": "/static/images/u.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234522, "name_kh": "Letter Charm V", "price": 1200, "image": "/static/images/v.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234523, "name_kh": "Letter Charm W", "price": 1200, "image": "/static/images/w.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 234524, "name_kh": "Letter Charm X", "price": 1200, "image": "/static/images/x.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 234525, "name_kh": "Letter Charm Y", "price": 1200, "image": "/static/images/y.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234526, "name_kh": "Letter Charm Z", "price": 1200, "image": "/static/images/z.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+
+    // --- STEAV (cm01 - cm13) ---
+    {"id": 123601, "name_kh": "Steav Charm 01", "price": 3000, "image": "/static/images/cm01.jpg", "categories": ["Steav"], "subcategory": ["Car Logo"], "discount": 20},
+    {"id": 123602, "name_kh": "Steav Charm 02", "price": 3000, "image": "/static/images/cm02.jpg", "categories": ["Steav"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123603, "name_kh": "Steav Charm 03", "price": 3000, "image": "/static/images/cm03.jpg", "categories": ["Steav"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123604, "name_kh": "Steav Charm 04", "price": 3000, "image": "/static/images/cm04.jpg", "categories": ["Steav"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123605, "name_kh": "Steav Charm 05", "price": 3000, "image": "/static/images/cm05.jpg", "categories": ["Steav"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123606, "name_kh": "Steav Charm 06", "price": 3000, "image": "/static/images/cm06.jpg", "categories": ["Steav"], "subcategory": ["Car Logo"], "discount": 20},
+    {"id": 123607, "name_kh": "Steav Charm 07", "price": 3000, "image": "/static/images/cm07.jpg", "categories": ["Steav"], "subcategory": ["Car Logo"], "discount": 20},
+    {"id": 123608, "name_kh": "Steav Charm 08", "price": 3000, "image": "/static/images/cm08.jpg", "categories": ["Steav"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123609, "name_kh": "Steav Charm 09", "price": 3000, "image": "/static/images/cm09.jpg", "categories": ["Steav"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123610, "name_kh": "Steav Charm 10", "price": 3000, "image": "/static/images/cm10.jpg", "categories": ["Steav"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123611, "name_kh": "Steav Charm 11", "price": 3000, "image": "/static/images/cm11.jpg", "categories": ["Steav"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123612, "name_kh": "Steav Charm 12", "price": 3000, "image": "/static/images/cm12.jpg", "categories": ["Steav"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123613, "name_kh": "Steav Charm 13", "price": 4000, "image": "/static/images/cm13.jpg", "categories": ["Steav"], "subcategory": ["All","Football"], "discount": 20},
+    // --- Cartoon 
+    {"id": 101, "name_kh": "Cartoon", "price": 3000, "image": "/static/images/ct01.jpg", "categories": ["Car Logo"]},
+
+    // --- CUTIE (cw01 - cw16) ---
+    {"id": 123701, "name_kh": "Cutie Charm 01", "price": 3000, "image": "/static/images/cw01.jpg", "categories": ["Cutie"], "subcategory": ["Car Logo"], "discount": 20},
+    {"id": 123702, "name_kh": "Cutie Charm 02", "price": 3000, "image": "/static/images/cw02.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123703, "name_kh": "Cutie Charm 03", "price": 3000, "image": "/static/images/cw03.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123704, "name_kh": "Cutie Charm 04", "price": 3000, "image": "/static/images/cw04.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123705, "name_kh": "Cutie Charm 05", "price": 3000, "image": "/static/images/cw05.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123706, "name_kh": "Cutie Charm 06", "price": 4000, "image": "/static/images/cw06.jpg", "categories": ["Cutie"], "subcategory": ["Car Logo"], "discount": 20},
+    {"id": 123707, "name_kh": "Cutie Charm 07", "price": 4000, "image": "/static/images/cw07.jpg", "categories": ["Cutie"], "subcategory": ["Car Logo"], "discount": 20},
+    {"id": 123708, "name_kh": "Cutie Charm 08", "price": 4000, "image": "/static/images/cw08.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123709, "name_kh": "Cutie Charm 09", "price": 4000, "image": "/static/images/cw09.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123710, "name_kh": "Cutie Charm 10", "price": 4000, "image": "/static/images/cw10.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20}, // Corrected typo: "Cutiet" -> "Cutie"
+    {"id": 123711, "name_kh": "Cutie Charm 11", "price": 4000, "image": "/static/images/cw11.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123712, "name_kh": "Cutie Charm 12", "price": 4000, "image": "/static/images/cw12.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123713, "name_kh": "Cutie Charm 13", "price": 4000, "image": "/static/images/cw13.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123714, "name_kh": "Cutie Charm 14", "price": 4000, "image": "/static/images/cw14.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123715, "name_kh": "Cutie Charm 15", "price": 4000, "image": "/static/images/cw15.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 123716, "name_kh": "Cutie Charm 16", "price": 4000, "image": "/static/images/cw16.jpg", "categories": ["Cutie"], "subcategory": ["All","Football"], "discount": 20}
+];
+    // Build unique categories (order preserved by first appearance)
     const categories = Array.from(allCharms.reduce((s, ch) => {
       ch.categories.forEach(cat => { if (!s.has(cat)) s.add(cat); });
       return s;
     }, new Set()));
 
-    // Renders the total price
-    function updateTotalPrice() {
-        const total = charms.reduce((sum, charm) => sum + Number(charm.price), 0);
-        totalPriceSpan.textContent = total.toLocaleString() + '៛';
-        preview.scrollLeft = preview.scrollWidth; 
+    // Render category tiles
+    function renderCategories() {
+      categoryGallery.innerHTML = '';
+      categories.forEach(cat => {
+        const item = document.createElement('div');
+        item.className = 'category-item';
+        item.tabIndex = 0;
+        item.dataset.category = cat;
+
+        const imgSrc = getCategoryImage(cat);
+        item.innerHTML = `<img src="${imgSrc}" alt="${escapeHtml(cat)}"><p>${escapeHtml(cat)}</p>`;
+        item.addEventListener('click', () => openCharmModal(cat));
+        item.addEventListener('keydown', (e) => { if (e.key === 'Enter') openCharmModal(cat); });
+
+        categoryGallery.appendChild(item);
+      });
     }
 
-    // Renders the bracelet preview
+    // Get an image for a category (first charm image in that category)
+    function getCategoryImage(cat) {
+      const found = allCharms.find(c => c.categories.includes(cat));
+      return found ? found.image : '/static/images/default.jpg';
+    }
+
+    // Open modal and populate charms for the chosen category
+    function openCharmModal(category) {
+      modalTitle.textContent = `✨ ${category} Charms ✨`;
+      charmGrid.innerHTML = '';
+
+      const charmsInCategory = allCharms.filter(ch => ch.categories.includes(category));
+      if (charmsInCategory.length === 0) {
+        charmGrid.innerHTML = `<p>No charms in this category.</p>`;
+      } else {
+        charmsInCategory.forEach(ch => {
+          const div = document.createElement('div');
+          div.className = 'recommended-item';
+          div.dataset.image = ch.image;
+          div.dataset.name = ch.name_kh;
+          div.dataset.price = ch.price;
+          div.innerHTML = `
+            <img src="${ch.image}" alt="${escapeHtml(ch.name_kh)}">
+            <p>${escapeHtml(ch.name_kh)}</p>
+            <p><strong>${Number(ch.price).toLocaleString()}៛</strong></p>
+          `;
+          div.addEventListener('click', () => {
+            addCharm(ch.image, ch.name_kh, ch.price);
+            // keep modal open so user can add several; remove the next line if you prefer it to close:
+            // closeCharmModal();
+          });
+          charmGrid.appendChild(div);
+        });
+      }
+
+      charmModal.style.display = 'flex';
+      charmModal.setAttribute('aria-hidden','false');
+    }
+
+    function closeCharmModal() {
+      charmModal.style.display = 'none';
+      charmModal.setAttribute('aria-hidden','true');
+    }
+
+    // Renders the bracelet preview and total price
     function renderBracelet() {
       preview.innerHTML = '';
       if (charms.length === 0) {
-        preview.textContent = 'Add your first charm from the categories below!';
-        preview.style.justifyContent = 'center';
-        preview.style.alignItems = 'center';
-        preview.style.color = 'var(--text-light)';
-        updateTotalPrice();
+        preview.textContent = 'Your charms will appear here...';
+        totalPrice.textContent = '0៛';
         return;
       }
 
-      preview.style.justifyContent = 'flex-start';
-      preview.style.alignItems = 'flex-start';
-      preview.style.color = 'var(--text-dark)';
-
-
+      let total = 0;
       charms.forEach((charm, idx) => {
+        total += Number(charm.price);
         const div = document.createElement('div');
         div.className = 'bracelet-charm';
         div.innerHTML = `
           <button class="remove-btn" data-index="${idx}" title="Remove">✖</button>
-          <img src="${charm.image}" onerror="this.onerror=null;this.src='https://placehold.co/90x150/cccccc/333?text=Error';" alt="${escapeHtml(charm.name_kh)}">
+          <img src="${charm.image}" alt="${escapeHtml(charm.name)}">
           <div class="controls">
             <button class="move-left" data-index="${idx}" title="Move left">⬅️</button>
             <button class="move-right" data-index="${idx}" title="Move right">➡️</button>
@@ -713,9 +411,9 @@
         preview.appendChild(div);
       });
 
-      updateTotalPrice();
+      totalPrice.textContent = total.toLocaleString() + '៛';
 
-      // Attach listeners for remove / move buttons
+      // attach listeners for remove / move buttons (delegation would also work)
       preview.querySelectorAll('.remove-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const i = Number(btn.dataset.index);
@@ -736,28 +434,21 @@
       });
     }
 
-    // Add / remove / move functions now call saveDesign()
-    function addCharm(image, name_kh, price) {
-      charms.push({ image, name_kh, price: Number(price) });
+    // Add / remove / move
+    function addCharm(image, name, price) {
+      charms.push({ image, name, price: Number(price) });
       renderBracelet();
-      saveDesign();
-      closeCharmModal();
-      showNotification(`Added ${name_kh} to your bracelet!`);
     }
 
     function removeCharm(index) {
-      if (index >= 0 && index < charms.length) {
-        charms.splice(index, 1);
-        renderBracelet();
-        saveDesign();
-      }
+      charms.splice(index, 1);
+      renderBracelet();
     }
 
     function moveLeft(index) {
       if (index > 0) {
         [charms[index-1], charms[index]] = [charms[index], charms[index-1]];
         renderBracelet();
-        saveDesign();
       }
     }
 
@@ -765,122 +456,21 @@
       if (index < charms.length - 1) {
         [charms[index+1], charms[index]] = [charms[index], charms[index+1]];
         renderBracelet();
-        saveDesign();
       }
     }
-    
-    // --- CATEGORY AND MODAL LOGIC ---
-    
-    // Get an image for a category
-    function getCategoryImage(cat) {
-      const found = allCharms.find(c => c.categories.includes(cat));
-      return found ? found.image : 'https://placehold.co/90x150/cccccc/333?text=N/A';
-    }
 
-    // Render category tiles
-    function renderCategories() {
-      categoryGallery.innerHTML = '';
-      categories.forEach(cat => {
-        const item = document.createElement('div');
-        item.className = 'category-item';
-        item.tabIndex = 0;
-        item.dataset.category = cat;
-
-        const imgSrc = getCategoryImage(cat);
-        item.innerHTML = `<img src="${imgSrc}" onerror="this.onerror=null;this.src='https://placehold.co/90x150/cccccc/333?text=Error';" alt="${escapeHtml(cat)}"><p>${escapeHtml(cat)}</p>`;
-        item.addEventListener('click', () => openCharmModal(cat));
-        item.addEventListener('keydown', (e) => { if (e.key === 'Enter') openCharmModal(cat); });
-
-        categoryGallery.appendChild(item);
-      });
-    }
-
-    // Opens modal and shows list view
-    function openCharmModal(category) {
-      modalTitle.textContent = `✨ ${category} Charms ✨`;
-      charmGrid.innerHTML = '';
-      charmListView.classList.remove('hidden-detail');
-      charmDetailView.classList.add('hidden-detail');
-
-      currentCategoryCharms = allCharms.filter(ch => ch.categories.includes(category));
-      
-      if (currentCategoryCharms.length === 0) {
-        charmGrid.innerHTML = `<p>No charms in this category.</p>`;
-      } else {
-        currentCategoryCharms.forEach(ch => {
-          const div = document.createElement('div');
-          div.className = 'charm-list-item';
-          div.dataset.id = ch.id;
-          div.tabIndex = 0;
-          
-          div.innerHTML = `
-            <img src="${ch.image}" onerror="this.onerror=null;this.src='https://placehold.co/90x150/cccccc/333?text=Error';" alt="${escapeHtml(ch.name_kh)}">
-            <p>${escapeHtml(ch.name_kh)}</p>
-            <p><strong>${Number(ch.price).toLocaleString()}៛</strong></p>
-          `;
-          
-          const clickHandler = () => showCharmDetail(ch);
-          div.addEventListener('click', clickHandler);
-          div.addEventListener('keydown', (e) => { if (e.key === 'Enter') clickHandler(); });
-          
-          charmGrid.appendChild(div);
-        });
-      }
-
-      charmModal.style.display = 'flex';
-      charmModal.setAttribute('aria-hidden','false');
-    }
-    
-    // Shows the detail view for a specific charm
-    function showCharmDetail(charm) {
-      charmListView.classList.add('hidden-detail');
-      charmDetailView.classList.remove('hidden-detail');
-
-      charmDetailView.innerHTML = `
-        <img src="${charm.image}" onerror="this.onerror=null;this.src='https://placehold.co/150x220/cccccc/333?text=Error';" alt="${escapeHtml(charm.name_kh)}">
-        <div class="detail-info">
-          <h4>${escapeHtml(charm.name_kh)}</h4>
-          <p>Price: ${Number(charm.price).toLocaleString()}៛</p>
-        </div>
-        <div class="detail-actions">
-          <button id="addCharmDetailBtn" class="add-charm-btn">➕ Add to Bracelet</button>
-          <button id="backToCharmListBtn" class="back-btn">← Back to List</button>
-        </div>
-      `;
-
-      document.getElementById('addCharmDetailBtn').addEventListener('click', () => {
-        addCharm(charm.image, charm.name_kh, charm.price);
-      });
-
-      document.getElementById('backToCharmListBtn').addEventListener('click', () => {
-        charmDetailView.classList.add('hidden-detail');
-        charmListView.classList.remove('hidden-detail');
-      });
-    }
-
-
-    function closeCharmModal() {
-      charmModal.style.display = 'none';
-      charmModal.setAttribute('aria-hidden','true');
-      // Reset to list view just in case
-      charmListView.classList.remove('hidden-detail');
-      charmDetailView.classList.add('hidden-detail');
-    }
-
-    // --- EVENT LISTENERS ---
-
-    // Cancel selection 
-    cancelSelectionBtn.addEventListener('click', () => {
+    // Cancel selection
+    document.getElementById('cancelSelection').addEventListener('click', () => {
+      if (confirm('Are you sure you want to cancel your bracelet design?')) {
         charms = [];
         renderBracelet();
-        saveDesign();
-        showNotification('Design cleared successfully!');
+      }
     });
 
     // screenshot
     screenshotBtn.addEventListener('click', () => {
       const element = document.getElementById('previewBox');
-      html2canvas(element, { useCORS: true }).then(canvas => {
+      html2canvas(element).then(canvas => {
         const link = document.createElement('a');
         link.download = 'bracelet_design.png';
         link.href = canvas.toDataURL('image/png');
@@ -890,13 +480,9 @@
 
     // recommended (random) charm
     recommendedBtn.addEventListener('click', () => {
-      if (allCharms.length === 0) {
-        showNotification('No charms available to recommend!', true);
-        return;
-      }
+      if (allCharms.length === 0) return;
       const random = allCharms[Math.floor(Math.random()*allCharms.length)];
       addCharm(random.image, random.name_kh, random.price);
-      // Since addCharm calls closeCharmModal(), the notification must be handled inside addCharm
     });
 
     // modal close button
@@ -908,7 +494,7 @@
 
     // helper to escape text for safe insertion
     function escapeHtml(str) {
-      if (str === null || typeof str === 'undefined') return '';
+      if (!str && str !== 0) return '';
       return String(str)
         .replace(/&/g, '&amp;')
         .replace(/"/g, '&quot;')
@@ -916,11 +502,35 @@
         .replace(/>/g, '&gt;');
     }
 
-    // Initial Render
+    // initial render
     renderCategories();
-    // renderBracelet() is called by loadDesign() after auth is ready.
+    renderBracelet();
+
+    // expose renderCategories so we can call it after updating `allCharms` dynamically
+    function renderCategories() { renderCategoriesImpl(); }
+    function renderCategoriesImpl() {
+      categoryGallery.innerHTML = '';
+      categories.forEach(cat => {
+        const item = document.createElement('div');
+        item.className = 'category-item';
+        item.tabIndex = 0;
+        item.dataset.category = cat;
+        const imgSrc = getCategoryImage(cat);
+        item.innerHTML = `<img src="${imgSrc}" alt="${escapeHtml(cat)}"><p>${escapeHtml(cat)}</p>`;
+        item.addEventListener('click', () => openCharmModal(cat));
+        item.addEventListener('keydown', (e) => { if (e.key === 'Enter') openCharmModal(cat); });
+        categoryGallery.appendChild(item);
+      });
+    }
+
+    // If you want to add categories dynamically later (from server),
+    // update allCharms array and then recalc categories & call renderCategoriesImpl():
+    //
+    // Example:
+    // allCharms.push({ id:999, name_kh:'New', price:2000, image:'/static/images/new.jpg', categories:['NewCat'] });
+    // categories.push('NewCat'); // or recompute unique set
+    // renderCategoriesImpl();
 
   </script>
 </body>
 </html>
-
