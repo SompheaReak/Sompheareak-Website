@@ -37,26 +37,29 @@
     .add-recommended-btn { background:#ff9800; color:white; border:none; padding:10px 18px; border-radius:8px; font-size:16px; cursor:pointer; transition:0.2s; }
     .add-recommended-btn:hover { background:#e68900; transform:scale(1.05); }
 
-    /* Category grid - FIX CENTERING AND INCREASE OVERALL SIZE */
+    /* Category grid - FIX APPLIED HERE */
     .category-gallery { 
         display:grid; 
-        grid-template-columns: repeat(3, 1fr); 
-        gap:20px; /* Increased gap */
-        padding:20px; /* Reduced padding on top/bottom */
-        max-width: 600px; /* Increased max-width to make the whole grid bigger */
-        width: 90%; /* Ensure it uses width within the max-width */
+        /* FIX: Use auto-fit to ensure all 10 tiles fit responsively */
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+        gap:20px; 
+        padding:20px;
+        max-width: 900px; /* Increased max-width for better horizontal space */
+        width: 90%; 
         margin:0 auto; 
+        justify-content: center; /* Center the grid items */
     }
     .category-item { 
         background:white; 
         border:2px solid #eee; 
         border-radius:10px; 
-        padding: 30px 20px; /* GREATLY INCREASED PADDING for height/size */
+        /* Adjusted padding */
+        padding: 20px 15px;
         cursor:pointer; 
         transition:0.2s; 
         text-align:center; 
-        font-size: 1.4rem; /* INCREASED FONT SIZE */
-        margin: 5px; 
+        font-size: 1.2rem; /* Adjusted font size */
+        margin: 0; /* Use gap for spacing instead of margin */
         opacity: 1 !important; 
     }
     /* Hover effects removed */
@@ -68,35 +71,34 @@
     .category-item img { width:100px; height:150px; object-fit:cover; border-radius:8px; }
 
     /* Modal - UPDATED FOR 50% HEIGHT BOTTOM SLIDE-UP */
-.modal { 
-    position:fixed; 
-    top:0; 
-    left:0; 
-    width:100%; 
-    height:100%; 
-    background: rgba(0,0,0,0.5); /* Added a slight overlay for better focus */
-    display:none; 
-    justify-content:center; 
-    align-items:flex-end; /* ALIGNS MODAL CONTENT TO THE BOTTOM */
-    z-index:10000; 
-    backdrop-filter: none; 
-}
-.modal-content { 
-    background:white; 
-    padding:20px; 
-    border-radius:10px 10px 0 0; 
-    width: 100%; 
-    max-width: none; 
-    /* The key change: set max-height to 50% of the viewport height (vh) */
-    max-height: 50vh; 
-    height: auto; /* Allow content to dictate initial height up to max-height */
-    overflow-y: auto; 
-    text-align:center; 
-    position: relative; 
-    bottom: 0;
-    left: 0; 
-    transform: none; 
-}
+    .modal { 
+        position:fixed; 
+        top:0; 
+        left:0; 
+        width:100%; 
+        height:100%; 
+        background: rgba(0,0,0,0.5); 
+        display:none; 
+        justify-content:center; 
+        align-items:flex-end; 
+        z-index:10000; 
+        backdrop-filter: none; 
+    }
+    .modal-content { 
+        background:white; 
+        padding:20px; 
+        border-radius:10px 10px 0 0; 
+        width: 100%; 
+        max-width: none; 
+        max-height: 50vh; 
+        height: auto; 
+        overflow-y: auto; 
+        text-align:center; 
+        position: relative; 
+        bottom: 0;
+        left: 0; 
+        transform: none; 
+    }
     /* Charm Grid inside Modal - SMALLER IMAGES for Selection (FIXED) */
     .charm-grid { 
         display:grid; 
@@ -365,7 +367,7 @@
     }, new Set()));
 
     // Render category tiles
-    function renderCategories() {
+    function renderCategoriesImpl() {
       categoryGallery.innerHTML = '';
       categories.forEach(cat => {
         const item = document.createElement('div');
@@ -452,8 +454,6 @@
       });
 
       totalPrice.textContent = total.toLocaleString() + '៛';
-      
-      // Removed repetitive querySelectorAll and listener attachments here (See Fix 1)
     }
 
     // Add / remove / move
@@ -549,25 +549,11 @@
 
 
     // initial render
-    renderCategories();
+    renderCategoriesImpl();
     renderBracelet();
 
     // expose renderCategories so we can call it after updating `allCharms` dynamically
     function renderCategories() { renderCategoriesImpl(); }
-    function renderCategoriesImpl() {
-      categoryGallery.innerHTML = '';
-      categories.forEach(cat => {
-        const item = document.createElement('div');
-        item.className = 'category-item';
-        item.tabIndex = 0;
-        item.dataset.category = cat;
-        const imgSrc = getCategoryImage(cat);
-        item.innerHTML = `<img src="${imgSrc}" alt="${escapeHtml(cat)}"><p>${escapeHtml(cat)}</p>`;
-        item.addEventListener('click', () => openCharmModal(cat));
-        item.addEventListener('keydown', (e) => { if (e.key === 'Enter') openCharmModal(cat); });
-        categoryGallery.appendChild(item);
-      });
-    }
   </script>
 </body>
 </html>
