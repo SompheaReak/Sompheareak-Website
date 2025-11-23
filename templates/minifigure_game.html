@@ -156,7 +156,7 @@
         <div id="result-area" class="mt-4 min-h-[150px] flex items-center justify-center border-2 border-dashed border-gray-700 rounded-lg p-2">
             <div id="initial-message" class="text-center p-4 text-gray-400">
                 <p class="mb-2 text-lg font-semibold text-yellow-500">Welcome, Player!</p>
-                <p class="text-sm">Use the **FREE5** redeem code to get draws and start collecting.</p>
+                <p class="text-sm">Use a redeem code (e.g., **FIGFREE1**) to get draws and start collecting.</p>
             </div>
         </div>
 
@@ -170,7 +170,7 @@
         </div>
 
         <div class="mt-4 flex space-x-2">
-            <input type="text" id="redeem-input" placeholder="Enter redeem code (e.g., FREE5)" 
+            <input type="text" id="redeem-input" placeholder="Enter redeem code (e.g., FIGFREE1)" 
                    class="flex-grow p-2 text-sm rounded-xl bg-gray-700 text-white border border-gray-600 placeholder-gray-400 focus:ring-yellow-500 focus:border-yellow-500">
             <button id="redeem-button" class="py-2 px-4 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-xl shadow transition duration-200">
                 Redeem
@@ -290,14 +290,20 @@
     const redeemButton = document.getElementById('redeem-button');
     const redeemMessage = document.getElementById('redeem-message');
 
-    const CORRECT_CODE = "FREE5"; // The code that grants 5 draws
+    // --- CODE CONSTANTS ---
+    // 1. Master list of unique, global single-use codes
+    const SINGLE_USE_CODES = [
+        "FIGFREE1", "FIGFREE2", "FIGFREE3", "FIGFREE4", "FIGFREE5",
+        "FIGFREE6", "FIGFREE7", "FIGFREE8", "FIGFREE9", "FIGFREE10"
+    ];
     const CODE_REFILL_AMOUNT = 5;
     
     // localStorage Keys
     const USER_ID_KEY = 'minifigure_user_id'; 
     const BASE_DRAW_COUNT_KEY = 'minifigure_draw_count_simple';
     const BASE_COLLECTION_KEY = 'minifigure_collection_list_v2'; 
-    const CODE_USED_KEY = 'minifigure_redeem_used_v1'; 
+    // This key now stores ALL codes used globally by any player
+    const GLOBAL_USED_CODES_KEY = 'minifigure_global_used_codes_v1'; 
     const INITIAL_DRAWS = 0; 
 
     // --- Utility Function to generate a unique placeholder URL for the onerror fallback ---
@@ -477,8 +483,7 @@
     }
     
     function resetCollection() {
-        // Also remove the used codes when collection is reset
-        localStorage.removeItem(`${USER_ID}_${CODE_USED_KEY}`); 
+        // NOTE: Does NOT reset the global redeem codes, as they are meant to be one-time use forever.
         
         collectedFigures = [];
         localStorage.removeItem(getCollectionKey());
@@ -569,36 +574,40 @@
         updateDrawCountUI(); 
     }
 
-    // --- New Function: Handle Code Redemption ---
+    // --- Updated Function: Handle Code Redemption ---
     function handleRedeem() {
         const code = redeemInput.value.trim().toUpperCase();
         
-        // Load used codes specific to this user ID
-        const usedCodes = JSON.parse(localStorage.getItem(`${USER_ID}_${CODE_USED_KEY}`) || '[]');
+        // 1. Load the list of codes that have been used globally
+        const usedCodes = JSON.parse(localStorage.getItem(GLOBAL_USED_CODES_KEY) || '[]');
         
-        // Check if code has already been used by this user
-        if (usedCodes.includes(code)) {
-            redeemMessage.textContent = "❌ Code already redeemed!";
-            redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
-            redeemInput.value = '';
-            return;
-        }
+        // 2. Check if the code is a valid, single-use code
+        const isValidCode = SINGLE_USE_CODES.includes(code);
 
-        if (code === CORRECT_CODE) {
+        // 3. Check if the code has been used before
+        const isAlreadyUsed = usedCodes.includes(code);
+        
+        // Clear previous message
+        redeemMessage.textContent = '';
+
+        if (!isValidCode) {
+            redeemMessage.textContent = "❌ Invalid Code!";
+            redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
+        } else if (isAlreadyUsed) {
+            redeemMessage.textContent = "❌ Code already used globally!";
+            redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
+        } else {
+            // Successful redemption!
             updateDrawCount(currentDraws + CODE_REFILL_AMOUNT);
             redeemMessage.textContent = `✅ Success! Added ${CODE_REFILL_AMOUNT} draws.`;
             redeemMessage.className = "text-xs text-center mt-1 h-4 text-green-500 font-semibold";
             
-            // Mark the code as used for this user
+            // 4. Mark the code as used globally
             usedCodes.push(code);
-            localStorage.setItem(`${USER_ID}_${CODE_USED_KEY}`, JSON.stringify(usedCodes));
+            localStorage.setItem(GLOBAL_USED_CODES_KEY, JSON.stringify(usedCodes));
             
             // Clear input after success
             redeemInput.value = ''; 
-
-        } else {
-            redeemMessage.textContent = "❌ Invalid Code!";
-            redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
         }
         
         // Clear message after a few seconds
@@ -607,7 +616,7 @@
         }, 3000);
     }
 
-    // --- Main Draw Logic ---
+    // --- Main Draw Logic (No changes needed here) ---
 
     function displayDrawResults(results) {
         if(initialMessage) initialMessage.remove(); 
