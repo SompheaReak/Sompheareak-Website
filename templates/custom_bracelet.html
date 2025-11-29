@@ -34,9 +34,7 @@
     .total-box p { font-size:18px; font-weight:bold; margin:5px 0; }
     .action-buttons { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
 
-    /* New/Updated Button Styles */
-    .screenshot-btn { background:#28a745; color:white; border:none; padding:10px 18px; border-radius:8px; font-size:16px; cursor:pointer; }
-    
+    /* Updated Button Styles (Screenshot button removed) */
     .add-recommended-btn { background:#ff9800; color:white; border:none; padding:10px 18px; border-radius:8px; font-size:16px; cursor:pointer; transition:0.2s; }
     .add-recommended-btn:hover { background:#e68900; transform:scale(1.05); }
 
@@ -54,10 +52,10 @@
         background: #0056b3;
         transform: scale(1.05);
     }
-    /* End New/Updated Button Styles */
+    /* End Updated Button Styles */
 
 
-    /* Category grid */
+    /* Category grid (5 per row on wide screens, responsive) */
     .category-gallery { 
         display:grid; 
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
@@ -66,7 +64,7 @@
         max-width: 900px; 
         width: 90%; 
         margin:0 auto; 
-        justify-content: center; /* Ensures categories are centered within their container */
+        justify-content: center; 
     }
     .category-item { 
         background:white; 
@@ -116,10 +114,12 @@
         left: 0; 
         transform: none; 
     }
-    /* Charm Grid inside Modal - SMALLER IMAGES for Selection (Fixed) */
+    
+    /* Charm Grid inside Modal - Set to max 6 per row */
     .charm-grid { 
         display:grid; 
-        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Adjusted for smaller charm tiles */
+        /* Updated: ensures charms are around 80px wide, fitting up to 6 on a wide screen */
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
         gap: 15px; 
     }
     
@@ -174,9 +174,9 @@
     <div id="bracelet-preview">Your charms will appear here...</div>
 
     <div class="total-box">
-      <p>Total: <span id="totalPrice">0៛</span></p>
+      <p>Total Charms: <span id="totalCharms">0</span></p>
+      <p>Total Price: <span id="totalPrice">0៛</span></p>
       <div class="action-buttons">
-        <button class="screenshot-btn" id="screenshotBtn">📸 Save Design (Screenshot)</button>
         <button class="add-to-cart-btn" id="addToCartBtn">🛍️ Add to Cart</button>
         <button class="add-recommended-btn" id="recommendedBtn">✨ Add Recommended Charm</button>
       </div>
@@ -198,14 +198,14 @@
     // DOM refs
     const preview = document.getElementById('bracelet-preview');
     const totalPrice = document.getElementById('totalPrice');
+    const totalCharms = document.getElementById('totalCharms'); // New reference
     const categoryGallery = document.getElementById('categoryGallery');
     const charmModal = document.getElementById('charmModal');
     const charmGrid = document.getElementById('charmGrid');
     const modalTitle = document.getElementById('modalTitle');
     const closeModalBtn = document.getElementById('closeModalBtn');
-    const screenshotBtn = document.getElementById('screenshotBtn');
     const recommendedBtn = document.getElementById('recommendedBtn');
-    const addToCartBtn = document.getElementById('addToCartBtn'); // New reference
+    const addToCartBtn = document.getElementById('addToCartBtn'); 
 
     let charms = []; // current preview charms
 
@@ -366,7 +366,7 @@
     {"id": 234511, "name_kh": "Letter Charm K", "price": 1200, "image": "/static/images/k.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
     {"id": 234512, "name_kh": "Letter Charm L", "price": 1200, "image": "/static/images/l.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
     {"id": 234513, "name_kh": "Letter Charm M", "price": 1200, "image": "/static/images/m.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 234514, "name_kh": "Letter Charm N", "price": 1200, "image": "/static/images/n.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 234514, "name_kh": "Letter Charm N", "price": 1200, "image": "/static/images/np.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
     {"id": 234515, "name_kh": "Letter Charm O", "price": 1200, "image": "/static/images/o.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
     {"id": 234516, "name_kh": "Letter Charm P", "price": 1200, "image": "/static/images/p.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
     {"id": 234517, "name_kh": "Letter Charm Q", "price": 1200, "image": "/static/images/q.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
@@ -486,9 +486,12 @@
     // Renders the bracelet preview and total price
     function renderBracelet() {
       preview.innerHTML = '';
-      if (charms.length === 0) {
+      const charmCount = charms.length;
+
+      if (charmCount === 0) {
         preview.textContent = 'Your charms will appear here...';
         totalPrice.textContent = '0៛';
+        totalCharms.textContent = '0'; // Update total charms
         return;
       }
 
@@ -509,6 +512,7 @@
       });
 
       totalPrice.textContent = total.toLocaleString() + '៛';
+      totalCharms.textContent = charmCount; // Update total charms
     }
 
     // Add / remove / move
@@ -536,7 +540,7 @@
       }
     }
 
-    // --- New Functionality ---
+    // Add to Cart Functionality
     function addToCart() {
         if (charms.length === 0) {
             alert('Please add at least one charm to your bracelet before adding it to the cart!');
@@ -559,12 +563,7 @@
         // --- End Simulated Cart Action ---
 
         alert(`✅ Successfully added a Custom Bracelet with ${itemCount} charms for ${total.toLocaleString()}៛ to your cart!`);
-        
-        // Optional: Clear the design after adding to cart
-        // charms = []; 
-        // renderBracelet();
     }
-    // --- End New Functionality ---
 
     // helper to escape text for safe insertion
     function escapeHtml(str) {
@@ -578,7 +577,7 @@
 
     // --- Event Listeners ---
 
-    // FIX 1: EVENT DELEGATION SETUP (Handles clicks on dynamically rendered charm controls)
+    // FIX: EVENT DELEGATION SETUP (Handles clicks on dynamically rendered charm controls)
     preview.addEventListener('click', (e) => {
         const target = e.target;
         // Check if the clicked element is one of the control buttons
@@ -607,23 +606,13 @@
       }
     });
 
-    screenshotBtn.addEventListener('click', () => {
-      const element = document.getElementById('previewBox');
-      html2canvas(element).then(canvas => {
-        const link = document.createElement('a');
-        link.download = 'bracelet_design.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      });
-    });
-
     recommendedBtn.addEventListener('click', () => {
       if (allCharms.length === 0) return;
       const random = allCharms[Math.floor(Math.random()*allCharms.length)];
       addCharm(random.image, random.name_kh, random.price);
     });
 
-    addToCartBtn.addEventListener('click', addToCart); // New listener for Add to Cart
+    addToCartBtn.addEventListener('click', addToCart);
 
     closeModalBtn.addEventListener('click', closeCharmModal);
     charmModal.addEventListener('click', (e) => {
