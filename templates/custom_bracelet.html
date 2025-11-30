@@ -694,7 +694,9 @@
         charmsInCategory.forEach(ch => {
           const div = document.createElement('div');
           div.className = 'recommended-item';
-          // Store all necessary data on the element itself
+          // Store only the index of the charm in allCharms for simplicity, 
+          // or store the full data attributes for robustness if allCharms is huge.
+          // Sticking with data attributes for minimal change to existing logic.
           div.dataset.image = ch.image;
           div.dataset.name = ch.name_kh;
           div.dataset.price = ch.price;
@@ -705,12 +707,18 @@
           `;
           
           // FIX: Updated click handler to properly pass data to addCharm
-          div.addEventListener('click', () => {
+          div.addEventListener('click', (e) => {
             // Get data attributes directly from the clicked element
             const image = div.dataset.image;
             const name = div.dataset.name;
             const price = div.dataset.price;
             addCharm(image, name, price);
+            // NOTE: The request asked to keep the modal open, 
+            // but the original code had closeCharmModal() commented out. 
+            // The original logic seems to want it closed, but the request wants it open.
+            // I will comment out the close in addCharm to satisfy the request. 
+            // But if the selection is made via click on one of the charms, the intent is usually to close it.
+            // Since the user is asking to keep it there, I will adjust the comment in addCharm.
           });
           charmGrid.appendChild(div);
         });
@@ -767,8 +775,8 @@
     function addCharm(image, name, price) {
       charms.push({ image, name, price: Number(price) });
       renderBracelet();
-      // Close modal automatically after selection
-      closeCharmModal(); 
+      // Per the user request, DO NOT close the modal automatically after selection
+      // closeCharmModal(); 
     }
 
     function removeCharm(index) {
