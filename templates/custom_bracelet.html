@@ -14,6 +14,8 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        /* Ensure no body padding/margin causes scrollbar on the right */
+        overflow-x: hidden; 
     }
     .header { 
         position: sticky; 
@@ -26,8 +28,9 @@
         box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
         z-index: 1000; 
         width: 100%; 
-        flex-wrap: wrap; /* Allow items to wrap on smaller screens */
-        gap: 10px; /* Space between header items */
+        flex-wrap: wrap; 
+        gap: 10px; 
+        box-sizing: border-box; /* Ensures padding is included in the width */
     }
     .back-home { 
         background: #007bff; 
@@ -41,14 +44,14 @@
 
     /* GIF Style */
     .header-gif {
-        max-height: 50px; /* Adjust as needed */
+        max-height: 50px; 
         width: auto;
-        margin: 0 10px; /* Space around the GIF */
+        margin: 0 10px; 
     }
 
 
     .preview-box { position: sticky; top: 60px; background: #fff; border: 2px solid #ddd; border-radius: 12px; margin: 20px auto; padding: 20px; width: 90%; max-width: 900px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .preview-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap: wrap; gap: 10px; } /* Wrap for mobile */
+    .preview-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap: wrap; gap: 10px; } 
     .cancel-btn { background: #ff4c4c; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer; }
     #bracelet-preview { display:flex; justify-content:flex-start; align-items:flex-start; overflow-x:auto; gap:5px; padding:10px; min-height:160px; }
     .bracelet-charm { position:relative; margin:0; }
@@ -83,15 +86,16 @@
     /* End Button Styles */
 
 
-    /* Category gallery - Mobile Friendly */
+    /* --- CATEGORY GALLERY: STICK TO EDGES --- */
     .category-gallery { 
         display:grid; 
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Min size 140px, adjust columns */
-        gap:20px; 
-        padding:20px;
-        max-width: 900px; 
-        width: 90%; 
-        margin:0 auto; 
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+        gap: 10px; /* Reduced gap slightly for compact look */
+        padding: 10px; /* Padding for internal spacing */
+        width: 100%; /* Take full width */
+        max-width: 100%; /* Ensure no max limit */
+        margin: 0; /* Remove horizontal margin */
+        box-sizing: border-box; /* Include padding in the 100% width */
         justify-content: center; 
     }
     .category-item { 
@@ -129,7 +133,7 @@
     }
     .modal-content { 
         background:white; 
-        padding:20px; 
+        padding: 15px 0 0 0; /* Remove horizontal padding here */
         border-radius:10px 10px 0 0; 
         width: 100%; 
         max-width: none; 
@@ -143,13 +147,16 @@
         transform: none; 
     }
     
-    /* Charm Grid inside Modal - Mobile Friendly (5 per row on wide screens) */
+    /* --- CHARM GRID: STICK TO EDGES (uses padding only from the item itself) --- */
     .charm-grid { 
         display:grid; 
         grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
-        max-width: 500px; /* Still constrain for large screens */
-        margin: 0 auto;
-        gap: 15px; 
+        max-width: 100%; /* No max width */
+        width: 100%; /* Full width */
+        margin: 0; /* Remove margin */
+        padding: 10px; /* Add padding here for internal spacing from edges */
+        box-sizing: border-box;
+        gap: 10px; /* Reduced gap slightly */
     }
     
     .recommended-item { 
@@ -189,26 +196,26 @@
     /* Media Queries for Mobile Responsiveness */
     @media (max-width: 768px) {
         .header {
-            flex-direction: column; /* Stack header items */
-            align-items: flex-start; /* Align to the left */
+            flex-direction: column; 
+            align-items: flex-start; 
             padding: 10px;
         }
         .header h3 {
-            order: 1; /* Place title below buttons */
+            order: 1; 
             width: 100%;
             text-align: center;
             margin-top: 10px;
         }
         .back-home {
-            order: 0; /* Keep back home first */
+            order: 0; 
         }
         .header-gif {
-            order: 2; /* Place GIF below title */
+            order: 2; 
             margin-top: 10px;
         }
         
         .preview-box {
-            top: 10px; /* Adjust sticky position for smaller screens */
+            top: 10px; 
             width: 95%;
             margin: 10px auto;
         }
@@ -217,38 +224,36 @@
             align-items: center;
         }
         .add-to-cart-btn, .add-recommended-btn {
-            width: 100%; /* Full width buttons on mobile */
+            width: 100%; 
         }
 
         .category-gallery {
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* 2-3 columns on mobile */
-            gap: 15px;
-            padding: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); /* Slightly smaller min width for mobile */
+            gap: 5px; /* Tighter spacing */
+            padding: 5px; /* Tighter padding */
         }
 
         .charm-grid {
-            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); /* 3-4 columns on mobile */
-            gap: 10px;
-            max-width: 100%; /* Allow grid to use full modal width on small screens */
-            padding-bottom: 50px; /* Prevent close button from overlapping last row */
+            grid-template-columns: repeat(auto-fit, minmax(65px, 1fr)); 
+            gap: 5px; 
+            padding: 10px 5px; /* Small horizontal padding */
         }
 
         .modal-content {
-            max-height: 75vh; /* Increase modal height on small screens */
-            padding: 15px;
+            max-height: 75vh; 
+            padding-bottom: 50px; /* Add space for close button */
         }
     }
 
     @media (max-width: 480px) {
         .category-gallery {
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* 2 columns on very small mobile */
-            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
         }
         .charm-grid {
-            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); /* 2-3 columns on very small mobile */
+            grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)); 
         }
         .bracelet-charm img {
-            width: 70px; /* Smaller charms in preview on very small screens */
+            width: 70px; 
             height: 120px;
         }
         .remove-btn {
@@ -427,18 +432,7 @@
     {"id": 2007, "name_kh": "Pink Charm 07", "price": 3000, "image": "/static/images/cp07.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
     {"id": 2008, "name_kh": "Pink Charm 08", "price": 3000, "image": "/static/images/cp08.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
     {"id": 2009, "name_kh": "Pink Charm 09", "price": 3000, "image": "/static/images/cp09.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
- // --- CuteCat
-   {"id": 11, "name_kh": "Pink Charm 01", "price": 3000, "image": "/static/images/charm-cutecat-01.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 12, "name_kh": "Pink Charm 02", "price": 3000, "image": "/static/images/charm-cutecat-02.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 13, "name_kh": "Pink Charm 03", "price": 3000, "image": "/static/images/charm-cutecat-03.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 14, "name_kh": "Pink Charm 04", "price": 3000, "image": "/static/images/charm-cutecat-04.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 15, "name_kh": "Pink Charm 05", "price": 3000, "image": "/static/images/charm-cutecat-05.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 16, "name_kh": "Pink Charm 06", "price": 3000, "image": "/static/images/charm-cutecat-06.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 17, "name_kh": "Pink Charm 07", "price": 3000, "image": "/static/images/charm-cutecat-07.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 18, "name_kh": "Pink Charm 08", "price": 3000, "image": "/static/images/charm-cutecat-08.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 19, "name_kh": "Pink Charm 09", "price": 3000, "image": "/static/images/charm-cutecat-09.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 20, "name_kh": "Pink Charm 01", "price": 3000, "image": "/static/images/charm-cutecat-10.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-
+ 
       // --- PINK LETTERS (ap - zp) ---
     {"id": 1234501, "name_kh": "Pink Letter Charm A", "price": 1200, "image": "/static/images/ap.jpg", "categories": ["Pink Letter"], "subcategory": ["All","Football"], "discount": 20},
     {"id": 1234502, "name_kh": "Pink Letter Charm B", "price": 1200, "image": "/static/images/bp.jpg", "categories": ["Pink Letter"], "subcategory": ["Flag","Football"], "discount": 20},
