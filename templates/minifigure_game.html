@@ -479,9 +479,15 @@
             console.error("Firebase Initialization Error:", error);
             // Handling the specific error from the screenshot for better user feedback
             if (error.message.includes('projectId') || JSON.stringify(error).includes('projectId')) {
+                // Keep the error message visible but allow the user to select a category
                 authStatus.textContent = `❌ Initialization Error: Project config missing (projectId).`;
             } else {
                 authStatus.textContent = `Authentication Failed: ${error.message}`;
+            }
+             // Even if initialization failed, we can still show the modal, 
+             // but we rely on selectCategory not using IS_AUTH_READY flag.
+             if (!CATEGORY_ID) {
+                document.getElementById('category-modal').classList.remove('hidden');
             }
         }
     }
@@ -490,7 +496,10 @@
     // --- Category Selection Logic ---
     
     window.selectCategory = function(categoryId) {
-        if (!IS_AUTH_READY || IS_GAME_READY) return;
+        // FIX: Removed !IS_AUTH_READY guard. If Firebase initialization failed, 
+        // the button click was blocked. Now it proceeds, and Firebase-dependent 
+        // functions will handle the null 'db' variable gracefully.
+        if (IS_GAME_READY) return; 
 
         CATEGORY_ID = categoryId;
         
@@ -530,8 +539,13 @@
     // --- Firestore Realtime Listener ---
 
     function startFirestoreListener() {
-        if (!getDrawCollectionDocRef()) {
-            console.warn("Attempted to start listener before category or auth ready.");
+        // Check if Firestore is initialized. If not, default to 0 draws / empty collection.
+        if (!db || !getDrawCollectionDocRef()) {
+            console.warn("Firestore not initialized or category/auth not ready. Skipping real-time listener.");
+            currentDraws = INITIAL_DRAWS;
+            collectedFigures = [];
+            updateCollectionUI();
+            updateDrawCountUI();
             return;
         }
 
@@ -573,7 +587,8 @@
     async function updateDrawCount(newCount) {
         currentDraws = Math.max(0, newCount);
         const docRef = getDrawCollectionDocRef();
-        if (docRef) {
+        // Check if DB is available before attempting to write
+        if (docRef && db) { 
             await firebase.updateDoc(docRef, { 
                 draws: currentDraws,
                 lastUpdate: firebase.serverTimestamp()
@@ -593,7 +608,8 @@
             const newCollected = [...collectedFigures, figureUrl];
             const docRef = getDrawCollectionDocRef();
             
-            if (docRef) {
+            // Check if DB is available before attempting to write
+            if (docRef && db) { 
                 // The snapshot listener handles the real-time update of collectedFigures
                 await firebase.updateDoc(docRef, { 
                     collectedFigures: newCollected,
@@ -609,7 +625,8 @@
      */
     async function resetCollection() {
         const docRef = getDrawCollectionDocRef();
-        if (docRef) {
+        // Check if DB is available before attempting to write
+        if (docRef && db) { 
             await firebase.setDoc(docRef, { // Using setDoc to overwrite cleanly
                 collectedFigures: [],
                 draws: INITIAL_DRAWS,
@@ -818,8 +835,10 @@
     // --- Updated Function: Handle Code Redemption (Uses Firestore Transaction for Atomicity) ---
     async function handleRedeem() {
         // Check for Firebase initialization and game readiness
-        if (!IS_AUTH_READY || isLoading || !db || !CATEGORY_ID) {
-            redeemMessage.textContent = "App not ready or still loading.";
+        if (!db || !IS_AUTH_READY || isLoading || !CATEGORY_ID) {
+            redeemMessage.textContent = "App not ready or database is inaccessible.";
+            redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
+            setTimeout(() => { redeemMessage.textContent = ''; }, 3000);
             return;
         }
 
@@ -997,6 +1016,7 @@
         if(initialMessage) initialMessage.remove(); 
 
         // 1. Deduct draws first (triggers real-time UI update via onSnapshot)
+        // If DB is null, currentDraws is local and will be updated, but not saved.
         await updateDrawCount(currentDraws - count);
 
         resultArea.innerHTML = `
@@ -1015,7 +1035,8 @@
 
                 // 2. Check if it's new and save if it is
                 // We rely on saveCollection to update Firestore and the onSnapshot listener 
-                // to update the local collectedFigures array correctly.
+                // to update the local collectedFigures array correctly. If Firestore is down, 
+                // isNew check is based on the current in-memory collection.
                 const isNew = await saveCollection(drawnFigure.image_url);
 
                 // 3. Log the final result for display
