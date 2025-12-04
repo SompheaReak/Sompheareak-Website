@@ -5,9 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minifigure Mystery Draw</title>
     <script src="https://cdn.tailwindcss.com"></script> 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Bungee+Inline&family=Inter:wght@100..900&display=swap');
+    <link href="https://fonts.googleapis.com/css2?family=Bungee+Inline&family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
+        // Expose Firebase tools to the global scope for use in the script tag
+        window.firebase = {
+            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, 
+            getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, setLogLevel
+        };
+    </script>
+
+    <style>
+        /* CSS variables and animations remain the same */
         :root {
             --lego-yellow: #FFC300;
             --lego-red: #C80815;
@@ -18,7 +32,6 @@
             font-family: 'Inter', sans-serif;
         }
 
-        /* Keyframes for the shaking/loading animation */
         @keyframes shake {
             0% { transform: translate(1px, 1px) rotate(0deg); }
             10% { transform: translate(-2px, -3px) rotate(-1deg); }
@@ -40,9 +53,7 @@
             border-color: #fefefe !important;
         }
 
-        /* Styles for individual result cards within the multi-draw */
         .result-card {
-            /* Animation for pop-in effect */
             transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
             transform: scale(0.7);
             opacity: 0;
@@ -53,11 +64,12 @@
             to { transform: scale(1); opacity: 1; }
         }
 
-        /* Custom style for the rarity badge background */
+        /* Rarity Styles */
         .rarity-common { background-color: #3b82f6; color: white; } 
         .rarity-rare { background-color: #fbbf24; color: #333; } 
         .rarity-super-rare { background-color: #ef4444; color: white; } 
         .rarity-ultra-rare { background-color: #a855f7; color: white; } 
+        
         .new-badge {
             background-color: #10b981; /* Emerald-500 */
             color: white;
@@ -85,7 +97,6 @@
             cursor: not-allowed;
         }
         
-        /* Styles for the Collection grid items */
         .collection-item {
             cursor: pointer;
             transition: transform 0.1s;
@@ -103,7 +114,7 @@
             opacity: 0.6;
             border: 2px dashed #4B5563;
             position: relative;
-            cursor: default; /* Not clickable */
+            cursor: default;
         }
         .missing:after {
             content: '??';
@@ -116,6 +127,15 @@
             color: var(--lego-yellow);
             text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
         }
+
+        /* Modal specific styles */
+        .category-button {
+            transition: all 0.2s;
+        }
+        .category-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen bg-gray-900 flex flex-col items-center">
@@ -127,7 +147,8 @@
         Back to Home
     </a>
     
-    <div id="minifigure-app" class="w-full max-w-sm bg-gray-800 border-4 border-yellow-500 shadow-2xl p-6 rounded-xl relative overflow-hidden">
+    <!-- Main App Container -->
+    <div id="minifigure-app" class="w-full max-w-sm bg-gray-800 border-4 border-yellow-500 shadow-2xl p-6 rounded-xl relative overflow-hidden hidden">
         
         <div class="flex justify-center items-center mb-4">
             <h1 class="text-3xl font-black text-yellow-500 text-center uppercase tracking-wider font-['Bungee_Inline'] drop-shadow-lg shadow-black/50">
@@ -135,28 +156,29 @@
             </h1>
         </div>
         
-        <audio id="bgm" autoplay loop>
-            <source src="static/sounds/RPReplay_Final1763010968.mov" type="audio/mpeg">
-            Your browser does not support the audio element.
-        </audio>
-
+        <!-- Category Selector Display -->
+        <div id="category-display" class="mb-4 p-2 rounded-lg bg-red-800 shadow-inner border border-red-700 text-center">
+            <span class="text-sm font-semibold text-gray-200">Current Collection:</span>
+            <code id="current-category" class="text-xl font-mono font-extrabold text-yellow-300 block tracking-widest">...</code>
+        </div>
+        
         <div class="mb-4 p-2 rounded-lg bg-gray-700 shadow-inner border border-gray-600 text-center">
             <span class="text-sm font-semibold text-gray-300">Your Player ID:</span>
-            <code id="user-id-display" class="text-3xl font-mono font-extrabold text-red-400 block tracking-widest">...</code>
+            <code id="user-id-display" class="text-xl font-mono font-extrabold text-red-400 block tracking-widest">...</code>
         </div>
 
         <div class="flex justify-between items-center mb-4 p-3 rounded-lg bg-gray-700 shadow-inner border border-gray-600">
             <span class="text-lg font-semibold text-gray-300">Draws Available:</span>
-            <span id="draw-count" class="text-3xl font-extrabold text-yellow-500 drop-shadow-lg">...</span>
+            <span id="draw-count" class="text-3xl font-extrabold text-yellow-500 drop-shadow-lg">0</span>
         </div>
         
         <div id="datetime-display" class="mb-6 p-2 text-center rounded-lg bg-gray-700 border border-gray-600">
-            </div>
+        </div>
 
         <div id="result-area" class="mt-4 min-h-[150px] flex items-center justify-center border-2 border-dashed border-gray-700 rounded-lg p-2">
             <div id="initial-message" class="text-center p-4 text-gray-400">
                 <p class="mb-2 text-lg font-semibold text-yellow-500">Welcome, Player!</p>
-                <p class="text-sm">Use a redeem code (e.g., **FIGFREE1**) to get draws and start collecting.</p>
+                <p class="text-sm">Use a redeem code (e.g., **FIGFREEA1**) to get draws and start collecting.</p>
             </div>
         </div>
 
@@ -170,7 +192,7 @@
         </div>
 
         <div class="mt-4 flex space-x-2">
-            <input type="text" id="redeem-input" placeholder="Enter redeem code (e.g., FIGFREE1)" 
+            <input type="text" id="redeem-input" placeholder="Enter redeem code (e.g., FIGFREEA1)" 
                    class="flex-grow p-2 text-sm rounded-xl bg-gray-700 text-white border border-gray-600 placeholder-gray-400 focus:ring-yellow-500 focus:border-yellow-500">
             <button id="redeem-button" class="py-2 px-4 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-xl shadow transition duration-200">
                 Redeem
@@ -178,41 +200,69 @@
         </div>
         <p id="redeem-message" class="text-xs text-center mt-1 h-4"></p>
         <button id="reset-collection-button" class="w-full py-2 text-xs font-semibold bg-red-800 hover:bg-red-700 text-white rounded-xl shadow transition duration-200 mt-2 border border-red-700">
-            [DEMO MODE] Reset Collection
+            [DEMO MODE] Reset Current Collection
         </button>
     </div>
     
-    <div class="w-full max-w-sm mt-8 p-4 bg-gray-800 rounded-xl border border-gray-700 shadow-lg">
+    <!-- Collection List -->
+    <div id="collection-app" class="w-full max-w-sm mt-8 p-4 bg-gray-800 rounded-xl border border-gray-700 shadow-lg hidden">
         <h2 class="text-xl font-bold text-yellow-500 mb-3 border-b border-yellow-500 pb-2 flex justify-between items-center">
-            <span>Your Collection</span>
+            <span>Collection: <span id="collection-name">...</span></span>
             <span class="text-lg font-mono text-white">
                 (<span id="collected-count">0</span> / <span id="total-count">0</span>)
             </span>
         </h2>
         <div id="collection-list" class="grid grid-cols-6 gap-1">
-            </div>
+        </div>
     </div>
-</div>
 
-<div id="figure-modal" class="hidden fixed inset-0 z-50 bg-gray-900 bg-opacity-95 flex items-center justify-center p-4" onclick="document.getElementById('figure-modal').classList.add('hidden')">
-    <div class="bg-gray-800 p-6 rounded-xl border-4 border-yellow-500 shadow-2xl max-w-xs sm:max-w-sm w-full relative" onclick="event.stopPropagation()">
-        <button onclick="document.getElementById('figure-modal').classList.add('hidden')" class="absolute top-2 right-2 text-white bg-red-600 rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold hover:bg-red-700 transition">
-            &times;
-        </button>
-        <h3 id="modal-title" class="2xl font-bold text-yellow-500 mb-4 text-center"></h3>
-        <div class="aspect-square w-full bg-gray-700 rounded-lg overflow-hidden border-4 border-gray-600">
-            <img id="modal-image" src="" alt="" class="w-full h-full object-contain">
-        </div>
-        <div class="mt-4 text-center">
-             <span id="modal-rarity" class="px-4 py-1 text-sm font-bold rounded-full text-gray-900 shadow-md"></span>
+    <!-- Figure Details Modal -->
+    <div id="figure-modal" class="hidden fixed inset-0 z-50 bg-gray-900 bg-opacity-95 flex items-center justify-center p-4" onclick="document.getElementById('figure-modal').classList.add('hidden')">
+        <div class="bg-gray-800 p-6 rounded-xl border-4 border-yellow-500 shadow-2xl max-w-xs sm:max-w-sm w-full relative" onclick="event.stopPropagation()">
+            <button onclick="document.getElementById('figure-modal').classList.add('hidden')" class="absolute top-2 right-2 text-white bg-red-600 rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold hover:bg-red-700 transition">
+                &times;
+            </button>
+            <h3 id="modal-title" class="2xl font-bold text-yellow-500 mb-4 text-center"></h3>
+            <div class="aspect-square w-full bg-gray-700 rounded-lg overflow-hidden border-4 border-gray-600">
+                <img id="modal-image" src="" alt="" class="w-full h-full object-contain">
+            </div>
+            <div class="mt-4 text-center">
+                <span id="modal-rarity" class="px-4 py-1 text-sm font-bold rounded-full text-gray-900 shadow-md"></span>
+            </div>
         </div>
     </div>
-</div>
+
+    <!-- Category Selection Modal (Initial Load) -->
+    <div id="category-modal" class="fixed inset-0 z-50 bg-gray-900 bg-opacity-90 flex items-center justify-center p-4">
+        <div class="bg-gray-800 p-8 rounded-xl border-4 border-red-600 shadow-2xl max-w-lg w-full relative text-center">
+            <h2 class="text-3xl font-black text-red-400 mb-6 font-['Bungee_Inline']">Choose Your Collection!</h2>
+            <p class="text-gray-300 mb-6 text-sm">Your draws and collection are separate for each category.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Category A: Pop Culture -->
+                <button onclick="selectCategory('A')" 
+                        class="category-button bg-blue-600 text-white p-6 rounded-xl font-bold text-lg hover:bg-blue-700">
+                    <p class="text-xl mb-2">Category A: Pop Culture</p>
+                    <p class="text-sm font-normal opacity-90">(Avengers, Spidey, Anime, Godzilla, etc.)</p>
+                </button>
+                
+                <!-- Category B: Ninjago -->
+                <button onclick="selectCategory('B')" 
+                        class="category-button bg-green-600 text-white p-6 rounded-xl font-bold text-lg hover:bg-green-700">
+                    <p class="text-xl mb-2">Category B: Ninjago</p>
+                    <p class="text-sm font-normal opacity-90">(Classic Ninja Variants)</p>
+                </button>
+            </div>
+            <p id="auth-status" class="mt-6 text-yellow-500 font-semibold"></p>
+        </div>
+    </div>
 
 
 <script>
-    // --- 💥 CUSTOM MINIFIGURE WEIGHTS 💥 ---
-    const FIGURE_STRINGS = [ 
+    // --- 💥 CUSTOM MINIFIGURE DATASETS 💥 ---
+
+    const NINJAGO_FIGURE_STRINGS = [ 
+        // Existing user data (Category B)
         // Kai variants (Red color theme)
      'name:"Kai (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-01.jpg"',
      'name:"Zane (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-02.jpg"',
@@ -262,18 +312,56 @@
      'name:"Cole (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-74.jpg"',
      'name:"Lloyd (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-75.jpg"',
      'name:"Pixal (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-76.jpg"',
+    ];
 
-       ];
-    // ----------------------------------------
-    
-    // Global state
-    let MINIFIGURES = [];
-    let currentDraws = 0;
-    let isLoading = false;
-    let collectedFigures = []; 
+    const POP_CULTURE_FIGURE_STRINGS = [
+        // New mock data for Category A
+        'name:"Iron Man (Mk 50)", rarity:"Common", weight:80, color:"red-600", image_url:"https://placehold.co/96x96/C80815/FFC300?text=IRONMAN"',
+        'name:"Captain America (Endgame)", rarity:"Rare", weight:60, color:"blue-600", image_url:"https://placehold.co/96x96/2563EB/ffffff?text=CAPTAIN"',
+        'name:"Spider-Man (Black Suit)", rarity:"Rare", weight:60, color:"gray-700", image_url:"https://placehold.co/96x96/374151/C80815?text=SPIDEY"',
+        'name:"Goku (Super Saiyan)", rarity:"Super Rare", weight:40, color:"orange-500", image_url:"https://placehold.co/96x96/F97316/ffffff?text=GOKU"',
+        'name:"Godzilla (Atomic)", rarity:"Ultra Rare", weight:10, color:"purple-600", image_url:"https://placehold.co/96x96/9333EA/ffffff?text=GODZILLA"',
+        'name:"Black Widow (Tactical)", rarity:"Common", weight:80, color:"gray-700", image_url:"https://placehold.co/96x96/374151/C80815?text=WIDOW"',
+        'name:"Thor (Stormbreaker)", rarity:"Common", weight:80, color:"yellow-500", image_url:"https://placehold.co/96x96/FBBF24/333333?text=THOR"',
+        'name:"Thanos (Full Armor)", rarity:"Super Rare", weight:40, color:"purple-600", image_url:"https://placehold.co/96x96/9333EA/ffffff?text=THANOS"',
+        'name:"Hulk (Smash)", rarity:"Rare", weight:60, color:"green-500", image_url:"https://placehold.co/96x96/22C55E/ffffff?text=HULK"',
+        'name:"Vegeta (Majin)", rarity:"Ultra Rare", weight:10, color:"blue-600", image_url:"https://placehold.co/96x96/2563EB/ffffff?text=VEGETA"',
+        'name:"Wonder Woman (Gold Armor)", rarity:"Ultra Rare", weight:10, color:"yellow-500", image_url:"https://placehold.co/96x96/FBBF24/333333?text=WW"',
+        'name:"Groot (Tiny)", rarity:"Common", weight:80, color:"green-500", image_url:"https://placehold.co/96x96/22C55E/ffffff?text=GROOT"',
+        'name:"Batman (The Dark Knight)", rarity:"Rare", weight:60, color:"gray-700", image_url:"https://placehold.co/96x96/374151/ffffff?text=BATMAN"',
+        'name:"Joker (Clown Prince)", rarity:"Super Rare", weight:40, color:"purple-600", image_url:"https://placehold.co/96x96/9333EA/ffffff?text=JOKER"',
+        'name:"Master Chief (Halo)", rarity:"Ultra Rare", weight:10, color:"green-500", image_url:"https://placehold.co/96x96/22C55E/ffffff?text=MC"',
+    ];
+
+    // --- Redeem Codes are now Category Specific ---
+    const CODE_REFILL_AMOUNT = 5;
+    const POP_CULTURE_CODES = ["FREEA1", "FREEA2", "FREEMARVEL", "FREEANIME", "FREEGODZ"];
+    const NINJAGO_CODES = ["FREEB1", "FREEB2", "FREENINJA", "FREEDX", "FREELLOYD"];
+
+
+    // --- GLOBAL STATE ---
+    let db, auth;
+    let APP_ID; 
     let USER_ID = null; 
+    let IS_AUTH_READY = false;
+    let IS_GAME_READY = false; 
 
-    // UI Elements
+    let CATEGORY_ID = null; // 'A' or 'B'
+    let MINIFIGURES = [];
+    let SINGLE_USE_CODES = [];
+    let currentDraws = 0;
+    let collectedFigures = []; 
+    let isLoading = false;
+
+    // --- FIRESTORE CONSTANTS ---
+    const BASE_COLLECTION_NAME = 'game_state'; 
+    const GLOBAL_CODES_COLLECTION = 'redeem_codes';
+    const GLOBAL_CODES_DOC = 'used_codes';
+    const INITIAL_DRAWS = 0; 
+
+    // --- UI Elements ---
+    const appContainer = document.getElementById('minifigure-app');
+    const collectionAppContainer = document.getElementById('collection-app');
     const drawCountElement = document.getElementById('draw-count');
     const draw1xButton = document.getElementById('draw-1x-button'); 
     const draw5xButton = document.getElementById('draw-5x-button');
@@ -284,76 +372,231 @@
     const totalCountElement = document.getElementById('total-count');
     const initialMessage = document.getElementById('initial-message');
     const userIdDisplay = document.getElementById('user-id-display');
-    
-    // New Redeem Code UI Elements and Constants
+    const currentCategoryDisplay = document.getElementById('current-category');
+    const collectionNameDisplay = document.getElementById('collection-name');
+
     const redeemInput = document.getElementById('redeem-input');
     const redeemButton = document.getElementById('redeem-button');
     const redeemMessage = document.getElementById('redeem-message');
+    const authStatus = document.getElementById('auth-status');
 
-    // --- CODE CONSTANTS ---
-    // 1. Master list of unique, global single-use codes (UPDATED TO 10 CODES)
-    const SINGLE_USE_CODES = [
-        "FREE1", "FREE2", "c", "d", "e",
-        "f", "g", "h", "i", "j"
-    ];
-    const CODE_REFILL_AMOUNT = 5;
+
+    // --- FIRESTORE PATH UTILITIES ---
+
+    function getDrawCollectionDocRef() {
+        if (!db || !USER_ID || !CATEGORY_ID) return null;
+        // Private Data Path: /artifacts/{appId}/users/{userId}/game_state/category_A
+        return firebase.doc(db, 'artifacts', APP_ID, 'users', USER_ID, BASE_COLLECTION_NAME, `category_${CATEGORY_ID}`);
+    }
+
+    function getGlobalCodesDocRef() {
+        if (!db) return null;
+        // Public Data Path: /artifacts/{appId}/public/data/redeem_codes/used_codes
+        return firebase.doc(db, 'artifacts', APP_ID, 'public', 'data', GLOBAL_CODES_COLLECTION, GLOBAL_CODES_DOC);
+    }
     
-    // localStorage Keys
-    const USER_ID_KEY = 'minifigure_user_id'; 
-    const BASE_DRAW_COUNT_KEY = 'minifigure_draw_count_simple';
-    const BASE_COLLECTION_KEY = 'minifigure_collection_list_v2'; 
-    // This key now stores ALL codes used globally by any player
-    const GLOBAL_USED_CODES_KEY = 'minifigure_global_used_codes_v1'; 
-    const INITIAL_DRAWS = 0; 
+    // --- Initial Setup & Auth ---
 
-    // --- Utility Function to generate a unique placeholder URL for the onerror fallback ---
-    function getPlaceholderUrl(figure) {
-        let bgColor;
-        let fgColor = 'ffffff'; 
-        switch (figure.color) {
-            case 'red-600': bgColor = 'DC2626'; break; 
-            case 'sky-400': bgColor = '38BDF8'; fgColor = '333333'; break; 
-            case 'blue-600': bgColor = '2563EB'; break; 
-            case 'gray-700': bgColor = '374151'; break; 
-            case 'green-500': bgColor = '22C55E'; break; 
-            case 'purple-600': bgColor = '9333EA'; break; 
-            default: bgColor = '6B7280'; break; 
+    async function setupFirebase() {
+        try {
+            // 1. Get Global Variables
+            APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            
+            // Debugging
+            firebase.setLogLevel('Debug');
+            authStatus.textContent = "Initializing Firebase...";
+
+            // 2. Initialize App and Services
+            const app = firebase.initializeApp(firebaseConfig);
+            db = firebase.getFirestore(app);
+            auth = firebase.getAuth(app);
+            
+            // 3. Authenticate User
+            authStatus.textContent = "Authenticating...";
+            if (initialAuthToken) {
+                await firebase.signInWithCustomToken(auth, initialAuthToken);
+            } else {
+                await firebase.signInAnonymously(auth);
+            }
+
+            // 4. Set up Auth Listener
+            firebase.onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    USER_ID = user.uid;
+                    IS_AUTH_READY = true;
+                    userIdDisplay.textContent = USER_ID;
+                    authStatus.textContent = `Authenticated as: ${USER_ID}`;
+                    
+                    // Show category modal only once auth is done
+                    if (!CATEGORY_ID) {
+                        document.getElementById('category-modal').classList.remove('hidden');
+                    }
+                    
+                } else {
+                    // This handles anonymous sign-in failure or sign-out (unlikely here)
+                    console.warn("User is not authenticated. Some features may not work.");
+                    USER_ID = crypto.randomUUID(); // Fallback ID
+                    userIdDisplay.textContent = USER_ID;
+                }
+            });
+        } catch (error) {
+            console.error("Firebase Initialization Error:", error);
+            authStatus.textContent = `Authentication Failed: ${error.message}`;
+        }
+    }
+
+
+    // --- Category Selection Logic ---
+    
+    window.selectCategory = function(categoryId) {
+        if (!IS_AUTH_READY) {
+            console.error("Cannot select category, authentication not ready.");
+            return;
+        }
+
+        CATEGORY_ID = categoryId;
+        
+        // 1. Set game data based on category
+        if (CATEGORY_ID === 'B') {
+            MINIFIGURES = NINJAGO_FIGURE_STRINGS.map(parseFigureString);
+            SINGLE_USE_CODES = NINJAGO_CODES;
+            currentCategoryDisplay.textContent = "CATEGORY B: NINJAGO";
+            collectionNameDisplay.textContent = "NINJAGO";
+            redeemInput.placeholder = "Enter redeem code (e.g., FREEB1)";
+        } else { // Default to A
+            MINIFIGURES = POP_CULTURE_FIGURE_STRINGS.map(parseFigureString);
+            SINGLE_USE_CODES = POP_CULTURE_CODES;
+            currentCategoryDisplay.textContent = "CATEGORY A: POP CULTURE";
+            collectionNameDisplay.textContent = "POP CULTURE";
+            redeemInput.placeholder = "Enter redeem code (e.g., FREEA1)";
+        }
+
+        // 2. Hide modal and show app UI
+        document.getElementById('category-modal').classList.add('hidden');
+        appContainer.classList.remove('hidden');
+        collectionAppContainer.classList.remove('hidden');
+        
+        // 3. Start Firestore listener for this category
+        startFirestoreListener();
+        
+        // 4. Update UI visuals
+        if (totalCountElement) {
+            totalCountElement.textContent = MINIFIGURES.length;
+        }
+
+        IS_GAME_READY = true;
+        updateDrawCountUI();
+    }
+
+
+    // --- Firestore Realtime Listener ---
+
+    function startFirestoreListener() {
+        if (!getDrawCollectionDocRef()) {
+            // Guard clause if auth/category isn't set yet.
+            setTimeout(startFirestoreListener, 100);
+            return;
+        }
+
+        const docRef = getDrawCollectionDocRef();
+        
+        firebase.onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                currentDraws = data.draws || INITIAL_DRAWS;
+                collectedFigures = data.collectedFigures || [];
+            } else {
+                // Initialize document if it doesn't exist
+                currentDraws = INITIAL_DRAWS;
+                collectedFigures = [];
+                firebase.setDoc(docRef, { 
+                    draws: INITIAL_DRAWS, 
+                    collectedFigures: [], 
+                    lastUpdate: firebase.serverTimestamp()
+                }).catch(e => console.error("Error initializing document:", e));
+            }
+
+            updateCollectionUI();
+            updateDrawCountUI();
+            authStatus.textContent = `Collection loaded for ${CATEGORY_ID}.`;
+
+        }, (error) => {
+            console.error("Firestore Snapshot Error:", error);
+            authStatus.textContent = `Data Sync Error: ${error.message}`;
+        });
+    }
+
+    // --- Core Data Management ---
+
+    async function updateDrawCount(newCount, updateUI = true) {
+        currentDraws = Math.max(0, newCount);
+        const docRef = getDrawCollectionDocRef();
+        if (docRef) {
+            await firebase.updateDoc(docRef, { 
+                draws: currentDraws,
+                lastUpdate: firebase.serverTimestamp()
+            }).catch(e => console.error("Error updating draw count:", e));
+        }
+        if (updateUI) updateDrawCountUI();
+    }
+    
+    async function saveCollection(figureUrl) {
+        const isNew = !collectedFigures.includes(figureUrl);
+        
+        if (isNew) {
+            const newCollected = [...collectedFigures, figureUrl];
+            const docRef = getDrawCollectionDocRef();
+            
+            if (docRef) {
+                await firebase.updateDoc(docRef, { 
+                    collectedFigures: newCollected,
+                    lastUpdate: firebase.serverTimestamp()
+                }).catch(e => console.error("Error saving collection:", e));
+            }
+        }
+        return isNew; 
+    }
+    
+    async function resetCollection() {
+        const docRef = getDrawCollectionDocRef();
+        if (docRef) {
+            await firebase.updateDoc(docRef, { 
+                collectedFigures: [],
+                draws: INITIAL_DRAWS,
+                lastUpdate: firebase.serverTimestamp()
+            }).catch(e => console.error("Error resetting collection:", e));
         }
         
-        const numberMatch = figure.image_url.match(/lucky-(\d+)\.jpg$/);
-        const numberCode = numberMatch ? numberMatch[1] : 'XX';
-        const baseName = figure.name.split(' ')[0].toUpperCase();
-
-        return `https://placehold.co/96x96/${bgColor}/${fgColor}?text=${baseName}|${numberCode}`;
+        resultArea.innerHTML = `
+            <div class="text-center p-4 text-gray-400">
+                <p class="mb-2 text-lg font-semibold text-red-500">Collection Reset!</p>
+                <p class="text-sm">All collected figures for ${CATEGORY_ID} cleared.</p>
+            </div>
+        `;
     }
 
-    // --- User ID Management (Simple 4-Digit ID) ---
-    function generateSimpleID() {
-        const num = Math.floor(Math.random() * 9999) + 1;
-        return String(num).padStart(4, '0');
+    // --- Utility Function to generate a unique placeholder URL ---
+    function getPlaceholderUrl(figure) {
+        const figureColorMap = {
+            'red-600': 'C80815',
+            'sky-400': '38BDF8',
+            'blue-600': '2563EB',
+            'gray-700': '374151',
+            'green-500': '22C55E',
+            'purple-600': '9333EA',
+            'yellow-500': 'FBBF24',
+            'orange-500': 'F97316',
+        };
+
+        let bgColor = figureColorMap[figure.color] || '6B7280';
+        let fgColor = figure.color === 'sky-400' || figure.color === 'yellow-500' ? '333333' : 'ffffff';
+        
+        const nameCode = figure.name.split(' ')[0].toUpperCase().substring(0, 5);
+        return `https://placehold.co/96x96/${bgColor}/${fgColor}?text=${nameCode}`;
     }
 
-    function getUserID() {
-        let id = localStorage.getItem(USER_ID_KEY);
-        if (!id) {
-            id = generateSimpleID();
-            localStorage.setItem(USER_ID_KEY, id);
-        }
-        USER_ID = id;
-        if (userIdDisplay) {
-            userIdDisplay.textContent = USER_ID;
-        }
-    }
-
-    function getDrawCountKey() {
-        return `${USER_ID}_${BASE_DRAW_COUNT_KEY}`;
-    }
-    
-    function getCollectionKey() {
-        return `${USER_ID}_${BASE_COLLECTION_KEY}`;
-    }
-
-    // --- Core Game Logic Utilities ---
     function parseFigureString(str) {
         const figure = {};
         const regex = /(\w+):"([^"]+)"/g; 
@@ -367,14 +610,7 @@
         }
         return figure;
     }
-    
-    function initializeMinifigures() {
-        MINIFIGURES = FIGURE_STRINGS.map(parseFigureString);
-        if (totalCountElement) {
-            totalCountElement.textContent = MINIFIGURES.length;
-        }
-    }
-    
+
     function weightedDraw() {
         const weightedList = [];
         MINIFIGURES.forEach(fig => {
@@ -392,7 +628,7 @@
         const randomIndex = Math.floor(Math.random() * weightedList.length);
         return weightedList[randomIndex];
     }
-
+    
     // --- Cambodia Time Logic ---
     function getOrdinal(d) {
         if (d > 3 && d < 21) return 'th'; 
@@ -444,58 +680,6 @@
         }
     }
     
-    // --- Local Storage Management ---
-
-    function updateDrawCount(newCount) {
-        currentDraws = Math.max(0, newCount);
-        localStorage.setItem(getDrawCountKey(), currentDraws);
-        updateDrawCountUI();
-    }
-    
-    function loadDrawCount() {
-        const storedCount = localStorage.getItem(getDrawCountKey());
-        if (storedCount === null || isNaN(parseInt(storedCount, 10))) {
-            updateDrawCount(INITIAL_DRAWS);
-        } else {
-            currentDraws = parseInt(storedCount, 10);
-            updateDrawCountUI();
-        }
-    }
-    
-    function loadCollection() {
-        const storedCollection = localStorage.getItem(getCollectionKey());
-        try {
-            collectedFigures = storedCollection ? JSON.parse(storedCollection) : [];
-        } catch (e) {
-            console.error("Error parsing collection data, resetting:", e);
-            collectedFigures = [];
-        }
-        updateCollectionUI();
-    }
-    
-    function saveCollection(figureUrl) {
-        if (!collectedFigures.includes(figureUrl)) {
-            collectedFigures.push(figureUrl);
-            localStorage.setItem(getCollectionKey(), JSON.stringify(collectedFigures));
-            return true; 
-        }
-        return false; 
-    }
-    
-    function resetCollection() {
-        // NOTE: Does NOT reset the global redeem codes, as they are meant to be one-time use forever.
-        
-        collectedFigures = [];
-        localStorage.removeItem(getCollectionKey());
-        updateCollectionUI();
-        resultArea.innerHTML = `
-            <div class="text-center p-4 text-gray-400">
-                <p class="mb-2 text-lg font-semibold text-red-500">Collection Reset!</p>
-                <p class="text-sm">All collected figures have been cleared.</p>
-            </div>
-        `;
-    }
-
     // --- Modal Function ---
     window.showFigureDetails = function(figureUrl) {
         const figure = MINIFIGURES.find(f => f.image_url === figureUrl);
@@ -524,6 +708,8 @@
     // --- UI Update ---
 
     function updateDrawCountUI() {
+        if (!IS_GAME_READY) return;
+
         if (drawCountElement) {
             drawCountElement.textContent = currentDraws;
         }
@@ -531,7 +717,7 @@
         if (draw1xButton && draw5xButton) {
             const noDraws = currentDraws <= 0;
             const notEnoughFor5x = currentDraws < 5;
-            const disableButtons = isLoading;
+            const disableButtons = isLoading || !IS_GAME_READY;
             
             draw1xButton.disabled = noDraws || disableButtons;
             draw1xButton.textContent = disableButtons ? 'Drawing...' : (noDraws ? 'No Draws Left!' : 'Open 1x (1 Draw)');
@@ -555,7 +741,7 @@
             const statusClass = isCollected ? 'collected collection-item' : 'missing';
             const clickHandler = isCollected ? `onclick="showFigureDetails('${fig.image_url}')"` : '';
             const fallbackUrl = getPlaceholderUrl(fig);
-            const rarityClass = `rarity-${fig.rarity.toLowerCase().replace(' ', '-')}`;
+            const rarityClass = `rarity-${fig.rarity.toLowerCase().replace(' ', '-')} `;
 
 
             return `
@@ -570,53 +756,72 @@
                 </div>
             `;
         }).join('');
-
-        updateDrawCountUI(); 
     }
 
-    // --- Updated Function: Handle Code Redemption ---
-    function handleRedeem() {
+    // --- Updated Function: Handle Code Redemption (Uses Firestore for global check) ---
+    async function handleRedeem() {
+        if (!IS_AUTH_READY || isLoading) return;
+
         const code = redeemInput.value.trim().toUpperCase();
         
-        // 1. Load the list of codes that have been used globally
-        const usedCodes = JSON.parse(localStorage.getItem(GLOBAL_USED_CODES_KEY) || '[]');
-        
-        // 2. Check if the code is a valid, single-use code
-        const isValidCode = SINGLE_USE_CODES.includes(code);
-
-        // 3. Check if the code has been used before
-        const isAlreadyUsed = usedCodes.includes(code);
-        
-        // Clear previous message
-        redeemMessage.textContent = '';
-
-        if (!isValidCode) {
+        // 1. Basic validation
+        if (!SINGLE_USE_CODES.includes(code)) {
             redeemMessage.textContent = "❌ Invalid Code!";
             redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
-        } else if (isAlreadyUsed) {
-            redeemMessage.textContent = "❌ Code already used globally!";
-            redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
-        } else {
-            // Successful redemption!
-            updateDrawCount(currentDraws + CODE_REFILL_AMOUNT);
-            redeemMessage.textContent = `✅ Success! Added ${CODE_REFILL_AMOUNT} draws.`;
-            redeemMessage.className = "text-xs text-center mt-1 h-4 text-green-500 font-semibold";
-            
-            // 4. Mark the code as used globally
-            usedCodes.push(code);
-            localStorage.setItem(GLOBAL_USED_CODES_KEY, JSON.stringify(usedCodes));
-            
-            // Clear input after success
-            redeemInput.value = ''; 
+            setTimeout(() => { redeemMessage.textContent = ''; }, 3000);
+            return;
         }
-        
-        // Clear message after a few seconds
-        setTimeout(() => {
-            redeemMessage.textContent = '';
-        }, 3000);
+
+        isLoading = true;
+        redeemButton.disabled = true;
+        redeemMessage.textContent = "Checking code...";
+        redeemMessage.className = "text-xs text-center mt-1 h-4 text-yellow-500 font-semibold";
+
+        try {
+            const globalDocRef = getGlobalCodesDocRef();
+            let globalDocSnap = await firebase.getDoc(globalDocRef);
+            
+            let usedCodes = [];
+            if (globalDocSnap.exists()) {
+                usedCodes = globalDocSnap.data().codes || [];
+            } else {
+                // Initialize the global codes document
+                await firebase.setDoc(globalDocRef, { codes: [] });
+            }
+
+            // 2. Check if the code has been used globally
+            const isAlreadyUsed = usedCodes.includes(code);
+            
+            if (isAlreadyUsed) {
+                redeemMessage.textContent = "❌ Code already used globally!";
+                redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
+            } else {
+                // 3. Successful redemption! Update Firestore for both states.
+                
+                // Transaction: Update global used codes
+                const newUsedCodes = [...usedCodes, code];
+                await firebase.updateDoc(globalDocRef, { codes: newUsedCodes });
+
+                // Update user's draw count (triggers real-time update)
+                await updateDrawCount(currentDraws + CODE_REFILL_AMOUNT, false);
+                
+                redeemMessage.textContent = `✅ Success! Added ${CODE_REFILL_AMOUNT} draws.`;
+                redeemMessage.className = "text-xs text-center mt-1 h-4 text-green-500 font-semibold";
+                
+                redeemInput.value = ''; // Clear input after success
+            }
+        } catch (error) {
+            console.error("Redemption failed:", error);
+            redeemMessage.textContent = "❌ Server error during redemption. Try again.";
+            redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
+        } finally {
+            isLoading = false;
+            redeemButton.disabled = false;
+            setTimeout(() => { redeemMessage.textContent = ''; }, 3000);
+        }
     }
 
-    // --- Main Draw Logic (No changes needed here) ---
+    // --- Main Draw Logic ---
 
     function displayDrawResults(results) {
         if(initialMessage) initialMessage.remove(); 
@@ -646,7 +851,6 @@
         results.forEach((result, index) => {
             const figure = result.figure;
             const isNewFigure = result.isNew;
-            const wasFreeRedraw = result.wasFreeRedraw;
             
             const borderColorClass = figure.color ? `border-${figure.color}` : 'border-yellow-500';
             const rarityClass = `rarity-${figure.rarity.toLowerCase().replace(' ', '-')} `;
@@ -659,7 +863,7 @@
             let titleBadge; 
 
             if (isNewFigure) {
-                titleText = wasFreeRedraw ? 'RE-ROLL SUCCESS!' : 'NEW FIGURE!';
+                titleText = 'NEW FIGURE!';
                 titleClass = 'text-green-400';
                 titleBadge = `<span class="new-badge absolute top-0 left-0 text-[8px] font-bold px-1.5 py-0.5 rounded-br-lg rounded-tl-lg uppercase">NEW</span>`;
             } else {
@@ -695,21 +899,22 @@
             resultsGrid.insertAdjacentHTML('beforeend', cardHtml);
         });
 
-        updateCollectionUI();
-
         // Reset loading state
         isLoading = false;
         updateDrawCountUI();
     }
 
 
-    function handleDraw(count) {
-        if (isLoading || currentDraws < count) return;
+    async function handleDraw(count) {
+        if (isLoading || currentDraws < count || !IS_GAME_READY) return;
         
         isLoading = true;
         updateDrawCountUI(); 
         
         if(initialMessage) initialMessage.remove(); 
+
+        // 1. Deduct draws first (triggers real-time UI update via onSnapshot)
+        await updateDrawCount(currentDraws - count, false);
 
         resultArea.innerHTML = `
             <div id="mystery-box" class="loading-animation w-32 h-32 rounded-xl flex items-center justify-center shadow-inner border-4 border-white">
@@ -717,50 +922,29 @@
             </div>
         `;
 
-        updateDrawCount(currentDraws - count);
-
         // Wait for suspense (1.5 seconds)
-        setTimeout(() => {
+        setTimeout(async () => {
             const drawResults = [];
 
             for (let i = 0; i < count; i++) {
                 let finalDrawnFigure = null;
                 let isNew = false;
-                let wasFreeRedraw = false;
-                const maxFreeAttempts = MINIFIGURES.length * 2; 
-
-                // 1. Initial Draw (Paid Slot)
+                
+                // 1. Initial Draw
                 let drawnFigure = weightedDraw();
-                let initialIsNew = saveCollection(drawnFigure.image_url);
+                
+                // 2. Check if it's new and save if it is
+                let initialIsNew = await saveCollection(drawnFigure.image_url);
                 finalDrawnFigure = drawnFigure;
                 isNew = initialIsNew;
 
-                // 2. Continuous Re-draw logic if duplicate AND collection is not full
-                if (!initialIsNew && collectedFigures.length < MINIFIGURES.length) {
-                    wasFreeRedraw = true; 
-                    let attempts = 0;
-
-                    do {
-                        attempts++;
-                        let reDrawnFigure = weightedDraw();
-                        
-                        if (saveCollection(reDrawnFigure.image_url)) {
-                            finalDrawnFigure = reDrawnFigure; 
-                            isNew = true; 
-                            break;
-                        }
-                        
-                        if (collectedFigures.length >= MINIFIGURES.length || attempts >= maxFreeAttempts) {
-                            break;
-                        }
-                    } while (true);
-                }
+                // Note: The continuous re-draw logic for duplicates is removed to keep Firestore writes simple.
+                // We rely on the core draw + save logic.
 
                 // 3. Log the final result for display
                 drawResults.push({
                     figure: finalDrawnFigure,
                     isNew: isNew,
-                    wasFreeRedraw: wasFreeRedraw 
                 });
             }
             
@@ -772,10 +956,8 @@
     // --- Initialization ---
 
     function initGame() {
-        getUserID(); 
-        initializeMinifigures();
-        loadDrawCount();
-        loadCollection(); 
+        // Start Firebase setup and authentication
+        setupFirebase();
         
         // Start the real-time clock update
         updateCambodiaTime();
@@ -789,7 +971,6 @@
             draw5xButton.addEventListener('click', () => handleDraw(5));
         }
         
-        // --- Redeem Code Listeners ---
         if (redeemButton) {
             redeemButton.addEventListener('click', handleRedeem);
         }
@@ -800,7 +981,6 @@
                 }
             });
         }
-        // --- End Redeem Code Listeners ---
         
         if (resetCollectionButton) {
             resetCollectionButton.addEventListener('click', resetCollection);
@@ -813,3 +993,4 @@
 </script>
 </body>
 </html>
+
