@@ -450,29 +450,19 @@
 
     async function setupFirebase() {
         try {
-            // =========================================================================
-            // IMPORTANT: REPLACE THE DUMMY CONFIGURATION BELOW WITH YOUR ACTUAL FIREBASE CONFIG
-            // This fix ensures that the Firebase app initializes successfully,
-            // preventing the "App not ready or database is inaccessible" error.
-            // =========================================================================
-            const YOUR_FIREBASE_CONFIG_GOES_HERE = {
-                apiKey: "DUMMY_API_KEY_TO_BE_REPLACED",
-                authDomain: "your-project-id.firebaseapp.com",
-                projectId: "your-project-id", // MUST be the correct project ID
-                storageBucket: "your-project-id.appspot.com",
-                messagingSenderId: "123456789012",
-                appId: "1:123456789012:web:abcdef1234567890abcdef",
-            };
-            
-            // 1. Get Global Variables & Config
-            const firebaseConfig = YOUR_FIREBASE_CONFIG_GOES_HERE;
-            APP_ID = firebaseConfig.projectId; // Using projectId as the application identifier
-            
-            // Check for canvas environment token, otherwise use standard auth flow
+            // 1. Get Global Variables & Config - CORRECTLY LOADING ENVIRONMENT VARIABLES
+            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+            APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-            // =========================================================================
+            
+            // Basic check for valid config
+            if (!firebaseConfig.apiKey || APP_ID === 'default-app-id') {
+                console.error("Error: Firebase configuration or App ID is missing.");
+                authStatus.textContent = `❌ Initialization Error: Missing Firebase Config.`;
+                return;
+            }
 
-            // Debugging
+            // Debugging (Mandatory when using Firestore)
             firebase.setLogLevel('Debug');
             authStatus.textContent = "Initializing Firebase...";
 
@@ -941,7 +931,8 @@
                 redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
             } else {
                 console.error("Redemption failed:", error);
-                redeemMessage.textContent = "❌ Server error during redemption. Try again.";
+                // The most common error here is Firestore connection/permission failure due to initialization.
+                redeemMessage.textContent = "❌ Server error during redemption. (Check console for details).";
                 redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
             }
         } finally {
