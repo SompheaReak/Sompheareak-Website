@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minifigure Mystery Draw</title>
+    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script> 
+    <!-- Load custom fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Bungee+Inline&family=Inter:wght@100..900&display=swap" rel="stylesheet">
     
+    <!-- Firebase Imports (Must be type="module") -->
     <script type="module">
-        // Import necessary Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         // IMPORTANT: Added arrayUnion and runTransaction for atomic code redemption
@@ -182,7 +184,7 @@
         </div>
         
         <div class="mb-4 p-2 rounded-lg bg-gray-700 shadow-inner border border-gray-600 text-center">
-            <span class="text-sm font-semibold text-gray-300">Your Player ID:</span>
+            <span class="text-sm font-semibold text-gray-300">Your Player ID (4-Digit):</span>
             <code id="user-id-display" class="text-xl font-mono font-extrabold text-red-400 block tracking-widest text-wrap break-all">...</code>
         </div>
 
@@ -281,58 +283,56 @@
 <script>
     // --- 💥 CUSTOM MINIFIGURE DATASETS 💥 ---
 
-    // Note: The original image_url for Category B figures were using "static/images/lucky-XX.jpg" 
-    // which won't load in this environment. We will use placeholders for Category B as well.
     const NINJAGO_FIGURE_STRINGS = [ 
-        // Kai variants (Red color theme)
+        // Note: Using placeholders for Category B as static images won't load
      'name:"Kai (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-01.jpg"',
-     'name:"Zane (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-02.jpg"',
-     'name:"Jay (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-03.jpg"',
-     'name:"Cole (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-04.jpg"',
-     'name:"Lloyd (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-05.jpg"',
+     'name:"Zane (DX)", rarity:"Common", weight:80, color:"sky-400", image_url:"static/images/lucky-02.jpg"',
+     'name:"Jay (DX)", rarity:"Common", weight:80, color:"blue-600", image_url:"static/images/lucky-03.jpg"',
+     'name:"Cole (DX)", rarity:"Common", weight:80, color:"gray-700", image_url:"static/images/lucky-04.jpg"',
+     'name:"Lloyd (DX)", rarity:"Common", weight:80, color:"green-500", image_url:"static/images/lucky-05.jpg"',
      'name:"Nya (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-06.jpg"',
   
      'name:"Kai (PILOT)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-11.jpg"',
-     'name:"Zane (PILOT)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-12.jpg"',
-     'name:"Jay (PILOT)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-13.jpg"',
-     'name:"Cole (PILOT)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-14.jpg"',
-     'name:"Lloyd (PILOT)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-15.jpg"',
-     'name:"Pink Zane (PILOT)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-16.jpg"',
+     'name:"Zane (PILOT)", rarity:"Common", weight:80, color:"sky-400", image_url:"static/images/lucky-12.jpg"',
+     'name:"Jay (PILOT)", rarity:"Rare", weight:60, color:"blue-600", image_url:"static/images/lucky-13.jpg"',
+     'name:"Cole (PILOT)", rarity:"Common", weight:80, color:"gray-700", image_url:"static/images/lucky-14.jpg"',
+     'name:"Lloyd (PILOT)", rarity:"Rare", weight:60, color:"green-500", image_url:"static/images/lucky-15.jpg"',
+     'name:"Pink Zane (PILOT)", rarity:"Rare", weight:60, color:"pink-400", image_url:"static/images/lucky-16.jpg"',
 
      'name:"Kai (NRG)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-21.jpg"',
-     'name:"Zane (NRG)", rarity:"Rare", weight:80, color:"red-600", image_url:"static/images/lucky-22.jpg"',
-     'name:"Jay (NRG)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-23.jpg"',
-     'name:"Cole (NRG)", rarity:"Rare", weight:80, color:"red-600", image_url:"static/images/lucky-24.jpg"',
-     'name:"Lloyd (NRG)", rarity:"Rare", weight:20, color:"red-600", image_url:"static/images/lucky-25.jpg"',
+     'name:"Zane (NRG)", rarity:"Rare", weight:80, color:"sky-400", image_url:"static/images/lucky-22.jpg"',
+     'name:"Jay (NRG)", rarity:"Ultra Rare", weight:10, color:"blue-600", image_url:"static/images/lucky-23.jpg"',
+     'name:"Cole (NRG)", rarity:"Rare", weight:80, color:"gray-700", image_url:"static/images/lucky-24.jpg"',
+     'name:"Lloyd (NRG)", rarity:"Rare", weight:20, color:"green-500", image_url:"static/images/lucky-25.jpg"',
      'name:"Nya (NRG)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-26.jpg"',
   
      'name:"Kai (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-41.jpg"',
-     'name:"Zane (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-42.jpg"',
-     'name:"Jay (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-43.jpg"',
-     'name:"Cole (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-44.jpg"',
-     'name:"Lloyd (ZX)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-45.jpg"',
+     'name:"Zane (ZX)", rarity:"Rare", weight:60, color:"sky-400", image_url:"static/images/lucky-42.jpg"',
+     'name:"Jay (ZX)", rarity:"Rare", weight:60, color:"blue-600", image_url:"static/images/lucky-43.jpg"',
+     'name:"Cole (ZX)", rarity:"Rare", weight:60, color:"gray-700", image_url:"static/images/lucky-44.jpg"',
+     'name:"Lloyd (ZX)", rarity:"Ultra Rare", weight:10, color:"green-500", image_url:"static/images/lucky-45.jpg"',
      'name:"Nya (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-46.jpg"',
   
      'name:"Kai (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-51.jpg"',
-     'name:"Zane (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-52.jpg"',
-     'name:"Jay (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-53.jpg"',
-     'name:"Cole (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-54.jpg"',
-     'name:"Lloyd (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-55.jpg"',
-     'name:"Golden Lloyd (KIMONO)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-56.jpg"',
+     'name:"Zane (KIMONO)", rarity:"Rare", weight:60, color:"sky-400", image_url:"static/images/lucky-52.jpg"',
+     'name:"Jay (KIMONO)", rarity:"Rare", weight:60, color:"blue-600", image_url:"static/images/lucky-53.jpg"',
+     'name:"Cole (KIMONO)", rarity:"Rare", weight:60, color:"gray-700", image_url:"static/images/lucky-54.jpg"',
+     'name:"Lloyd (KIMONO)", rarity:"Rare", weight:60, color:"green-500", image_url:"static/images/lucky-55.jpg"',
+     'name:"Golden Lloyd (KIMONO)", rarity:"Ultra Rare", weight:10, color:"yellow-500", image_url:"static/images/lucky-56.jpg"',
 
      'name:"Kai (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-61.jpg"',
-     'name:"Zane (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-62.jpg"',
-     'name:"Jay (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-63.jpg"',
-     'name:"Cole (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-64.jpg"',
-     'name:"Golden Zane (DX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-65.jpg"',
+     'name:"Zane (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"sky-400", image_url:"static/images/lucky-62.jpg"',
+     'name:"Jay (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"blue-600", image_url:"static/images/lucky-63.jpg"',
+     'name:"Cole (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"gray-700", image_url:"static/images/lucky-64.jpg"',
+     'name:"Golden Zane (DX)", rarity:"Rare", weight:60, color:"yellow-500", image_url:"static/images/lucky-65.jpg"',
      'name:"Ultra Nya (DX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-66.jpg"',
   
      'name:"Kai (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-71.jpg"',
-     'name:"Zane (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-72.jpg"',
-     'name:"Jay (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-73.jpg"',
-     'name:"Cole (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-74.jpg"',
-     'name:"Lloyd (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-75.jpg"',
-     'name:"Pixal (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-76.jpg"',
+     'name:"Zane (REBOOTED)", rarity:"Super Rare", weight:40, color:"sky-400", image_url:"static/images/lucky-72.jpg"',
+     'name:"Jay (REBOOTED)", rarity:"Super Rare", weight:40, color:"blue-600", image_url:"static/images/lucky-73.jpg"',
+     'name:"Cole (REBOOTED)", rarity:"Super Rare", weight:40, color:"gray-700", image_url:"static/images/lucky-74.jpg"',
+     'name:"Lloyd (REBOOTED)", rarity:"Super Rare", weight:40, color:"green-500", image_url:"static/images/lucky-75.jpg"',
+     'name:"Pixal (REBOOTED)", rarity:"Super Rare", weight:40, color:"pink-400", image_url:"static/images/lucky-76.jpg"',
     ];
 
     const POP_CULTURE_FIGURE_STRINGS = [
@@ -359,7 +359,6 @@
 
     // --- Redeem Codes are now Category Specific ---
     const CODE_REFILL_AMOUNT = 5;
-    // We add the category ID prefix to distinguish which category the code belongs to, but Firestore checks the global list.
     const POP_CULTURE_CODES = ["FREEA1", "FREEA2", "FREEMARVEL", "FREEANIME", "FREEGODZ"];
     const NINJAGO_CODES = ["FREEB1", "FREEB2", "FREENINJA", "FREEDX", "FREELLOYD"];
 
@@ -384,7 +383,7 @@
     const GLOBAL_CODES_DOC = 'used_codes';
     const INITIAL_DRAWS = 0; 
     
-    // Rarity Color Map for Placeholder Generation (Used by getPlaceholderUrl)
+    // Rarity Color Map for Placeholder Generation
     const FIGURE_COLOR_MAP = {
         'red-600': 'C80815',
         'sky-400': '38BDF8',
@@ -462,12 +461,11 @@
 
     async function setupFirebase() {
         try {
-            // 1. Get Global Variables & Config - CORRECTLY LOADING ENVIRONMENT VARIABLES
+            // 1. Get Global Variables & Config
             const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
             APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
             
-            // Basic check for valid config
             if (!firebaseConfig.apiKey || APP_ID === 'default-app-id') {
                 console.error("Error: Firebase configuration or App ID is missing.");
                 authStatus.textContent = `❌ Initialization Error: Missing Firebase Config.`;
@@ -499,7 +497,6 @@
                         }
                     } catch (e) {
                         console.error("Auth sign-in error:", e);
-                        // If auth fails completely, set a random ID for temporary state
                         USER_ID = crypto.randomUUID(); 
                     }
                 }
@@ -507,18 +504,15 @@
                 // Once authenticated (or fallback ID generated)
                 if (!IS_AUTH_READY) {
                     IS_AUTH_READY = true;
-                    // --- MODIFIED: Format and display the 4-digit, numbers-only Player ID ---
                     const shortId = formatPlayerId(USER_ID);
                     userIdDisplay.textContent = shortId; 
                     authStatus.textContent = `Authenticated. ID: ${shortId}...`;
                     
-                    // Show category modal only once auth is done
                     if (!CATEGORY_ID) {
                         document.getElementById('category-modal').classList.remove('hidden');
                     }
                 }
                 
-                // IMPORTANT: Call updateDrawCountUI to enable buttons if initialization is complete
                 updateDrawCountUI(); 
             });
         } catch (error) {
@@ -574,8 +568,7 @@
     // --- Firestore Realtime Listener ---
 
     function startFirestoreListener() {
-        // Check if Firestore is initialized. If not, default to 0 draws / empty collection.
-        if (!db || !getDrawCollectionDocRef()) {
+        if (!db || !getDrawCollectionDocRef() || !IS_AUTH_READY) {
             console.warn("Firestore not initialized or category/auth not ready. Skipping real-time listener.");
             currentDraws = INITIAL_DRAWS;
             collectedFigures = [];
@@ -590,13 +583,11 @@
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 currentDraws = data.draws || INITIAL_DRAWS;
-                // Filter out any potential duplicates in the stored array just in case
                 collectedFigures = Array.from(new Set(data.collectedFigures || [])); 
             } else {
                 // Initialize document if it doesn't exist
                 currentDraws = INITIAL_DRAWS;
                 collectedFigures = [];
-                // Use setDoc to create the document with initial state
                 firebase.setDoc(docRef, { 
                     draws: INITIAL_DRAWS, 
                     collectedFigures: [], 
@@ -622,7 +613,6 @@
     async function updateDrawCount(newCount) {
         currentDraws = Math.max(0, newCount);
         const docRef = getDrawCollectionDocRef();
-        // Check if DB is available before attempting to write
         if (docRef && db) { 
             await firebase.updateDoc(docRef, { 
                 draws: currentDraws,
@@ -643,9 +633,7 @@
             const newCollected = [...collectedFigures, figureUrl];
             const docRef = getDrawCollectionDocRef();
             
-            // Check if DB is available before attempting to write
             if (docRef && db) { 
-                // The snapshot listener handles the real-time update of collectedFigures
                 await firebase.updateDoc(docRef, { 
                     collectedFigures: newCollected,
                     lastUpdate: firebase.serverTimestamp()
@@ -660,16 +648,14 @@
      */
     async function resetCollection() {
         const docRef = getDrawCollectionDocRef();
-        // Check if DB is available before attempting to write
         if (docRef && db) { 
-            await firebase.setDoc(docRef, { // Using setDoc to overwrite cleanly
+            await firebase.setDoc(docRef, { 
                 collectedFigures: [],
                 draws: INITIAL_DRAWS,
                 lastUpdate: firebase.serverTimestamp()
             }).catch(e => console.error("Error resetting collection:", e));
         }
         
-        // Display confirmation message in the draw area
         resultArea.innerHTML = `
             <div class="text-center p-4 text-gray-400">
                 <p class="mb-2 text-lg font-semibold text-red-500">Collection Reset!</p>
@@ -687,7 +673,6 @@
      */
     function getPlaceholderUrl(figure) {
         let bgColor = FIGURE_COLOR_MAP[figure.color] || '6B7280';
-        // Light text for dark backgrounds, dark text for light backgrounds (yellow, sky, pink)
         let fgColor = ['sky-400', 'yellow-500', 'pink-400'].includes(figure.color) ? '333333' : 'ffffff';
         
         const nameCode = figure.name.split(' ')[0].toUpperCase().substring(0, 5);
@@ -701,7 +686,6 @@
      */
     function parseFigureString(str) {
         const figure = {};
-        // Regex to match key:"value" pairs, handling nested quotes or complex values are not needed here
         const regex = /(\w+):"([^"]+)"/g; 
         let match;
         while ((match = regex.exec(str)) !== null) {
@@ -803,7 +787,6 @@
         modalTitle.textContent = figure.name;
         modalImage.src = figure.image_url; 
         modalImage.alt = figure.name;
-        // Set the onerror handler for fallback image
         modalImage.setAttribute('onerror', `this.onerror=null; this.src='${fallbackUrl}'`);
         
         modalRarity.textContent = figure.rarity.toUpperCase();
@@ -815,11 +798,8 @@
 
     // --- UI Update ---
     
-    // MODIFIED: Added logic to disable the redeem button and input field when not ready
     function updateDrawCountUI() {
-        // If IS_GAME_READY is false, we are still waiting for category selection
         if (!IS_GAME_READY) {
-            // However, we still need to check if auth is ready for the redeem button state
             if (redeemButton && redeemInput) {
                 redeemButton.disabled = true;
                 redeemInput.disabled = true;
@@ -846,7 +826,7 @@
             draw5xButton.textContent = disableButtons ? 'Drawing...' : (notEnoughFor5x ? `Need ${5 - currentDraws} More` : 'Open 5x (5 Draws)');
         }
         
-        // Redeem button logic (CRITICAL FIX)
+        // Redeem button logic
         if (redeemButton && redeemInput) {
             const isRedeemReady = IS_AUTH_READY && IS_GAME_READY && !isLoading;
             
@@ -854,13 +834,11 @@
             redeemInput.disabled = !isRedeemReady;
 
             if (!isRedeemReady) {
-                 // Clear message if it's the "not ready" error, to avoid constant display
                  if (redeemMessage.textContent === "App not ready or database is inaccessible.") {
                      redeemMessage.textContent = '';
                  }
                  redeemInput.placeholder = "Waiting for game sync...";
             } else {
-                 // Restore original placeholder based on category
                  redeemInput.placeholder = CATEGORY_ID === 'B' 
                     ? "Enter NINJAGO code (e.g., FREEB1)" 
                     : "Enter POP CULTURE code (e.g., FREEA1)";
@@ -900,10 +878,8 @@
         }).join('');
     }
 
-    // --- Updated Function: Handle Code Redemption (Uses Firestore Transaction for Atomicity) ---
+    // --- Atomic Code Redemption Logic (Using runTransaction) ---
     async function handleRedeem() {
-        // CRITICAL FIX: The initial guard clause is now less likely to trigger due to button disabling,
-        // but we keep it as a fallback.
         if (!db || !IS_AUTH_READY || isLoading || !CATEGORY_ID) {
             redeemMessage.textContent = "App not ready or database is inaccessible.";
             redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
@@ -913,7 +889,7 @@
 
         const code = redeemInput.value.trim().toUpperCase();
         
-        // 1. Basic validation
+        // 1. Basic validation (check against category-specific codes)
         if (!SINGLE_USE_CODES.includes(code)) {
             redeemMessage.textContent = "❌ Invalid Code for this category!";
             redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
@@ -922,7 +898,7 @@
         }
 
         isLoading = true;
-        updateDrawCountUI(); // Disable buttons
+        updateDrawCountUI(); 
         redeemMessage.textContent = "Checking code...";
         redeemMessage.className = "text-xs text-center mt-1 h-4 text-yellow-500 font-semibold";
 
@@ -931,20 +907,18 @@
             const userDocRef = getDrawCollectionDocRef();
             let wasSuccessful = false;
 
-            // Use a transaction to ensure that checking the code's status and updating 
-            // both the global list and the user's draws is atomic.
+            // Use a transaction to ensure atomic redemption
             await firebase.runTransaction(db, async (transaction) => {
+                // Check Global Used Codes
                 const globalDoc = await transaction.get(globalDocRef);
-                
-                // Get the list of codes already used globally
                 let usedCodes = globalDoc.exists() ? globalDoc.data().codes || [] : [];
                 
                 if (usedCodes.includes(code)) {
-                    // Code is already used. Abort transaction by throwing an identifiable error.
+                    // Code is already used globally. Throw error to abort the transaction.
                     throw new Error("CODE_ALREADY_USED");
                 }
 
-                // 1. Atomically mark code as used globally by adding it to the array
+                // 1. Atomically mark code as used globally
                 transaction.set(globalDocRef, { 
                     codes: firebase.arrayUnion(code),
                     lastUpdate: firebase.serverTimestamp()
@@ -954,7 +928,6 @@
                 const userDoc = await transaction.get(userDocRef);
                 let currentDrawsInDB = userDoc.exists() ? userDoc.data().draws || INITIAL_DRAWS : INITIAL_DRAWS;
                 
-                // Set the user's draw count
                 transaction.set(userDocRef, { 
                     draws: currentDrawsInDB + CODE_REFILL_AMOUNT,
                     collectedFigures: userDoc.exists() ? userDoc.data().collectedFigures || [] : [],
@@ -965,10 +938,10 @@
             });
             
             if (wasSuccessful) {
-                // The transaction succeeded, so the draws will update via onSnapshot
+                // Success message. The draws update via the onSnapshot listener.
                 redeemMessage.textContent = `✅ Success! Added ${CODE_REFILL_AMOUNT} draws.`;
                 redeemMessage.className = "text-xs text-center mt-1 h-4 text-green-500 font-semibold";
-                redeemInput.value = ''; // Clear input after success
+                redeemInput.value = ''; 
             }
             
         } catch (error) {
@@ -977,13 +950,12 @@
                 redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
             } else {
                 console.error("Redemption failed:", error);
-                // Catch any other general Firestore transaction failure
-                redeemMessage.textContent = "❌ Server error during redemption. (Check console for problem details).";
+                redeemMessage.textContent = "❌ Server error during redemption. Try again.";
                 redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
             }
         } finally {
             isLoading = false;
-            updateDrawCountUI(); // Re-enable buttons
+            updateDrawCountUI(); 
             setTimeout(() => { redeemMessage.textContent = ''; }, 3000);
         }
     }
@@ -1067,7 +1039,6 @@
             resultsGrid.insertAdjacentHTML('beforeend', cardHtml);
         });
 
-        // Reset loading state
         isLoading = false;
         updateDrawCountUI();
     }
@@ -1081,8 +1052,6 @@
         
         if(initialMessage) initialMessage.remove(); 
 
-        // 1. Deduct draws first (triggers real-time UI update via onSnapshot)
-        // If DB is null, currentDraws is local and will be updated, but not saved.
         await updateDrawCount(currentDraws - count);
 
         resultArea.innerHTML = `
@@ -1097,23 +1066,16 @@
 
             for (let i = 0; i < count; i++) {
                 let drawnFigure = weightedDraw();
-                if (!drawnFigure) continue; // Should not happen
+                if (!drawnFigure) continue; 
 
-                // 2. Check if it's new and save if it is
-                // We rely on saveCollection to update Firestore and the onSnapshot listener 
-                // to update the local collectedFigures array correctly. If Firestore is down, 
-                // isNew check is based on the current in-memory collection.
                 const isNew = await saveCollection(drawnFigure.image_url);
 
-                // 3. Log the final result for display
                 drawResults.push({
                     figure: drawnFigure,
                     isNew: isNew,
                 });
             }
             
-            // Note: Displaying the results happens *before* the Firestore updates confirm, 
-            // but the collection display relies on the listener which should update quickly.
             displayDrawResults(drawResults);
 
         }, 1500); 
@@ -1122,10 +1084,8 @@
     // --- Initialization ---
 
     function initGame() {
-        // Start Firebase setup and authentication
         setupFirebase();
         
-        // Start the real-time clock update
         updateCambodiaTime();
         setInterval(updateCambodiaTime, 1000); 
         
@@ -1139,7 +1099,6 @@
         
         if (redeemButton) {
             redeemButton.addEventListener('click', handleRedeem);
-            // Initially disable the button until auth and category are set
             redeemButton.disabled = true;
             redeemInput.disabled = true;
         }
@@ -1162,3 +1121,4 @@
 </script>
 </body>
 </html>
+
