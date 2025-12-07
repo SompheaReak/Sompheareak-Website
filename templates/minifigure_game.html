@@ -143,6 +143,18 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
         }
+        
+        /* Disabled input style for better feedback */
+        #redeem-input:disabled {
+            background-color: #4B5563 !important;
+            color: #9CA3AF !important;
+            cursor: wait;
+        }
+        #redeem-button:disabled {
+            background-color: #4B5563 !important;
+            box-shadow: 0 5px 0 0 #374151;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen bg-gray-900 flex flex-col items-center">
@@ -505,6 +517,9 @@
                         document.getElementById('category-modal').classList.remove('hidden');
                     }
                 }
+                
+                // IMPORTANT: Call updateDrawCountUI to enable buttons if initialization is complete
+                updateDrawCountUI(); 
             });
         } catch (error) {
             console.error("Firebase Initialization Error:", error);
@@ -799,24 +814,57 @@
 
 
     // --- UI Update ---
-
+    
+    // MODIFIED: Added logic to disable the redeem button and input field when not ready
     function updateDrawCountUI() {
-        if (!IS_GAME_READY) return;
+        // If IS_GAME_READY is false, we are still waiting for category selection
+        if (!IS_GAME_READY) {
+            // However, we still need to check if auth is ready for the redeem button state
+            if (redeemButton && redeemInput) {
+                redeemButton.disabled = true;
+                redeemInput.disabled = true;
+                redeemInput.placeholder = "Select Category First...";
+            }
+            return;
+        }
 
         if (drawCountElement) {
             drawCountElement.textContent = currentDraws;
         }
         
+        const disableButtons = isLoading || !IS_AUTH_READY || !IS_GAME_READY;
+
+        // Draw button logic
         if (draw1xButton && draw5xButton) {
             const noDraws = currentDraws <= 0;
             const notEnoughFor5x = currentDraws < 5;
-            const disableButtons = isLoading || !IS_GAME_READY;
             
             draw1xButton.disabled = noDraws || disableButtons;
             draw1xButton.textContent = disableButtons ? 'Drawing...' : (noDraws ? 'No Draws Left!' : 'Open 1x (1 Draw)');
             
             draw5xButton.disabled = notEnoughFor5x || disableButtons;
             draw5xButton.textContent = disableButtons ? 'Drawing...' : (notEnoughFor5x ? `Need ${5 - currentDraws} More` : 'Open 5x (5 Draws)');
+        }
+        
+        // Redeem button logic (CRITICAL FIX)
+        if (redeemButton && redeemInput) {
+            const isRedeemReady = IS_AUTH_READY && IS_GAME_READY && !isLoading;
+            
+            redeemButton.disabled = !isRedeemReady;
+            redeemInput.disabled = !isRedeemReady;
+
+            if (!isRedeemReady) {
+                 // Clear message if it's the "not ready" error, to avoid constant display
+                 if (redeemMessage.textContent === "App not ready or database is inaccessible.") {
+                     redeemMessage.textContent = '';
+                 }
+                 redeemInput.placeholder = "Waiting for game sync...";
+            } else {
+                 // Restore original placeholder based on category
+                 redeemInput.placeholder = CATEGORY_ID === 'B' 
+                    ? "Enter NINJAGO code (e.g., FREEB1)" 
+                    : "Enter POP CULTURE code (e.g., FREEA1)";
+            }
         }
     }
     
@@ -854,7 +902,8 @@
 
     // --- Updated Function: Handle Code Redemption (Uses Firestore Transaction for Atomicity) ---
     async function handleRedeem() {
-        // Check for Firebase initialization and game readiness
+        // CRITICAL FIX: The initial guard clause is now less likely to trigger due to button disabling,
+        // but we keep it as a fallback.
         if (!db || !IS_AUTH_READY || isLoading || !CATEGORY_ID) {
             redeemMessage.textContent = "App not ready or database is inaccessible.";
             redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
@@ -873,7 +922,7 @@
         }
 
         isLoading = true;
-        redeemButton.disabled = true;
+        updateDrawCountUI(); // Disable buttons
         redeemMessage.textContent = "Checking code...";
         redeemMessage.className = "text-xs text-center mt-1 h-4 text-yellow-500 font-semibold";
 
@@ -895,11 +944,8 @@
                     throw new Error("CODE_ALREADY_USED");
                 }
 
-                // --- CRITICAL STEP: Atomic Update ---
-                
                 // 1. Atomically mark code as used globally by adding it to the array
-                // We use arrayUnion for safety, but in a transaction context, this ensures it's added.
-                transaction.update(globalDocRef, { 
+                transaction.set(globalDocRef, { 
                     codes: firebase.arrayUnion(code),
                     lastUpdate: firebase.serverTimestamp()
                 }, { merge: true });
@@ -931,14 +977,13 @@
                 redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
             } else {
                 console.error("Redemption failed:", error);
-                // The most common error here is Firestore connection/permission failure due to initialization.
-                redeemMessage.textContent = "❌ Server error during redemption. (Check console for details).";
+                // Catch any other general Firestore transaction failure
+                redeemMessage.textContent = "❌ Server error during redemption. (Check console for problem details).";
                 redeemMessage.className = "text-xs text-center mt-1 h-4 text-red-500 font-semibold";
             }
         } finally {
             isLoading = false;
-            redeemButton.disabled = false;
-            updateDrawCountUI();
+            updateDrawCountUI(); // Re-enable buttons
             setTimeout(() => { redeemMessage.textContent = ''; }, 3000);
         }
     }
@@ -1094,10 +1139,13 @@
         
         if (redeemButton) {
             redeemButton.addEventListener('click', handleRedeem);
+            // Initially disable the button until auth and category are set
+            redeemButton.disabled = true;
+            redeemInput.disabled = true;
         }
         if (redeemInput) {
              redeemInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && !redeemButton.disabled) {
                     handleRedeem();
                 }
             });
@@ -1114,4 +1162,3 @@
 </script>
 </body>
 </html>
-
