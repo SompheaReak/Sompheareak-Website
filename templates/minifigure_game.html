@@ -127,6 +127,25 @@
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(255, 195, 0, 0.5);
         }
+        
+        /* Custom styles for theme cards */
+        .theme-card {
+            border: 3px solid transparent;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .theme-card.active-ninjago {
+            border-color: #3b82f6; /* Blue-500 */
+            background-color: #1e3a8a; /* Blue-900 */
+            color: white;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+        }
+        .theme-card.active-marvel {
+            border-color: #ef4444; /* Red-500 */
+            background-color: #7f1d1d; /* Red-900 */
+            color: white;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
+        }
+
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen bg-gray-900 flex flex-col items-center">
@@ -142,13 +161,35 @@
         
         <div class="flex justify-center items-center mb-4">
             <h1 class="text-3xl font-black text-yellow-500 text-center uppercase tracking-wider font-['Bungee_Inline'] drop-shadow-lg shadow-black/50">
-                Mystery Draw!
+                MYSTERY DRAW!
             </h1>
         </div>
         
+        <div id="theme-selection" class="mb-6">
+            <label class="block text-lg font-semibold text-gray-300 mb-2 text-center">Select Theme to Draw:</label>
+            <div class="flex space-x-3">
+                <!-- Ninjago Theme Card -->
+                <div id="ninjago-card"
+                     class="theme-card flex-1 p-3 rounded-lg cursor-pointer transition duration-200 text-center bg-gray-700 hover:bg-gray-600 active-ninjago"
+                     data-theme="Ninjago"
+                     onclick="selectTheme('Ninjago')">
+                    <h3 class="text-base font-bold text-blue-400">NINJAGO</h3>
+                    <p class="text-[10px] text-gray-400">Elemental Masters</p>
+                </div>
+                <!-- Marvel Theme Card -->
+                <div id="marvel-card"
+                     class="theme-card flex-1 p-3 rounded-lg cursor-pointer transition duration-200 text-center bg-gray-700 hover:bg-gray-600"
+                     data-theme="Marvel"
+                     onclick="selectTheme('Marvel')">
+                    <h3 class="text-base font-bold text-red-400">MARVEL</h3>
+                    <p class="text-[10px] text-gray-400">Superheroes</p>
+                </div>
+            </div>
+        </div>
+
         <audio id="bgm" autoplay loop>
+            <!-- No actual sound file, keeping for structure -->
             <source src="static/sounds/RPReplay_Final1763010968.mov" type="audio/mpeg">
-            Your browser does not support the audio element.
         </audio>
 
         <div class="mb-4 p-2 rounded-lg bg-gray-700 shadow-inner border border-gray-600 text-center">
@@ -167,7 +208,7 @@
         <div id="result-area" class="mt-4 min-h-[150px] flex items-center justify-center border-2 border-dashed border-gray-700 rounded-lg p-2">
             <div id="initial-message" class="text-center p-4 text-gray-400">
                 <p class="mb-2 text-lg font-semibold text-yellow-500">Welcome, Player!</p>
-                <p class="text-sm">Use a redeem code (e.g., **FIGFREE1**) to get draws and start collecting.</p>
+                <p class="text-sm">Select your theme above, then redeem a code (e.g., **FIGFREE1**) to get draws and start collecting.</p>
             </div>
         </div>
 
@@ -195,25 +236,13 @@
     
     <div class="w-full max-w-sm mt-8 p-4 bg-gray-800 rounded-xl border border-gray-700 shadow-lg">
         <h2 class="text-xl font-bold text-yellow-500 mb-3 border-b border-yellow-500 pb-2 flex justify-between items-center">
-            <span>Your Collection</span>
+            <span><span id="collection-theme-name">Ninjago</span> Collection</span>
             <span class="text-lg font-mono text-white">
                 (<span id="collected-count">0</span> / <span id="total-count">0</span>)
             </span>
         </h2>
         
-        <!-- START: NEW CATEGORY FILTER UI -->
-        <div id="category-filters" class="flex space-x-2 mb-3">
-             <button id="filter-all" data-filter="all" class="filter-button active w-1/3 py-1 text-xs text-white rounded-lg">
-                All Figures
-            </button>
-            <button id="filter-classic" data-filter="classic" class="filter-button w-1/3 py-1 text-xs text-white rounded-lg">
-                Classic Series
-            </button>
-            <button id="filter-special" data-filter="special" class="filter-button w-1/3 py-1 text-xs text-white rounded-lg">
-                Special Series
-            </button>
-        </div>
-        <!-- END: NEW CATEGORY FILTER UI -->
+        <!-- Removed Category Filters as we use Theme Selection now -->
 
         <div id="collection-list" class="grid grid-cols-6 gap-1">
             </div>
@@ -239,9 +268,9 @@
 <script>
     // --- 💥 CUSTOM MINIFIGURE WEIGHTS 💥 ---
     const FIGURE_STRINGS = [ 
-        // Classic Series (01-46 prefixes)
-        // Kai variants (Red color theme)
-     'name:"Kai (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-01.jpg"',
+        // --- NINJAGO FIGURES (theme:"Ninjago") ---
+        // Image URLs are placeholder paths, the placeholder function handles rendering.
+  'name:"Kai (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-01.jpg"',
      'name:"Zane (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-02.jpg"',
      'name:"Jay (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-03.jpg"',
      'name:"Cole (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-04.jpg"',
@@ -291,6 +320,34 @@
      'name:"Lloyd (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-75.jpg"',
      'name:"Pixal (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-76.jpg"',
 
+        // --- MARVEL FIGURES (theme:"Marvel") ---
+     'name:"Spider-Man (Iron)", rarity:"Common", weight:80, theme:"Marvel", color:"blue-500", image_url:"static/images/marvel-81.jpg"',
+     'name:"Iron Man (Mark 50)", rarity:"Rare", weight:60, theme:"Marvel", color:"yellow-500", image_url:"static/images/marvel-82.jpg"',
+     'name:"Captain America (Classic)", rarity:"Common", weight:80, theme:"Marvel", color:"blue-500", image_url:"static/images/marvel-83.jpg"',
+     'name:"Thor (Ragnarok)", rarity:"Rare", weight:60, theme:"Marvel", color:"gray-500", image_url:"static/images/marvel-84.jpg"',
+     'name:"Black Widow (White Suit)", rarity:"Rare", weight:60, theme:"Marvel", color:"white", image_url:"static/images/marvel-85.jpg"',
+     'name:"Hulk (Big Fig)", rarity:"Ultra Rare", weight:10, theme:"Marvel", color:"green-500", image_url:"static/images/marvel-86.jpg"',
+     
+     'name:"Wolverine (Yellow)", rarity:"Super Rare", weight:40, theme:"Marvel", color:"yellow-500", image_url:"static/images/marvel-91.jpg"',
+     'name:"Deadpool (Taco)", rarity:"Ultra Rare", weight:10, theme:"Marvel", color:"red-500", image_url:"static/images/marvel-92.jpg"',
+     'name:"Dr. Strange (Cape)", rarity:"Rare", weight:60, theme:"Marvel", color:"blue-500", image_url:"static/images/marvel-93.jpg"',
+     'name:"Scarlet Witch (WandaVision)", rarity:"Super Rare", weight:40, theme:"Marvel", color:"red-500", image_url:"static/images/marvel-94.jpg"',
+     'name:"Loki (TVA)", rarity:"Common", weight:80, theme:"Marvel", color:"gray-500", image_url:"static/images/marvel-95.jpg"',
+     'name:"Thanos (Gauntlet)", rarity:"Ultra Rare", weight:10, theme:"Marvel", color:"purple-500", image_url:"static/images/marvel-96.jpg"',
+
+     'name:"Groot (Dancing)", rarity:"Rare", weight:60, theme:"Marvel", color:"brown-500", image_url:"static/images/marvel-97.jpg"',
+     'name:"Star-Lord (Trench Coat)", rarity:"Common", weight:80, theme:"Marvel", color:"red-500", image_url:"static/images/marvel-98.jpg"',
+     'name:"Gamora (Guardians)", rarity:"Rare", weight:60, theme:"Marvel", color:"green-500", image_url:"static/images/marvel-99.jpg"',
+     'name:"Rocket Raccoon", rarity:"Common", weight:80, theme:"Marvel", color:"gray-500", image_url:"static/images/marvel-100.jpg"',
+     'name:"Nebula (Cybernetic)", rarity:"Rare", weight:60, theme:"Marvel", color:"blue-500", image_url:"static/images/marvel-101.jpg"',
+     'name:"Drax the Destroyer", rarity:"Common", weight:80, theme:"Marvel", color:"gray-500", image_url:"static/images/marvel-102.jpg"',
+
+     'name:"Miles Morales (Suit)", rarity:"Rare", weight:60, theme:"Marvel", color:"red-500", image_url:"static/images/marvel-103.jpg"',
+     'name:"Venom (Tongue Out)", rarity:"Super Rare", weight:40, theme:"Marvel", color:"black-500", image_url:"static/images/marvel-104.jpg"',
+     'name:"Gwen Stacy (Ghost-Spider)", rarity:"Rare", weight:60, theme:"Marvel", color:"pink-500", image_url:"static/images/marvel-105.jpg"',
+     'name:"Vulture (Wings)", rarity:"Common", weight:80, theme:"Marvel", color:"green-500", image_url:"static/images/marvel-106.jpg"',
+     'name:"Green Goblin (Glider)", rarity:"Super Rare", weight:40, theme:"Marvel", color:"green-500", image_url:"static/images/marvel-107.jpg"',
+     'name:"Carnage (Tendrils)", rarity:"Ultra Rare", weight:10, theme:"Marvel", color:"red-500", image_url:"static/images/marvel-108.jpg"',
        ];
     // ----------------------------------------
     
@@ -300,7 +357,7 @@
     let isLoading = false;
     let collectedFigures = []; 
     let USER_ID = null; 
-    let currentFilter = 'all'; // NEW: State for current category filter ('all', 'classic', 'special')
+    let currentTheme = 'Ninjago'; // Updated: State for current selected theme
 
     // UI Elements
     const drawCountElement = document.getElementById('draw-count');
@@ -313,7 +370,7 @@
     const totalCountElement = document.getElementById('total-count');
     const initialMessage = document.getElementById('initial-message');
     const userIdDisplay = document.getElementById('user-id-display');
-    const categoryFilters = document.getElementById('category-filters'); // NEW: Category filter container
+    const collectionThemeName = document.getElementById('collection-theme-name'); // New element
     
     // New Redeem Code UI Elements and Constants
     const redeemInput = document.getElementById('redeem-input');
@@ -323,8 +380,8 @@
     // --- CODE CONSTANTS ---
     // 1. Master list of unique, global single-use codes (UPDATED TO 10 CODES)
     const SINGLE_USE_CODES = [
-        "FREE1", "FREE2", "c", "d", "e",
-        "f", "g", "h", "i", "j"
+        "FREE1", "FREE2", "FIGFREE1", "FIGFREE2", "FIGFREE3",
+        "WELCOME1", "WELCOME2", "WELCOME3", "WELCOME4", "WELCOME5"
     ];
     const CODE_REFILL_AMOUNT = 5;
     
@@ -332,7 +389,6 @@
     const USER_ID_KEY = 'minifigure_user_id'; 
     const BASE_DRAW_COUNT_KEY = 'minifigure_draw_count_simple';
     const BASE_COLLECTION_KEY = 'minifigure_collection_list_v2'; 
-    // This key now stores ALL codes used globally by any player
     const GLOBAL_USED_CODES_KEY = 'minifigure_global_used_codes_v1'; 
     const INITIAL_DRAWS = 0; 
 
@@ -340,21 +396,17 @@
     function getPlaceholderUrl(figure) {
         let bgColor;
         let fgColor = 'ffffff'; 
-        switch (figure.color) {
-            case 'red-600': bgColor = 'DC2626'; break; 
-            case 'sky-400': bgColor = '38BDF8'; fgColor = '333333'; break; 
-            case 'blue-600': bgColor = '2563EB'; break; 
-            case 'gray-700': bgColor = '374151'; break; 
-            case 'green-500': bgColor = '22C55E'; break; 
-            case 'purple-600': bgColor = '9333EA'; break; 
+        // Use theme color for placeholder background
+        switch (figure.theme) {
+            case 'Ninjago': bgColor = '3b82f6'; break; // Blue-500
+            case 'Marvel': bgColor = 'ef4444'; break; // Red-500
             default: bgColor = '6B7280'; break; 
         }
         
-        const numberMatch = figure.image_url.match(/lucky-(\d+)\.jpg$/);
-        const numberCode = numberMatch ? numberMatch[1] : 'XX';
         const baseName = figure.name.split(' ')[0].toUpperCase();
+        const rarityInitial = figure.rarity.charAt(0).toUpperCase();
 
-        return `https://placehold.co/96x96/${bgColor}/${fgColor}?text=${baseName}|${numberCode}`;
+        return `https://placehold.co/96x96/${bgColor}/${fgColor}?text=${baseName}|${rarityInitial}`;
     }
 
     // --- User ID Management (Simple 4-Digit ID) ---
@@ -386,6 +438,7 @@
     // --- Core Game Logic Utilities ---
     function parseFigureString(str) {
         const figure = {};
+        // Regex to match key:"value" pairs, including single quotes for weight as a string initially
         const regex = /(\w+):"([^"]+)"/g; 
         let match;
         while ((match = regex.exec(str)) !== null) {
@@ -400,14 +453,17 @@
     
     function initializeMinifigures() {
         MINIFIGURES = FIGURE_STRINGS.map(parseFigureString);
-        if (totalCountElement) {
-            totalCountElement.textContent = MINIFIGURES.length;
-        }
+        // Note: totalCountElement is updated by updateCollectionUI to reflect the filtered count
     }
     
+    /**
+     * Performs a weighted draw ONLY from the figures belonging to the currentTheme.
+     */
     function weightedDraw() {
+        const themeFigures = MINIFIGURES.filter(fig => fig.theme === currentTheme);
+
         const weightedList = [];
-        MINIFIGURES.forEach(fig => {
+        themeFigures.forEach(fig => {
             const weight = fig.weight || 1; 
             for (let i = 0; i < weight; i++) {
                 weightedList.push(fig);
@@ -415,7 +471,7 @@
         });
 
         if (weightedList.length === 0) {
-            console.error("No figures available for draw.");
+            console.error(`No figures available for draw in the ${currentTheme} theme.`);
             return null;
         }
 
@@ -513,8 +569,6 @@
     }
     
     function resetCollection() {
-        // NOTE: Does NOT reset the global redeem codes, as they are meant to be one-time use forever.
-        
         collectedFigures = [];
         localStorage.removeItem(getCollectionKey());
         updateCollectionUI();
@@ -550,45 +604,41 @@
         modal.classList.remove('hidden');
     }
 
-    // --- NEW: Filter Logic ---
-    function setFilter(filterType) {
-        currentFilter = filterType;
+    // --- NEW: Theme Selection Logic ---
+    window.selectTheme = function(theme) {
+        currentTheme = theme;
         updateCollectionUI();
         
-        // Update active class on buttons
-        document.querySelectorAll('#category-filters button').forEach(button => {
-            if (button.dataset.filter === filterType) {
-                button.classList.add('active');
+        // Update active class on cards
+        document.querySelectorAll('.theme-card').forEach(card => {
+            card.classList.remove('active-ninjago', 'active-marvel');
+            card.classList.add('bg-gray-700');
+            card.querySelector('h3').classList.remove('text-white');
+            
+            if (card.dataset.theme === theme) {
+                card.classList.remove('bg-gray-700');
+                if (theme === 'Ninjago') {
+                    card.classList.add('active-ninjago');
+                    card.querySelector('h3').classList.add('text-white');
+                } else if (theme === 'Marvel') {
+                    card.classList.add('active-marvel');
+                    card.querySelector('h3').classList.add('text-white');
+                }
             } else {
-                button.classList.remove('active');
+                 if (card.dataset.theme === 'Ninjago') {
+                    card.querySelector('h3').classList.add('text-blue-400');
+                } else if (card.dataset.theme === 'Marvel') {
+                    card.querySelector('h3').classList.add('text-red-400');
+                }
             }
         });
     }
 
+    /**
+     * Filters the master list to show only figures belonging to the currentTheme.
+     */
     function getFilteredFigures() {
-        if (currentFilter === 'all') {
-            return MINIFIGURES;
-        }
-
-        // Logic to determine which category a figure belongs to based on the number in its image_url
-        return MINIFIGURES.filter(fig => {
-            const numberMatch = fig.image_url.match(/lucky-(\d+)\.jpg$/);
-            if (!numberMatch) return false;
-
-            const codePrefix = parseInt(numberMatch[1].substring(0, 2), 10);
-            
-            // "Classic Series" includes prefixes 01, 11, 21, 41 (representing DX, Pilot, NRG, ZX)
-            const isClassic = codePrefix >= 1 && codePrefix <= 46 && codePrefix % 10 === 1;
-
-            if (currentFilter === 'classic') {
-                // Classic Series: DX (0x), Pilot (1x), NRG (2x), ZX (4x)
-                return codePrefix >= 1 && codePrefix <= 46;
-            } else if (currentFilter === 'special') {
-                // Special Series: Kimono (5x), Pajamas (6x), Rebooted (7x)
-                return codePrefix >= 51 && codePrefix <= 76;
-            }
-            return true; // Should be caught by 'all' or filtered cases
-        });
+        return MINIFIGURES.filter(fig => fig.theme === currentTheme);
     }
 
     // --- UI Update ---
@@ -615,21 +665,31 @@
         if (!collectionListElement) return;
         
         const collectedUrls = new Set(collectedFigures);
-        const figuresToShow = getFilteredFigures(); // NEW: Filter figures based on currentFilter
+        const figuresToShow = getFilteredFigures(); 
         
-        // Count only the collected items within the ENTIRE MINIFIGURES list (not just the filtered view)
+        // Total collected figures across ALL themes
+        const totalCollectedAll = MINIFIGURES.filter(fig => collectedUrls.has(fig.image_url)).length;
+        
+        // Count of collected figures in the CURRENT theme
+        const collectedInThemeCount = figuresToShow.filter(fig => collectedUrls.has(fig.image_url)).length;
+        
+        // Update Theme Name Display
+        collectionThemeName.textContent = currentTheme;
+
+        // Update counts (showing current theme progress)
         if (collectedCountElement) {
-            collectedCountElement.textContent = collectedUrls.size;
+            collectedCountElement.textContent = collectedInThemeCount;
         }
 
         if (totalCountElement) {
-             // Show total count of the currently filtered set
+             // Show total count of the currently selected theme
              totalCountElement.textContent = figuresToShow.length;
         }
 
         collectionListElement.innerHTML = figuresToShow.map(fig => {
             const isCollected = collectedUrls.has(fig.image_url);
-            const statusClass = isCollected ? 'collected collection-item' : 'missing';
+            // Collection items are always clickable if collected, or default if missing
+            const statusClass = isCollected ? 'collected collection-item' : 'missing'; 
             const clickHandler = isCollected ? `onclick="showFigureDetails('${fig.image_url}')"` : '';
             const fallbackUrl = getPlaceholderUrl(fig);
             const rarityClass = `rarity-${fig.rarity.toLowerCase().replace(' ', '-')}`;
@@ -648,10 +708,10 @@
             `;
         }).join('');
 
-        // If the filtered list is empty, show a message
+        // If the filtered list is empty (should not happen with our setup)
         if (figuresToShow.length === 0) {
             collectionListElement.innerHTML = `
-                <p class="col-span-6 text-center text-gray-500 py-6 text-sm">No figures found in the '${currentFilter}' series.</p>
+                <p class="col-span-6 text-center text-gray-500 py-6 text-sm">No figures found in the '${currentTheme}' series.</p>
             `;
         }
 
@@ -700,18 +760,22 @@
         }, 3000);
     }
 
-    // --- Main Draw Logic (No changes needed here) ---
+    // --- Main Draw Logic (Modified to use filtered list for re-roll count) ---
 
     function displayDrawResults(results) {
         if(initialMessage) initialMessage.remove(); 
 
         const isMultiDraw = results.length > 1;
         
-        const totalFiguresInCollection = new Set(collectedFigures).size;
-        const totalFiguresAvailable = MINIFIGURES.length;
+        const figuresInCurrentTheme = MINIFIGURES.filter(f => f.theme === currentTheme);
+        const totalFiguresAvailableInTheme = figuresInCurrentTheme.length;
+
+        const collectedInTheme = new Set(collectedFigures.filter(url => 
+            figuresInCurrentTheme.some(f => f.image_url === url)
+        )).size;
         
         const resultTitle = isMultiDraw 
-            ? `RESULTS (${results.length} FIGURES DRAWN)` 
+            ? `RESULTS (${results.length} DRAWS)` 
             : 'YOUR MYSTERY RESULT';
         
         let containerClass = "flex flex-col items-center justify-center p-4 w-full";
@@ -735,7 +799,7 @@
             const isNewFigure = result.isNew;
             const wasFreeRedraw = result.wasFreeRedraw;
             
-            const borderColorClass = figure.color ? `border-${figure.color}` : 'border-yellow-500';
+            const borderColorClass = figure.theme === 'Ninjago' ? 'border-blue-500' : 'border-red-500';
             const rarityClass = `rarity-${figure.rarity.toLowerCase().replace(' ', '-')} `;
             
             const figureImageUrl = figure.image_url;
@@ -750,9 +814,9 @@
                 titleClass = 'text-green-400';
                 titleBadge = `<span class="new-badge absolute top-0 left-0 text-[8px] font-bold px-1.5 py-0.5 rounded-br-lg rounded-tl-lg uppercase">NEW</span>`;
             } else {
-                // Check against the total available count, not the filtered list.
-                const isCollectionFull = totalFiguresInCollection >= totalFiguresAvailable; 
-                titleText = isCollectionFull ? 'COLLECTION COMPLETE!' : 'DUPLICATE!';
+                // Check if the current theme collection is full
+                const isCollectionFull = collectedInTheme >= totalFiguresAvailableInTheme; 
+                titleText = isCollectionFull ? 'THEME COMPLETE!' : 'DUPLICATE!';
                 titleClass = isCollectionFull ? 'text-yellow-400' : 'text-red-400';
                 titleBadge = ''; 
             }
@@ -810,39 +874,52 @@
         // Wait for suspense (1.5 seconds)
         setTimeout(() => {
             const drawResults = [];
+            const figuresInCurrentTheme = MINIFIGURES.filter(f => f.theme === currentTheme);
 
             for (let i = 0; i < count; i++) {
                 let finalDrawnFigure = null;
                 let isNew = false;
                 let wasFreeRedraw = false;
-                const maxFreeAttempts = MINIFIGURES.length * 2; 
-
-                // 1. Initial Draw (Paid Slot)
+                
+                // 1. Initial Draw (Paid Slot) - uses the weightedDraw which only draws from the currentTheme pool
                 let drawnFigure = weightedDraw();
+                
+                // Save and check if it's new
                 let initialIsNew = saveCollection(drawnFigure.image_url);
                 finalDrawnFigure = drawnFigure;
                 isNew = initialIsNew;
 
-                // 2. Continuous Re-draw logic if duplicate AND collection is not full
-                if (!initialIsNew && collectedFigures.length < MINIFIGURES.length) {
-                    wasFreeRedraw = true; 
-                    let attempts = 0;
+                // 2. Continuous Re-draw logic if duplicate AND the current theme collection is not full
+                if (!initialIsNew) {
+                    const collectedInThemeCount = new Set(collectedFigures.filter(url => 
+                        figuresInCurrentTheme.some(f => f.image_url === url)
+                    )).size;
+                    
+                    if (collectedInThemeCount < figuresInCurrentTheme.length) {
+                         wasFreeRedraw = true; 
+                        let attempts = 0;
 
-                    do {
-                        attempts++;
-                        let reDrawnFigure = weightedDraw();
-                        
-                        if (saveCollection(reDrawnFigure.image_url)) {
-                            finalDrawnFigure = reDrawnFigure; 
-                            isNew = true; 
-                            break;
-                        }
-                        
-                        // Check if collection is now full after drawing the duplicate
-                        if (new Set(collectedFigures).size >= MINIFIGURES.length || attempts >= maxFreeAttempts) { 
-                            break;
-                        }
-                    } while (true);
+                        do {
+                            attempts++;
+                            let reDrawnFigure = weightedDraw(); // Draws ONLY from current theme pool
+                            
+                            if (saveCollection(reDrawnFigure.image_url)) {
+                                finalDrawnFigure = reDrawnFigure; 
+                                isNew = true; 
+                                break;
+                            }
+                            
+                            // Recalculate collection size to prevent infinite loop if collection becomes full
+                            const currentThemeCollectedAfterDraw = new Set(collectedFigures.filter(url => 
+                                figuresInCurrentTheme.some(f => f.image_url === url)
+                            )).size;
+                            
+                            // Break condition: if collection is now full or too many attempts
+                            if (currentThemeCollectedAfterDraw >= figuresInCurrentTheme.length || attempts > 100) { 
+                                break;
+                            }
+                        } while (true);
+                    }
                 }
 
                 // 3. Log the final result for display
@@ -865,6 +942,9 @@
         initializeMinifigures();
         loadDrawCount();
         loadCollection(); 
+        
+        // Select Ninjago by default and update the UI
+        selectTheme('Ninjago'); 
         
         // Start the real-time clock update
         updateCambodiaTime();
@@ -895,18 +975,6 @@
             resetCollectionButton.addEventListener('click', resetCollection);
         }
         
-        // NEW: Attach event listeners for Category Filters
-        if (categoryFilters) {
-            categoryFilters.querySelectorAll('button').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const filter = e.currentTarget.dataset.filter;
-                    if (filter) {
-                        setFilter(filter);
-                    }
-                });
-            });
-        }
-
         updateDrawCountUI();
     }
 
@@ -914,4 +982,3 @@
 </script>
 </body>
 </html>
-
