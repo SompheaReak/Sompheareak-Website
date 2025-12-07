@@ -117,17 +117,6 @@
             text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
         }
 
-        .filter-button {
-            transition: all 0.2s;
-            background-color: #4b5563;
-        }
-        .filter-button.active {
-            background-color: var(--lego-yellow);
-            color: #1f2937;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(255, 195, 0, 0.5);
-        }
-        
         /* Custom styles for theme cards */
         .theme-card {
             border: 3px solid transparent;
@@ -194,6 +183,7 @@
 
         <div class="mb-4 p-2 rounded-lg bg-gray-700 shadow-inner border border-gray-600 text-center">
             <span class="text-sm font-semibold text-gray-300">Your Player ID:</span>
+            <!-- User ID is a 4-digit simple ID stored in localStorage -->
             <code id="user-id-display" class="text-3xl font-mono font-extrabold text-red-400 block tracking-widest">...</code>
         </div>
 
@@ -203,7 +193,8 @@
         </div>
         
         <div id="datetime-display" class="mb-6 p-2 text-center rounded-lg bg-gray-700 border border-gray-600">
-            </div>
+            <!-- Cambodia Time will be displayed here -->
+        </div>
 
         <div id="result-area" class="mt-4 min-h-[150px] flex items-center justify-center border-2 border-dashed border-gray-700 rounded-lg p-2">
             <div id="initial-message" class="text-center p-4 text-gray-400">
@@ -234,6 +225,7 @@
         </button>
     </div>
     
+    <!-- Collection List Section (Dynamically switches content based on theme) -->
     <div class="w-full max-w-sm mt-8 p-4 bg-gray-800 rounded-xl border border-gray-700 shadow-lg">
         <h2 class="text-xl font-bold text-yellow-500 mb-3 border-b border-yellow-500 pb-2 flex justify-between items-center">
             <span><span id="collection-theme-name">Ninjago</span> Collection</span>
@@ -242,10 +234,9 @@
             </span>
         </h2>
         
-        <!-- Removed Category Filters as we use Theme Selection now -->
-
         <div id="collection-list" class="grid grid-cols-6 gap-1">
-            </div>
+            <!-- Figures are rendered here based on the selected theme -->
+        </div>
     </div>
 </div>
 
@@ -267,58 +258,59 @@
 
 <script>
     // --- 💥 CUSTOM MINIFIGURE WEIGHTS 💥 ---
+    // All figures must have a 'theme' property defined, but since most of the original list was Ninjago,
+    // we assume the ones without an explicit theme are 'Ninjago'. We will update the parser for this.
     const FIGURE_STRINGS = [ 
         // --- NINJAGO FIGURES (theme:"Ninjago") ---
-        // Image URLs are placeholder paths, the placeholder function handles rendering.
-  'name:"Kai (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-01.jpg"',
-     'name:"Zane (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-02.jpg"',
-     'name:"Jay (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-03.jpg"',
-     'name:"Cole (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-04.jpg"',
-     'name:"Lloyd (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-05.jpg"',
-     'name:"Nya (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-06.jpg"',
+     'name:"Kai (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-01.jpg", theme:"Ninjago"',
+     'name:"Zane (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-02.jpg", theme:"Ninjago"',
+     'name:"Jay (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-03.jpg", theme:"Ninjago"',
+     'name:"Cole (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-04.jpg", theme:"Ninjago"',
+     'name:"Lloyd (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-05.jpg", theme:"Ninjago"',
+     'name:"Nya (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-06.jpg", theme:"Ninjago"',
   
-     'name:"Kai (PILOT)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-11.jpg"',
-     'name:"Zane (PILOT)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-12.jpg"',
-     'name:"Jay (PILOT)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-13.jpg"',
-     'name:"Cole (PILOT)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-14.jpg"',
-     'name:"Lloyd (PILOT)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-15.jpg"',
-     'name:"Pink Zane (PILOT)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-16.jpg"',
+     'name:"Kai (PILOT)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-11.jpg", theme:"Ninjago"',
+     'name:"Zane (PILOT)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-12.jpg", theme:"Ninjago"',
+     'name:"Jay (PILOT)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-13.jpg", theme:"Ninjago"',
+     'name:"Cole (PILOT)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-14.jpg", theme:"Ninjago"',
+     'name:"Lloyd (PILOT)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-15.jpg", theme:"Ninjago"',
+     'name:"Pink Zane (PILOT)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-16.jpg", theme:"Ninjago"',
 
-     'name:"Kai (NRG)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-21.jpg"',
-     'name:"Zane (NRG)", rarity:"Rare", weight:80, color:"red-600", image_url:"static/images/lucky-22.jpg"',
-     'name:"Jay (NRG)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-23.jpg"',
-     'name:"Cole (NRG)", rarity:"Rare", weight:80, color:"red-600", image_url:"static/images/lucky-24.jpg"',
-     'name:"Lloyd (NRG)", rarity:"Rare", weight:20, color:"red-600", image_url:"static/images/lucky-25.jpg"',
-     'name:"Nya (NRG)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-26.jpg"',
+     'name:"Kai (NRG)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-21.jpg", theme:"Ninjago"',
+     'name:"Zane (NRG)", rarity:"Rare", weight:80, color:"red-600", image_url:"static/images/lucky-22.jpg", theme:"Ninjago"',
+     'name:"Jay (NRG)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-23.jpg", theme:"Ninjago"',
+     'name:"Cole (NRG)", rarity:"Rare", weight:80, color:"red-600", image_url:"static/images/lucky-24.jpg", theme:"Ninjago"',
+     'name:"Lloyd (NRG)", rarity:"Rare", weight:20, color:"red-600", image_url:"static/images/lucky-25.jpg", theme:"Ninjago"',
+     'name:"Nya (NRG)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-26.jpg", theme:"Ninjago"',
   
-     'name:"Kai (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-41.jpg"',
-     'name:"Zane (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-42.jpg"',
-     'name:"Jay (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-43.jpg"',
-     'name:"Cole (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-44.jpg"',
-     'name:"Lloyd (ZX)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-45.jpg"',
-     'name:"Nya (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-46.jpg"',
+     'name:"Kai (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-41.jpg", theme:"Ninjago"',
+     'name:"Zane (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-42.jpg", theme:"Ninjago"',
+     'name:"Jay (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-43.jpg", theme:"Ninjago"',
+     'name:"Cole (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-44.jpg", theme:"Ninjago"',
+     'name:"Lloyd (ZX)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-45.jpg", theme:"Ninjago"',
+     'name:"Nya (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-46.jpg", theme:"Ninjago"',
 
         // Special Series (51-76 prefixes)
-     'name:"Kai (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-51.jpg"',
-     'name:"Zane (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-52.jpg"',
-     'name:"Jay (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-53.jpg"',
-     'name:"Cole (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-54.jpg"',
-     'name:"Lloyd (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-55.jpg"',
-     'name:"Golden Lloyd (KIMONO)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-56.jpg"',
+     'name:"Kai (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-51.jpg", theme:"Ninjago"',
+     'name:"Zane (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-52.jpg", theme:"Ninjago"',
+     'name:"Jay (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-53.jpg", theme:"Ninjago"',
+     'name:"Cole (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-54.jpg", theme:"Ninjago"',
+     'name:"Lloyd (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-55.jpg", theme:"Ninjago"',
+     'name:"Golden Lloyd (KIMONO)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-56.jpg", theme:"Ninjago"',
 
-     'name:"Kai (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-61.jpg"',
-     'name:"Zane (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-62.jpg"',
-     'name:"Jay (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-63.jpg"',
-     'name:"Cole (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-64.jpg"',
-     'name:"Golden Zane (DX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-65.jpg"',
-     'name:"Ultra Nya (DX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-66.jpg"',
+     'name:"Kai (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-61.jpg", theme:"Ninjago"',
+     'name:"Zane (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-62.jpg", theme:"Ninjago"',
+     'name:"Jay (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-63.jpg", theme:"Ninjago"',
+     'name:"Cole (PAJAMAS)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-64.jpg", theme:"Ninjago"',
+     'name:"Golden Zane (DX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-65.jpg", theme:"Ninjago"',
+     'name:"Ultra Nya (DX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-66.jpg", theme:"Ninjago"',
   
-     'name:"Kai (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-71.jpg"',
-     'name:"Zane (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-72.jpg"',
-     'name:"Jay (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-73.jpg"',
-     'name:"Cole (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-74.jpg"',
-     'name:"Lloyd (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-75.jpg"',
-     'name:"Pixal (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-76.jpg"',
+     'name:"Kai (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-71.jpg", theme:"Ninjago"',
+     'name:"Zane (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-72.jpg", theme:"Ninjago"',
+     'name:"Jay (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-73.jpg", theme:"Ninjago"',
+     'name:"Cole (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-74.jpg", theme:"Ninjago"',
+     'name:"Lloyd (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-75.jpg", theme:"Ninjago"',
+     'name:"Pixal (REBOOTED)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-76.jpg", theme:"Ninjago"',
 
         // --- MARVEL FIGURES (theme:"Marvel") ---
      'name:"Spider-Man (Iron)", rarity:"Common", weight:80, theme:"Marvel", color:"blue-500", image_url:"static/images/marvel-81.jpg"',
@@ -357,7 +349,7 @@
     let isLoading = false;
     let collectedFigures = []; 
     let USER_ID = null; 
-    let currentTheme = 'Ninjago'; // Updated: State for current selected theme
+    let currentTheme = 'Ninjago'; // State for current selected theme
 
     // UI Elements
     const drawCountElement = document.getElementById('draw-count');
@@ -370,15 +362,15 @@
     const totalCountElement = document.getElementById('total-count');
     const initialMessage = document.getElementById('initial-message');
     const userIdDisplay = document.getElementById('user-id-display');
-    const collectionThemeName = document.getElementById('collection-theme-name'); // New element
+    const collectionThemeName = document.getElementById('collection-theme-name');
     
-    // New Redeem Code UI Elements and Constants
+    // Redeem Code UI Elements and Constants
     const redeemInput = document.getElementById('redeem-input');
     const redeemButton = document.getElementById('redeem-button');
     const redeemMessage = document.getElementById('redeem-message');
 
     // --- CODE CONSTANTS ---
-    // 1. Master list of unique, global single-use codes (UPDATED TO 10 CODES)
+    // Master list of unique, global single-use codes 
     const SINGLE_USE_CODES = [
         "FREE1", "FREE2", "FIGFREE1", "FIGFREE2", "FIGFREE3",
         "WELCOME1", "WELCOME2", "WELCOME3", "WELCOME4", "WELCOME5"
@@ -448,12 +440,13 @@
                 figure[match[1]] = match[2];
             }
         }
+        // Ensure theme is set even if missing in original string (though we updated the list)
+        if (!figure.theme) figure.theme = 'Ninjago'; 
         return figure;
     }
     
     function initializeMinifigures() {
         MINIFIGURES = FIGURE_STRINGS.map(parseFigureString);
-        // Note: totalCountElement is updated by updateCollectionUI to reflect the filtered count
     }
     
     /**
@@ -607,31 +600,37 @@
     // --- NEW: Theme Selection Logic ---
     window.selectTheme = function(theme) {
         currentTheme = theme;
-        updateCollectionUI();
         
         // Update active class on cards
         document.querySelectorAll('.theme-card').forEach(card => {
+            const cardTheme = card.dataset.theme;
             card.classList.remove('active-ninjago', 'active-marvel');
-            card.classList.add('bg-gray-700');
+            card.classList.remove('bg-gray-800'); // Ensure background is grey when inactive
+            card.classList.add('bg-gray-700'); 
             card.querySelector('h3').classList.remove('text-white');
             
-            if (card.dataset.theme === theme) {
+            if (cardTheme === theme) {
                 card.classList.remove('bg-gray-700');
                 if (theme === 'Ninjago') {
                     card.classList.add('active-ninjago');
+                    card.querySelector('h3').classList.remove('text-blue-400');
                     card.querySelector('h3').classList.add('text-white');
                 } else if (theme === 'Marvel') {
                     card.classList.add('active-marvel');
+                    card.querySelector('h3').classList.remove('text-red-400');
                     card.querySelector('h3').classList.add('text-white');
                 }
             } else {
-                 if (card.dataset.theme === 'Ninjago') {
+                 if (cardTheme === 'Ninjago') {
                     card.querySelector('h3').classList.add('text-blue-400');
-                } else if (card.dataset.theme === 'Marvel') {
+                } else if (cardTheme === 'Marvel') {
                     card.querySelector('h3').classList.add('text-red-400');
                 }
             }
         });
+
+        // Crucial: Update the collection list and counts based on the newly selected theme
+        updateCollectionUI();
     }
 
     /**
@@ -667,9 +666,6 @@
         const collectedUrls = new Set(collectedFigures);
         const figuresToShow = getFilteredFigures(); 
         
-        // Total collected figures across ALL themes
-        const totalCollectedAll = MINIFIGURES.filter(fig => collectedUrls.has(fig.image_url)).length;
-        
         // Count of collected figures in the CURRENT theme
         const collectedInThemeCount = figuresToShow.filter(fig => collectedUrls.has(fig.image_url)).length;
         
@@ -692,7 +688,7 @@
             const statusClass = isCollected ? 'collected collection-item' : 'missing'; 
             const clickHandler = isCollected ? `onclick="showFigureDetails('${fig.image_url}')"` : '';
             const fallbackUrl = getPlaceholderUrl(fig);
-            const rarityClass = `rarity-${fig.rarity.toLowerCase().replace(' ', '-')}`;
+            const rarityClass = `rarity-${fig.rarity.toLowerCase().replace(' ', '-')} `;
 
 
             return `
@@ -833,7 +829,8 @@
                     </div>
 
                     <div class="${imageContainerClass}">
-                        <img src="${figureImageUrl}" alt="${figure.name}" class="w-full h-full object-contain rounded-md" onerror="this.onerror=null; this.src='${fallbackUrl}'"/>
+                        <img src="${figureImageUrl}" alt="${figure.name}" class="w-full h-full object-contain rounded-md" 
+                             onerror="this.onerror=null; this.src='${fallbackUrl}'"/>
                         ${titleBadge}
                     </div>
                     
@@ -891,6 +888,7 @@
 
                 // 2. Continuous Re-draw logic if duplicate AND the current theme collection is not full
                 if (!initialIsNew) {
+                    // Recalculate collected count in current theme *before* re-rolls
                     const collectedInThemeCount = new Set(collectedFigures.filter(url => 
                         figuresInCurrentTheme.some(f => f.image_url === url)
                     )).size;
@@ -914,7 +912,7 @@
                                 figuresInCurrentTheme.some(f => f.image_url === url)
                             )).size;
                             
-                            // Break condition: if collection is now full or too many attempts
+                            // Break condition: if collection is now full or too many attempts (safeguard)
                             if (currentThemeCollectedAfterDraw >= figuresInCurrentTheme.length || attempts > 100) { 
                                 break;
                             }
@@ -982,3 +980,4 @@
 </script>
 </body>
 </html>
+
