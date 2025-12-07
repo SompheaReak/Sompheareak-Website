@@ -16,7 +16,6 @@
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Expose Firebase tools to the global scope for use in the script tag
-        // These are now correctly imported using the module system before being exposed.
         window.firebase = {
             initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, 
             getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, setLogLevel, serverTimestamp, arrayUnion, arrayRemove, runTransaction
@@ -220,7 +219,8 @@
                 (<span id="collected-count">0</span> / <span id="total-count">0</span>)
             </span>
         </h2>
-        <div id="collection-list" class="grid grid-cols-6 gap-1">
+        <!-- The collection list now uses the requested 6 columns -->
+        <div id="collection-list" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-1"> 
         </div>
     </div>
 
@@ -265,7 +265,7 @@
         </div>
     </div>
 
-
+<!-- --- FIGURE DATA (Needed for the game to run) --- -->
 <script>
     // --- 💥 CUSTOM MINIFIGURE DATASETS 💥 ---
 
@@ -340,6 +340,10 @@
         'name:"Joker (Clown Prince)", rarity:"Super Rare", weight:40, color:"purple-600", image_url:"https://placehold.co/96x96/9333EA/ffffff?text=JOKER"',
         'name:"Master Chief (Halo)", rarity:"Ultra Rare", weight:10, color:"green-500", image_url:"https://placehold.co/96x96/22C55E/ffffff?text=MC"',
     ];
+</script>
+
+
+<script>
 
     // --- Redeem Codes are now Category Specific ---
     const CODE_REFILL_AMOUNT = 5;
@@ -425,14 +429,49 @@
     
     // --- Initial Setup & Auth ---
 
+    /**
+     * Extracts and formats the Player ID to be 4 digits long, using only numbers.
+     * @param {string} fullId - The full Firebase User ID (alphanumeric).
+     * @returns {string} The 4-digit numeric player ID.
+     */
+    const formatPlayerId = (fullId) => {
+        // 1. Remove all non-digit characters
+        let digits = fullId.replace(/[^\d]/g, ''); 
+        
+        // 2. Ensure it's 4 digits long (take first 4, or pad with zeros if shorter)
+        if (digits.length >= 4) {
+            return digits.substring(0, 4);
+        } else {
+            // Fallback: If not enough digits, pad the available digits with zeros to ensure 4 digits
+            return (digits + '0000').substring(0, 4);
+        }
+    };
+
+
     async function setupFirebase() {
         try {
-            // 1. Get Global Variables
-            APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            // Parse config, falling back to an empty object if undefined/malformed
-            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            // =========================================================================
+            // IMPORTANT: REPLACE THE DUMMY CONFIGURATION BELOW WITH YOUR ACTUAL FIREBASE CONFIG
+            // This fix ensures that the Firebase app initializes successfully,
+            // preventing the "App not ready or database is inaccessible" error.
+            // =========================================================================
+            const YOUR_FIREBASE_CONFIG_GOES_HERE = {
+                apiKey: "DUMMY_API_KEY_TO_BE_REPLACED",
+                authDomain: "your-project-id.firebaseapp.com",
+                projectId: "your-project-id", // MUST be the correct project ID
+                storageBucket: "your-project-id.appspot.com",
+                messagingSenderId: "123456789012",
+                appId: "1:123456789012:web:abcdef1234567890abcdef",
+            };
             
+            // 1. Get Global Variables & Config
+            const firebaseConfig = YOUR_FIREBASE_CONFIG_GOES_HERE;
+            APP_ID = firebaseConfig.projectId; // Using projectId as the application identifier
+            
+            // Check for canvas environment token, otherwise use standard auth flow
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            // =========================================================================
+
             // Debugging
             firebase.setLogLevel('Debug');
             authStatus.textContent = "Initializing Firebase...";
@@ -466,8 +505,10 @@
                 // Once authenticated (or fallback ID generated)
                 if (!IS_AUTH_READY) {
                     IS_AUTH_READY = true;
-                    userIdDisplay.textContent = USER_ID;
-                    authStatus.textContent = `Authenticated. ID: ${USER_ID.substring(0, 8)}...`;
+                    // --- MODIFIED: Format and display the 4-digit, numbers-only Player ID ---
+                    const shortId = formatPlayerId(USER_ID);
+                    userIdDisplay.textContent = shortId; 
+                    authStatus.textContent = `Authenticated. ID: ${shortId}...`;
                     
                     // Show category modal only once auth is done
                     if (!CATEGORY_ID) {
@@ -477,15 +518,7 @@
             });
         } catch (error) {
             console.error("Firebase Initialization Error:", error);
-            // Handling the specific error from the screenshot for better user feedback
-            if (error.message.includes('projectId') || JSON.stringify(error).includes('projectId')) {
-                // Keep the error message visible but allow the user to select a category
-                authStatus.textContent = `❌ Initialization Error: Project config missing (projectId).`;
-            } else {
-                authStatus.textContent = `Authentication Failed: ${error.message}`;
-            }
-             // Even if initialization failed, we can still show the modal, 
-             // but we rely on selectCategory not using IS_AUTH_READY flag.
+            authStatus.textContent = `❌ Initialization Error: Check Firebase Config or Internet.`;
              if (!CATEGORY_ID) {
                 document.getElementById('category-modal').classList.remove('hidden');
             }
@@ -496,9 +529,6 @@
     // --- Category Selection Logic ---
     
     window.selectCategory = function(categoryId) {
-        // FIX: Removed !IS_AUTH_READY guard. If Firebase initialization failed, 
-        // the button click was blocked. Now it proceeds, and Firebase-dependent 
-        // functions will handle the null 'db' variable gracefully.
         if (IS_GAME_READY) return; 
 
         CATEGORY_ID = categoryId;
