@@ -259,6 +259,7 @@
 <script>
     // --- 💥 CUSTOM MINIFIGURE WEIGHTS 💥 ---
     // All figures must have a 'theme' property defined.
+    // NOTE: A weight of 0 will now prevent a figure from being drawn.
     const FIGURE_STRINGS = [ 
         // --- NINJAGO FIGURES (theme:"Ninjago") ---
      'name:"Kai (DX)", rarity:"Common", weight:80, color:"red-600", image_url:"static/images/lucky-01.jpg", theme:"Ninjago"',
@@ -376,7 +377,7 @@
     // --- CODE CONSTANTS ---
     // Fixed list of unique, theme-specific codes for the demo
     const SINGLE_USE_CODES = {
-        Ninjago: ["NJO1001", "NJO2002", "NJO3003", "NJO4004"], // NJO + 4 digits
+        Ninjago: ["NJO0001", "NJO0002", "NJO0003", "NJO0004", "NJO0005", "NJO0006", "NJO0007", "NJO0008", "NJO0009", "NJO0010", "NJO0011"]// NJO + 4 digits
         Marvel: ["PRO5005", "PRO6006", "PRO7007", "PRO8008"]  // PRO + 4 digits
     };
     const CODE_REFILL_AMOUNT = 5;
@@ -478,15 +479,19 @@
     
     /**
      * Performs a weighted draw ONLY from the figures belonging to the currentTheme.
+     * FIX: Ensures figures with weight: 0 are explicitly excluded from the pool.
      */
     function weightedDraw() {
         const themeFigures = MINIFIGURES.filter(fig => fig.theme === currentTheme);
 
         const weightedList = [];
         themeFigures.forEach(fig => {
-            const weight = fig.weight || 1; 
-            for (let i = 0; i < weight; i++) {
-                weightedList.push(fig);
+            const weight = fig.weight; 
+            // Only add the figure to the list if the weight is a positive number
+            if (weight > 0) {
+                for (let i = 0; i < weight; i++) {
+                    weightedList.push(fig);
+                }
             }
         });
 
@@ -824,6 +829,21 @@
         setTimeout(() => {
             const drawResults = [];
             const figuresInCurrentTheme = MINIFIGURES.filter(f => f.theme === currentTheme);
+            const figuresInCurrentThemeWithWeight = figuresInCurrentTheme.filter(f => f.weight > 0);
+            
+            // Check if there are any figures to draw
+            if (figuresInCurrentThemeWithWeight.length === 0) {
+                 resultArea.innerHTML = `
+                    <div class="text-center p-4 text-gray-400">
+                        <p class="mb-2 text-lg font-semibold text-red-500">Draw Pool Empty!</p>
+                        <p class="text-sm">No figures in the ${currentTheme} theme have a weight greater than 0.</p>
+                    </div>
+                `;
+                isLoading = false;
+                updateDrawCountUI();
+                return;
+            }
+
 
             for (let i = 0; i < count; i++) {
                 let finalDrawnFigure = null;
@@ -833,6 +853,12 @@
                 // 1. Initial Draw (Paid Slot) - uses the weightedDraw which only draws from the currentTheme pool
                 let drawnFigure = weightedDraw();
                 
+                if (!drawnFigure) {
+                    // This should only happen if the draw pool unexpectedly becomes empty
+                    console.error("Weighted draw failed to return a figure.");
+                    break; 
+                }
+
                 // Save and check if it's new
                 let initialIsNew = saveCollection(drawnFigure.image_url);
                 finalDrawnFigure = drawnFigure;
@@ -898,9 +924,7 @@
             figuresInCurrentTheme.some(f => f.image_url === url)
         )).size;
         
-        const resultTitle = isMultiDraw 
-            ? `RESULTS (${results.length} DRAWS)` 
-            : 'YOUR MYSTERY RESULT';
+        const resultTitle = results.length > 0 ? (isMultiDraw ? `RESULTS (${results.length} DRAWS)` : 'YOUR MYSTERY RESULT') : 'DRAW ERROR';
         
         let containerClass = "flex flex-col items-center justify-center p-4 w-full";
         let cardClass = "result-card p-4 bg-gray-700 rounded-xl shadow-2xl w-full max-w-xs border-b-8";
