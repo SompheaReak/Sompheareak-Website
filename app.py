@@ -18,28 +18,31 @@ import {
   Menu, 
   X, 
   ShieldCheck, 
-  Languages,
   ArrowLeft,
   Phone,
   User,
   MapPin,
-  History,
   Search,
   CheckCircle2
 } from 'lucide-react';
 
-// --- Firebase Initialization (CRITICAL FOR DEPLOY) ---
-const firebaseConfig = JSON.parse(__firebase_config);
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'the-song-store-v2';
+// --- Firebase Initialization (Robust Pattern for Deployment) ---
+let app, auth, db, appId;
+
+try {
+  const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  appId = typeof __app_id !== 'undefined' ? __app_id : 'the-song-store-default';
+} catch (error) {
+  console.error("Firebase initialization failed:", error);
+}
 
 // --- Constants ---
 const BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8";
 const CHAT_ID = "-1002654437316";
 
-// Keeping your specific product storage way
 const INITIAL_PRODUCTS = [
   { 
     "id": 1, 
@@ -138,8 +141,10 @@ export default function App() {
 
   const t = LANGUAGES[lang];
 
-  // RULE 3: Auth Before Queries
+  // Auth Initialization (Mandatory Rule 3)
   useEffect(() => {
+    if (!auth) return;
+
     const initAuth = async () => {
       try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -189,7 +194,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] text-slate-900 font-sans pb-24">
-      {/* Header */}
+      {/* Navbar */}
       <nav className="bg-white/80 backdrop-blur-xl sticky top-0 z-40 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -230,7 +235,7 @@ export default function App() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 pt-6">
-        {/* VIEW: HOME */}
+        {/* Home View */}
         {view === 'home' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="mb-8">
@@ -265,12 +270,12 @@ export default function App() {
               <button onClick={() => { setView('shop'); setActiveCategory(null); }} className="text-red-600 font-bold text-sm flex items-center gap-1">View All <ChevronRight size={16}/></button>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-               {products.slice(0, 5).map(p => <ProductCard key={p.id} product={p} lang={lang} t={t} setCart={setCart} />)}
+               {products.slice(0, 5).map(p => <ProductCard key={p.id} product={p} t={t} setCart={setCart} />)}
             </div>
           </div>
         )}
 
-        {/* VIEW: SHOP */}
+        {/* Shop View */}
         {view === 'shop' && (
           <div className="animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -304,7 +309,7 @@ export default function App() {
 
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-                {filteredProducts.map(p => <ProductCard key={p.id} product={p} lang={lang} t={t} setCart={setCart} />)}
+                {filteredProducts.map(p => <ProductCard key={p.id} product={p} t={t} setCart={setCart} />)}
               </div>
             ) : (
               <div className="text-center py-20 bg-white rounded-[40px] border-2 border-dashed border-gray-100">
@@ -315,7 +320,7 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW: CART */}
+        {/* Cart View */}
         {view === 'cart' && (
           <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 animate-in slide-in-from-bottom-8">
             <div className="space-y-4">
@@ -346,6 +351,7 @@ export default function App() {
               )}
             </div>
 
+            {/* Checkout Form */}
             <div className="bg-white p-8 rounded-[40px] shadow-xl shadow-gray-200/50 h-fit sticky top-24 border border-gray-50">
               <h3 className="text-xl font-black mb-6">Order Summary</h3>
               <form onSubmit={(e) => {
@@ -403,7 +409,7 @@ export default function App() {
           </div>
         )}
 
-        {/* VIEW: SUCCESS */}
+        {/* Order Success View */}
         {view === 'success' && (
           <div className="max-w-md mx-auto py-20 text-center animate-in zoom-in-95 duration-500">
             <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-green-100">
@@ -418,16 +424,16 @@ export default function App() {
         )}
       </main>
 
-      {/* Floating Bottom Nav */}
+      {/* Navigation Dock */}
       <div className="fixed bottom-6 left-0 right-0 px-4 flex justify-center z-50 pointer-events-none">
         <nav className="bg-white/90 backdrop-blur-xl border border-white/20 shadow-[0_20px_60px_rgba(0,0,0,0.15)] p-2 rounded-[32px] flex gap-1 pointer-events-auto">
           <button onClick={() => { setView('home'); setActiveCategory(null); }} className={`p-4 rounded-[26px] flex items-center gap-2 transition-all ${view === 'home' || view === 'shop' ? 'bg-red-600 text-white shadow-xl shadow-red-200' : 'text-gray-400 hover:bg-gray-50'}`}>
             <Package size={20} strokeWidth={2.5} />
             {(view === 'home' || view === 'shop') && <span className="text-xs font-black">Shop</span>}
           </button>
-          <button onClick={() => setView('cart')} className={`p-4 rounded-[26px] flex items-center gap-2 transition-all ${view === 'cart' || view === 'checkout' ? 'bg-red-600 text-white shadow-xl shadow-red-200' : 'text-gray-400 hover:bg-gray-50'}`}>
+          <button onClick={() => setView('cart')} className={`p-4 rounded-[26px] flex items-center gap-2 transition-all ${view === 'cart' ? 'bg-red-600 text-white shadow-xl shadow-red-200' : 'text-gray-400 hover:bg-gray-50'}`}>
             <ShoppingBag size={20} strokeWidth={2.5} />
-            {(view === 'cart' || view === 'checkout') && <span className="text-xs font-black">Cart</span>}
+            {view === 'cart' && <span className="text-xs font-black">Cart</span>}
           </button>
           <button onClick={() => setView('admin')} className="p-4 rounded-[26px] text-gray-400 hover:bg-gray-50 transition-all">
             <ShieldCheck size={20} strokeWidth={2.5} />
@@ -435,7 +441,7 @@ export default function App() {
         </nav>
       </div>
 
-      {/* Drawer Overlay */}
+      {/* Sidebar Navigation */}
       <div className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-500 ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className={`w-80 bg-white h-full shadow-2xl transition-transform duration-500 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="p-8 border-b border-gray-50 flex justify-between items-center">
@@ -463,7 +469,7 @@ export default function App() {
 }
 
 function ProductCard({ product, t, setCart }) {
-  const fallbackImg = "https://via.placeholder.com/400?text=TheSong+Store";
+  const fallbackImg = "https://via.placeholder.com/400?text=Product+Image";
 
   return (
     <div className="bg-white rounded-[32px] border border-gray-100 overflow-hidden group shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 flex flex-col">
