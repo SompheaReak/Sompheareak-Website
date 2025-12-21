@@ -1,373 +1,344 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { 
-  getFirestore, 
-  collection, 
-  onSnapshot, 
-  addDoc, 
-  doc, 
-  serverTimestamp 
-} from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, 
   Package, 
-  Plus, 
   Trash2, 
-  ChevronRight, 
   Menu, 
   X, 
   ShieldCheck, 
-  ArrowLeft,
-  Phone,
-  User,
-  MapPin,
-  Search,
-  CheckCircle2
+  Search, 
+  Gift, 
+  Lock,
+  CheckCircle,
+  Truck
 } from 'lucide-react';
 
-// --- CRITICAL: Safe Global Variable Handling ---
-// This prevents the "Deploy Failed" error caused by missing/invalid environment variables
-const getSafeConfig = () => {
-  try {
-    if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-      return JSON.parse(__firebase_config);
-    }
-  } catch (e) {
-    console.error("Firebase config parse error:", e);
-  }
-  return null;
+/**
+ * SIMULATED DATA FROM YOUR FLASK CODE
+ */
+const ADMIN_USERNAME = 'AdminSompheaReakVitou';
+const ADMIN_PASSWORD = 'Thesong_Admin@2022?!$';
+
+const SUBCATEGORIES_MAP = {
+    "Accessories": ["Gym Bracelet", "Gem Stone Bracelet","Dragon Bracelet","Bracelet"],
+    "LEGO Ninjago": ["Dragon Rising","Building Set","Season 1", "Season 2", "Season 3", "Season 4", "Season 5"],
+    "LEGO Anime": ["One Piece","Demon Slayer"],
+    "Keychain": ["Gun Keychains"],
+    "Hot Sale": [],
+    "LEGO": ["Formula 1"],
+    "Toy": ["Lego Ninjago", "One Piece","Lego WWII", "Lego ទាហាន"],
+    "Italy Bracelet": ["All","Football","Gem","Flag","Chain"],
+    "Lucky Draw": ["/lucky-draw"], 
 };
 
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'the-song-store-default';
-const firebaseConfig = getSafeConfig();
-
-// Initialize Firebase only if config exists
-let app, auth, db;
-if (firebaseConfig) {
-  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-  auth = getAuth(app);
-  db = getFirestore(app);
-}
-
-// --- Constants ---
-const BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8";
-const CHAT_ID = "-1002654437316";
-
-const INITIAL_PRODUCTS = [
-  { 
-    "id": 1, 
-    "name_kh": "#OP01 One Piece - Sakazuki",
-    "price": 7500, 
-    "image": "https://raw.githubusercontent.com/TheSong-Store/static/main/images/op01.jpg", 
-    "categories": ["LEGO Anime", "Toy"], 
-    "subcategory": ["One Piece"],
-    "stock": 1,
-    "discount": 0 
-  },
-  { 
-    "id": 2, 
-    "name_kh": "#OP02 One Piece - Portgas D Ace",
-    "price": 6500, 
-    "image": "https://raw.githubusercontent.com/TheSong-Store/static/main/images/op02.jpg", 
-    "categories": ["LEGO Anime", "Toy"], 
-    "subcategory": ["One Piece"],
-    "stock": 1,
-    "discount": 0 
-  }
+const MOCK_PRODUCTS = [
+  { id: 1, name_kh: "LEGO One Piece Luffy", price: 6500, image: "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=400", categories: ["LEGO Anime", "Toy"], subcategory: ["One Piece"] },
+  { id: 2, name_kh: "Dragon Bracelet Luxury", price: 12000, image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400", categories: ["Accessories"], subcategory: ["Dragon Bracelet"] },
+  { id: 3, name_kh: "Gym Bracelet Pro", price: 5000, image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400", categories: ["Accessories"], subcategory: ["Gym Bracelet"] },
+  { id: 4, name_kh: "LEGO Ninjago Dragon", price: 8500, image: "https://images.unsplash.com/photo-1560000593-06674681330c?w=400", categories: ["LEGO Ninjago"], subcategory: ["Dragon Rising"] }
 ];
 
-const CATEGORY_DATA = {
-  "Hot Sale": { img: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400", sub: [] },
-  "Accessories": { img: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400", sub: ["Gym Bracelet", "Gem Stone Bracelet", "Dragon Bracelet", "Bracelet"] },
-  "LEGO Ninjago": { img: "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=400", sub: ["Dragon Rising", "Building Set"] },
-  "LEGO Anime": { img: "https://images.unsplash.com/photo-1614583225154-5feaba071595?w=400", sub: ["One Piece", "Demon Slayer"] },
-  "Keychain": { img: "https://images.unsplash.com/photo-1582142407894-ec85a1260a46?w=400", sub: ["Gun Keychains"] },
-  "Toy": { img: "https://images.unsplash.com/photo-1531651008558-ed1740375b39?w=400", sub: ["Lego Ninjago", "One Piece"] },
-  "Italy Bracelet": { img: "https://images.unsplash.com/photo-1535633302703-b0703af2939a?w=400", sub: ["All", "Football", "Flag"] },
-  "Lucky Draw": { img: "https://images.unsplash.com/photo-1596838132731-163467475510?w=400", sub: ["Play"] }
-};
-
-const LANGUAGES = {
-  kh: {
-    storeName: "TheSong Store",
-    addToCart: "បន្ថែមទៅក្នុងកន្ត្រក",
-    checkout: "បន្តទៅការទូទាត់",
-    cart: "កន្ត្រកទំនិញ",
-    total: "សរុប",
-    name: "ឈ្មោះពេញ",
-    phone: "លេខទូរស័ព្ទ",
-    address: "អាសយដ្ឋានដឹកជញ្ជូន",
-    orderNow: "បញ្ជាទិញឥឡូវនេះ",
-    currency: "៛",
-    explore: "ស្វែងរកតាមប្រភេទ",
-    trending: "ទំនិញពេញនិយម"
-  },
-  en: {
-    storeName: "TheSong Store",
-    addToCart: "Add to Cart",
-    checkout: "Checkout Now",
-    cart: "Your Cart",
-    total: "Subtotal",
-    name: "Full Name",
-    phone: "Phone Number",
-    address: "Shipping Address",
-    orderNow: "Complete Order",
-    currency: "KHR",
-    explore: "Shop by Category",
-    trending: "Trending Now"
-  }
-};
-
 export default function App() {
-  const [user, setUser] = useState(null);
-  const [lang, setLang] = useState('kh');
-  const [view, setView] = useState('home'); 
-  const [activeCategory, setActiveCategory] = useState(null);
+  const [view, setView] = useState('home');
+  const [activeCategory, setActiveCategory] = useState('Hot Sale');
   const [activeSub, setActiveSub] = useState(null);
-  const [products] = useState(INITIAL_PRODUCTS);
   const [cart, setCart] = useState([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminInput, setAdminInput] = useState({ user: '', pass: '' });
+  const [checkoutStatus, setCheckoutStatus] = useState(null);
 
-  const t = LANGUAGES[lang];
+  // Filter products based on Flask logic
+  const filteredProducts = MOCK_PRODUCTS.filter(p => {
+    if (activeCategory === 'Hot Sale') return true;
+    if (activeSub) return p.subcategory.includes(activeSub);
+    return p.categories.includes(activeCategory);
+  });
 
-  // Auth Initialization (Mandatory Rule 3)
-  useEffect(() => {
-    if (!auth) return;
+  const addToCart = (product) => {
+    setCart([...cart, { ...product, cartId: Date.now() }]);
+  };
 
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (e) {
-        console.error("Auth failed:", e);
-      }
-    };
-    initAuth();
-    const unsub = onAuthStateChanged(auth, setUser);
-    return () => unsub();
-  }, []);
-
-  const filteredProducts = useMemo(() => {
-    let list = products;
-    if (activeCategory && activeCategory !== "Hot Sale") {
-      list = list.filter(p => p.categories?.includes(activeCategory));
-    }
-    if (activeSub) {
-      list = list.filter(p => p.subcategory?.includes(activeSub));
-    }
-    if (searchQuery) {
-      list = list.filter(p => p.name_kh.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
-    return list;
-  }, [products, activeCategory, activeSub, searchQuery]);
-
-  const sendOrderToTelegram = async (data) => {
-    const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
-    const msg = `🚀 *NEW ORDER*\n👤 ${data.name}\n📞 ${data.phone}\n📍 ${data.address}\n\n*Items:* \n${cart.map(i => `- ${i.name_kh} x${i.qty}`).join('\n')}\n\n*Total:* ${subtotal.toLocaleString()}៛`;
+  const handleCheckout = (e) => {
+    e.preventDefault();
+    setCheckoutStatus('loading');
     
-    try {
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: 'Markdown' })
-      });
+    // Simulate your notify_telegram logic
+    setTimeout(() => {
+      setCheckoutStatus('success');
       setCart([]);
-      setView('success');
-    } catch (err) {
-      console.error("Telegram error:", err);
+    }, 1500);
+  };
+
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    if (adminInput.user === ADMIN_USERNAME && adminInput.pass === ADMIN_PASSWORD) {
+      setIsAdmin(true);
+    } else {
+      alert("Invalid Admin Credentials");
     }
   };
 
-  // Guard: If no config, show setup instructions instead of crashing
-  if (!firebaseConfig) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6 text-center">
-        <ShieldCheck className="text-red-500 mb-4" size={64} />
-        <h1 className="text-2xl font-black mb-2">Setup Required</h1>
-        <p className="text-gray-500 max-w-sm">Please add your Firebase configuration to the project settings to enable store features.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-[#F8F9FB] text-slate-900 font-sans pb-24">
-      {/* Navbar */}
-      <nav className="bg-white/80 backdrop-blur-xl sticky top-0 z-40 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setIsMenuOpen(true)} className="p-2 hover:bg-gray-50 rounded-xl transition-colors">
-              <Menu size={22} strokeWidth={2.5} />
-            </button>
-            <h1 onClick={() => { setView('home'); setActiveCategory(null); }} className="text-xl font-black tracking-tight cursor-pointer text-red-600">
-              THESONG
-            </h1>
-          </div>
+    <div className="min-h-screen bg-gray-50 text-slate-900 font-sans pb-20">
+      {/* Header */}
+      <nav className="bg-white border-b sticky top-0 z-50 px-4 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsMenuOpen(true)} className="p-2 hover:bg-gray-100 rounded-lg">
+            <Menu size={24} />
+          </button>
+          <h1 onClick={() => setView('home')} className="text-xl font-bold text-red-600 tracking-tighter cursor-pointer">
+            THESONG STORE
+          </h1>
+        </div>
 
-          <div className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="ស្វែងរកទំនិញ..." 
-                className="w-full bg-gray-100 border-none rounded-2xl py-2 pl-10 pr-4 text-sm focus:ring-2 ring-red-500/20 transition-all outline-none font-medium"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button onClick={() => setLang(lang === 'kh' ? 'en' : 'kh')} className="text-[10px] font-black border-2 border-gray-100 px-3 py-1.5 rounded-xl hover:bg-gray-50 uppercase">
-              {lang}
-            </button>
-            <button onClick={() => setView('cart')} className="relative p-2.5 bg-gray-900 text-white rounded-2xl shadow-lg active:scale-95 transition-transform">
-              <ShoppingBag size={20} />
-              {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
-                  {cart.length}
-                </span>
-              )}
-            </button>
-          </div>
+        <div className="flex items-center gap-4">
+          <button onClick={() => setView('cart')} className="relative p-2 bg-slate-900 text-white rounded-full">
+            <ShoppingBag size={20} />
+            {cart.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white font-bold">
+                {cart.length}
+              </span>
+            )}
+          </button>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 pt-6">
+      <main className="max-w-4xl mx-auto p-4">
         {view === 'home' && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="mb-8">
-              <h2 className="text-3xl font-black tracking-tight mb-2">{t.explore}</h2>
-              <div className="h-1.5 w-12 bg-red-600 rounded-full"></div>
+          <div className="space-y-6">
+            {/* Category Navigation (Flask: subcategories_map) */}
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+              {Object.keys(SUBCATEGORIES_MAP).map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    if (cat === 'Lucky Draw') {
+                      setView('lucky-draw');
+                    } else {
+                      setActiveCategory(cat);
+                      setActiveSub(null);
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${activeCategory === cat ? 'bg-red-600 text-white' : 'bg-white border text-gray-600'}`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {Object.entries(CATEGORY_DATA).map(([name, meta]) => (
-                <div 
-                  key={name}
-                  onClick={() => {
-                    setActiveCategory(name);
-                    setActiveSub(null);
-                    setView('shop');
-                  }}
-                  className="group relative h-40 md:h-56 rounded-[32px] overflow-hidden cursor-pointer shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500"
-                >
-                  <img src={meta.img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={name} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-5 md:p-6">
-                    <div>
-                      <h3 className="text-white font-black text-lg md:text-xl leading-tight">{name}</h3>
-                      <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-1">Collection</p>
-                    </div>
+            {/* Sub-Category Navigation */}
+            {SUBCATEGORIES_MAP[activeCategory] && SUBCATEGORIES_MAP[activeCategory].length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                {SUBCATEGORIES_MAP[activeCategory].map(sub => (
+                  <button
+                    key={sub}
+                    onClick={() => setActiveSub(sub)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${activeSub === sub ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}
+                  >
+                    {sub}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Product Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {filteredProducts.map(p => (
+                <div key={p.id} className="bg-white rounded-2xl overflow-hidden border shadow-sm group">
+                  <div className="aspect-square bg-gray-100 relative">
+                    <img src={p.image} className="w-full h-full object-cover" alt={p.name_kh} />
+                  </div>
+                  <div className="p-3">
+                    <h3 className="font-bold text-sm mb-1">{p.name_kh}</h3>
+                    <p className="text-red-600 font-bold mb-3">{p.price.toLocaleString()}៛</p>
+                    <button 
+                      onClick={() => addToCart(p)}
+                      className="w-full bg-slate-100 group-hover:bg-red-600 group-hover:text-white py-2 rounded-xl text-[10px] font-black uppercase transition-all"
+                    >
+                      បន្ថែមទៅកន្ត្រក
+                    </button>
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        )}
-
-        {view === 'shop' && (
-          <div className="animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-              <button onClick={() => setView('home')} className="flex items-center gap-2 text-gray-400 font-bold text-sm hover:text-black transition-colors w-fit">
-                <ArrowLeft size={16}/> Back
-              </button>
-              <h2 className="text-4xl font-black tracking-tighter">{activeCategory}</h2>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-              {filteredProducts.map(p => <ProductCard key={p.id} product={p} t={t} setCart={setCart} />)}
             </div>
           </div>
         )}
 
         {view === 'cart' && (
-          <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 animate-in slide-in-from-bottom-8">
-            <div className="space-y-4">
-              <h2 className="text-3xl font-black mb-6">{t.cart}</h2>
-              {cart.map((item, idx) => (
-                <div key={idx} className="bg-white p-4 rounded-[32px] border border-gray-100 flex gap-4">
-                  <img src={item.image} className="w-20 h-20 rounded-2xl object-cover" alt={item.name_kh} />
-                  <div className="flex-1 flex flex-col justify-between">
-                    <h4 className="font-bold text-sm">{item.name_kh}</h4>
-                    <div className="flex justify-between items-center">
-                      <span className="text-red-600 font-black">{item.price.toLocaleString()}៛</span>
-                      <button onClick={() => setCart(cart.filter((_, i) => i !== idx))} className="text-gray-300 hover:text-red-500"><Trash2 size={18}/></button>
+          <div className="animate-in slide-in-from-bottom-4">
+            <h2 className="text-2xl font-bold mb-6">កន្ត្រកទំនិញ ({cart.length})</h2>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                {cart.map((item, idx) => (
+                  <div key={idx} className="bg-white p-4 rounded-2xl border flex gap-4">
+                    <img src={item.image} className="w-16 h-16 rounded-xl object-cover" />
+                    <div className="flex-1">
+                      <h4 className="font-bold text-sm">{item.name_kh}</h4>
+                      <p className="text-red-600 font-bold">{item.price.toLocaleString()}៛</p>
                     </div>
+                    <button onClick={() => setCart(cart.filter((_, i) => i !== idx))} className="text-gray-300">
+                      <Trash2 size={18} />
+                    </button>
                   </div>
-                </div>
-              ))}
-              {cart.length === 0 && <p className="text-center py-10 text-gray-400 font-bold">Your cart is empty</p>}
-            </div>
+                ))}
+                {cart.length === 0 && <p className="text-gray-400 py-10 text-center">Your cart is empty.</p>}
+              </div>
 
-            <div className="bg-white p-8 rounded-[40px] shadow-xl border border-gray-50 h-fit">
-              <h3 className="text-xl font-black mb-6">Checkout</h3>
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                sendOrderToTelegram(Object.fromEntries(new FormData(e.target)));
-              }} className="space-y-4">
-                <input name="name" required className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold text-sm" placeholder={t.name} />
-                <input name="phone" required className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold text-sm" placeholder={t.phone} />
-                <textarea name="address" required className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold text-sm h-24" placeholder={t.address} />
-                <div className="pt-6 border-t flex justify-between items-center">
-                  <span className="font-bold text-gray-400">{t.total}</span>
-                  <span className="text-2xl font-black text-red-600">{cart.reduce((s, i) => s + (i.price * i.qty), 0).toLocaleString()}៛</span>
-                </div>
-                <button type="submit" disabled={cart.length === 0} className="w-full bg-red-600 text-white py-5 rounded-3xl font-black disabled:opacity-50">
-                  {t.orderNow}
-                </button>
+              <div className="bg-white p-6 rounded-3xl border shadow-sm h-fit">
+                <h3 className="font-bold text-lg mb-4">ការទូទាត់ប្រាក់</h3>
+                <form onSubmit={handleCheckout} className="space-y-4">
+                  <input placeholder="ឈ្មោះរបស់អ្នក" required className="w-full bg-gray-50 border p-3 rounded-xl text-sm" />
+                  <input placeholder="លេខទូរស័ព្ទ" required className="w-full bg-gray-50 border p-3 rounded-xl text-sm" />
+                  <select className="w-full bg-gray-50 border p-3 rounded-xl text-sm">
+                    <option value="door">ដឹកដល់ផ្ទះ (7,000៛)</option>
+                    <option value="vet">វីរៈប៊ុនថាំ (5,000៛)</option>
+                  </select>
+                  <div className="border-t pt-4 flex justify-between font-bold text-lg">
+                    <span>សរុប:</span>
+                    <span className="text-red-600">
+                      {cart.reduce((sum, item) => sum + item.price, 0).toLocaleString()}៛
+                    </span>
+                  </div>
+                  <button 
+                    disabled={cart.length === 0 || checkoutStatus === 'loading'}
+                    className="w-full bg-red-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-red-100 disabled:opacity-50"
+                  >
+                    {checkoutStatus === 'loading' ? 'កំពុងផ្ញើទៅ Telegram...' : 'បញ្ជាទិញឥឡូវនេះ'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view === 'lucky-draw' && (
+          <div className="bg-white p-10 rounded-[40px] border shadow-sm text-center">
+            <Gift className="mx-auto text-red-500 mb-6" size={60} />
+            <h2 className="text-3xl font-bold mb-4">Minifigure Lucky Draw</h2>
+            <p className="text-gray-500 mb-8">Win rare LEGO minifigures for only 5,000៛!</p>
+            <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl p-12 text-gray-300 font-bold text-4xl mb-8">
+              ? ? ?
+            </div>
+            <button className="bg-red-600 text-white px-10 py-4 rounded-2xl font-bold text-xl shadow-xl shadow-red-200">
+              Spin to Win
+            </button>
+            <button onClick={() => setView('home')} className="block mx-auto mt-6 text-gray-400 font-bold underline">
+              Back to Store
+            </button>
+          </div>
+        )}
+
+        {view === 'admin-login' && !isAdmin && (
+          <div className="max-w-sm mx-auto pt-20">
+            <div className="bg-white p-8 rounded-3xl border shadow-xl text-center">
+              <Lock className="mx-auto text-gray-200 mb-4" size={40} />
+              <h2 className="text-xl font-bold mb-6">Admin Panel</h2>
+              <form onSubmit={handleAdminLogin} className="space-y-4">
+                <input 
+                  placeholder="Username" 
+                  className="w-full bg-gray-50 border p-3 rounded-xl text-sm"
+                  value={adminInput.user}
+                  onChange={e => setAdminInput({...adminInput, user: e.target.value})}
+                />
+                <input 
+                  type="password" 
+                  placeholder="Password" 
+                  className="w-full bg-gray-50 border p-3 rounded-xl text-sm"
+                  value={adminInput.pass}
+                  onChange={e => setAdminInput({...adminInput, pass: e.target.value})}
+                />
+                <button className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold">Login</button>
               </form>
             </div>
           </div>
         )}
 
-        {view === 'success' && (
-          <div className="max-w-md mx-auto py-20 text-center animate-in zoom-in-95">
-            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 size={40} />
+        {isAdmin && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Dashboard</h2>
+              <button onClick={() => setIsAdmin(false)} className="text-red-500 font-bold">Logout</button>
             </div>
-            <h2 className="text-3xl font-black mb-2">Order Success!</h2>
-            <p className="text-gray-500 mb-8">We will contact you shortly.</p>
-            <button onClick={() => setView('home')} className="w-full bg-gray-900 text-white py-4 rounded-2xl font-black">Back to Home</button>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-white p-6 rounded-2xl border text-center">
+                <p className="text-xs text-gray-400 font-bold uppercase">Products</p>
+                <p className="text-2xl font-bold">{MOCK_PRODUCTS.length}</p>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border text-center">
+                <p className="text-xs text-gray-400 font-bold uppercase">Bot Status</p>
+                <p className="text-2xl font-bold text-green-500">Active</p>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border text-center">
+                <p className="text-xs text-gray-400 font-bold uppercase">IP Bans</p>
+                <p className="text-2xl font-bold">2</p>
+              </div>
+            </div>
+            <div className="bg-white border rounded-2xl overflow-hidden">
+               <div className="p-4 border-b font-bold bg-gray-50">Manage Products</div>
+               <div className="divide-y">
+                 {MOCK_PRODUCTS.map(p => (
+                   <div key={p.id} className="p-4 flex items-center justify-between">
+                     <div className="flex items-center gap-3">
+                       <img src={p.image} className="w-10 h-10 rounded-lg object-cover" />
+                       <span className="text-sm font-bold">{p.name_kh}</span>
+                     </div>
+                     <button className="text-red-500"><Trash2 size={16} /></button>
+                   </div>
+                 ))}
+               </div>
+            </div>
+          </div>
+        )}
+
+        {checkoutStatus === 'success' && (
+          <div className="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in">
+            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
+              <CheckCircle size={40} />
+            </div>
+            <h2 className="text-3xl font-bold mb-4">ការបញ្ជាទិញជោគជ័យ!</h2>
+            <p className="text-gray-500 mb-10 max-w-xs">ក្រុមការងារយើងនឹងទាក់ទងទៅអ្នកក្នុងពេលឆាប់ៗតាមរយៈ Telegram ។</p>
+            <button onClick={() => {setCheckoutStatus(null); setView('home');}} className="w-full max-w-xs bg-slate-900 text-white py-4 rounded-2xl font-bold">រួចរាល់</button>
           </div>
         )}
       </main>
 
-      {/* Dock */}
-      <div className="fixed bottom-6 left-0 right-0 px-4 flex justify-center z-50">
-        <nav className="bg-white/90 backdrop-blur-xl border border-gray-100 shadow-2xl p-2 rounded-[32px] flex gap-1">
-          <button onClick={() => setView('home')} className={`p-4 rounded-[26px] ${view === 'home' ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'text-gray-400'}`}>
-            <Package size={20} />
-          </button>
-          <button onClick={() => setView('cart')} className={`p-4 rounded-[26px] ${view === 'cart' ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'text-gray-400'}`}>
-            <ShoppingBag size={20} />
-          </button>
-        </nav>
-      </div>
-    </div>
-  );
-}
-
-function ProductCard({ product, t, setCart }) {
-  return (
-    <div className="bg-white rounded-[32px] border border-gray-100 overflow-hidden group shadow-sm hover:shadow-xl transition-all flex flex-col">
-      <div className="aspect-square relative overflow-hidden bg-gray-50">
-        <img src={product.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={product.name_kh} />
-      </div>
-      <div className="p-4 flex-1 flex flex-col">
-        <h4 className="font-black text-xs mb-2 line-clamp-2">{product.name_kh}</h4>
-        <p className="text-red-600 font-black text-base mt-auto mb-3">{product.price.toLocaleString()}៛</p>
-        <button 
-          onClick={() => setCart(prev => {
-            const exists = prev.find(i => i.id === product.id);
-            if (exists) return prev.map(i => i.id === product.id ? {...i, qty: i.qty + 1} : i);
-            return [...prev, { ...product, qty: 1 }];
-          })}
-          className="w-full bg-gray-900 text-white py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
-        >
-          {t.addToCart}
+      {/* Footer Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t px-6 py-3 flex justify-around items-center z-40">
+        <button onClick={() => setView('home')} className={`flex flex-col items-center ${view === 'home' ? 'text-red-600' : 'text-gray-400'}`}>
+          <Package size={20} />
+          <span className="text-[10px] font-bold mt-1">Store</span>
         </button>
+        <button onClick={() => setView('lucky-draw')} className={`flex flex-col items-center ${view === 'lucky-draw' ? 'text-red-600' : 'text-gray-400'}`}>
+          <Gift size={20} />
+          <span className="text-[10px] font-bold mt-1">Lucky Draw</span>
+        </button>
+        <button onClick={() => setView('admin-login')} className={`flex flex-col items-center ${view === 'admin-login' || isAdmin ? 'text-red-600' : 'text-gray-400'}`}>
+          <ShieldCheck size={20} />
+          <span className="text-[10px] font-bold mt-1">Admin</span>
+        </button>
+      </div>
+
+      {/* Side Menu */}
+      <div className={`fixed inset-0 bg-black/40 z-[60] transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`w-72 bg-white h-full transition-transform duration-300 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="p-6 border-b flex justify-between items-center">
+            <h2 className="font-bold text-xl">Categories</h2>
+            <button onClick={() => setIsMenuOpen(false)} className="p-2"><X size={20} /></button>
+          </div>
+          <div className="p-4 space-y-1">
+            {Object.keys(SUBCATEGORIES_MAP).map(cat => (
+              <button 
+                key={cat}
+                onClick={() => {setActiveCategory(cat); setIsMenuOpen(false); setView('home');}}
+                className="w-full text-left p-3 rounded-xl hover:bg-gray-50 font-bold text-gray-600 flex items-center justify-between"
+              >
+                {cat}
+                <span className="text-gray-300"><Search size={14} /></span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
