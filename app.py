@@ -39,7 +39,31 @@ const appId = typeof __app_id !== 'undefined' ? __app_id : 'the-song-store-v2';
 const BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8";
 const CHAT_ID = "-1002654437316";
 
-// Keeping your current category & product logic structure
+// Keeping your specific product storage way
+const INITIAL_PRODUCTS = [
+  { 
+    "id": 1, 
+    "name_kh": "#OP01 One Piece - Sakazuki",
+    "price": 7500, 
+    "image": "/static/images/op01.jpg", 
+    "categories": ["LEGO Anime", "Toy"], 
+    "subcategory": ["One Piece"],
+    "stock": 1,
+    "discount": 0 
+  },
+  { 
+    "id": 2, 
+    "name_kh": "#OP02 One Piece - Portgas D Ace",
+    "price": 6500, 
+    "image": "/static/images/op02.jpg", 
+    "categories": ["LEGO Anime", "Toy"], 
+    "subcategory": ["One Piece"],
+    "stock": 1,
+    "discount": 0 
+  },
+  // Add more products here using your GitHub URLs
+];
+
 const CATEGORY_DATA = {
   "Hot Sale": { img: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400", sub: [] },
   "Accessories": { 
@@ -57,10 +81,6 @@ const CATEGORY_DATA = {
   "Keychain": { 
     img: "https://images.unsplash.com/photo-1582142407894-ec85a1260a46?w=400", 
     sub: ["Gun Keychains"] 
-  },
-  "LEGO": { 
-    img: "https://images.unsplash.com/photo-1472457897821-70d3819a0e24?w=400", 
-    sub: ["Formula 1"] 
   },
   "Toy": { 
     img: "https://images.unsplash.com/photo-1531651008558-ed1740375b39?w=400", 
@@ -112,10 +132,7 @@ export default function App() {
   const [view, setView] = useState('home'); 
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeSub, setActiveSub] = useState(null);
-  const [products, setProducts] = useState([
-    { id: 1, name_kh: "#OP01 One Piece - Sakazuki", price: 7500, image: "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=400", categories: ["LEGO Anime", "Toy"], subcategory: ["One Piece"], discount: 0 },
-    { id: 2, name_kh: "#OP02 One Piece - Portgas D Ace", price: 6500, image: "https://images.unsplash.com/photo-1614583225154-5feaba071595?w=400", categories: ["LEGO Anime", "Toy"], subcategory: ["One Piece"], discount: 0 },
-  ]);
+  const [products] = useState(INITIAL_PRODUCTS);
   const [cart, setCart] = useState([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -131,7 +148,6 @@ export default function App() {
     return () => unsub();
   }, []);
 
-  // Filter Logic
   const filteredProducts = useMemo(() => {
     let list = products;
     if (activeCategory && activeCategory !== "Hot Sale") {
@@ -150,17 +166,21 @@ export default function App() {
     const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
     const msg = `🚀 *NEW ORDER*\n👤 ${data.name}\n📞 ${data.phone}\n📍 ${data.address}\n🚚 ${data.delivery}\n\n*Items:* \n${cart.map(i => `- ${i.name_kh} x${i.qty}`).join('\n')}\n\n*Total:* ${subtotal.toLocaleString()}៛`;
     
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: 'Markdown' })
-    });
-    setCart([]);
-    setView('success');
+    try {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: 'Markdown' })
+      });
+      setCart([]);
+      setView('success');
+    } catch (err) {
+      console.error("Telegram error:", err);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] text-slate-900 font-sans selection:bg-red-100 pb-20">
+    <div className="min-h-screen bg-[#F8F9FB] text-slate-900 font-sans pb-24">
       {/* Header */}
       <nav className="bg-white/80 backdrop-blur-xl sticky top-0 z-40 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -179,8 +199,8 @@ export default function App() {
               <input 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products..." 
-                className="w-full bg-gray-100 border-none rounded-2xl py-2 pl-10 pr-4 text-sm focus:ring-2 ring-red-500/20 transition-all outline-none"
+                placeholder="ស្វែងរកទំនិញ..." 
+                className="w-full bg-gray-100 border-none rounded-2xl py-2 pl-10 pr-4 text-sm focus:ring-2 ring-red-500/20 transition-all outline-none font-medium"
               />
             </div>
           </div>
@@ -189,7 +209,7 @@ export default function App() {
              <button onClick={() => setLang(lang === 'kh' ? 'en' : 'kh')} className="text-[10px] font-black border-2 border-gray-100 px-3 py-1.5 rounded-xl hover:bg-gray-50 uppercase">
               {lang}
             </button>
-            <button onClick={() => setView('cart')} className="relative p-2.5 bg-gray-900 text-white rounded-2xl shadow-lg shadow-gray-200 active:scale-95 transition-transform">
+            <button onClick={() => setView('cart')} className="relative p-2.5 bg-gray-900 text-white rounded-2xl shadow-lg active:scale-95 transition-transform">
               <ShoppingBag size={20} />
               {cart.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
@@ -215,18 +235,13 @@ export default function App() {
                 <div 
                   key={name}
                   onClick={() => {
-                    if (name === 'Lucky Draw') {
-                       setView('shop');
-                       setActiveCategory(name);
-                    } else {
-                      setActiveCategory(name);
-                      setActiveSub(null);
-                      setView('shop');
-                    }
+                    setActiveCategory(name);
+                    setActiveSub(null);
+                    setView('shop');
                   }}
                   className="group relative h-40 md:h-56 rounded-[32px] overflow-hidden cursor-pointer shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500"
                 >
-                  <img src={meta.img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="" />
+                  <img src={meta.img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={name} />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-5 md:p-6">
                     <div>
                       <h3 className="text-white font-black text-lg md:text-xl leading-tight">{name}</h3>
@@ -239,7 +254,7 @@ export default function App() {
             
             <div className="mt-12 mb-6 flex justify-between items-center">
               <h2 className="text-2xl font-black">{t.trending}</h2>
-              <button onClick={() => setView('shop')} className="text-red-600 font-bold text-sm flex items-center gap-1">View All <ChevronRight size={16}/></button>
+              <button onClick={() => { setView('shop'); setActiveCategory(null); }} className="text-red-600 font-bold text-sm flex items-center gap-1">View All <ChevronRight size={16}/></button>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                {products.slice(0, 5).map(p => <ProductCard key={p.id} product={p} lang={lang} t={t} setCart={setCart} />)}
@@ -258,11 +273,11 @@ export default function App() {
                 <h2 className="text-4xl font-black tracking-tighter">{activeCategory || "All Products"}</h2>
               </div>
               
-              {activeCategory && CATEGORY_DATA[activeCategory].sub.length > 0 && (
+              {activeCategory && CATEGORY_DATA[activeCategory]?.sub.length > 0 && (
                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                   <button 
                     onClick={() => setActiveSub(null)}
-                    className={`px-6 py-2.5 rounded-2xl whitespace-nowrap text-xs font-black transition-all ${!activeSub ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'bg-white border border-gray-100'}`}
+                    className={`px-6 py-2.5 rounded-2xl whitespace-nowrap text-xs font-black transition-all ${!activeSub ? 'bg-red-600 text-white shadow-lg' : 'bg-white border border-gray-100'}`}
                   >
                     All
                   </button>
@@ -285,28 +300,25 @@ export default function App() {
               </div>
             ) : (
               <div className="text-center py-20 bg-white rounded-[40px] border-2 border-dashed border-gray-100">
-                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Search size={32} className="text-gray-300" />
-                </div>
+                <Search size={32} className="text-gray-300 mx-auto mb-4" />
                 <h3 className="font-black text-xl">No products found</h3>
-                <p className="text-gray-400">Try changing your filters or search query</p>
               </div>
             )}
           </div>
         )}
 
-        {/* VIEW: CART & CHECKOUT */}
+        {/* VIEW: CART */}
         {view === 'cart' && (
           <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 animate-in slide-in-from-bottom-8">
             <div className="space-y-4">
               <h2 className="text-3xl font-black mb-6">{t.cart}</h2>
               {cart.length > 0 ? cart.map((item, idx) => (
                 <div key={idx} className="bg-white p-4 rounded-[32px] border border-gray-100 flex gap-4 shadow-sm">
-                  <img src={item.image} className="w-20 h-20 rounded-2xl object-cover bg-gray-50" />
+                  <img src={item.image} className="w-20 h-20 rounded-2xl object-cover bg-gray-50" alt={item.name_kh} />
                   <div className="flex-1 py-1 flex flex-col justify-between">
                     <div className="flex justify-between items-start">
                       <h4 className="font-bold text-sm leading-tight">{item.name_kh}</h4>
-                      <button onClick={() => setCart(cart.filter((_, i) => i !== idx))} className="text-gray-300 hover:text-red-500"><Trash2 size={18}/></button>
+                      <button onClick={() => setCart(cart.filter((_, i) => i !== idx))} className="text-gray-300 hover:text-red-500 transition-colors"><Trash2 size={18}/></button>
                     </div>
                     <div className="flex justify-between items-center">
                        <span className="text-red-600 font-black">{item.price.toLocaleString()}៛</span>
@@ -356,7 +368,7 @@ export default function App() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest pl-2">{t.delivery}</label>
-                  <select name="delivery" className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold text-sm appearance-none border border-transparent focus:border-red-500/20 transition-all cursor-pointer">
+                  <select name="delivery" className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-red-500/20 transition-all cursor-pointer">
                     <option>Standard Delivery (7,000៛)</option>
                     <option>VET Express (5,000៛)</option>
                     <option>J&T Express (7,000៛)</option>
@@ -373,7 +385,7 @@ export default function App() {
                   <button 
                     type="submit" 
                     disabled={cart.length === 0}
-                    className="w-full bg-red-600 text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-red-200 active:scale-95 disabled:opacity-50 disabled:grayscale transition-all"
+                    className="w-full bg-red-600 text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-red-200 active:scale-95 disabled:opacity-50 transition-all"
                   >
                     {t.orderNow}
                   </button>
@@ -391,10 +403,7 @@ export default function App() {
             </div>
             <h2 className="text-3xl font-black mb-3">Order Received!</h2>
             <p className="text-gray-500 font-medium mb-8">We have notified our staff. You will receive a call shortly to confirm your delivery.</p>
-            <button 
-              onClick={() => setView('home')}
-              className="w-full bg-gray-900 text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-gray-200 active:scale-95 transition-all"
-            >
+            <button onClick={() => setView('home')} className="w-full bg-gray-900 text-white py-5 rounded-[24px] font-black text-lg active:scale-95 transition-all">
               Back to Shopping
             </button>
           </div>
@@ -420,7 +429,7 @@ export default function App() {
 
       {/* Drawer Overlay */}
       <div className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-500 ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className={`w-80 bg-white h-full shadow-2xl transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className={`w-80 bg-white h-full shadow-2xl transition-transform duration-500 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="p-8 border-b border-gray-50 flex justify-between items-center">
             <h2 className="font-black text-2xl tracking-tight">Menu</h2>
             <button onClick={() => setIsMenuOpen(false)} className="p-2 bg-gray-50 rounded-full"><X size={20}/></button>
@@ -446,10 +455,17 @@ export default function App() {
 }
 
 function ProductCard({ product, t, setCart }) {
+  const fallbackImg = "https://via.placeholder.com/400?text=TheSong+Store";
+
   return (
     <div className="bg-white rounded-[32px] border border-gray-100 overflow-hidden group shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 flex flex-col">
       <div className="aspect-square relative overflow-hidden bg-[#F2F4F7]">
-        <img src={product.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+        <img 
+          src={product.image} 
+          onError={(e) => { e.target.src = fallbackImg; }}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+          alt={product.name_kh} 
+        />
         {product.discount > 0 && (
           <span className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-xl shadow-lg">-{product.discount}%</span>
         )}
