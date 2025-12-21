@@ -42,34 +42,8 @@ class Product(db.Model):
 initial_products = [
 # --- FULL INITIAL DATA LIST ---
 initial_products = [
+
 ] 
- --- PROCESSING LOOP ---
-with app.app_context():
-    for p_data in initial_products:
-        # Check if product already exists to avoid duplicates
-        if not Product.query.get(p_data.get('id')):
-            # Logic to handle lists in categories and subcategories
-            cats = p_data.get('categories', '')
-            if isinstance(cats, list): cats = ",".join(cats)
-            
-            subs = p_data.get('subcategory', '')
-            if isinstance(subs, list): subs = ",".join(subs)
-
-            # Apply your requested style mapping
-            new_p = Product(
-                id=p_data.get('id'),
-                name_kh=p_data['name_kh'],
-                price=p_data['price'],
-                image=p_data['image'],
-                categories_str=cats,
-                subcategory_str=subs,
-                stock=p_data.get('stock', 1)
-            )
-            db.session.add(new_p)
-    
-    db.session.commit()
-
-
 # --- SUBCATEGORIES MAP ---
 subcategories_map = {
     "Hot Sale": [],
