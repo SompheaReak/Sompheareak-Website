@@ -13,13 +13,14 @@ BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
 CHAT_ID = "-1002654437316"
 BANNED_IPS = ['123.45.67.89','45.119.135.70']
 
-# --- DATA (Restored from your previous input) ---
+# --- DATA: Products ---
 products = [
     {"id": 101, "name_kh": "NINJAGO Season 1 - DX Suit", "price": 30000, "image": "https://raw.githubusercontent.com/TheSong-Store/static/main/images/njoss1dx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago", "Season 1"], "stock": 1},
     {"id": 102, "name_kh": "NINJAGO Season 1 - KAI (DX)", "price": 5000, "image": "https://raw.githubusercontent.com/TheSong-Store/static/main/images/njoss1dxkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago", "Season 1"], "stock": 1},
     {"id": 103, "name_kh": "NINJAGO Season 1 - ZANE (DX)", "price": 5000, "image": "https://raw.githubusercontent.com/TheSong-Store/static/main/images/njoss1dxzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago", "Season 1"], "stock": 1},
 ]
 
+# --- SUBCATEGORIES MAP ---
 subcategories_map = {
     "Hot Sale": [],
     "LEGO Ninjago": ["Dragon Rising","Building Set","Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8","Season 9","Season 10","Season 11","Season 12","Season 13", "Season 14","Season 15"],
@@ -49,7 +50,6 @@ def block_banned_ips():
         ip = request.remote_addr
     
     user_agent = request.headers.get('User-Agent')
-
     if ip in BANNED_IPS: abort(403)
     if not session.get('notified'):
         notify_telegram(ip, user_agent)
@@ -60,6 +60,7 @@ def block_banned_ips():
 def home():
     language = request.args.get('lang', 'kh')
     cart = session.get('cart', [])
+    # Pass 'subcategories' as empty initially, updated in 'category' route
     return render_template('home.html', products=products, language=language, cart=cart, 
                          subcategories=[], current_category=None)
 
@@ -93,7 +94,9 @@ def subcategory(subcategory_name):
                 <form class="add-to-cart-form">
                     <input type="hidden" name="product_id" value="{p['id']}">
                     <div class="quantity-selector">
-                        <input type="number" name="quantity" value="1" min="1" style="width:40px;">
+                        <button type="button" onclick="decreaseQuantity(this)">-</button>
+                        <input type="number" name="quantity" value="1" min="1">
+                        <button type="button" onclick="increaseQuantity(this)">+</button>
                     </div>
                     <button type="submit" class="add-cart-button">បន្ថែម</button>
                 </form>
@@ -208,5 +211,3 @@ def ban_ip():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-
-
