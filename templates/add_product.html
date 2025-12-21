@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Product</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f6f8; display: flex; justify-content: center; padding: 20px; }
+        .form-box { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        label { font-weight: bold; font-size: 14px; display: block; margin-top: 15px; }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 25px; cursor: pointer; }
+        button:hover { background: #218838; }
+        .back-link { display: block; text-align: center; margin-top: 15px; color: #666; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="form-box">
+        <h2>➕ Add New Product</h2>
+        <form method="POST">
+            <label>Product Name (KH):</label>
+            <input type="text" name="name_kh" placeholder="e.g. LEGO Ninjago Golden Dragon" required>
+
+            <label>Price (Riel):</label>
+            <input type="number" name="price" placeholder="e.g. 45000" required>
+
+            <label>Image URL:</label>
+            <input type="text" name="image" placeholder="Paste image link here..." required>
+
+            <!-- CATEGORY DROPDOWN -->
+            <label>Category:</label>
+            <select name="categories" id="categorySelect" onchange="updateSubcategories()" required>
+                <option value="">-- Select Category --</option>
+                {% for category in subcategories_map %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- SUBCATEGORY DROPDOWN -->
+            <label>Subcategory:</label>
+            <select name="subcategory" id="subcategorySelect">
+                <option value="">-- Select Subcategory --</option>
+            </select>
+
+            <label>Stock:</label>
+            <input type="number" name="stock" value="1">
+
+            <button type="submit">Save Product</button>
+        </form>
+        <a href="/admin/products" class="back-link">Cancel</a>
+    </div>
+
+    <!-- SMART DROPDOWN LOGIC -->
+    <script>
+        // Pass Python dictionary to JavaScript
+        const subMap = {{ subcategories_map | tojson }};
+
+        function updateSubcategories() {
+            const catSelect = document.getElementById("categorySelect");
+            const subSelect = document.getElementById("subcategorySelect");
+            const selectedCat = catSelect.value;
+
+            // Clear existing options
+            subSelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+
+            if (selectedCat && subMap[selectedCat]) {
+                const subs = subMap[selectedCat];
+                subs.forEach(sub => {
+                    const option = document.createElement("option");
+                    option.value = sub;
+                    option.text = sub;
+                    subSelect.appendChild(option);
+                });
+            }
+        }
+    </script>
+
+</body>
+</html>
+
