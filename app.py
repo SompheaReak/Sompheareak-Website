@@ -40,7 +40,7 @@ class Product(db.Model):
 
 # --- INITIAL DATA ---
 initial_products = [
-{"id": 1, "name_kh": "#OP01 One Piece - Sakazuki","price": 7500, "image": "/static/images/op01.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
+    {"id": 1, "name_kh": "#OP01 One Piece - Sakazuki","price": 7500, "image": "/static/images/op01.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
     {"id": 2, "name_kh": "#OP02 One Piece - Portgas D Ace","price": 6500, "image": "/static/images/op02.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
     {"id": 3, "name_kh": "#OP03 One Piece - Marco","price": 7500, "image": "/static/images/op03.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
     {"id": 4, "name_kh": "#OP04 One Piece - Edward Newgate","price": 7500, "image": "/static/images/op04.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
