@@ -1,5 +1,6 @@
 import os 
 import requests
+import json
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
 from flask_sqlalchemy import SQLAlchemy
 
@@ -25,8 +26,8 @@ class Product(db.Model):
     name_kh = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Integer, nullable=False)
     image = db.Column(db.String(500), nullable=False)
-    categories_str = db.Column(db.String(500), default="") # Stores "LEGO,Toy"
-    subcategory_str = db.Column(db.String(500), default="") # Stores "Season 1,Season 2"
+    categories_str = db.Column(db.String(500), default="") 
+    subcategory_str = db.Column(db.String(500), default="") 
     stock = db.Column(db.Integer, default=1)
 
     @property
@@ -37,7 +38,7 @@ class Product(db.Model):
     def subcategory(self):
         return self.subcategory_str.split(',') if self.subcategory_str else []
 
-# --- INITIAL DATA (Runs once to fill database) ---
+# --- INITIAL DATA ---
 initial_products = [
     {"id": 101, "name_kh": "NINJAGO Season 1 - DX Suit", "price": 30000, "image": "https://raw.githubusercontent.com/TheSong-Store/static/main/images/njoss1dx.jpg", "categories": "LEGO Ninjago,Toy", "subcategory": "Lego Ninjago,Season 1", "stock": 1},
     {"id": 102, "name_kh": "NINJAGO Season 1 - KAI (DX)", "price": 5000, "image": "https://raw.githubusercontent.com/TheSong-Store/static/main/images/njoss1dxkai.jpg", "categories": "LEGO Ninjago,Toy", "subcategory": "Lego Ninjago,Season 1", "stock": 1},
@@ -56,6 +57,26 @@ subcategories_map = {
     "Italy Bracelet": ["All","Football","Gem","Flag","Chain"],
     "Lucky Draw": ["/lucky-draw"], 
 }
+
+# --- FIX: CREATE DATABASE AUTOMATICALLY ---
+# We do this OUTSIDE the 'if main' block so Gunicorn runs it too
+with app.app_context():
+    db.create_all()
+    # Fill with initial data if empty
+    if not Product.query.first():
+        print("Initializing Database...")
+        for p_data in initial_products:
+            new_p = Product(
+                id=p_data['id'],
+                name_kh=p_data['name_kh'],
+                price=p_data['price'],
+                image=p_data['image'],
+                categories_str=p_data['categories'],
+                subcategory_str=p_data['subcategory'],
+                stock=p_data['stock']
+            )
+            db.session.add(new_p)
+        db.session.commit()
 
 # --- HELPER FUNCTIONS ---
 def notify_telegram(ip, user_agent):
@@ -82,14 +103,12 @@ def home():
 @app.route('/category/<category_name>')
 def category(category_name):
     if category_name == 'Lucky Draw': return redirect(url_for('lucky_draw'))
-    # Search DB for category string
     products = Product.query.filter(Product.categories_str.contains(category_name)).all()
     return render_template('home.html', products=products, subcategories=subcategories_map.get(category_name, []), current_category=category_name, cart=session.get('cart', []))
 
 @app.route('/subcategory/<subcategory_name>')
 def subcategory(subcategory_name):
     products = Product.query.filter(Product.subcategory_str.contains(subcategory_name)).all()
-    # AJAX support for infinite scroll/dynamic loading if your frontend requests it
     if request.args.get('ajax') == 'true':
         html = ""
         for p in products:
@@ -111,7 +130,6 @@ def search():
         products = []
     return render_template('home.html', products=products, subcategories=[], current_category=f"Search: {query}", cart=session.get('cart', []))
 
-# --- CART LOGIC ---
 @app.route('/add-to-cart', methods=['POST'])
 def add_to_cart():
     try:
@@ -121,7 +139,6 @@ def add_to_cart():
         if not p: return jsonify({'success': False})
         
         cart = session.get('cart', [])
-        # Save as dict for session
         p_dict = {"id": p.id, "name_kh": p.name_kh, "price": p.price, "image": p.image}
         cart.append({"product": p_dict, "quantity": qty})
         session['cart'] = cart
@@ -155,10 +172,16 @@ def checkout():
 def thank_you(): return render_template('thankyou.html')
 @app.route('/lucky-draw')
 def lucky_draw(): return render_template('minifigure_game.html')
-@app.route('/custom-bracelet')
-def custom_bracelet(): return render_template('custom_bracelet.html')
 
-# --- ADMIN PANEL ---
+@app.route('/custom-bracelet')
+def custom_bracelet():
+    charms = [
+        {"id": 1, "name_kh": "Car Logo", "price": 3000, "image": "/static/images/cc01.jpg"},
+        {"id": 2, "name_kh": "Car Logo", "price": 3000, "image": "/static/images/cc02.jpg"},
+    ]
+    return render_template('custom_bracelet.html', charms=charms)
+
+# --- ADMIN ROUTES ---
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -172,58 +195,23 @@ def admin_products():
     if not session.get('admin'): return redirect(url_for('admin_login'))
     return render_template('admin_products.html', products=Product.query.all())
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Hanuman', sans-serif; margin: 0; background: #f4f6f8; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn { padding: 10px 20px; border-radius: 8px; text-decoration: none; color: white; font-weight: bold; border: none; cursor: pointer; }
-        .btn-add { background: #28a745; }
-        .btn-logout { background: #dc3545; }
-        
-        .product-list { display: grid; gap: 10px; }
-        .product-item { background: white; padding: 15px; border-radius: 10px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .product-item img { width: 50px; height: 50px; border-radius: 5px; object-fit: cover; }
-        .info { flex-grow: 1; }
-        .actions { display: flex; gap: 10px; }
-        
-        h3 { margin: 0; font-size: 16px; }
-        p { margin: 0; color: #666; font-size: 14px; }
-    </style>
-</head>
-<body>
+@app.route('/admin/add-product', methods=['GET', 'POST'])
+def add_product():
+    if not session.get('admin'): return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        new_p = Product(
+            name_kh=request.form['name_kh'],
+            price=int(request.form['price']),
+            image=request.form['image'],
+            categories_str=request.form.get('categories', ''),
+            subcategory_str=request.form.get('subcategory', ''),
+            stock=int(request.form.get('stock', 1))
+        )
+        db.session.add(new_p)
+        db.session.commit()
+        return redirect(url_for('admin_products'))
+    return render_template('add_product.html', subcategories_map=subcategories_map)
 
-    <div class="header">
-        <h2>📦 Product Manager</h2>
-        <a href="/" class="btn btn-logout" style="background:#666; margin-right: 10px;">View Shop</a>
-    </div>
-
-    <a href="/admin/add-product" class="btn btn-add" style="display:block; text-align:center; margin-bottom: 20px;">+ Add New Product</a>
-
-    <div class="product-list">
-        {% for p in products %}
-        <div class="product-item">
-            <img src="{{ p.image }}" onerror="this.src='https://via.placeholder.com/50'">
-            <div class="info">
-                <h3>{{ p.name_kh }}</h3>
-                <p>{{ "{:,}".format(p.price) }}៛ | Stock: {{ p.stock }}</p>
-            </div>
-            <div class="actions">
-                <form action="/admin/delete-product/{{ p.id }}" method="POST" onsubmit="return confirm('Delete this product?');">
-                    <button type="submit" class="btn btn-logout" style="padding: 5px 10px; font-size: 12px;">Delete</button>
-                </form>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-
-</body>
-</html>
 @app.route('/admin/delete-product/<int:product_id>', methods=['POST'])
 def delete_product(product_id):
     if not session.get('admin'): return redirect(url_for('admin_login'))
@@ -233,17 +221,7 @@ def delete_product(product_id):
         db.session.commit()
     return redirect(url_for('admin_products'))
 
-# --- STARTUP ---
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        # Create initial data if DB is empty
-        if not Product.query.first():
-            print("Creating database...")
-            for p_data in initial_products:
-                db.session.add(Product(id=p_data['id'], name_kh=p_data['name_kh'], price=p_data['price'], image=p_data['image'], categories_str=p_data['categories'], subcategory_str=p_data['subcategory'], stock=p_data['stock']))
-            db.session.commit()
-    
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
 
