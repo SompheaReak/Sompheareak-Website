@@ -4,267 +4,282 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Somphea Reak Shop</title>
-    <!-- Use a standard font that supports Khmer nicely -->
-    <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&display=swap" rel="stylesheet">
+    <!-- CSS and Scripts -->
+    <link rel="stylesheet" href="/static/style.css">
     
     <style>
-        body {
-            font-family: 'Hanuman', Arial, sans-serif;
-            background-color: #f8f9fa;
-            margin: 0;
-            padding: 10px;
-            padding-bottom: 80px;
-        }
-
-        /* --- THE 4-COLUMN CATEGORY FIX --- */
+        /* --- 4-COLUMN CATEGORY GRID FIX --- */
         .category-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr); /* FORCE 4 COLUMNS */
-            gap: 12px 8px; /* Vertical gap 12px, Horizontal 8px */
-            padding: 15px 10px;
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important; /* Force 4 columns */
+            gap: 12px 8px;
+            padding: 10px;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+            justify-items: center;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+            white-space: normal;
         }
 
         .category-bar a {
             display: flex;
             flex-direction: column;
             align-items: center;
-            text-decoration: none;
             text-align: center;
+            width: 100%;
+            text-decoration: none;
             color: #333;
+            margin: 0;
+            padding: 0;
+            background: none;
+            border: none;
+            box-shadow: none;
         }
 
         .category-bar img {
             width: 55px;
             height: 55px;
-            border-radius: 50%; /* Make them circles */
+            border-radius: 50%; /* Circle images */
             object-fit: cover;
             border: 2px solid #eee;
             margin-bottom: 5px;
+            display: block;
         }
 
         .category-bar span {
             font-size: 11px;
             font-weight: bold;
             line-height: 1.2;
-            display: block;
             width: 100%;
             overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
 
-        .category-bar a.active img {
-            border-color: #e44d26;
-            transform: scale(1.05);
-        }
-        .category-bar a.active span {
-            color: #e44d26;
+        /* Fix for Customize Link which might be text-only */
+        .custom-link {
+            grid-column: span 4; /* Make full width */
+            background: #007bff !important;
+            color: white !important;
+            padding: 10px !important;
+            border-radius: 8px;
+            margin-top: 5px !important;
         }
 
-        /* BANNER */
-        .banner img { width: 100%; border-radius: 12px; display: block; margin-bottom: 10px; }
-        
-        /* SLIDER */
-        .slider { width: 100%; overflow: hidden; position: relative; border-radius: 10px; margin-bottom: 20px; }
-        .slides { display: flex; transition: transform 0.5s ease-in-out; }
-        .slide { min-width: 100%; }
-        .slide img { width: 100%; display: block; }
-        
-        /* PRODUCT GRID */
+        /* --- PRODUCT GRID FIX --- */
         .product-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 2 per row on mobile */
+            grid-template-columns: repeat(2, 1fr); /* 2 per row mobile */
             gap: 10px;
+            padding: 10px;
         }
         @media(min-width: 768px) {
-            .product-grid { grid-template-columns: repeat(4, 1fr); } /* 4 on PC */
+            .product-grid { grid-template-columns: repeat(4, 1fr); }
         }
 
         .product-card {
             background: white;
-            border-radius: 10px;
+            border: 1px solid #eee;
+            border-radius: 8px;
             padding: 10px;
-            border: 1px solid #ddd;
-            position: relative;
+            display: flex;
+            flex-direction: column;
         }
+
         .product-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 8px; }
+        .price-line { color: #e44d26; font-weight: bold; font-size: 16px; margin: 5px 0; }
+        .add-cart-button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; }
         
-        /* LABELS */
-        .product-labels { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 10; }
-        .product-label { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; color: white; }
-        .hot { background: #ff5722; }
-        .new { background: #28a745; }
-        
-        .add-cart-button {
-            width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px;
-        }
-
-        /* SUBCATEGORY BAR */
-        .scroll-bar { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; scrollbar-width: none; }
-        .scroll-bar a { background: #eee; padding: 8px 15px; border-radius: 20px; text-decoration: none; color: #333; font-size: 13px; white-space: nowrap; }
-        .scroll-bar a.active { background: #333; color: white; }
-
-        /* FLOATING CART */
+        /* Floating Cart */
         .floating-cart {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: #007bff; color: white; padding: 12px 30px; border-radius: 30px;
-            text-decoration: none; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 1000; white-space: nowrap;
+            text-decoration: none; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 2000;
         }
+
+        /* Subcategory Scroll */
+        .scroll-bar { display: flex; overflow-x: auto; gap: 10px; padding: 10px; scrollbar-width: none; background: white; }
+        .scroll-bar a { background: #eee; padding: 8px 15px; border-radius: 20px; text-decoration: none; color: #333; white-space: nowrap; }
+        .scroll-bar a.active { background: #333; color: white; }
         
-        /* MODAL */
-        .image-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
-        .image-modal img { max-width: 95%; max-height: 90%; border-radius: 10px; }
-        .close-button { position: absolute; top: 20px; right: 20px; color: white; font-size: 40px; cursor: pointer; }
+        .modal-content-wrapper img { max-width: 90vw; max-height: 80vh; }
     </style>
+
+    <script defer>
+        function openImageModal(src) {
+            const modal = document.getElementById('image-modal');
+            const modalImg = document.getElementById('modal-image');
+            modalImg.src = src;
+            modal.style.display = 'flex';
+        }
+        function closeImageModal(event) {
+            document.getElementById('image-modal').style.display = 'none';
+        }
+        function increaseQuantity(btn) {
+            const input = btn.parentElement.querySelector('input[type="number"]');
+            input.value = parseInt(input.value) + 1;
+        }
+        function decreaseQuantity(btn) {
+            const input = btn.parentElement.querySelector('input[type="number"]');
+            if (parseInt(input.value) > 1) {
+                input.value = parseInt(input.value) - 1;
+            }
+        }
+    </script>
 </head>
+
 <body>
-
+    <!-- Banner -->
     <div class="banner">
-        <img src="/static/images/banner.jpg" alt="Banner" onerror="this.src='https://via.placeholder.com/800x200?text=Somphea+Reak+Shop'">
+        <img src="/static/images/banner.jpg" alt="Somphea Reak Banner" onerror="this.src='https://via.placeholder.com/800x200?text=Shop+Banner'">
     </div>
+    <h1 style="text-align: center; margin: 10px 0;">Somphea Reak Shop</h1>
 
-    <h1 style="text-align: center; color: #e44d26;">Somphea Reak Shop</h1>
-
-    <!-- SLIDER -->
-    <div class="slider">
-      <div class="slides" id="slides">
-        <div class="slide"><img src="/static/images/testslide1.jpg" alt="1" onerror="this.src='https://via.placeholder.com/400x200?text=Slide+1'"></div>
-        <div class="slide"><img src="/static/images/testslide2.jpg" alt="2" onerror="this.src='https://via.placeholder.com/400x200?text=Slide+2'"></div>
+    <!-- Slider -->
+    <div class="slider" style="overflow: hidden; margin-bottom: 20px;">
+      <div class="slides" style="display: flex;">
+        <div class="slide" style="min-width:100%"><img src="/static/images/testslide1.jpg" style="width:100%" onerror="this.src='https://via.placeholder.com/400x200'"></div>
       </div>
     </div>
 
-    <!-- 4-COLUMN CATEGORY GRID -->
-    <div class="category-bar">
-        <a href="/category/Hot Sale" class="{% if current_category == 'Hot Sale' %}active{% endif %}">
-            <img src="/static/images/categoryhotsale.jpg" alt="Hot" onerror="this.src='https://via.placeholder.com/100?text=Hot'">
-            <span>🔥 ទំនិញពិសេស</span>
-        </a>
-        <a href="/category/LEGO" class="{% if current_category == 'LEGO' %}active{% endif %}">
-            <img src="/static/images/categorylego.jpg" alt="LEGO" onerror="this.src='https://via.placeholder.com/100?text=LEGO'">
-            <span>LEGO</span>
-        </a>
-        <a href="/category/Toy" class="{% if current_category == 'Toy' %}active{% endif %}">
-            <img src="/static/images/categorytoy.jpg" alt="Toy" onerror="this.src='https://via.placeholder.com/100?text=Toy'">
-            <span>ប្រដាប់ក្មេង</span>
-        </a>
-        <a href="/category/Keychain" class="{% if current_category == 'Keychain' %}active{% endif %}">
-            <img src="/static/images/categorykey.jpg" alt="Key" onerror="this.src='https://via.placeholder.com/100?text=Key'">
-            <span>បណ្ដោងសោ</span>
-        </a>
-        <a href="/category/LEGO Anime" class="{% if current_category == 'LEGO Anime' %}active{% endif %}">
-            <img src="/static/images/categoryanime.jpg" alt="Anime" onerror="this.src='https://via.placeholder.com/100?text=Anime'">
-            <span>Anime</span>
-        </a>
-        <a href="/category/LEGO Ninjago" class="{% if current_category == 'LEGO Ninjago' %}active{% endif %}">
-            <img src="/static/images/categoryninjago.jpg" alt="Ninjago" onerror="this.src='https://via.placeholder.com/100?text=Ninjago'">
-            <span>Ninjago</span>
-        </a>
-        <a href="/category/Accessories" class="{% if current_category == 'Accessories' %}active{% endif %}">
-            <img src="/static/images/categorybracelet.jpg" alt="Acc" onerror="this.src='https://via.placeholder.com/100?text=Acc'">
-            <span>គ្រឿងតែងខ្លួន</span>
-        </a>
-        <a href="{{ url_for('lucky_draw') }}">
-            <img src="/static/images/categoryluckydraw.jpg" alt="Lucky" onerror="this.src='https://via.placeholder.com/100?text=Lucky'">
-            <span>💎 ហ្គេម</span>
-        </a>
+    <!-- Success Message -->
+    <div id="success" style="display:none; position: fixed; top:20px; right:20px; background:#28a745; color:white; padding:10px; border-radius:5px; z-index:9999;">
+        ✅ បន្ថែមទៅកន្ត្រកទំនិញបានជោគជ័យ!
     </div>
 
-    <!-- SUBCATEGORIES -->
+    <!-- Sticky Category Bar (Grid) -->
+    <div class="category-bar">
+        <a href="/category/Hot Sale" class="{% if current_category == 'Hot Sale' %}active{% endif %}">
+          <img src="/static/images/categoryhotsale.jpg" alt="Hot Sale" onerror="this.src='https://via.placeholder.com/100'">
+          <span>🔥 ទំនិញពិសេស</span>
+        </a>
+        <a href="/category/LEGO" class="{% if current_category == 'LEGO' %}active{% endif %}">
+          <img src="/static/images/categorylego.jpg" alt="LEGO" onerror="this.src='https://via.placeholder.com/100'">
+          <span>LEGO</span>
+        </a>
+        <a href="/category/Toy" class="{% if current_category == 'Toy' %}active{% endif %}">
+          <img src="/static/images/categorytoy.jpg" alt="Toy" onerror="this.src='https://via.placeholder.com/100'">
+          <span>ប្រដាប់ក្មេង</span>
+        </a>
+        <a href="/category/Keychain" class="{% if current_category == 'Keychain' %}active{% endif %}">
+          <img src="/static/images/categorykey.jpg" alt="Keychain" onerror="this.src='https://via.placeholder.com/100'">
+          <span>បណ្ដោងសោ</span>
+        </a>
+        <a href="/category/LEGO Anime" class="{% if current_category == 'LEGO Anime' %}active{% endif %}">
+          <img src="/static/images/categoryanime.jpg" alt="Anime" onerror="this.src='https://via.placeholder.com/100'">
+          <span>LEGO Anime</span>
+        </a>
+        <a href="/category/LEGO Ninjago" class="{% if current_category == 'LEGO Ninjago' %}active{% endif %}">
+          <img src="/static/images/categoryninjago.jpg" alt="Ninjago" onerror="this.src='https://via.placeholder.com/100'">
+          <span>Ninjago</span>
+        </a>
+        <a href="/category/Accessories" class="{% if current_category == 'Accessories' %}active{% endif %}">
+          <img src="/static/images/categorybracelet.jpg" alt="Accessories" onerror="this.src='https://via.placeholder.com/100'">
+          <span>គ្រឿងតែងខ្លួន</span>
+        </a>
+        <!-- Lucky Draw -->
+        <a href="{{ url_for('lucky_draw') }}" class="lucky-draw-link">
+          <img src="/static/images/categoryluckydraw.jpg" alt="Lucky Draw" onerror="this.src='https://via.placeholder.com/100?text=Lucky'">
+          <span>💎 ហ្គេម</span>
+        </a>
+        <!-- Italy Bracelet -->
+        <a href="/category/Italy Bracelet" class="{% if current_category == 'Italy Bracelet' %}active{% endif %}">
+          <img src="/static/images/italybracelet.jpg" alt="Italy" onerror="this.src='https://via.placeholder.com/100'">
+          <span>Italy Bracelet</span>
+        </a>
+        <!-- Customize Bracelet (Full Width) -->
+        <a href="/custom-bracelet" class="custom-link">✨ Customize Bracelet</a>
+    </div>
+
+    <!-- Subcategories -->
     {% if subcategories %}
-    <div class="scroll-bar">
+    <div class="sticky-wrapper sub-sticky">
+      <div class="back-to-category">
+        <a href="/" class="back-button" style="padding: 10px 20px; background: #333; color: white; border-radius: 8px; text-decoration: none;">⬅️ Back</a>
+      </div>
+      <div class="scroll-bar subcategory-bar" id="subcategory-scroll">
         {% for sub in subcategories %}
-            <a href="/subcategory/{{ sub }}" class="{% if current_subcategory == sub %}active{% endif %}">{{ sub }}</a>
+          <a href="/subcategory/{{ sub }}" class="{% if current_subcategory == sub %}active{% endif %}">
+            {{ sub }}
+          </a>
         {% endfor %}
+      </div>
     </div>
     {% endif %}
 
-    <!-- PRODUCTS -->
+    <!-- Product Grid -->
     <div class="product-grid" id="product-grid">
-        {% for product in products %}
-        <div class="product-card">
-            <div class="product-labels">
-                {% if "Hot Sale" in product.categories %}<span class="product-label hot">Hot</span>{% endif %}
-                {% if "New" in product.categories %}<span class="product-label new">New</span>{% endif %}
-            </div>
-            
-            <img src="{{ product.image }}" onclick="openImageModal(this.src)" onerror="this.src='https://via.placeholder.com/150'">
-            <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_kh }}{% endif %}</h3>
-            
-            <div style="color: #e44d26; font-weight: bold; font-size: 16px;">{{ "{:,}".format(product.price) }}៛</div>
-            
-            <form class="add-to-cart-form">
-                <input type="hidden" name="product_id" value="{{ product.id }}">
-                <div style="display: flex; justify-content: center; margin: 5px 0;">
-                    <input type="number" name="quantity" value="1" min="1" style="width: 50px; text-align: center;">
-                </div>
-                <button type="submit" class="add-cart-button">បន្ថែមទៅកន្ត្រក</button>
-            </form>
+      {% for product in products %}
+      <div class="product-card">
+        <div class="product-labels" style="position:absolute; top:10px; left:10px; display:flex; flex-direction:column; gap:4px; z-index:1;">
+          {% if "Hot Sale" in product.categories %}
+            <span style="background:#ff5722; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Hot</span>
+          {% endif %}
+          {% if "New" in product.categories %}
+            <span style="background:#28a745; color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">New</span>
+          {% endif %}
         </div>
-        {% endfor %}
+
+        <img src="{{ product.image }}" alt="{{ product.name_kh }}" onclick="openImageModal(this.src)" onerror="this.src='https://via.placeholder.com/150'">
+
+        <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_en }}{% endif %}</h3>
+
+        <div class="price-line">
+            {{ "{:,}".format(product.price) }}៛
+        </div>
+
+        <form class="add-to-cart-form">
+          <input type="hidden" name="product_id" value="{{ product.id }}">
+          <div class="quantity-selector" style="display:flex; justify-content:center; margin:10px 0;">
+            <button type="button" onclick="decreaseQuantity(this)" style="width:30px; height:30px;">-</button>
+            <input type="number" name="quantity" value="1" min="1" style="width:50px; text-align:center;">
+            <button type="button" onclick="increaseQuantity(this)" style="width:30px; height:30px;">+</button>
+          </div>
+          <button type="submit" class="add-cart-button">បន្ថែម</button>
+        </form>
+
+      </div> 
+      {% endfor %}
     </div>
 
     {% if products|length == 0 %}
-        <div style="text-align: center; color: #999; padding: 40px;">No items in this category</div>
+        <div style="text-align: center; color: #999; padding: 40px;">គ្មានទំនិញទេ (No items)</div>
     {% endif %}
 
-    <a href="/cart" class="floating-cart">
+    <div style="text-align:center; margin-top: 30px;">
+      <a href="/cart" class="floating-cart">
         🛒 កន្ត្រក (<span id="cart-count">{{ cart|length }}</span>)
-    </a>
-
-    <!-- MODAL -->
-    <div id="image-modal" class="image-modal" onclick="closeImageModal()">
-        <span class="close-button">&times;</span>
-        <img id="modal-image" src="">
+      </a>
     </div>
 
-    <!-- SCRIPTS -->
+    <!-- Fullscreen Image Modal -->
+    <div id="image-modal" class="image-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center;" onclick="closeImageModal(event)">
+      <div class="modal-content-wrapper" onclick="event.stopPropagation()">
+        <span class="close-button" style="position:absolute; top:20px; right:30px; font-size:40px; color:white; cursor:pointer;" onclick="closeImageModal(event)">&times;</span>
+        <img id="modal-image" src="" alt="Preview" style="max-width:90%; max-height:80vh; border-radius:10px;">
+      </div>
+    </div>
+
     <script>
-        function openImageModal(src) {
-            document.getElementById('modal-image').src = src;
-            document.getElementById('image-modal').style.display = 'flex';
-        }
-        function closeImageModal() {
-            document.getElementById('image-modal').style.display = 'none';
-        }
-
-        // Auto Slider
-        let slideIndex = 0;
-        function showSlides() {
-            let slides = document.querySelectorAll(".slide");
-            for (let i = 0; i < slides.length; i++) {
-                slides[i].style.display = "none";  
+    document.addEventListener('DOMContentLoaded', function () {
+      const forms = document.querySelectorAll('.add-to-cart-form');
+      forms.forEach(form => {
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          const formData = new FormData(form);
+          fetch('/add-to-cart', { method: 'POST', body: formData })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              document.querySelectorAll('#cart-count').forEach(el => el.innerText = data.cart_count);
+              const success = document.getElementById('success');
+              success.style.display = 'block';
+              setTimeout(() => { success.style.display = 'none'; }, 1500);
             }
-            slideIndex++;
-            if (slideIndex > slides.length) {slideIndex = 1}    
-            if (slides[slideIndex-1]) slides[slideIndex-1].style.display = "block";  
-            setTimeout(showSlides, 3000); 
-        }
-        // Simple fix for slider: assume css handles transform, or use JS
-        // Since original had complex logic, let's keep it simple: 
-        setInterval(() => {
-           const container = document.getElementById('slides');
-           // Basic scrolling logic if needed
-        }, 3000);
-
-        // Add to Cart
-        document.querySelectorAll('.add-to-cart-form').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData(form);
-                fetch('/add-to-cart', {method: 'POST', body: formData})
-                .then(res => res.json())
-                .then(data => {
-                   if(data.success) {
-                       document.getElementById('cart-count').innerText = data.cart_count;
-                       alert("✅ Added to cart!");
-                   }
-                });
-            });
+          });
         });
+      });
+    });
     </script>
 </body>
 </html>
