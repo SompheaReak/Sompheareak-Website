@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 import { 
   getFirestore, 
@@ -26,17 +26,29 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
-// --- Firebase Initialization (Robust Pattern for Deployment) ---
-let app, auth, db, appId;
+// --- Global Variable Resilience (Crucial for Deployment) ---
+const getFirebaseConfig = () => {
+  try {
+    if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+      return JSON.parse(__firebase_config);
+    }
+  } catch (e) {
+    console.error("Failed to parse firebase config", e);
+  }
+  return null;
+};
 
-try {
-  const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-  app = initializeApp(firebaseConfig);
+const getAppId = () => (typeof __app_id !== 'undefined' ? __app_id : 'the-song-store-default');
+
+// --- Firebase Initialization ---
+let app, auth, db;
+const config = getFirebaseConfig();
+const appId = getAppId();
+
+if (config) {
+  app = !getApps().length ? initializeApp(config) : getApp();
   auth = getAuth(app);
   db = getFirestore(app);
-  appId = typeof __app_id !== 'undefined' ? __app_id : 'the-song-store-default';
-} catch (error) {
-  console.error("Firebase initialization failed:", error);
 }
 
 // --- Constants ---
@@ -191,6 +203,19 @@ export default function App() {
       console.error("Telegram error:", err);
     }
   };
+
+  // Guard for missing config during build
+  if (!config) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-6 text-center">
+        <div className="max-w-md bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+          <ShieldCheck className="mx-auto text-red-500 mb-4" size={48} />
+          <h1 className="text-xl font-black mb-2">Configuration Required</h1>
+          <p className="text-gray-500 text-sm">Please ensure Firebase configuration is provided in the workspace settings.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] text-slate-900 font-sans pb-24">
