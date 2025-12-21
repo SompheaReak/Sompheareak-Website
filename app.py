@@ -1,183 +1,405 @@
-import os
+import os 
 import requests
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
-from flask_sqlalchemy import SQLAlchemy
-
-app = Flask(__name__)
-app.secret_key = 'somphea_reak_shop_secret_key'
-app.debug = True
-
-# ---------------- DATABASE ----------------
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shop.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-
-# ---------------- CONFIG ----------------
+# Admin login credentials
 ADMIN_USERNAME = 'AdminSompheaReakVitou'
 ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
-BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
-CHAT_ID = "-1002654437316"
-BANNED_IPS = ['123.45.67.89', '45.119.135.70']
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
+app = Flask(__name__)
 
-# ---------------- MODEL ----------------
-class Product(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name_kh = db.Column(db.String(200), nullable=False)
-    price = db.Column(db.Integer, nullable=False)
-    image = db.Column(db.String(500), nullable=False)
-    categories_str = db.Column(db.String(500), default="")
-    subcategory_str = db.Column(db.String(500), default="")
-    stock = db.Column(db.Integer, default=1)
+def notify_telegram(ip, user_agent):
+    import requests
 
-    @property
-    def categories(self):
-        return self.categories_str.split(',') if self.categories_str else []
+    bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"  # Confirmed bot token
+    chat_id = "-1002654437316" # Confirmed group chat ID
 
-    @property
-    def subcategory(self):
-        return self.subcategory_str.split(',') if self.subcategory_str else []
+    message = (
+        f"📦 *New Visitor or Order Attempt*\n\n"
+        f"*IP:* `{ip}`\n"
+        f"*Device:* `{user_agent}`"
+    )
 
-# ---------------- INITIAL DATA ----------------
-initial_products = [
-    {
-        "id": 20012,
-        "name_kh": "71049 - 12 GENERIC",
-        "price": 24000,
-        "image": "/static/images/lego71049-12.jpg",
-        "categories": "LEGO,Toy",
-        "subcategory": "Formula 1",
-        "stock": 1
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": "Markdown"
     }
-]
 
-# ---------------- SUBCATEGORIES ----------------
-subcategories_map = {
-    "Hot Sale": [],
-    "LEGO Ninjago": ["Dragon Rising", "Building Set", "Season 1", "Season 2"],
-    "LEGO Anime": ["One Piece", "Demon Slayer"],
-    "Accessories": ["Bracelet"],
-    "Keychain": ["Gun Keychains"],
-    "LEGO": ["Formula 1"],
-    "Toy": ["Lego Ninjago", "One Piece"],
-    "Lucky Draw": ["/lucky-draw"]
-}
-
-# ---------------- INIT DB ----------------
-with app.app_context():
-    db.create_all()
-    if not Product.query.first():
-        for p in initial_products:
-            db.session.add(Product(
-                id=p.get('id'),
-                name_kh=p['name_kh'],
-                price=p['price'],
-                image=p['image'],
-                categories_str=p.get('categories', ''),
-                subcategory_str=p.get('subcategory', ''),
-                stock=p.get('stock', 1)
-            ))
-        db.session.commit()
-
-# ---------------- SECURITY ----------------
-def notify_telegram(ip, ua):
     try:
-        msg = f"📦 New Visitor\nIP: {ip}\nDevice: {ua}"
-        requests.post(
-            f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-            data={"chat_id": CHAT_ID, "text": msg}
-        )
-    except:
-        pass
+        response = requests.post(url, data=payload)
+        if response.status_code != 200:
+            print(f"[❌] Telegram API Error: {response.status_code} - {response.text}")
+        else:
+            print(f"[✅] Telegram message sent successfully.")
+        print("Telegram Response:", response.text)
+    except Exception as e:
+        print("[❌] Telegram notify error:", e)
+
+    print("==> Visitor Bot Message Sent")
+    print("BOT TOKEN:", bot_token)
+    print("CHAT ID:", chat_id)
+    print("MESSAGE:", message)
+
+def check_bot_in_group(bot_token, chat_id):
+    url = f"https://api.telegram.org/bot{bot_token}/getChatMember"
+    user_id = int(bot_token.split(":")[0])
+    response = requests.get(url, params={"chat_id": chat_id, "user_id": user_id})
+    print("==> Bot Status Check:")
+    print(response.text)
+
+# List of IPs you want to ban
+banned_ips = ['123.45.67.89','45.119.135.70'] # Replace with real IPs
 
 @app.before_request
-def protect():
-    ip = request.headers.get("X-Forwarded-For", request.remote_addr)
-    if ip in BANNED_IPS:
-        abort(403)
-    if not session.get("notified"):
-        notify_telegram(ip, request.headers.get("User-Agent"))
-        session["notified"] = True
+def block_banned_ips():
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    user_agent = request.headers.get('User-Agent')
 
-# ---------------- PUBLIC ROUTES ----------------
+    # Block banned IPs
+    if ip in banned_ips:
+        abort(403)
+
+    # Only notify once per session
+    if not session.get('notified'):
+        notify_telegram(ip, user_agent)
+        session['notified'] = True
+app.secret_key = 'your_secret_key'
+app.debug = True
+
+# Products data
+products = [
+   
+]
+# --- Subcategories Map ---
+subcategories_map = {
+    "Accessories": ["Gym Bracelet", "Gem Stone Bracelet","Dragon Bracelet","Bracelet"],
+    "LEGO Ninjago": ["Dragon Rising","Building Set","Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8","Season 9","Season 10","Season 11","Season 12","Season 13",
+                     "Season 14","Season 15"],
+    "LEGO Anime": ["One Piece","Demon Slayer"],
+    "Keychain": ["Gun Keychains"],
+    "Hot Sale": [],
+    "LEGO": ["Formula 1"],
+    "Toy": ["Lego Ninjago", "One Piece","Lego WWII", "Lego ទាហាន"],
+    "Italy Bracelet": ["All","Football","Gem","Flag","Chain"],
+    # ADDED: Special entry for the Lucky Draw game
+    "Lucky Draw": ["/lucky-draw"], 
+}
+
+# --- Routes ---
+
 @app.route('/')
 def home():
-    return render_template('home.html', products=Product.query.all(), cart=session.get('cart', []))
+    # If your home.html renders navigation using subcategories_map.keys(),
+    # this route remains fine since it redirects to 'Hot Sale'
+    return redirect(url_for('category', category_name='Hot Sale'))
+    language = request.args.get('lang', 'kh')
+    cart = session.get('cart', [])
+    return render_template('home.html', products=products, language=language, cart=cart, current_category=None, current_subcategory=None, subcategories=[])
+
+@app.route('/category/<category_name>')
+def category(category_name):
+    language = request.args.get('lang', 'kh')
+    
+    # 💥 NEW LOGIC: Check if it's the special 'Lucky Draw' link 💥
+    if category_name == 'Lucky Draw':
+        # Redirect directly to the game route
+        return redirect(url_for('lucky_draw'))
+
+    subs = subcategories_map.get(category_name, [])
+    
+    # If subcategories exist, redirect to first one
+    if subs and subs[0] != "/lucky-draw": # Added check to ensure we don't treat the /lucky-draw URL as a subcategory
+        return redirect(url_for('subcategory', subcategory_name=subs[0]))
+
+    # If no subcategories, show all products in that category
+    filtered_products = [
+        p for p in products
+        if category_name in p.get('categories', [])
+    ]
+    cart = session.get('cart', [])
+    return render_template(
+        'home.html',
+        products=filtered_products,
+        language=language,
+        cart=cart,
+        current_category=category_name,
+        current_subcategory=None,
+        subcategories=[]
+    )
+
+@app.route('/custom-bracelet')
+def custom_bracelet():
+    # Example charms to display
+    charms = [
+    {"id": 1, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc01.jpg", "categories": [""]},
+    {"id": 2, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc02.jpg", "categories": [""]},
+    {"id": 3, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc03.jpg", "categories": [""]},
+    {"id": 4, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc04.jpg", "categories": [""]},
+  
+  ]
+    return render_template('custom_bracelet.html', charms=charms)
+
+@app.route('/subcategory/<subcategory_name>')
+def subcategory(subcategory_name):
+    language = request.args.get('lang', 'kh')
+    filtered_products = [
+        p for p in products
+        if subcategory_name in p.get('subcategory', [])
+    ]
+    cart = session.get('cart', [])
+
+    # Find main category
+    main_category = None
+    for category, subs in subcategories_map.items():
+        if subcategory_name in subs:
+            main_category = category
+            break
+
+    subs = subcategories_map.get(main_category, []) if main_category else []
+
+    # Correct indentation here!
+    if request.args.get('ajax') == 'true':
+        return render_template('product_cards.html', products=filtered_products, language=language)
+
+    # Full page render
+    return render_template(
+        'home.html',
+        products=filtered_products,
+        language=language,
+        cart=cart,
+        current_category=main_category,
+        current_subcategory=subcategory_name,
+        subcategories=subs
+    )
 
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
-    return render_template('product.html', product=Product.query.get_or_404(product_id))
-
-@app.route('/add-to-cart', methods=['POST'])
-def add_to_cart():
-    p = Product.query.get(request.form.get('product_id'))
-    if not p:
-        return jsonify(success=False)
+    language = request.args.get('lang', 'kh')
+    product = next((p for p in products if p['id'] == product_id), None)
     cart = session.get('cart', [])
-    cart.append({"product": {"id": p.id, "name_kh": p.name_kh, "price": p.price, "image": p.image}, "quantity": 1})
-    session['cart'] = cart
-    return jsonify(success=True, cart_count=len(cart))
+    return render_template('product.html', product=product, language=language, cart=cart)
+
+# --- NEW ROUTE FOR THE MINIFIGURE GAME ---
+@app.route('/lucky-draw')
+def lucky_draw():
+    """
+    Renders the Minifigure Lucky Draw game template.
+    This requires 'templates/minifigure_game.html' to exist.
+    """
+    return render_template('minifigure_game.html')
+# ----------------------------------------
+
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    error = None
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['admin'] = True
+            return redirect(url_for('admin_dashboard'))
+        else:
+            error = 'Invalid credentials. Try again.'
+
+    return render_template('admin_login.html', error=error)
 
 @app.route('/cart')
 def cart_page():
-    return render_template('cart.html', cart=session.get('cart', []))
+    language = request.args.get('lang', 'kh')
+    cart = session.get('cart', [])
+    return render_template('cart.html', cart=cart, language=language)
 
-# ---------------- ADMIN ----------------
-@app.route('/admin/login', methods=['GET', 'POST'])
-def admin_login():
-    if request.method == 'POST':
-        if request.form['username'] == ADMIN_USERNAME and request.form['password'] == ADMIN_PASSWORD:
-            session['admin'] = True
-            return redirect(url_for('admin_products'))
-    return render_template('admin_login.html')
+@app.route('/add-to-cart', methods=['POST'])
+def add_to_cart():
+    product_id = int(request.form.get('product_id'))
+    quantity = int(request.form.get('quantity', 1))
+
+    product = next((p for p in products if p['id'] == product_id), None)
+    if not product:
+        return jsonify({'success': False})
+
+    cart = session.get('cart', [])
+    cart.append({"product": product, "quantity": quantity})
+    session['cart'] = cart
+
+    return jsonify({"success": True, "cart_count": len(cart)})
+
+@app.route('/remove-from-cart/<int:index>', methods=["POST"])
+def remove_from_cart(index):
+    cart = session.get('cart', [])
+    if 0 <= index < len(cart):
+        cart.pop(index)
+    session['cart'] = cart
+    return redirect(url_for('cart_page'))
+
+@app.route('/checkout', methods=["GET", "POST"])
+def checkout():
+    language = request.args.get('lang', 'kh')
+    cart = session.get('cart', [])
+
+    if request.method == "POST":
+        # ✅ Get IP and User Agent for logging
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+        user_agent = request.headers.get('User-Agent')
+
+        # ✅ Telegram Bot Token and Chat ID
+        bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
+        chat_id = "-1002654437316"
+
+        name = request.form['name']
+        phone = request.form['phone']
+        address = request.form['address']
+        delivery_method = request.form['delivery']
+
+        delivery_text = ""
+        delivery_fee = 0
+        total = 0
+
+        # ✅ Delivery method mapping
+        if delivery_method == "door":
+            delivery_text = "ទំនិញដល់ដៃទូទាត់ប្រាក់"
+            delivery_fee = 7000
+        elif delivery_method == "vet":
+            delivery_text = "វីរៈប៊ុនថាំ (VET)"
+            delivery_fee = 5000
+        elif delivery_method == "jnt":
+            delivery_text = "J&T"
+            delivery_fee = 7000
+
+        # ✅ Build message
+        message = f"🛒 *New Order Received!*\n\n"
+        message += f"*Name:* {name}\n*Phone:* {phone}\n*Address:* {address}\n"
+        message += f"*Delivery:* {delivery_text} ({delivery_fee}៛)\n"
+        message += f"*IP:* `{ip}`\n*Device:* `{user_agent}`\n\n*Order Details:*\n"
+
+        for item in cart:
+            p = item['product']
+            subtotal = p['price'] * item['quantity']
+            total += subtotal
+            pname = p.get('name_en', p.get('name_kh', 'Unknown Product'))
+            message += f"- {pname} x {item['quantity']} = {subtotal:,}៛\n"
+
+        total += delivery_fee
+        message += f"\n*Total with Delivery:* {total:,}៛"
+
+        # ✅ Send Telegram alert
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        payload = {
+            "chat_id": chat_id,
+            "text": message,
+            "parse_mode": "Markdown"
+        }
+
+        try:
+            response = requests.post(url, data=payload)
+            print("Telegram response:", response.text)
+        except Exception as e:
+            print("Telegram Error:", str(e))
+
+        session['cart'] = []
+        return redirect(url_for('thank_you'))
+
+    return render_template('checkout.html', language=language, cart=cart)
+
+@app.route('/thankyou')
+def thank_you():
+    language = request.args.get('lang', 'kh')
+    return render_template('thankyou.html', language=language)
+
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+    return render_template('admin_dashboard.html')
+
+@app.errorhandler(403)
+def forbidden(e):
+    return "Access Denied: Your IP is blocked.", 403
 
 @app.route('/admin/products')
 def admin_products():
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
-    return render_template('admin_products.html', products=Product.query.all())
+    return render_template('admin_products.html', products=products)
+
 
 @app.route('/admin/add-product', methods=['GET', 'POST'])
 def add_product():
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
+
     if request.method == 'POST':
-        db.session.add(Product(
-            name_kh=request.form['name_kh'],
-            price=int(request.form['price']),
-            image=request.form['image'],
-            categories_str=request.form.get('categories', ''),
-            subcategory_str=request.form.get('subcategory', ''),
-            stock=int(request.form.get('stock', 1))
-        ))
-        db.session.commit()
+        new_id = max([p['id'] for p in products]) + 1 if products else 1
+        new_product = {
+            'id': new_id,
+            'name_kh': request.form['name_kh'],
+            'name_en': request.form['name_en'],
+            'price': int(request.form['price']),
+            'image': request.form['image'],
+            'categories': [request.form['category']],
+            'subcategory': request.form['subcategory']
+        }
+        products.append(new_product)
         return redirect(url_for('admin_products'))
-    return render_template('add_product.html', subcategories_map=subcategories_map)
+
+    return render_template('add_product.html')
+
 
 @app.route('/admin/edit-product/<int:product_id>', methods=['GET', 'POST'])
 def edit_product(product_id):
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
-    p = Product.query.get_or_404(product_id)
+
+    product = next((p for p in products if p['id'] == product_id), None)
+    if not product:
+        return "Product not found", 404
+
     if request.method == 'POST':
-        p.name_kh = request.form['name_kh']
-        p.price = int(request.form['price'])
-        p.image = request.form['image']
-        p.categories_str = request.form.get('categories', '')
-        p.subcategory_str = request.form.get('subcategory', '')
-        p.stock = int(request.form.get('stock', 1))
-        db.session.commit()
+        product['name_kh'] = request.form['name_kh']
+        product['name_en'] = request.form['name_en']
+        product['price'] = int(request.form['price'])
+        product['image'] = request.form['image']
         return redirect(url_for('admin_products'))
-    return render_template('edit_product.html', product=p, subcategories_map=subcategories_map)
+
+    return render_template('edit_product.html', product=product)
+
 
 @app.route('/admin/delete-product/<int:product_id>', methods=['POST'])
 def delete_product(product_id):
-    if session.get('admin'):
-        p = Product.query.get(product_id)
-        if p:
-            db.session.delete(p)
-            db.session.commit()
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+
+    global products
+    products = [p for p in products if p['id'] != product_id]
     return redirect(url_for('admin_products'))
 
-# ---------------- RUN ----------------
+
+@app.route('/admin/ban-ip', methods=['GET', 'POST'])
+def ban_ip():
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+
+    message = ""
+    if request.method == 'POST':
+        ip = request.form.get('ip')
+        if ip and ip not in banned_ips:
+            banned_ips.append(ip)
+            message = f"IP {ip} has been banned."
+    return render_template('ban_ip.html', banned_ips=banned_ips, message=message)
+
+
+@app.errorhandler(403)
+def forbidden(e):
+    # This 403 handler is already defined above, but repeated here just in case 
+    # the original code had it twice. We'll leave the first one as definitive.
+    return "Access Denied: Your IP is blocked.", 403
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
+    chat_id = "-1002654437316"
+    check_bot_in_group(bot_token, chat_id)
+
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
+
