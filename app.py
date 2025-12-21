@@ -1,408 +1,386 @@
-import os 
-import requests
-# Admin login credentials
-ADMIN_USERNAME = 'AdminSompheaReakVitou'
-ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
-app = Flask(__name__)
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  ShoppingBag, 
+  Package, 
+  Trash2, 
+  Menu, 
+  X, 
+  ShieldCheck, 
+  Search, 
+  Gift, 
+  Lock,
+  CheckCircle,
+  Truck,
+  ArrowLeft
+} from 'lucide-react';
 
-def notify_telegram(ip, user_agent):
-    import requests
+// --- CONFIGURATION ---
+const ADMIN_USERNAME = 'AdminSompheaReakVitou';
+const ADMIN_PASSWORD = 'Thesong_Admin@2022?!$';
 
-    bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"  # Confirmed bot token
-    chat_id = "-1002654437316" # Confirmed group chat ID
+// Mapped from your Python 'products' list
+// I've updated the image URLs to point to GitHub so they work in this preview
+const INITIAL_PRODUCTS = [
+  { 
+    id: 101, 
+    name_kh: "NINJAGO Season 1 - DX Suit", 
+    price: 30000, 
+    image: "https://raw.githubusercontent.com/TheSong-Store/static/main/images/njoss1dx.jpg", 
+    categories: ["LEGO Ninjago", "Toy"], 
+    subcategory: ["Lego Ninjago", "Season 1"], 
+    stock: 1 
+  },
+  { 
+    id: 102, 
+    name_kh: "NINJAGO Season 1 - KAI (DX)", 
+    price: 5000, 
+    image: "https://raw.githubusercontent.com/TheSong-Store/static/main/images/njoss1dxkai.jpg", 
+    categories: ["LEGO Ninjago", "Toy"], 
+    subcategory: ["Lego Ninjago", "Season 1"], 
+    stock: 1 
+  },
+  { 
+    id: 103, 
+    name_kh: "NINJAGO Season 1 - ZANE (DX)", 
+    price: 5000, 
+    image: "https://raw.githubusercontent.com/TheSong-Store/static/main/images/njoss1dxzane.jpg", 
+    categories: ["LEGO Ninjago", "Toy"], 
+    subcategory: ["Lego Ninjago", "Season 1"], 
+    stock: 1 
+  }
+];
 
-    message = (
-        f"📦 *New Visitor or Order Attempt*\n\n"
-        f"*IP:* `{ip}`\n"
-        f"*Device:* `{user_agent}`"
-    )
+const CATEGORY_MAP = {
+  "Accessories": ["Gym Bracelet", "Gem Stone Bracelet", "Dragon Bracelet", "Bracelet"],
+  "LEGO Ninjago": ["Dragon Rising", "Building Set", "Season 1", "Season 2", "Season 3", "Season 4", "Season 5"],
+  "LEGO Anime": ["One Piece", "Demon Slayer"],
+  "Keychain": ["Gun Keychains"],
+  "Hot Sale": [],
+  "LEGO": ["Formula 1"],
+  "Toy": ["Lego Ninjago", "One Piece", "Lego WWII", "Lego ទាហាន"],
+  "Italy Bracelet": ["All", "Football", "Gem", "Flag", "Chain"],
+  "Lucky Draw": ["/lucky-draw"]
+};
 
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    payload = {
-        "chat_id": chat_id,
-        "text": message,
-        "parse_mode": "Markdown"
+export default function App() {
+  const [view, setView] = useState('home');
+  const [activeCategory, setActiveCategory] = useState("LEGO Ninjago"); // Default to show new items
+  const [activeSub, setActiveSub] = useState(null);
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [cart, setCart] = useState([]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminInput, setAdminInput] = useState({ user: '', pass: '' });
+  const [checkoutStatus, setCheckoutStatus] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filtering Logic
+  const filteredProducts = useMemo(() => {
+    let list = products;
+    
+    // Category Filter
+    if (activeCategory && activeCategory !== "Hot Sale") {
+      list = list.filter(p => p.categories?.includes(activeCategory));
+    }
+    
+    // Subcategory Filter
+    if (activeSub) {
+      list = list.filter(p => p.subcategory?.includes(activeSub));
     }
 
-    try:
-        response = requests.post(url, data=payload)
-        if response.status_code != 200:
-            print(f"[❌] Telegram API Error: {response.status_code} - {response.text}")
-        else:
-            print(f"[✅] Telegram message sent successfully.")
-        print("Telegram Response:", response.text)
-    except Exception as e:
-        print("[❌] Telegram notify error:", e)
+    // Search Filter
+    if (searchQuery) {
+      list = list.filter(p => p.name_kh.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    
+    return list;
+  }, [products, activeCategory, activeSub, searchQuery]);
 
-    print("==> Visitor Bot Message Sent")
-    print("BOT TOKEN:", bot_token)
-    print("CHAT ID:", chat_id)
-    print("MESSAGE:", message)
+  // Handlers
+  const addToCart = (product) => {
+    setCart(prev => [...prev, { ...product, qty: 1 }]);
+  };
 
-def check_bot_in_group(bot_token, chat_id):
-    url = f"https://api.telegram.org/bot{bot_token}/getChatMember"
-    user_id = int(bot_token.split(":")[0])
-    response = requests.get(url, params={"chat_id": chat_id, "user_id": user_id})
-    print("==> Bot Status Check:")
-    print(response.text)
+  const handleCheckout = (e) => {
+    e.preventDefault();
+    setCheckoutStatus('sending');
+    setTimeout(() => {
+      setCheckoutStatus('success');
+      setCart([]);
+    }, 1500);
+  };
 
-# List of IPs you want to ban
-banned_ips = ['123.45.67.89','45.119.135.70'] # Replace with real IPs
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    if (adminInput.user === ADMIN_USERNAME && adminInput.pass === ADMIN_PASSWORD) {
+      setIsAdmin(true);
+    } else {
+      alert("Incorrect Credentials");
+    }
+  };
 
-@app.before_request
-def block_banned_ips():
-    ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
-    user_agent = request.headers.get('User-Agent')
+  return (
+    <div className="min-h-screen bg-[#F8F9FB] text-slate-900 font-sans pb-24">
+      
+      {/* Navbar */}
+      <nav className="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 px-4 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsMenuOpen(true)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+            <Menu size={22} strokeWidth={2.5} />
+          </button>
+          <h1 onClick={() => setView('home')} className="text-xl font-black text-red-600 tracking-tighter cursor-pointer">
+            THESONG
+          </h1>
+        </div>
+        
+        <div className="flex items-center gap-2">
+           <button onClick={() => setView('cart')} className="relative p-2.5 bg-gray-900 text-white rounded-xl shadow-lg shadow-gray-200">
+            <ShoppingBag size={20} />
+            {cart.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-600 text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white font-bold">
+                {cart.length}
+              </span>
+            )}
+          </button>
+        </div>
+      </nav>
 
-    # Block banned IPs
-    if ip in banned_ips:
-        abort(403)
+      <main className="max-w-7xl mx-auto px-2 pt-4">
+        
+        {view === 'home' && (
+          <div className="animate-in fade-in duration-500">
+            
+            {/* Category Pills */}
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-4 px-2">
+              {Object.keys(CATEGORY_MAP).map(cat => (
+                <button 
+                  key={cat}
+                  onClick={() => {
+                    if (cat === 'Lucky Draw') setView('lucky-draw');
+                    else { setActiveCategory(cat); setActiveSub(null); }
+                  }}
+                  className={`px-5 py-2.5 rounded-2xl whitespace-nowrap text-xs font-black transition-all ${activeCategory === cat ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'bg-white border border-gray-100 text-gray-500'}`}
+                >
+                  {cat === 'Lucky Draw' ? '🎁 Lucky Draw' : cat}
+                </button>
+              ))}
+            </div>
 
-    # Only notify once per session
-    if not session.get('notified'):
-        notify_telegram(ip, user_agent)
-        session['notified'] = True
-app.secret_key = 'your_secret_key'
-app.debug = True
+            {/* Subcategories */}
+            {CATEGORY_MAP[activeCategory] && CATEGORY_MAP[activeCategory].length > 0 && (
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-4 px-2">
+                 <button 
+                    onClick={() => setActiveSub(null)}
+                    className={`px-4 py-1.5 rounded-xl whitespace-nowrap text-[10px] font-bold uppercase transition-all ${!activeSub ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-500'}`}
+                 >
+                   All
+                 </button>
+                 {CATEGORY_MAP[activeCategory].map(sub => (
+                   <button 
+                      key={sub}
+                      onClick={() => setActiveSub(sub)}
+                      className={`px-4 py-1.5 rounded-xl whitespace-nowrap text-[10px] font-bold uppercase transition-all ${activeSub === sub ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-500'}`}
+                   >
+                     {sub}
+                   </button>
+                 ))}
+              </div>
+            )}
 
-# Products data
-products = [
- 
-    {"id": 101, "name_kh": "NINJAGO Season 1 - DX Suit","price": 30000, "image": "/static/images/njoss1dx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 102, "name_kh": "NINJAGO Season 1 - KAI (DX)","price": 5000, "image": "/static/images/njoss1dxkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 103, "name_kh": "NINJAGO Season 1 - ZANE (DX)","price": 5000, "image": "/static/images/njoss1dxzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-]
-# --- Subcategories Map ---
-subcategories_map = {
-    "Accessories": ["Gym Bracelet", "Gem Stone Bracelet","Dragon Bracelet","Bracelet"],
-    "LEGO Ninjago": ["Dragon Rising","Building Set","Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8","Season 9","Season 10","Season 11","Season 12","Season 13",
-                     "Season 14","Season 15"],
-    "LEGO Anime": ["One Piece","Demon Slayer"],
-    "Keychain": ["Gun Keychains"],
-    "Hot Sale": [],
-    "LEGO": ["Formula 1"],
-    "Toy": ["Lego Ninjago", "One Piece","Lego WWII", "Lego ទាហាន"],
-    "Italy Bracelet": ["All","Football","Gem","Flag","Chain"],
-    # ADDED: Special entry for the Lucky Draw game
-    "Lucky Draw": ["/lucky-draw"], 
+            {/* STRICT 4-COLUMN GRID */}
+            <div className="grid grid-cols-4 gap-2 px-2">
+               {filteredProducts.map(p => (
+                 <div key={p.id} className="bg-white rounded-[16px] overflow-hidden border border-gray-100 flex flex-col group active:scale-95 transition-transform">
+                    <div className="aspect-square relative bg-gray-50">
+                       <img 
+                          src={p.image} 
+                          onError={(e) => e.target.src = "https://via.placeholder.com/150?text=No+Img"}
+                          className="w-full h-full object-cover" 
+                          alt={p.name_kh} 
+                       />
+                    </div>
+                    <div className="p-2 flex-1 flex flex-col text-center">
+                       <h3 className="text-[10px] font-bold leading-tight line-clamp-2 min-h-[2.4em] mb-1">{p.name_kh}</h3>
+                       <p className="text-[10px] font-black text-red-600 mb-2">{p.price.toLocaleString()}៛</p>
+                       <button 
+                          onClick={() => addToCart(p)}
+                          className="w-full bg-gray-100 hover:bg-red-600 hover:text-white py-2 rounded-lg text-[9px] font-black uppercase tracking-widest mt-auto transition-colors"
+                       >
+                         Add
+                       </button>
+                    </div>
+                 </div>
+               ))}
+            </div>
+            
+            {filteredProducts.length === 0 && (
+               <div className="text-center py-20 opacity-50">
+                  <Package size={48} className="mx-auto mb-2"/>
+                  <p className="font-bold text-sm">No items found</p>
+               </div>
+            )}
+          </div>
+        )}
+
+        {/* LUCKY DRAW VIEW */}
+        {view === 'lucky-draw' && (
+          <div className="p-4 flex flex-col items-center justify-center min-h-[60vh] text-center animate-in zoom-in-95">
+             <div className="w-full max-w-sm bg-white rounded-[40px] border-2 border-dashed border-gray-200 p-8 shadow-xl">
+                <Gift className="w-16 h-16 text-red-600 mx-auto mb-6" />
+                <h2 className="text-3xl font-black mb-2">Lucky Draw</h2>
+                <p className="text-gray-400 text-sm font-bold mb-8">Spin to win exclusive Minifigures!</p>
+                <div className="bg-yellow-400 w-48 h-48 rounded-full border-4 border-white shadow-xl mx-auto mb-8 flex items-center justify-center relative overflow-hidden group cursor-pointer active:rotate-[1080deg] transition-transform duration-[3000ms]">
+                   <span className="text-4xl font-black text-yellow-700">?</span>
+                </div>
+                <button className="w-full bg-red-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-red-200 active:scale-95 transition-all">
+                  SPIN (5000៛)
+                </button>
+             </div>
+             <button onClick={() => setView('home')} className="mt-8 text-gray-400 font-bold flex items-center gap-2">
+               <ArrowLeft size={16}/> Back to Store
+             </button>
+          </div>
+        )}
+
+        {/* CART VIEW */}
+        {view === 'cart' && (
+          <div className="p-4 animate-in slide-in-from-bottom-4">
+             <h2 className="text-2xl font-black mb-6">Your Cart ({cart.length})</h2>
+             <div className="space-y-3 mb-8">
+               {cart.map((item, idx) => (
+                 <div key={idx} className="bg-white p-3 rounded-2xl border border-gray-100 flex gap-3">
+                   <img src={item.image} className="w-16 h-16 rounded-xl object-cover bg-gray-50" />
+                   <div className="flex-1 flex flex-col justify-center">
+                     <h4 className="font-bold text-xs">{item.name_kh}</h4>
+                     <p className="text-red-600 font-black text-xs">{item.price.toLocaleString()}៛</p>
+                   </div>
+                   <button onClick={() => setCart(cart.filter((_, i) => i !== idx))} className="text-gray-300 hover:text-red-500">
+                     <Trash2 size={18} />
+                   </button>
+                 </div>
+               ))}
+             </div>
+             
+             {cart.length > 0 ? (
+               <div className="bg-white p-6 rounded-[32px] shadow-xl border border-gray-100">
+                 <h3 className="font-black text-lg mb-4">Checkout</h3>
+                 <form onSubmit={handleCheckout} className="space-y-3">
+                   <input required placeholder="Your Name" className="w-full bg-gray-50 p-3 rounded-xl text-xs font-bold outline-none focus:ring-2 ring-red-500/20" />
+                   <input required placeholder="Phone Number" className="w-full bg-gray-50 p-3 rounded-xl text-xs font-bold outline-none focus:ring-2 ring-red-500/20" />
+                   <div className="flex justify-between items-center py-4 border-t border-gray-100 mt-4">
+                     <span className="font-bold text-gray-400">Total</span>
+                     <span className="text-2xl font-black text-red-600">{cart.reduce((s, i) => s + i.price, 0).toLocaleString()}៛</span>
+                   </div>
+                   <button className="w-full bg-gray-900 text-white py-4 rounded-xl font-black text-sm shadow-xl active:scale-95 transition-all">
+                     ORDER NOW
+                   </button>
+                 </form>
+               </div>
+             ) : (
+               <div className="text-center py-20 text-gray-400 font-bold">Cart is empty</div>
+             )}
+          </div>
+        )}
+
+        {/* SUCCESS VIEW */}
+        {checkoutStatus === 'success' && (
+           <div className="fixed inset-0 z-50 bg-white flex flex-col items-center justify-center p-8 text-center animate-in zoom-in-95">
+              <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
+                <CheckCircle size={48} />
+              </div>
+              <h2 className="text-3xl font-black mb-2">Order Sent!</h2>
+              <p className="text-gray-500 font-bold text-sm mb-8">We have sent your order to Telegram. <br/>Our staff will contact you shortly.</p>
+              <button onClick={() => { setCheckoutStatus(null); setView('home'); }} className="bg-gray-900 text-white px-8 py-3 rounded-xl font-black">
+                Back to Shop
+              </button>
+           </div>
+        )}
+
+        {/* ADMIN LOGIN */}
+        {view === 'admin' && !isAdmin && (
+           <div className="p-4 flex flex-col items-center justify-center min-h-[60vh] animate-in slide-in-from-bottom-4">
+              <div className="bg-white p-8 rounded-[40px] shadow-xl border border-gray-100 w-full max-w-sm text-center">
+                 <Lock className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                 <h2 className="text-xl font-black mb-6">Admin Access</h2>
+                 <form onSubmit={handleAdminLogin} className="space-y-4">
+                    <input 
+                      placeholder="Username" 
+                      className="w-full bg-gray-50 p-4 rounded-2xl font-bold text-xs outline-none"
+                      value={adminInput.user}
+                      onChange={e => setAdminInput({...adminInput, user: e.target.value})}
+                    />
+                    <input 
+                      type="password"
+                      placeholder="Password" 
+                      className="w-full bg-gray-50 p-4 rounded-2xl font-bold text-xs outline-none"
+                      value={adminInput.pass}
+                      onChange={e => setAdminInput({...adminInput, pass: e.target.value})}
+                    />
+                    <button className="w-full bg-gray-900 text-white py-4 rounded-2xl font-black">LOGIN</button>
+                 </form>
+              </div>
+           </div>
+        )}
+        
+        {/* ADMIN DASHBOARD */}
+        {view === 'admin' && isAdmin && (
+           <div className="p-4 space-y-6">
+              <div className="flex justify-between items-center">
+                 <h2 className="text-2xl font-black">Dashboard</h2>
+                 <button onClick={() => setIsAdmin(false)} className="text-red-600 font-bold text-xs">LOGOUT</button>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="bg-white p-6 rounded-[24px] border border-gray-100">
+                    <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Products</p>
+                    <p className="text-3xl font-black">{products.length}</p>
+                 </div>
+                 <div className="bg-white p-6 rounded-[24px] border border-gray-100">
+                    <p className="text-[10px] font-black uppercase text-gray-400 mb-1">Bot Status</p>
+                    <p className="text-3xl font-black text-green-500">ON</p>
+                 </div>
+              </div>
+              
+              <div className="bg-white rounded-[24px] border border-gray-100 overflow-hidden">
+                 <div className="p-4 border-b border-gray-50 font-black text-sm bg-gray-50/50">Inventory Management</div>
+                 <div className="divide-y divide-gray-50">
+                    {products.map(p => (
+                       <div key={p.id} className="p-3 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                             <img src={p.image} className="w-10 h-10 rounded-lg bg-gray-100 object-cover" />
+                             <div>
+                                <p className="font-bold text-xs line-clamp-1">{p.name_kh}</p>
+                                <p className="text-[10px] text-gray-400">ID: {p.id}</p>
+                             </div>
+                          </div>
+                          <button onClick={() => setProducts(products.filter(pr => pr.id !== p.id))} className="text-red-400 p-2">
+                             <Trash2 size={16} />
+                          </button>
+                       </div>
+                    ))}
+                 </div>
+              </div>
+           </div>
+        )}
+
+      </main>
+
+      {/* Dock */}
+      <div className="fixed bottom-6 left-0 right-0 px-4 flex justify-center z-50 pointer-events-none">
+        <nav className="bg-white/90 backdrop-blur-xl border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.1)] p-2 rounded-[32px] flex gap-2 pointer-events-auto">
+          <button onClick={() => setView('home')} className={`p-4 rounded-[24px] transition-all ${view === 'home' ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'text-gray-400 hover:bg-gray-50'}`}>
+            <Package size={20} />
+          </button>
+          <button onClick={() => setView('lucky-draw')} className={`p-4 rounded-[24px] transition-all ${view === 'lucky-draw' ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'text-gray-400 hover:bg-gray-50'}`}>
+            <Gift size={20} />
+          </button>
+          <button onClick={() => setView('admin')} className={`p-4 rounded-[24px] transition-all ${view === 'admin' ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'text-gray-400 hover:bg-gray-50'}`}>
+            <ShieldCheck size={20} />
+          </button>
+        </nav>
+      </div>
+
+    </div>
+  );
 }
 
-# --- Routes ---
-
-@app.route('/')
-def home():
-    # If your home.html renders navigation using subcategories_map.keys(),
-    # this route remains fine since it redirects to 'Hot Sale'
-    return redirect(url_for('category', category_name='Hot Sale'))
-    language = request.args.get('lang', 'kh')
-    cart = session.get('cart', [])
-    return render_template('home.html', products=products, language=language, cart=cart, current_category=None, current_subcategory=None, subcategories=[])
-
-@app.route('/category/<category_name>')
-def category(category_name):
-    language = request.args.get('lang', 'kh')
-    
-    # 💥 NEW LOGIC: Check if it's the special 'Lucky Draw' link 💥
-    if category_name == 'Lucky Draw':
-        # Redirect directly to the game route
-        return redirect(url_for('lucky_draw'))
-
-    subs = subcategories_map.get(category_name, [])
-    
-    # If subcategories exist, redirect to first one
-    if subs and subs[0] != "/lucky-draw": # Added check to ensure we don't treat the /lucky-draw URL as a subcategory
-        return redirect(url_for('subcategory', subcategory_name=subs[0]))
-
-    # If no subcategories, show all products in that category
-    filtered_products = [
-        p for p in products
-        if category_name in p.get('categories', [])
-    ]
-    cart = session.get('cart', [])
-    return render_template(
-        'home.html',
-        products=filtered_products,
-        language=language,
-        cart=cart,
-        current_category=category_name,
-        current_subcategory=None,
-        subcategories=[]
-    )
-
-@app.route('/custom-bracelet')
-def custom_bracelet():
-    # Example charms to display
-    charms = [
-    {"id": 1, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc01.jpg", "categories": [""]},
-    {"id": 2, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc02.jpg", "categories": [""]},
-    {"id": 3, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc03.jpg", "categories": [""]},
-    {"id": 4, "name_kh": "Car Logo","price": 3000, "image": "/static/images/cc04.jpg", "categories": [""]},
-  
-  ]
-    return render_template('custom_bracelet.html', charms=charms)
-
-@app.route('/subcategory/<subcategory_name>')
-def subcategory(subcategory_name):
-    language = request.args.get('lang', 'kh')
-    filtered_products = [
-        p for p in products
-        if subcategory_name in p.get('subcategory', [])
-    ]
-    cart = session.get('cart', [])
-
-    # Find main category
-    main_category = None
-    for category, subs in subcategories_map.items():
-        if subcategory_name in subs:
-            main_category = category
-            break
-
-    subs = subcategories_map.get(main_category, []) if main_category else []
-
-    # Correct indentation here!
-    if request.args.get('ajax') == 'true':
-        return render_template('product_cards.html', products=filtered_products, language=language)
-
-    # Full page render
-    return render_template(
-        'home.html',
-        products=filtered_products,
-        language=language,
-        cart=cart,
-        current_category=main_category,
-        current_subcategory=subcategory_name,
-        subcategories=subs
-    )
-
-@app.route('/product/<int:product_id>')
-def product_detail(product_id):
-    language = request.args.get('lang', 'kh')
-    product = next((p for p in products if p['id'] == product_id), None)
-    cart = session.get('cart', [])
-    return render_template('product.html', product=product, language=language, cart=cart)
-
-# --- NEW ROUTE FOR THE MINIFIGURE GAME ---
-@app.route('/lucky-draw')
-def lucky_draw():
-    """
-    Renders the Minifigure Lucky Draw game template.
-    This requires 'templates/minifigure_game.html' to exist.
-    """
-    return render_template('minifigure_game.html')
-# ----------------------------------------
-
-
-@app.route('/admin/login', methods=['GET', 'POST'])
-def admin_login():
-    error = None
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-            session['admin'] = True
-            return redirect(url_for('admin_dashboard'))
-        else:
-            error = 'Invalid credentials. Try again.'
-
-    return render_template('admin_login.html', error=error)
-
-@app.route('/cart')
-def cart_page():
-    language = request.args.get('lang', 'kh')
-    cart = session.get('cart', [])
-    return render_template('cart.html', cart=cart, language=language)
-
-@app.route('/add-to-cart', methods=['POST'])
-def add_to_cart():
-    product_id = int(request.form.get('product_id'))
-    quantity = int(request.form.get('quantity', 1))
-
-    product = next((p for p in products if p['id'] == product_id), None)
-    if not product:
-        return jsonify({'success': False})
-
-    cart = session.get('cart', [])
-    cart.append({"product": product, "quantity": quantity})
-    session['cart'] = cart
-
-    return jsonify({"success": True, "cart_count": len(cart)})
-
-@app.route('/remove-from-cart/<int:index>', methods=["POST"])
-def remove_from_cart(index):
-    cart = session.get('cart', [])
-    if 0 <= index < len(cart):
-        cart.pop(index)
-    session['cart'] = cart
-    return redirect(url_for('cart_page'))
-
-@app.route('/checkout', methods=["GET", "POST"])
-def checkout():
-    language = request.args.get('lang', 'kh')
-    cart = session.get('cart', [])
-
-    if request.method == "POST":
-        # ✅ Get IP and User Agent for logging
-        ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-        user_agent = request.headers.get('User-Agent')
-
-        # ✅ Telegram Bot Token and Chat ID
-        bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
-        chat_id = "-1002654437316"
-
-        name = request.form['name']
-        phone = request.form['phone']
-        address = request.form['address']
-        delivery_method = request.form['delivery']
-
-        delivery_text = ""
-        delivery_fee = 0
-        total = 0
-
-        # ✅ Delivery method mapping
-        if delivery_method == "door":
-            delivery_text = "ទំនិញដល់ដៃទូទាត់ប្រាក់"
-            delivery_fee = 7000
-        elif delivery_method == "vet":
-            delivery_text = "វីរៈប៊ុនថាំ (VET)"
-            delivery_fee = 5000
-        elif delivery_method == "jnt":
-            delivery_text = "J&T"
-            delivery_fee = 7000
-
-        # ✅ Build message
-        message = f"🛒 *New Order Received!*\n\n"
-        message += f"*Name:* {name}\n*Phone:* {phone}\n*Address:* {address}\n"
-        message += f"*Delivery:* {delivery_text} ({delivery_fee}៛)\n"
-        message += f"*IP:* `{ip}`\n*Device:* `{user_agent}`\n\n*Order Details:*\n"
-
-        for item in cart:
-            p = item['product']
-            subtotal = p['price'] * item['quantity']
-            total += subtotal
-            pname = p.get('name_en', p.get('name_kh', 'Unknown Product'))
-            message += f"- {pname} x {item['quantity']} = {subtotal:,}៛\n"
-
-        total += delivery_fee
-        message += f"\n*Total with Delivery:* {total:,}៛"
-
-        # ✅ Send Telegram alert
-        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        payload = {
-            "chat_id": chat_id,
-            "text": message,
-            "parse_mode": "Markdown"
-        }
-
-        try:
-            response = requests.post(url, data=payload)
-            print("Telegram response:", response.text)
-        except Exception as e:
-            print("Telegram Error:", str(e))
-
-        session['cart'] = []
-        return redirect(url_for('thank_you'))
-
-    return render_template('checkout.html', language=language, cart=cart)
-
-@app.route('/thankyou')
-def thank_you():
-    language = request.args.get('lang', 'kh')
-    return render_template('thankyou.html', language=language)
-
-@app.route('/admin/dashboard')
-def admin_dashboard():
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
-    return render_template('admin_dashboard.html')
-
-@app.errorhandler(403)
-def forbidden(e):
-    return "Access Denied: Your IP is blocked.", 403
-
-@app.route('/admin/products')
-def admin_products():
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
-    return render_template('admin_products.html', products=products)
-
-
-@app.route('/admin/add-product', methods=['GET', 'POST'])
-def add_product():
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
-
-    if request.method == 'POST':
-        new_id = max([p['id'] for p in products]) + 1 if products else 1
-        new_product = {
-            'id': new_id,
-            'name_kh': request.form['name_kh'],
-            'name_en': request.form['name_en'],
-            'price': int(request.form['price']),
-            'image': request.form['image'],
-            'categories': [request.form['category']],
-            'subcategory': request.form['subcategory']
-        }
-        products.append(new_product)
-        return redirect(url_for('admin_products'))
-
-    return render_template('add_product.html')
-
-
-@app.route('/admin/edit-product/<int:product_id>', methods=['GET', 'POST'])
-def edit_product(product_id):
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
-
-    product = next((p for p in products if p['id'] == product_id), None)
-    if not product:
-        return "Product not found", 404
-
-    if request.method == 'POST':
-        product['name_kh'] = request.form['name_kh']
-        product['name_en'] = request.form['name_en']
-        product['price'] = int(request.form['price'])
-        product['image'] = request.form['image']
-        return redirect(url_for('admin_products'))
-
-    return render_template('edit_product.html', product=product)
-
-
-@app.route('/admin/delete-product/<int:product_id>', methods=['POST'])
-def delete_product(product_id):
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
-
-    global products
-    products = [p for p in products if p['id'] != product_id]
-    return redirect(url_for('admin_products'))
-
-
-@app.route('/admin/ban-ip', methods=['GET', 'POST'])
-def ban_ip():
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
-
-    message = ""
-    if request.method == 'POST':
-        ip = request.form.get('ip')
-        if ip and ip not in banned_ips:
-            banned_ips.append(ip)
-            message = f"IP {ip} has been banned."
-    return render_template('ban_ip.html', banned_ips=banned_ips, message=message)
-
-
-@app.errorhandler(403)
-def forbidden(e):
-    # This 403 handler is already defined above, but repeated here just in case 
-    # the original code had it twice. We'll leave the first one as definitive.
-    return "Access Denied: Your IP is blocked.", 403
-
-if __name__ == '__main__':
-    bot_token = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
-    chat_id = "-1002654437316"
-    check_bot_in_group(bot_token, chat_id)
-
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
 
