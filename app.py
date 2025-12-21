@@ -19,7 +19,6 @@ const ADMIN_USERNAME = 'AdminSompheaReakVitou';
 const ADMIN_PASSWORD = 'Thesong_Admin@2022?!$';
 
 // Mapped from your Python 'products' list
-// I've updated the image URLs to point to GitHub so they work in this preview
 const INITIAL_PRODUCTS = [
   { 
     id: 101, 
@@ -51,20 +50,33 @@ const INITIAL_PRODUCTS = [
 ];
 
 const CATEGORY_MAP = {
-  "Accessories": ["Gym Bracelet", "Gem Stone Bracelet", "Dragon Bracelet", "Bracelet"],
+  "Hot Sale": [],
   "LEGO Ninjago": ["Dragon Rising", "Building Set", "Season 1", "Season 2", "Season 3", "Season 4", "Season 5"],
   "LEGO Anime": ["One Piece", "Demon Slayer"],
-  "Keychain": ["Gun Keychains"],
-  "Hot Sale": [],
-  "LEGO": ["Formula 1"],
+  "Accessories": ["Gym Bracelet", "Gem Stone Bracelet", "Dragon Bracelet", "Bracelet"],
   "Toy": ["Lego Ninjago", "One Piece", "Lego WWII", "Lego ទាហាន"],
+  "Keychain": ["Gun Keychains"],
   "Italy Bracelet": ["All", "Football", "Gem", "Flag", "Chain"],
+  "LEGO": ["Formula 1"],
   "Lucky Draw": ["/lucky-draw"]
+};
+
+// NEW: Images for categories
+const CATEGORY_IMAGES = {
+  "Hot Sale": "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=200",
+  "LEGO Ninjago": "https://images.unsplash.com/photo-1560000593-06674681330c?w=200",
+  "LEGO Anime": "https://images.unsplash.com/photo-1566576912902-1dcd1b6d0e3d?w=200",
+  "Accessories": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200",
+  "Toy": "https://images.unsplash.com/photo-1558877385-48572c023785?w=200",
+  "Keychain": "https://images.unsplash.com/photo-1622619000171-8935c421735d?w=200",
+  "Italy Bracelet": "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=200",
+  "LEGO": "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=200",
+  "Lucky Draw": "https://images.unsplash.com/photo-1513201099705-a9746e1e201f?w=200"
 };
 
 export default function App() {
   const [view, setView] = useState('home');
-  const [activeCategory, setActiveCategory] = useState("LEGO Ninjago"); // Default to show new items
+  const [activeCategory, setActiveCategory] = useState("LEGO Ninjago"); 
   const [activeSub, setActiveSub] = useState(null);
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [cart, setCart] = useState([]);
@@ -150,8 +162,8 @@ export default function App() {
         {view === 'home' && (
           <div className="animate-in fade-in duration-500">
             
-            {/* Category Pills */}
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-4 px-2">
+            {/* Category Images (Grid 4 per row) */}
+            <div className="grid grid-cols-4 gap-4 pb-6 px-2">
               {Object.keys(CATEGORY_MAP).map(cat => (
                 <button 
                   key={cat}
@@ -159,9 +171,20 @@ export default function App() {
                     if (cat === 'Lucky Draw') setView('lucky-draw');
                     else { setActiveCategory(cat); setActiveSub(null); }
                   }}
-                  className={`px-5 py-2.5 rounded-2xl whitespace-nowrap text-xs font-black transition-all ${activeCategory === cat ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'bg-white border border-gray-100 text-gray-500'}`}
+                  className="flex flex-col items-center gap-2 group"
                 >
-                  {cat === 'Lucky Draw' ? '🎁 Lucky Draw' : cat}
+                  <div className={`w-16 h-16 rounded-full p-0.5 border-2 transition-all duration-300 ${activeCategory === cat ? 'border-red-600 scale-110 shadow-md' : 'border-transparent bg-white shadow-sm'}`}>
+                    <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
+                         <img 
+                           src={CATEGORY_IMAGES[cat] || "https://via.placeholder.com/100"} 
+                           alt={cat} 
+                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                         />
+                    </div>
+                  </div>
+                  <span className={`text-[10px] font-bold text-center leading-tight ${activeCategory === cat ? 'text-red-600' : 'text-gray-600'}`}>
+                    {cat === 'Lucky Draw' ? '🎁 Lucky' : cat}
+                  </span>
                 </button>
               ))}
             </div>
@@ -382,5 +405,3 @@ export default function App() {
     </div>
   );
 }
-
-
