@@ -26,27 +26,26 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
-// --- Global Variable Resilience (Crucial for Deployment) ---
-const getFirebaseConfig = () => {
+// --- CRITICAL: Safe Global Variable Handling ---
+// This prevents the "Deploy Failed" error caused by missing/invalid environment variables
+const getSafeConfig = () => {
   try {
     if (typeof __firebase_config !== 'undefined' && __firebase_config) {
       return JSON.parse(__firebase_config);
     }
   } catch (e) {
-    console.error("Failed to parse firebase config", e);
+    console.error("Firebase config parse error:", e);
   }
   return null;
 };
 
-const getAppId = () => (typeof __app_id !== 'undefined' ? __app_id : 'the-song-store-default');
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'the-song-store-default';
+const firebaseConfig = getSafeConfig();
 
-// --- Firebase Initialization ---
+// Initialize Firebase only if config exists
 let app, auth, db;
-const config = getFirebaseConfig();
-const appId = getAppId();
-
-if (config) {
-  app = !getApps().length ? initializeApp(config) : getApp();
+if (firebaseConfig) {
+  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   auth = getAuth(app);
   db = getFirestore(app);
 }
@@ -80,30 +79,12 @@ const INITIAL_PRODUCTS = [
 
 const CATEGORY_DATA = {
   "Hot Sale": { img: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400", sub: [] },
-  "Accessories": { 
-    img: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400", 
-    sub: ["Gym Bracelet", "Gem Stone Bracelet", "Dragon Bracelet", "Bracelet"] 
-  },
-  "LEGO Ninjago": { 
-    img: "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=400", 
-    sub: ["Dragon Rising", "Building Set", "Season 1", "Season 2", "Season 3"] 
-  },
-  "LEGO Anime": { 
-    img: "https://images.unsplash.com/photo-1614583225154-5feaba071595?w=400", 
-    sub: ["One Piece", "Demon Slayer"] 
-  },
-  "Keychain": { 
-    img: "https://images.unsplash.com/photo-1582142407894-ec85a1260a46?w=400", 
-    sub: ["Gun Keychains"] 
-  },
-  "Toy": { 
-    img: "https://images.unsplash.com/photo-1531651008558-ed1740375b39?w=400", 
-    sub: ["Lego Ninjago", "One Piece", "Lego WWII", "Lego ទាហាន"] 
-  },
-  "Italy Bracelet": { 
-    img: "https://images.unsplash.com/photo-1535633302703-b0703af2939a?w=400", 
-    sub: ["All", "Football", "Gem", "Flag", "Chain"] 
-  },
+  "Accessories": { img: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400", sub: ["Gym Bracelet", "Gem Stone Bracelet", "Dragon Bracelet", "Bracelet"] },
+  "LEGO Ninjago": { img: "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=400", sub: ["Dragon Rising", "Building Set"] },
+  "LEGO Anime": { img: "https://images.unsplash.com/photo-1614583225154-5feaba071595?w=400", sub: ["One Piece", "Demon Slayer"] },
+  "Keychain": { img: "https://images.unsplash.com/photo-1582142407894-ec85a1260a46?w=400", sub: ["Gun Keychains"] },
+  "Toy": { img: "https://images.unsplash.com/photo-1531651008558-ed1740375b39?w=400", sub: ["Lego Ninjago", "One Piece"] },
+  "Italy Bracelet": { img: "https://images.unsplash.com/photo-1535633302703-b0703af2939a?w=400", sub: ["All", "Football", "Flag"] },
   "Lucky Draw": { img: "https://images.unsplash.com/photo-1596838132731-163467475510?w=400", sub: ["Play"] }
 };
 
@@ -117,7 +98,6 @@ const LANGUAGES = {
     name: "ឈ្មោះពេញ",
     phone: "លេខទូរស័ព្ទ",
     address: "អាសយដ្ឋានដឹកជញ្ជូន",
-    delivery: "សេវាដឹកជញ្ជូន",
     orderNow: "បញ្ជាទិញឥឡូវនេះ",
     currency: "៛",
     explore: "ស្វែងរកតាមប្រភេទ",
@@ -132,7 +112,6 @@ const LANGUAGES = {
     name: "Full Name",
     phone: "Phone Number",
     address: "Shipping Address",
-    delivery: "Delivery Method",
     orderNow: "Complete Order",
     currency: "KHR",
     explore: "Shop by Category",
@@ -189,7 +168,7 @@ export default function App() {
 
   const sendOrderToTelegram = async (data) => {
     const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
-    const msg = `🚀 *NEW ORDER*\n👤 ${data.name}\n📞 ${data.phone}\n📍 ${data.address}\n🚚 ${data.delivery}\n\n*Items:* \n${cart.map(i => `- ${i.name_kh} x${i.qty}`).join('\n')}\n\n*Total:* ${subtotal.toLocaleString()}៛`;
+    const msg = `🚀 *NEW ORDER*\n👤 ${data.name}\n📞 ${data.phone}\n📍 ${data.address}\n\n*Items:* \n${cart.map(i => `- ${i.name_kh} x${i.qty}`).join('\n')}\n\n*Total:* ${subtotal.toLocaleString()}៛`;
     
     try {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -204,15 +183,13 @@ export default function App() {
     }
   };
 
-  // Guard for missing config during build
-  if (!config) {
+  // Guard: If no config, show setup instructions instead of crashing
+  if (!firebaseConfig) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-6 text-center">
-        <div className="max-w-md bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-          <ShieldCheck className="mx-auto text-red-500 mb-4" size={48} />
-          <h1 className="text-xl font-black mb-2">Configuration Required</h1>
-          <p className="text-gray-500 text-sm">Please ensure Firebase configuration is provided in the workspace settings.</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6 text-center">
+        <ShieldCheck className="text-red-500 mb-4" size={64} />
+        <h1 className="text-2xl font-black mb-2">Setup Required</h1>
+        <p className="text-gray-500 max-w-sm">Please add your Firebase configuration to the project settings to enable store features.</p>
       </div>
     );
   }
@@ -244,7 +221,7 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
-             <button onClick={() => setLang(lang === 'kh' ? 'en' : 'kh')} className="text-[10px] font-black border-2 border-gray-100 px-3 py-1.5 rounded-xl hover:bg-gray-50 uppercase">
+            <button onClick={() => setLang(lang === 'kh' ? 'en' : 'kh')} className="text-[10px] font-black border-2 border-gray-100 px-3 py-1.5 rounded-xl hover:bg-gray-50 uppercase">
               {lang}
             </button>
             <button onClick={() => setView('cart')} className="relative p-2.5 bg-gray-900 text-white rounded-2xl shadow-lg active:scale-95 transition-transform">
@@ -260,7 +237,6 @@ export default function App() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 pt-6">
-        {/* Home View */}
         {view === 'home' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="mb-8">
@@ -283,247 +259,115 @@ export default function App() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-5 md:p-6">
                     <div>
                       <h3 className="text-white font-black text-lg md:text-xl leading-tight">{name}</h3>
-                      <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-1">Explore Collection</p>
+                      <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-1">Collection</p>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-            
-            <div className="mt-12 mb-6 flex justify-between items-center">
-              <h2 className="text-2xl font-black">{t.trending}</h2>
-              <button onClick={() => { setView('shop'); setActiveCategory(null); }} className="text-red-600 font-bold text-sm flex items-center gap-1">View All <ChevronRight size={16}/></button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-               {products.slice(0, 5).map(p => <ProductCard key={p.id} product={p} t={t} setCart={setCart} />)}
-            </div>
           </div>
         )}
 
-        {/* Shop View */}
         {view === 'shop' && (
           <div className="animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-              <div>
-                <button onClick={() => setView('home')} className="flex items-center gap-2 text-gray-400 font-bold text-sm mb-2 hover:text-black transition-colors">
-                  <ArrowLeft size={16}/> Back to Categories
-                </button>
-                <h2 className="text-4xl font-black tracking-tighter">{activeCategory || "All Products"}</h2>
-              </div>
-              
-              {activeCategory && CATEGORY_DATA[activeCategory]?.sub.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                  <button 
-                    onClick={() => setActiveSub(null)}
-                    className={`px-6 py-2.5 rounded-2xl whitespace-nowrap text-xs font-black transition-all ${!activeSub ? 'bg-red-600 text-white shadow-lg' : 'bg-white border border-gray-100'}`}
-                  >
-                    All
-                  </button>
-                  {CATEGORY_DATA[activeCategory].sub.map(s => (
-                    <button 
-                      key={s}
-                      onClick={() => setActiveSub(s)}
-                      className={`px-6 py-2.5 rounded-2xl whitespace-nowrap text-xs font-black transition-all ${activeSub === s ? 'bg-gray-900 text-white shadow-lg' : 'bg-white border border-gray-100'}`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <button onClick={() => setView('home')} className="flex items-center gap-2 text-gray-400 font-bold text-sm hover:text-black transition-colors w-fit">
+                <ArrowLeft size={16}/> Back
+              </button>
+              <h2 className="text-4xl font-black tracking-tighter">{activeCategory}</h2>
             </div>
-
-            {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-                {filteredProducts.map(p => <ProductCard key={p.id} product={p} t={t} setCart={setCart} />)}
-              </div>
-            ) : (
-              <div className="text-center py-20 bg-white rounded-[40px] border-2 border-dashed border-gray-100">
-                <Search size={32} className="text-gray-300 mx-auto mb-4" />
-                <h3 className="font-black text-xl">No products found</h3>
-              </div>
-            )}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+              {filteredProducts.map(p => <ProductCard key={p.id} product={p} t={t} setCart={setCart} />)}
+            </div>
           </div>
         )}
 
-        {/* Cart View */}
         {view === 'cart' && (
           <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8 animate-in slide-in-from-bottom-8">
             <div className="space-y-4">
               <h2 className="text-3xl font-black mb-6">{t.cart}</h2>
-              {cart.length > 0 ? cart.map((item, idx) => (
-                <div key={idx} className="bg-white p-4 rounded-[32px] border border-gray-100 flex gap-4 shadow-sm">
-                  <img src={item.image} className="w-20 h-20 rounded-2xl object-cover bg-gray-50" alt={item.name_kh} />
-                  <div className="flex-1 py-1 flex flex-col justify-between">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-bold text-sm leading-tight">{item.name_kh}</h4>
-                      <button onClick={() => setCart(cart.filter((_, i) => i !== idx))} className="text-gray-300 hover:text-red-500 transition-colors"><Trash2 size={18}/></button>
-                    </div>
+              {cart.map((item, idx) => (
+                <div key={idx} className="bg-white p-4 rounded-[32px] border border-gray-100 flex gap-4">
+                  <img src={item.image} className="w-20 h-20 rounded-2xl object-cover" alt={item.name_kh} />
+                  <div className="flex-1 flex flex-col justify-between">
+                    <h4 className="font-bold text-sm">{item.name_kh}</h4>
                     <div className="flex justify-between items-center">
-                       <span className="text-red-600 font-black">{item.price.toLocaleString()}៛</span>
-                       <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-1 px-3">
-                          <button onClick={() => setCart(cart.map((c, i) => i === idx ? {...c, qty: Math.max(1, c.qty-1)} : c))} className="font-black text-gray-400">-</button>
-                          <span className="text-xs font-black w-4 text-center">{item.qty}</span>
-                          <button onClick={() => setCart(cart.map((c, i) => i === idx ? {...c, qty: c.qty+1} : c))} className="font-black text-gray-400">+</button>
-                       </div>
+                      <span className="text-red-600 font-black">{item.price.toLocaleString()}៛</span>
+                      <button onClick={() => setCart(cart.filter((_, i) => i !== idx))} className="text-gray-300 hover:text-red-500"><Trash2 size={18}/></button>
                     </div>
                   </div>
                 </div>
-              )) : (
-                <div className="bg-white p-12 rounded-[40px] text-center border-2 border-dashed border-gray-100">
-                  <ShoppingBag size={48} className="mx-auto text-gray-200 mb-4" />
-                  <p className="font-bold text-gray-400">Empty cart</p>
-                </div>
-              )}
+              ))}
+              {cart.length === 0 && <p className="text-center py-10 text-gray-400 font-bold">Your cart is empty</p>}
             </div>
 
-            {/* Checkout Form */}
-            <div className="bg-white p-8 rounded-[40px] shadow-xl shadow-gray-200/50 h-fit sticky top-24 border border-gray-50">
-              <h3 className="text-xl font-black mb-6">Order Summary</h3>
+            <div className="bg-white p-8 rounded-[40px] shadow-xl border border-gray-50 h-fit">
+              <h3 className="text-xl font-black mb-6">Checkout</h3>
               <form onSubmit={(e) => {
                 e.preventDefault();
-                const fd = new FormData(e.target);
-                sendOrderToTelegram(Object.fromEntries(fd));
+                sendOrderToTelegram(Object.fromEntries(new FormData(e.target)));
               }} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest pl-2">{t.name}</label>
-                  <div className="flex items-center bg-gray-50 rounded-2xl px-4 border border-transparent focus-within:border-red-500/20 transition-all">
-                    <User size={16} className="text-gray-400" />
-                    <input name="name" required className="w-full bg-transparent p-3.5 outline-none font-bold text-sm" placeholder="Your name" />
-                  </div>
+                <input name="name" required className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold text-sm" placeholder={t.name} />
+                <input name="phone" required className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold text-sm" placeholder={t.phone} />
+                <textarea name="address" required className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold text-sm h-24" placeholder={t.address} />
+                <div className="pt-6 border-t flex justify-between items-center">
+                  <span className="font-bold text-gray-400">{t.total}</span>
+                  <span className="text-2xl font-black text-red-600">{cart.reduce((s, i) => s + (i.price * i.qty), 0).toLocaleString()}៛</span>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest pl-2">{t.phone}</label>
-                  <div className="flex items-center bg-gray-50 rounded-2xl px-4 border border-transparent focus-within:border-red-500/20 transition-all">
-                    <Phone size={16} className="text-gray-400" />
-                    <input name="phone" required className="w-full bg-transparent p-3.5 outline-none font-bold text-sm" placeholder="Phone number" />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest pl-2">{t.address}</label>
-                  <div className="flex items-start bg-gray-50 rounded-2xl px-4 border border-transparent focus-within:border-red-500/20 transition-all">
-                    <MapPin size={16} className="text-gray-400 mt-4" />
-                    <textarea name="address" required className="w-full bg-transparent p-3.5 outline-none font-bold text-sm h-20 resize-none" placeholder="Delivery address" />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest pl-2">{t.delivery}</label>
-                  <select name="delivery" className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold text-sm border border-transparent focus:border-red-500/20 transition-all cursor-pointer">
-                    <option>Standard Delivery (7,000៛)</option>
-                    <option>VET Express (5,000៛)</option>
-                    <option>J&T Express (7,000៛)</option>
-                  </select>
-                </div>
-
-                <div className="pt-6 border-t border-gray-100 mt-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <span className="text-gray-400 font-bold">{t.total}</span>
-                    <span className="text-3xl font-black text-red-600">
-                      {cart.reduce((s, i) => s + (i.price * i.qty), 0).toLocaleString()} {t.currency}
-                    </span>
-                  </div>
-                  <button 
-                    type="submit" 
-                    disabled={cart.length === 0}
-                    className="w-full bg-red-600 text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-red-200 active:scale-95 disabled:opacity-50 transition-all"
-                  >
-                    {t.orderNow}
-                  </button>
-                </div>
+                <button type="submit" disabled={cart.length === 0} className="w-full bg-red-600 text-white py-5 rounded-3xl font-black disabled:opacity-50">
+                  {t.orderNow}
+                </button>
               </form>
             </div>
           </div>
         )}
 
-        {/* Order Success View */}
         {view === 'success' && (
-          <div className="max-w-md mx-auto py-20 text-center animate-in zoom-in-95 duration-500">
-            <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-green-100">
-              <CheckCircle2 size={48} />
+          <div className="max-w-md mx-auto py-20 text-center animate-in zoom-in-95">
+            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 size={40} />
             </div>
-            <h2 className="text-3xl font-black mb-3">Order Received!</h2>
-            <p className="text-gray-500 font-medium mb-8">We have notified our staff. You will receive a call shortly to confirm your delivery.</p>
-            <button onClick={() => setView('home')} className="w-full bg-gray-900 text-white py-5 rounded-[24px] font-black text-lg active:scale-95 transition-all">
-              Back to Shopping
-            </button>
+            <h2 className="text-3xl font-black mb-2">Order Success!</h2>
+            <p className="text-gray-500 mb-8">We will contact you shortly.</p>
+            <button onClick={() => setView('home')} className="w-full bg-gray-900 text-white py-4 rounded-2xl font-black">Back to Home</button>
           </div>
         )}
       </main>
 
-      {/* Navigation Dock */}
-      <div className="fixed bottom-6 left-0 right-0 px-4 flex justify-center z-50 pointer-events-none">
-        <nav className="bg-white/90 backdrop-blur-xl border border-white/20 shadow-[0_20px_60px_rgba(0,0,0,0.15)] p-2 rounded-[32px] flex gap-1 pointer-events-auto">
-          <button onClick={() => { setView('home'); setActiveCategory(null); }} className={`p-4 rounded-[26px] flex items-center gap-2 transition-all ${view === 'home' || view === 'shop' ? 'bg-red-600 text-white shadow-xl shadow-red-200' : 'text-gray-400 hover:bg-gray-50'}`}>
-            <Package size={20} strokeWidth={2.5} />
-            {(view === 'home' || view === 'shop') && <span className="text-xs font-black">Shop</span>}
+      {/* Dock */}
+      <div className="fixed bottom-6 left-0 right-0 px-4 flex justify-center z-50">
+        <nav className="bg-white/90 backdrop-blur-xl border border-gray-100 shadow-2xl p-2 rounded-[32px] flex gap-1">
+          <button onClick={() => setView('home')} className={`p-4 rounded-[26px] ${view === 'home' ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'text-gray-400'}`}>
+            <Package size={20} />
           </button>
-          <button onClick={() => setView('cart')} className={`p-4 rounded-[26px] flex items-center gap-2 transition-all ${view === 'cart' ? 'bg-red-600 text-white shadow-xl shadow-red-200' : 'text-gray-400 hover:bg-gray-50'}`}>
-            <ShoppingBag size={20} strokeWidth={2.5} />
-            {view === 'cart' && <span className="text-xs font-black">Cart</span>}
-          </button>
-          <button onClick={() => setView('admin')} className="p-4 rounded-[26px] text-gray-400 hover:bg-gray-50 transition-all">
-            <ShieldCheck size={20} strokeWidth={2.5} />
+          <button onClick={() => setView('cart')} className={`p-4 rounded-[26px] ${view === 'cart' ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'text-gray-400'}`}>
+            <ShoppingBag size={20} />
           </button>
         </nav>
-      </div>
-
-      {/* Sidebar Navigation */}
-      <div className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm transition-opacity duration-500 ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className={`w-80 bg-white h-full shadow-2xl transition-transform duration-500 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <div className="p-8 border-b border-gray-50 flex justify-between items-center">
-            <h2 className="font-black text-2xl tracking-tight">Menu</h2>
-            <button onClick={() => setIsMenuOpen(false)} className="p-2 bg-gray-50 rounded-full"><X size={20}/></button>
-          </div>
-          <div className="p-6 space-y-2">
-            <button onClick={() => { setView('home'); setIsMenuOpen(false); }} className="w-full text-left p-4 rounded-2xl font-black text-gray-700 hover:bg-gray-50 flex items-center gap-4 transition-all">
-              <Package size={20}/> Categories
-            </button>
-            <button onClick={() => { setView('cart'); setIsMenuOpen(false); }} className="w-full text-left p-4 rounded-2xl font-black text-gray-700 hover:bg-gray-50 flex items-center gap-4 transition-all">
-              <ShoppingBag size={20}/> My Cart
-            </button>
-            <div className="pt-8 mt-8 border-t border-gray-50 px-4">
-              <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4">Account</p>
-              <button onClick={() => { setView('admin'); setIsMenuOpen(false); }} className="w-full text-left font-black text-gray-400 flex items-center gap-3">
-                <ShieldCheck size={18}/> Staff Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
 }
 
 function ProductCard({ product, t, setCart }) {
-  const fallbackImg = "https://via.placeholder.com/400?text=Product+Image";
-
   return (
-    <div className="bg-white rounded-[32px] border border-gray-100 overflow-hidden group shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 flex flex-col">
-      <div className="aspect-square relative overflow-hidden bg-[#F2F4F7]">
-        <img 
-          src={product.image} 
-          onError={(e) => { e.target.src = fallbackImg; }}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-          alt={product.name_kh} 
-        />
-        {product.discount > 0 && (
-          <span className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-xl shadow-lg">-{product.discount}%</span>
-        )}
+    <div className="bg-white rounded-[32px] border border-gray-100 overflow-hidden group shadow-sm hover:shadow-xl transition-all flex flex-col">
+      <div className="aspect-square relative overflow-hidden bg-gray-50">
+        <img src={product.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={product.name_kh} />
       </div>
-      <div className="p-4 md:p-5 flex-1 flex flex-col">
-        <h4 className="font-black text-xs md:text-sm line-clamp-2 mb-2 group-hover:text-red-600 transition-colors">{product.name_kh}</h4>
-        <div className="mt-auto">
-          <p className="text-red-600 font-black text-base md:text-lg mb-4">{product.price.toLocaleString()} {t.currency}</p>
-          <button 
-            onClick={() => setCart(prev => {
-              const existing = prev.find(i => i.id === product.id);
-              if (existing) return prev.map(i => i.id === product.id ? {...i, qty: i.qty + 1} : i);
-              return [...prev, { ...product, qty: 1 }];
-            })}
-            className="w-full bg-gray-50 group-hover:bg-red-600 text-gray-900 group-hover:text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-95"
-          >
-            {t.addToCart}
-          </button>
-        </div>
+      <div className="p-4 flex-1 flex flex-col">
+        <h4 className="font-black text-xs mb-2 line-clamp-2">{product.name_kh}</h4>
+        <p className="text-red-600 font-black text-base mt-auto mb-3">{product.price.toLocaleString()}៛</p>
+        <button 
+          onClick={() => setCart(prev => {
+            const exists = prev.find(i => i.id === product.id);
+            if (exists) return prev.map(i => i.id === product.id ? {...i, qty: i.qty + 1} : i);
+            return [...prev, { ...product, qty: 1 }];
+          })}
+          className="w-full bg-gray-900 text-white py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+        >
+          {t.addToCart}
+        </button>
       </div>
     </div>
   );
