@@ -211,7 +211,29 @@ def add_product():
         db.session.commit()
         return redirect(url_for('admin_products'))
     return render_template('add_product.html', subcategories_map=subcategories_map)
+@app.route('/admin/edit-product/<int:product_id>', methods=['GET', 'POST'])
+def edit_product(product_id):
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
 
+    product = Product.query.get_or_404(product_id)
+
+    if request.method == 'POST':
+        product.name_kh = request.form['name_kh']
+        product.price = int(request.form['price'])
+        product.image = request.form['image']
+        product.categories_str = request.form.get('categories', '')
+        product.subcategory_str = request.form.get('subcategory', '')
+        product.stock = int(request.form.get('stock', 1))
+
+        db.session.commit()
+        return redirect(url_for('admin_products'))
+
+    return render_template(
+        'edit_product.html',
+        product=product,
+        subcategories_map=subcategories_map
+    )
 @app.route('/admin/delete-product/<int:product_id>', methods=['POST'])
 def delete_product(product_id):
     if not session.get('admin'): return redirect(url_for('admin_login'))
