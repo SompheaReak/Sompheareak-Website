@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 import { 
   getFirestore, 
   collection, 
@@ -28,7 +28,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
-// --- Firebase Configuration ---
+// --- Firebase Initialization (CRITICAL FOR DEPLOY) ---
 const firebaseConfig = JSON.parse(__firebase_config);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -45,7 +45,7 @@ const INITIAL_PRODUCTS = [
     "id": 1, 
     "name_kh": "#OP01 One Piece - Sakazuki",
     "price": 7500, 
-    "image": "/static/images/op01.jpg", 
+    "image": "https://raw.githubusercontent.com/TheSong-Store/static/main/images/op01.jpg", 
     "categories": ["LEGO Anime", "Toy"], 
     "subcategory": ["One Piece"],
     "stock": 1,
@@ -55,13 +55,12 @@ const INITIAL_PRODUCTS = [
     "id": 2, 
     "name_kh": "#OP02 One Piece - Portgas D Ace",
     "price": 6500, 
-    "image": "/static/images/op02.jpg", 
+    "image": "https://raw.githubusercontent.com/TheSong-Store/static/main/images/op02.jpg", 
     "categories": ["LEGO Anime", "Toy"], 
     "subcategory": ["One Piece"],
     "stock": 1,
     "discount": 0 
-  },
-  // Add more products here using your GitHub URLs
+  }
 ];
 
 const CATEGORY_DATA = {
@@ -139,11 +138,20 @@ export default function App() {
 
   const t = LANGUAGES[lang];
 
+  // RULE 3: Auth Before Queries
   useEffect(() => {
-    const init = async () => {
-      try { await signInAnonymously(auth); } catch (e) { console.error(e); }
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (e) {
+        console.error("Auth failed:", e);
+      }
     };
-    init();
+    initAuth();
     const unsub = onAuthStateChanged(auth, setUser);
     return () => unsub();
   }, []);
@@ -222,7 +230,7 @@ export default function App() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 pt-6">
-        {/* VIEW: HOME (Category Grid 4 per row) */}
+        {/* VIEW: HOME */}
         {view === 'home' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="mb-8">
