@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.secret_key = 'somphea_reak_shop_secret_key' # Set early for session security
+app.secret_key = 'somphea_reak_shop_secret_key'
 
 # --- DATABASE SETUP ---
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -29,33 +29,24 @@ class Product(db.Model):
     subcategory_str = db.Column(db.String(500), default="") 
     stock = db.Column(db.Integer, default=1)
 
-# --- TELEGRAM NOTIFICATIONS ---
-def notify_telegram(ip, user_agent, event_type="Visitor"):
-    message = (
-        f"📦 *{event_type} Notification*\n\n"
-        f"*IP:* `{ip}`\n"
-        f"*Device:* `{user_agent}`"
-    )
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "Markdown"}
-    try:
-        requests.post(url, data=payload)
-    except Exception as e:
-        print(f"Telegram Error: {e}")
-
-# --- SECURITY: IP BANNING ---
+# --- SECURITY & TELEGRAM ---
 banned_ips = ['123.45.67.89', '45.119.135.70']
+
+def notify_telegram(ip, user_agent, event_type="Visitor"):
+    message = f"📦 *{event_type} Notification*\n*IP:* `{ip}`\n*Device:* `{user_agent}`"
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    try:
+        requests.post(url, data={"chat_id": CHAT_ID, "text": message, "parse_mode": "Markdown"})
+    except:
+        pass
 
 @app.before_request
 def security_check():
     ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
-    user_agent = request.headers.get('User-Agent')
-
     if ip in banned_ips:
         abort(403)
-
     if not session.get('notified'):
-        notify_telegram(ip, user_agent)
+        notify_telegram(ip, request.headers.get('User-Agent'))
         session['notified'] = True
 
 # --- SUBCATEGORIES MAP ---
@@ -74,17 +65,33 @@ subcategories_map = {
 # --- ROUTES ---
 @app.route('/')
 def home():
+    # Automatically start on Hot Sale
     return redirect(url_for('category', category_name='Hot Sale'))
 
 @app.route('/category/<category_name>')
 def category(category_name):
+    # DIRECT REDIRECT LOGIC FOR CUSTOMIZER
+    if category_name == 'Italy Bracelet':
+        return redirect(url_for('custom_bracelet'))
+    
     if category_name == 'Lucky Draw':
         return redirect(url_for('lucky_draw'))
     
+    # Standard category view
     products = Product.query.filter(Product.categories_str.contains(category_name)).all()
     subs = subcategories_map.get(category_name, [])
-    
-    return render_template('home.html', products=products, subcategories=subs, current_category=category_name, cart=session.get('cart', []))
+    return render_template('home.html', 
+                           products=products, 
+                           subcategories=subs, 
+                           current_category=category_name, 
+                           cart=session.get('cart', []))
+
+@app.route('/custom-bracelet')
+def custom_bracelet():
+    # Fetch all items intended for the Italy Bracelet builder
+    # Note: Ensure you add "Italy Bracelet" as a category in the Admin panel for these charms
+    charms = Product.query.filter(Product.categories_str.contains('Italy Bracelet')).all()
+    return render_template('custom_bracelet.html', charms=charms, cart=session.get('cart', []))
 
 @app.route('/lucky-draw')
 def lucky_draw():
@@ -92,11 +99,17 @@ def lucky_draw():
 
 @app.route('/add-to-cart', methods=['POST'])
 def add_to_cart():
-    p_id = int(request.form.get('product_id'))
-    p = Product.query.get(p_id)
+    p_id = request.form.get('product_id')
+    if not p_id: return jsonify({"success": False})
+    
+    p = Product.query.get(int(p_id))
     if not p: return jsonify({"success": False})
+    
     cart = session.get('cart', [])
-    cart.append({"product": {"id": p.id, "name_kh": p.name_kh, "price": p.price, "image": p.image}, "quantity": 1})
+    cart.append({
+        "product": {"id": p.id, "name_kh": p.name_kh, "price": p.price, "image": p.image},
+        "quantity": 1
+    })
     session['cart'] = cart
     return jsonify({"success": True, "cart_count": len(cart)})
 
@@ -106,13 +119,8 @@ def admin_login():
     if request.method == 'POST':
         if request.form['username'] == ADMIN_USERNAME and request.form['password'] == ADMIN_PASSWORD:
             session['admin'] = True
-            return redirect(url_for('admin_dashboard'))
+            return redirect(url_for('admin_products'))
     return render_template('admin_login.html')
-
-@app.route('/admin/dashboard')
-def admin_dashboard():
-    if not session.get('admin'): return redirect(url_for('admin_login'))
-    return render_template('admin_dashboard.html')
 
 @app.route('/admin/products')
 def admin_products():
@@ -125,7 +133,6 @@ def add_product():
     if request.method == 'POST':
         new_p = Product(
             name_kh=request.form['name_kh'],
-            name_en=request.form.get('name_en', ''),
             price=int(request.form['price']),
             image=request.form['image'],
             categories_str=request.form.get('category', ''),
@@ -140,9 +147,9 @@ def add_product():
 def forbidden(e):
     return "Access Denied: Your IP is blocked.", 403
 
-# --- STARTUP ---
+# Initialize the database file and tables
 with app.app_context():
-    db.create_all() # This creates the table automatically on Render
+    db.create_all()
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
