@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Somphea Reak - Italy Bracelet Studio Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
@@ -83,7 +84,6 @@
         pointer-events: none;
     }
 
-    /* Navigation Bar styling */
     .nav-indicator-container {
         display: flex;
         align-items: center;
@@ -105,10 +105,6 @@
         font-size: 10px;
         transition: all 0.2s;
     }
-    .nav-arrow:active {
-        background: #f1f5f9;
-        transform: scale(0.9);
-    }
 
     #scroll-track {
         height: 4px;
@@ -127,9 +123,44 @@
         left: 0;
         transition: left 0.1s linear;
     }
+
+    /* Screenshot Area Branding */
+    .screenshot-frame {
+        background: #fff;
+        padding: 40px 20px;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
   </style>
 </head>
 <body class="text-gray-900 overflow-x-hidden">
+
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay" class="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center text-white">
+      <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p class="text-xs font-black uppercase tracking-[0.3em]">Processing Studio Design</p>
+  </div>
+
+  <!-- RESULT MODAL (GALLERY PREVIEW) -->
+  <div id="resultModal" class="fixed inset-0 z-[1100] bg-black hidden flex-col items-center justify-center p-6">
+      <div class="absolute top-6 right-6">
+          <button onclick="closeResult()" class="w-10 h-10 bg-white/10 rounded-full text-white flex items-center justify-center text-xl">
+              <i class="fa-solid fa-xmark"></i>
+          </button>
+      </div>
+      <div class="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-4">
+          <img id="screenshotPreview" class="w-full h-auto rounded-xl shadow-inner border border-gray-100" src="" alt="Your Design">
+          <div class="mt-4 text-center">
+              <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Design Saved</p>
+              <p class="text-xs text-gray-600 font-bold mt-1 mb-4">Long press the image to save to your photos</p>
+              <button id="downloadBtn" class="w-full bg-orange-600 text-white font-black py-4 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-transform">
+                  Download Image
+              </button>
+          </div>
+      </div>
+  </div>
 
   <!-- HEADER -->
   <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex items-center justify-between">
@@ -227,8 +258,9 @@
         <button onclick="addRandom()" class="w-14 h-14 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-xl text-gray-400 active:scale-90 transition-transform">
             <i class="fa-solid fa-shuffle text-lg"></i>
         </button>
-        <button onclick="handleAddToCart()" id="add-to-cart-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-xl shadow-xl active:scale-95 transition-all disabled:opacity-20 text-[10px] uppercase tracking-[0.2em]">
-            Confirm Order
+        <button onclick="takeScreenshot()" id="screenshot-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-xl shadow-xl active:scale-95 transition-all disabled:opacity-20 text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+            <i class="fa-solid fa-camera text-sm"></i>
+            Save To Gallery
         </button>
     </div>
   </div>
@@ -236,7 +268,7 @@
   <script>
     // --- DATABASE ---
     const allCharms = [
-       // --- Charm
+      // --- Charm
     {"id": 1, "name_kh": "Silver Charm", "price": 400, "image": "/static/images/c01.jpg", "categories": ["Charm"]},
    
      // --- F1 LOGOS (1001 - 1015) ---
@@ -592,8 +624,6 @@
     const categories = Array.from(new Set(allCharms.flatMap(c => c.categories)));
     let selectedCharms = JSON.parse(localStorage.getItem('customCharms')) || [];
 
-    // --- RENDER FUNCTIONS ---
-
     function init() {
         renderCategories();
         updateUI();
@@ -637,8 +667,6 @@
         drawer.classList.remove('pointer-events-auto');
     }
 
-    // --- BUILDER ACTIONS ---
-
     function addCharmById(id) {
         const charm = allCharms.find(c => c.id === id);
         selectedCharms.push({ ...charm, uid: Math.random().toString(36).substr(2, 9) });
@@ -654,7 +682,7 @@
         const preview = document.getElementById('bracelet-preview');
         const totalDisplay = document.getElementById('total-price');
         const countDisplay = document.getElementById('link-count');
-        const addBtn = document.getElementById('add-to-cart-btn');
+        const screenshotBtn = document.getElementById('screenshot-btn');
 
         localStorage.setItem('customCharms', JSON.stringify(selectedCharms));
 
@@ -662,7 +690,7 @@
             preview.innerHTML = `<div class="w-full text-center py-8 opacity-20 uppercase tracking-[0.4em] text-[10px] font-black">Designer Workspace</div>`;
             totalDisplay.innerText = "0៛";
             countDisplay.innerText = "0 LINKS";
-            addBtn.disabled = true;
+            screenshotBtn.disabled = true;
             document.querySelector('.nav-indicator-container').style.opacity = '0';
             return;
         }
@@ -692,7 +720,7 @@
 
         totalDisplay.innerText = total.toLocaleString() + "៛";
         countDisplay.innerText = `${selectedCharms.length} LINKS`;
-        addBtn.disabled = false;
+        screenshotBtn.disabled = false;
         
         setTimeout(() => handlePreviewScroll(preview), 50);
 
@@ -701,7 +729,91 @@
         }
     }
 
-    // --- NAVIGATION LOGIC ---
+    // --- SCREENSHOT LOGIC ---
+
+    async function takeScreenshot() {
+        const overlay = document.getElementById('loadingOverlay');
+        const previewModal = document.getElementById('resultModal');
+        const previewImg = document.getElementById('screenshotPreview');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+
+        try {
+            // Create a hidden workspace for a perfect 1080px capture
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            tempDiv.className = 'screenshot-frame';
+            
+            const title = document.createElement('h2');
+            title.innerText = "ITALY BRACELET STUDIO";
+            title.style.fontSize = "24px";
+            title.style.fontWeight = "900";
+            title.style.letterSpacing = "0.2em";
+            title.style.textAlign = "center";
+            
+            const braceletContainer = document.createElement('div');
+            braceletContainer.style.display = 'flex';
+            braceletContainer.style.background = '#f8fafc';
+            braceletContainer.style.padding = '40px';
+            braceletContainer.style.borderRadius = '20px';
+            braceletContainer.style.border = '1px solid #e2e8f0';
+
+            selectedCharms.forEach(c => {
+                const img = document.createElement('img');
+                img.src = c.image;
+                img.style.width = '60px';
+                img.style.height = '100px';
+                img.style.objectFit = 'cover';
+                braceletContainer.appendChild(img);
+            });
+
+            const footer = document.createElement('p');
+            footer.innerText = `Total: ${document.getElementById('total-price').innerText} • ${selectedCharms.length} Pieces`;
+            footer.style.fontSize = "12px";
+            footer.style.fontWeight = "bold";
+            footer.style.color = "#94a3b8";
+
+            tempDiv.appendChild(title);
+            tempDiv.appendChild(braceletContainer);
+            tempDiv.appendChild(footer);
+            document.body.appendChild(tempDiv);
+
+            const canvas = await html2canvas(tempDiv, {
+                useCORS: true,
+                scale: 3, // Higher quality
+                backgroundColor: "#ffffff"
+            });
+
+            const dataUrl = canvas.toDataURL("image/png");
+            previewImg.src = dataUrl;
+            
+            downloadBtn.onclick = () => {
+                const link = document.createElement('a');
+                link.download = `bracelet-design-${Date.now()}.png`;
+                link.href = dataUrl;
+                link.click();
+            };
+
+            document.body.removeChild(tempDiv);
+            previewModal.classList.remove('hidden');
+            previewModal.classList.add('flex');
+        } catch (err) {
+            console.error(err);
+        } finally {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+        }
+    }
+
+    function closeResult() {
+        document.getElementById('resultModal').classList.add('hidden');
+        document.getElementById('resultModal').classList.remove('flex');
+    }
+
+    // --- SCROLLING LOGIC ---
 
     function handlePreviewScroll(el) {
         const thumb = document.getElementById('scroll-thumb');
@@ -730,90 +842,17 @@
         e.dataTransfer.setData('text/plain', e.target.dataset.index);
     }
 
-    function handleDragOver(e) {
-        e.preventDefault();
-        const target = e.target.closest('.bracelet-link-container');
-        if (target) target.classList.add('drag-over');
-    }
+    function handleDragOver(e) { e.preventDefault(); const target = e.target.closest('.bracelet-link-container'); if (target) target.classList.add('drag-over'); }
+    function handleDragLeave(e) { const target = e.target.closest('.bracelet-link-container'); if (target) target.classList.remove('drag-over'); }
+    function handleDrop(e) { e.preventDefault(); const target = e.target.closest('.bracelet-link-container'); if (!target) return; target.classList.remove('drag-over'); const from = parseInt(e.dataTransfer.getData('text/plain')); const to = parseInt(target.dataset.index); reorderArray(from, to); }
 
-    function handleDragLeave(e) {
-        const target = e.target.closest('.bracelet-link-container');
-        if (target) target.classList.remove('drag-over');
-    }
+    function handleTouchStart(e) { const container = e.target.closest('.bracelet-link-container'); if (!container) return; touchStartIndex = parseInt(container.dataset.index); container.classList.add('dragging'); }
+    function handleTouchMove(e) { e.preventDefault(); const touch = e.touches[0]; const target = document.elementFromPoint(touch.clientX, touch.clientY); const container = target?.closest('.bracelet-link-container'); document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('drag-over')); if (container) { currentHoverIndex = parseInt(container.dataset.index); container.classList.add('drag-over'); } }
+    function handleTouchEnd(e) { document.querySelectorAll('.bracelet-link-container').forEach(el => { el.classList.remove('dragging'); el.classList.remove('drag-over'); }); if (touchStartIndex !== null && currentHoverIndex !== null && touchStartIndex !== currentHoverIndex) reorderArray(touchStartIndex, currentHoverIndex); touchStartIndex = null; currentHoverIndex = null; }
 
-    function handleDrop(e) {
-        e.preventDefault();
-        const target = e.target.closest('.bracelet-link-container');
-        if (!target) return;
-        target.classList.remove('drag-over');
-        const from = parseInt(e.dataTransfer.getData('text/plain'));
-        const to = parseInt(target.dataset.index);
-        reorderArray(from, to);
-    }
-
-    function handleTouchStart(e) {
-        const container = e.target.closest('.bracelet-link-container');
-        if (!container) return;
-        touchStartIndex = parseInt(container.dataset.index);
-        container.classList.add('dragging');
-    }
-
-    function handleTouchMove(e) {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY);
-        const container = target?.closest('.bracelet-link-container');
-        
-        document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('drag-over'));
-        
-        if (container) {
-            currentHoverIndex = parseInt(container.dataset.index);
-            container.classList.add('drag-over');
-        }
-    }
-
-    function handleTouchEnd(e) {
-        document.querySelectorAll('.bracelet-link-container').forEach(el => {
-            el.classList.remove('dragging');
-            el.classList.remove('drag-over');
-        });
-        if (touchStartIndex !== null && currentHoverIndex !== null && touchStartIndex !== currentHoverIndex) {
-            reorderArray(touchStartIndex, currentHoverIndex);
-        }
-        touchStartIndex = null;
-        currentHoverIndex = null;
-    }
-
-    function reorderArray(from, to) {
-        const item = selectedCharms.splice(from, 1)[0];
-        selectedCharms.splice(to, 0, item);
-        updateUI();
-    }
-
-    function clearBracelet() {
-        if (confirm("Reset current design?")) { selectedCharms = []; updateUI(); }
-    }
-
-    function addRandom() {
-        const rand = allCharms[Math.floor(Math.random() * allCharms.length)];
-        if(rand) addCharmById(rand.id);
-    }
-
-    function handleAddToCart() {
-        const total = selectedCharms.reduce((s, c) => s + c.price, 0);
-        const formData = new FormData();
-        formData.append('custom_name', `Custom Italy Bracelet (${selectedCharms.length} links)`);
-        formData.append('price', total);
-
-        fetch('/add-to-cart', { method: 'POST', body: formData })
-        .then(res => res.json())
-        .then(() => {
-            alert("Design added to cart!");
-            selectedCharms = [];
-            localStorage.removeItem('customCharms');
-            window.location.href = "/";
-        });
-    }
+    function reorderArray(from, to) { const item = selectedCharms.splice(from, 1)[0]; selectedCharms.splice(to, 0, item); updateUI(); }
+    function clearBracelet() { if (confirm("Reset current design?")) { selectedCharms = []; updateUI(); } }
+    function addRandom() { const rand = allCharms[Math.floor(Math.random() * allCharms.length)]; if(rand) addCharmById(rand.id); }
 
     init();
   </script>
