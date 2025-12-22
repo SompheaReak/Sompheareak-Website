@@ -14,11 +14,11 @@
         -webkit-tap-highlight-color: transparent;
         user-select: none;
         background-color: #f8fafc;
+        overscroll-behavior-y: contain;
     }
 
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     
-    /* Animation for adding links */
     .link-pop {
         animation: linkPop 0.2s ease-out forwards;
     }
@@ -29,42 +29,52 @@
 
     /* Drag and Drop Visual States */
     .dragging {
-        opacity: 0.3;
-        transform: scale(0.9);
-        filter: grayscale(1);
+        opacity: 0.4;
+        transform: scale(1.1);
+        z-index: 50;
     }
     .drag-over {
-        border-left: 4px solid #ea580c !important;
-        background-color: rgba(234, 88, 12, 0.05);
+        border-left: 3px solid #ea580c !important;
+        transition: border 0.1s ease;
     }
 
     #drawer {
         transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
     }
 
-    /* Seamless Bracelet Links - No spaces or borders */
+    /* 10 CHARMS PER VIEW CALCULATION */
     .bracelet-link-container {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 60px; /* Precise link width */
-        height: 100px; /* Precise link height */
-        flex-shrink: 0;
+        /* Calculate width to show exactly 10 per view */
+        flex: 0 0 10%; 
+        aspect-ratio: 2 / 3.5;
         position: relative;
         margin: 0;
         padding: 0;
         cursor: grab;
+        touch-action: none;
     }
-    .bracelet-link-container:active { cursor: grabbing; }
 
     .bracelet-link-container img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
+        pointer-events: none;
     }
 
     .aspect-16-9 { aspect-ratio: 16 / 9; }
+    
+    /* Smooth scrolling for the preview */
+    #bracelet-preview {
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+    .bracelet-link-container {
+        scroll-snap-align: start;
+    }
   </style>
 </head>
 <body class="text-gray-900 overflow-x-hidden">
@@ -75,82 +85,65 @@
       <i class="fa-solid fa-arrow-left"></i>
     </a>
     <div class="text-center">
-        <h3 class="font-extrabold text-[9px] tracking-[0.2em] uppercase text-gray-400">Italy Bracelet</h3>
-        <p class="font-black text-sm text-gray-900 tracking-tighter uppercase">Studio Pro</p>
+        <h3 class="font-extrabold text-[9px] tracking-[0.2em] uppercase text-gray-400 leading-none">Custom Studio</h3>
+        <p class="font-black text-sm text-gray-900 tracking-tighter uppercase leading-tight">Italy Bracelet</p>
     </div>
     <div class="w-10"></div>
   </header>
 
-  <!-- COVER IMAGE -->
-  <section class="w-full aspect-16-9 bg-gray-100 overflow-hidden relative shadow-inner">
-    <img src="https://images.unsplash.com/photo-1611085583191-a3b1a308964b?auto=format&fit=crop&q=80&w=1200" alt="Cover" class="w-full h-full object-cover">
-    <div class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/30 to-transparent flex flex-col justify-end p-6">
-        <h2 class="text-white text-2xl font-black uppercase italic tracking-tighter">Your Bracelet<br><span class="text-orange-500">Your Story</span></h2>
-    </div>
-  </section>
-
-  <!-- SEAMLESS PREVIEW BOX (Sticky) -->
-  <section class="sticky top-[65px] z-[90] bg-white border-b shadow-xl">
-    <div class="max-w-2xl mx-auto px-4 py-6">
-        <div class="flex items-center justify-between mb-4 px-1">
-            <span id="link-count" class="bg-gray-900 text-[9px] font-black text-white px-3 py-1.5 rounded-full tracking-widest uppercase">0 / 18 LINKS</span>
-            <button onclick="clearBracelet()" class="text-[10px] font-black text-red-500 uppercase tracking-widest active:bg-red-50 px-2 py-1 rounded">Reset Design</button>
+  <!-- PREVIEW BOX (Sticky) -->
+  <section class="sticky top-[58px] z-[90] bg-white border-b shadow-lg pb-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Control Bar -->
+        <div class="flex items-center justify-between px-4 py-3">
+            <div class="flex items-center gap-2">
+                <span id="link-count" class="bg-gray-900 text-[9px] font-black text-white px-2.5 py-1 rounded-full tracking-widest uppercase">0 LINKS</span>
+                <span class="text-[8px] font-bold text-gray-400 uppercase italic">Slide to view</span>
+            </div>
+            <button onclick="clearBracelet()" class="text-[10px] font-black text-red-500 uppercase tracking-widest px-2 py-1">Reset</button>
         </div>
 
-        <div class="relative group">
-            <!-- Navigation Arrows -->
-            <button onclick="scrollPreview(-120)" class="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-24 bg-white/40 backdrop-blur-md shadow-lg flex items-center justify-center rounded-r-3xl text-gray-400 hover:text-black transition-all">
-                <i class="fa-solid fa-chevron-left text-lg"></i>
-            </button>
-
-            <!-- SEAMLESS BRACELET CONTAINER -->
-            <div id="bracelet-preview" class="flex overflow-x-auto py-2 scrollbar-hide min-h-[140px] items-center bg-gray-50 rounded-[2rem] px-12 border-2 border-dashed border-gray-200 gap-0">
-                <div class="w-full text-center py-10 opacity-30">
-                    <p class="text-[10px] font-black uppercase tracking-[0.4em]">Design Area</p>
-                </div>
+        <!-- SEAMLESS BRACELET PREVIEW (SCROLLABLE) -->
+        <div id="bracelet-preview" class="flex overflow-x-auto py-1 scrollbar-hide min-h-[80px] items-center bg-gray-50 border-y border-gray-100 gap-0">
+            <div class="w-full text-center py-8 opacity-20">
+                <p class="text-[10px] font-black uppercase tracking-[0.4em]">Designer Workspace</p>
             </div>
-
-            <button onclick="scrollPreview(120)" class="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-24 bg-white/40 backdrop-blur-md shadow-lg flex items-center justify-center rounded-l-3xl text-gray-400 hover:text-black transition-all">
-                <i class="fa-solid fa-chevron-right text-lg"></i>
-            </button>
         </div>
 
-        <div class="mt-6 flex justify-between items-end px-2">
-            <div class="text-left">
-                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 text-xs">Total Amount</p>
-                <span id="total-price" class="text-3xl font-black text-gray-900">0៛</span>
+        <!-- Price Summary -->
+        <div class="mt-3 flex justify-between items-center px-4">
+            <div class="flex flex-col">
+                <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest">Est. Total</span>
+                <span id="total-price" class="text-xl font-black text-gray-900 leading-none">0៛</span>
             </div>
-            <div class="text-right flex flex-col items-end">
-                <p class="text-[9px] font-bold text-gray-400 uppercase italic leading-tight">Drag and drop<br>to reorder charms</p>
-            </div>
+            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-right leading-tight">Drag and slide<br>to reorder</p>
         </div>
     </div>
   </section>
 
-  <!-- CATEGORY GRID (6 per row) -->
+  <!-- CATEGORY GRID -->
   <section class="p-4 pb-48">
-    <div class="mb-5 px-1">
-        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Select Collection</h4>
+    <div class="mb-4">
+        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Collections</h4>
     </div>
     <div id="categoryGallery" class="grid grid-cols-6 gap-3">
       <!-- Injected by JS -->
     </div>
   </section>
 
-  <!-- SELECTION DRAWER (8 per row grid) -->
+  <!-- SELECTION DRAWER -->
   <div id="drawer" class="fixed inset-0 z-[200] translate-y-full pointer-events-none">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" onclick="closeDrawer()"></div>
-    <div class="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-[3.5rem] shadow-2xl pointer-events-auto flex flex-col border-t-2 border-gray-100">
-        <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto my-6"></div>
-        <div class="px-8 pb-4 flex items-center justify-between">
-            <h4 id="drawer-title" class="text-xl font-black uppercase tracking-tighter text-gray-900">Charms</h4>
-            <button onclick="closeDrawer()" class="w-12 h-12 flex items-center justify-center bg-gray-100 rounded-full text-gray-400 active:scale-90">
-                <i class="fa-solid fa-xmark text-xl"></i>
+    <div class="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-[3rem] shadow-2xl pointer-events-auto flex flex-col border-t border-gray-100">
+        <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto my-4"></div>
+        <div class="px-6 pb-4 flex items-center justify-between">
+            <h4 id="drawer-title" class="text-lg font-black uppercase tracking-tighter text-gray-900">Category</h4>
+            <button onclick="closeDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-400">
+                <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
-        <div class="flex-grow overflow-y-auto px-3 pb-24">
-            <!-- 8 CHARMS PER ROW GRID -->
-            <div id="charmGrid" class="grid grid-cols-8 gap-2">
+        <div class="flex-grow overflow-y-auto px-2 pb-24">
+            <div id="charmGrid" class="grid grid-cols-8 gap-1.5">
                 <!-- Injected by JS -->
             </div>
         </div>
@@ -158,12 +151,12 @@
   </div>
 
   <!-- FIXED FOOTER -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-5 z-[110]">
-    <div class="max-w-md mx-auto flex gap-4">
-        <button onclick="addRandom()" class="w-16 h-16 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-2xl text-gray-500 active:scale-90 transition-transform shadow-inner">
-            <i class="fa-solid fa-shuffle text-xl"></i>
+  <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-4 z-[110]">
+    <div class="max-w-md mx-auto flex gap-3">
+        <button onclick="addRandom()" class="w-14 h-14 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-xl text-gray-400 active:scale-90 transition-transform">
+            <i class="fa-solid fa-shuffle text-lg"></i>
         </button>
-        <button onclick="handleAddToCart()" id="add-to-cart-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-2xl shadow-2xl active:scale-95 transition-all disabled:opacity-20 text-xs uppercase tracking-[0.2em] py-5">
+        <button onclick="handleAddToCart()" id="add-to-cart-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-xl shadow-xl active:scale-95 transition-all disabled:opacity-20 text-[10px] uppercase tracking-[0.2em]">
             Add To Cart
         </button>
     </div>
@@ -182,18 +175,25 @@
     {"id": 5001, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-01.jpg", "categories": ["Football Club Logo"]},
     {"id": 6001, "name_kh": "Black Charm 01", "price": 3000, "image": "/static/images/cb01.jpg", "categories": ["Black Lover"]},
     {"id": 8001, "name_kh": "Pink Charm 01", "price": 3000, "image": "/static/images/cp01.jpg", "categories": ["Pink Lover"]},
-    {"id": 9001, "name_kh": "Pink Letter A", "price": 1200, "image": "/static/images/ap.jpg", "categories": ["Pink Letter"]},
-    {"id": 1101, "name_kh": "Letter A", "price": 1200, "image": "/static/images/a.jpg", "categories": ["Letter"]},
     {"id": 1401, "name_kh": "Cutie Charm 01", "price": 3000, "image": "/static/images/cw01.jpg", "categories": ["Cutie"]},
     {"id": 1501, "name_kh": "Bubble 01", "price": 3000, "image": "/static/images/charm-bubble-01.jpg", "categories": ["Slay💅"]},
     {"id": 1601, "name_kh": "Cute Cat 01", "price": 3000, "image": "/static/images/charm-cutecat-01.jpg", "categories": ["Cute Cat"]},
     {"id": 1701, "name_kh": "Rok Jit 01", "price": 3000, "image": "/static/images/charm-rokjit-01.jpg", "categories": ["Rok Jit💔"]},
     {"id": 1801, "name_kh": "8 Ball 01", "price": 3000, "image": "/static/images/charm-8ball-01.jpg", "categories": ["8 Ball 🎱"]},
     {"id": 2101, "name_kh": "Flower 01", "price": 3000, "image": "/static/images/charm-flower-01.jpg", "categories": ["Flower 🌹"]},
-    ];
+     // --- CAR LOGOS (1001 - 1015) ---
+    {"id": 1001, "name_kh": "Car Charm 01", "price": 3000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"]},
+    {"id": 1002, "name_kh": "Car Charm 02", "price": 3000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"]},
+    {"id": 1003, "name_kh": "Car Charm 03", "price": 3000, "image": "/static/images/cc03.jpg", "categories": ["Car Logo"]},
+    {"id": 1004, "name_kh": "Car Charm 04", "price": 3000, "image": "/static/images/cc04.jpg", "categories": ["Car Logo"]},
+    {"id": 1005, "name_kh": "Car Charm 05", "price": 3000, "image": "/static/images/cc05.jpg", "categories": ["Car Logo"]},
+    {"id": 1006, "name_kh": "Car Charm 06", "price": 3000, "image": "/static/images/cc06.jpg", "categories": ["Car Logo"]},
+    {"id": 1007, "name_kh": "Car Charm 07", "price": 3000, "image": "/static/images/cc07.jpg", "categories": ["Car Logo"]}, 
+    {"id": 1008, "name_kh": "Car Charm 08", "price": 3000, "image": "/static/images/cc08.jpg", "categories": ["Car Logo"]},
+    
+        ];
 
     const categories = Array.from(new Set(allCharms.flatMap(c => c.categories)));
-    const MAX_LINKS = 18;
     let selectedCharms = JSON.parse(localStorage.getItem('customCharms')) || [];
 
     // --- RENDER FUNCTIONS ---
@@ -208,11 +208,11 @@
         container.innerHTML = categories.map(cat => {
             const charm = allCharms.find(c => c.categories.includes(cat));
             return `
-                <div onclick="openDrawer('${cat}')" class="flex flex-col items-center gap-2 active:scale-95 transition-transform cursor-pointer">
-                    <div class="w-full aspect-[2/3.2] bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden p-1 hover:border-orange-200 transition-colors">
-                        <img src="${charm.image}" class="w-full h-full object-cover rounded-lg">
+                <div onclick="openDrawer('${cat}')" class="flex flex-col items-center gap-1 active:scale-95 transition-transform cursor-pointer">
+                    <div class="w-full aspect-[2/3] bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden p-1">
+                        <img src="${charm.image}" class="w-full h-full object-cover rounded-md">
                     </div>
-                    <span class="text-[7px] font-black text-gray-500 uppercase truncate w-full text-center tracking-tighter">${cat}</span>
+                    <span class="text-[6px] font-black text-gray-500 uppercase truncate w-full text-center">${cat}</span>
                 </div>
             `;
         }).join('');
@@ -224,10 +224,9 @@
         const grid = document.getElementById('charmGrid');
         
         title.innerText = cat;
-        // 8 CHARMS PER ROW GRID
         grid.innerHTML = allCharms.filter(c => c.categories.includes(cat)).map(c => `
-            <div onclick="addCharmById(${c.id})" class="flex flex-col items-center bg-gray-50 rounded-lg p-1 border-2 border-transparent active:border-orange-500 transition-all cursor-pointer">
-                <img src="${c.image}" class="w-full aspect-[2/3.5] object-cover rounded-md shadow-sm">
+            <div onclick="addCharmById(${c.id})" class="flex flex-col items-center bg-gray-50 rounded-lg p-1 active:bg-orange-50 transition-all cursor-pointer">
+                <img src="${c.image}" class="w-full aspect-[2/3.5] object-cover rounded shadow-sm">
                 <p class="text-[6px] font-black mt-1 text-gray-400">${c.price}៛</p>
             </div>
         `).join('');
@@ -245,7 +244,7 @@
     // --- BUILDER ACTIONS ---
 
     function addCharmById(id) {
-        if (selectedCharms.length >= MAX_LINKS) return alert("Bracelet is full!");
+        // No limits logic
         const charm = allCharms.find(c => c.id === id);
         selectedCharms.push({ ...charm, uid: Math.random().toString(36).substr(2, 9) });
         updateUI();
@@ -265,9 +264,9 @@
         localStorage.setItem('customCharms', JSON.stringify(selectedCharms));
 
         if (selectedCharms.length === 0) {
-            preview.innerHTML = `<div class="w-full text-center py-10 opacity-30 uppercase tracking-[0.4em] text-[10px] font-black">Designer Space</div>`;
+            preview.innerHTML = `<div class="w-full text-center py-8 opacity-20 uppercase tracking-[0.4em] text-[10px] font-black">Designer Workspace</div>`;
             totalDisplay.innerText = "0៛";
-            countDisplay.innerText = "0 / 18 LINKS";
+            countDisplay.innerText = "0 LINKS";
             addBtn.disabled = true;
             return;
         }
@@ -279,12 +278,15 @@
                 <div class="bracelet-link-container link-pop" 
                      draggable="true" 
                      data-index="${index}"
+                     ontouchstart="handleTouchStart(event)"
+                     ontouchmove="handleTouchMove(event)"
+                     ontouchend="handleTouchEnd(event)"
                      ondragstart="handleDragStart(event)"
                      ondragover="handleDragOver(event)"
                      ondragleave="handleDragLeave(event)"
                      ondrop="handleDrop(event)">
-                    <img src="${c.image}" class="pointer-events-none">
-                    <button onclick="removeCharm('${c.uid}')" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[8px] shadow-lg opacity-0 hover:opacity-100 transition-opacity">
+                    <img src="${c.image}">
+                    <button onclick="removeCharm('${c.uid}')" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[7px] shadow-lg">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
@@ -292,23 +294,23 @@
         }).join('');
 
         totalDisplay.innerText = total.toLocaleString() + "៛";
-        countDisplay.innerText = `${selectedCharms.length} / ${MAX_LINKS} LINKS`;
+        countDisplay.innerText = `${selectedCharms.length} LINKS`;
         addBtn.disabled = false;
         
-        // Auto-scroll on first few items
+        // Auto-scroll to newly added items
         if (selectedCharms.length > 5) {
-            preview.scrollTo({ left: preview.scrollWidth, behavior: 'smooth' });
+             preview.scrollTo({ left: preview.scrollWidth, behavior: 'smooth' });
         }
     }
 
-    // --- REORDERING (DRAG & DROP) ---
+    // --- REORDERING LOGIC ---
 
-    let draggedIndex = null;
+    let touchStartIndex = null;
+    let currentHoverIndex = null;
 
     function handleDragStart(e) {
-        draggedIndex = parseInt(e.target.dataset.index);
-        e.dataTransfer.setData('text/plain', draggedIndex);
         e.target.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', e.target.dataset.index);
     }
 
     function handleDragOver(e) {
@@ -327,21 +329,46 @@
         const target = e.target.closest('.bracelet-link-container');
         if (!target) return;
         target.classList.remove('drag-over');
-
-        const dropIndex = parseInt(target.dataset.index);
-        if (draggedIndex === dropIndex) return;
-
-        // Splice and Move
-        const movedItem = selectedCharms.splice(draggedIndex, 1)[0];
-        selectedCharms.splice(dropIndex, 0, movedItem);
-        
-        updateUI();
+        const from = parseInt(e.dataTransfer.getData('text/plain'));
+        const to = parseInt(target.dataset.index);
+        reorderArray(from, to);
     }
 
-    // --- NAVIGATION ---
+    function handleTouchStart(e) {
+        const container = e.target.closest('.bracelet-link-container');
+        if (!container) return;
+        touchStartIndex = parseInt(container.dataset.index);
+        container.classList.add('dragging');
+    }
 
-    function scrollPreview(val) {
-        document.getElementById('bracelet-preview').scrollBy({ left: val, behavior: 'smooth' });
+    function handleTouchMove(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const container = target?.closest('.bracelet-link-container');
+        document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('drag-over'));
+        if (container) {
+            currentHoverIndex = parseInt(container.dataset.index);
+            container.classList.add('drag-over');
+        }
+    }
+
+    function handleTouchEnd(e) {
+        document.querySelectorAll('.bracelet-link-container').forEach(el => {
+            el.classList.remove('dragging');
+            el.classList.remove('drag-over');
+        });
+        if (touchStartIndex !== null && currentHoverIndex !== null && touchStartIndex !== currentHoverIndex) {
+            reorderArray(touchStartIndex, currentHoverIndex);
+        }
+        touchStartIndex = null;
+        currentHoverIndex = null;
+    }
+
+    function reorderArray(from, to) {
+        const item = selectedCharms.splice(from, 1)[0];
+        selectedCharms.splice(to, 0, item);
+        updateUI();
     }
 
     function clearBracelet() {
@@ -356,7 +383,6 @@
     function handleAddToCart() {
         const total = selectedCharms.reduce((s, c) => s + c.price, 0);
         const formData = new FormData();
-        formData.append('product_id', selectedCharms[0]?.id || 0);
         formData.append('custom_name', `Custom Italy Bracelet (${selectedCharms.length} links)`);
         formData.append('price', total);
 
