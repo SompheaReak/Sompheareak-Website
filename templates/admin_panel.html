@@ -1,25 +1,121 @@
-<!-- ... inside your main content div ... -->
-<div class="flex-grow overflow-y-auto px-10 py-8 no-scrollbar pb-32">
-    
-    <!-- STATS -->
-    <section class="grid grid-cols-4 gap-6 mb-12">
-        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-5">
-            <div class="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-box"></i></div>
-            <div><p class="text-[10px] font-black text-slate-400 uppercase">Total SKU</p><p class="text-xl font-black">{{ stats.total_items }}</p></div>
-        </div>
-        <!-- ... (other stat boxes) ... -->
-    </section>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Somphea Reak Admin - Stock Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f9fafb; }
+        .sold-out { filter: grayscale(1) opacity(0.3); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
 
-    {% if not grouped %}
-    <div class="flex flex-col items-center justify-center py-20 bg-white rounded-[3rem] border border-dashed border-slate-300">
-        <i class="fa-solid fa-folder-open text-4xl text-slate-200 mb-4"></i>
-        <p class="text-slate-400 font-bold uppercase text-xs tracking-widest">No products found in inventory</p>
-        <a href="/admin/add-product" class="mt-4 bg-black text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase">Add Your First Product</a>
-    </div>
-    {% else %}
-        {% for subcategory, items in grouped.items() %}
-            <!-- ... (your existing loop) ... -->
-        {% endfor %}
-    {% endif %}
-</div>
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-white border-r h-full flex flex-col p-6">
+        <h1 class="text-lg font-black uppercase italic mb-8">Somphea <span class="text-orange-600">Reak</span></h1>
+        <nav class="space-y-4 flex-grow">
+            <a href="/admin/panel" class="flex items-center gap-3 text-sm font-bold text-orange-600 bg-orange-50 p-3 rounded-xl border-r-4 border-orange-600"><i class="fa-solid fa-boxes-stacked"></i> Inventory</a>
+            <a href="/admin/add-product" class="flex items-center gap-3 text-sm font-bold text-gray-500 p-3 rounded-xl hover:bg-gray-50"><i class="fa-solid fa-plus-circle"></i> Add Item</a>
+        </nav>
+        <a href="/admin/logout" class="text-red-500 font-bold text-sm mt-auto"><i class="fa-solid fa-power-off"></i> Logout</a>
+    </aside>
+
+    <!-- MAIN PANEL -->
+    <main class="flex-grow flex flex-col h-full bg-gray-50/50">
+        <header class="bg-white border-b px-10 py-6 flex justify-between items-center">
+            <h2 class="text-2xl font-black tracking-tight">Management Console</h2>
+            <div class="flex items-center gap-4">
+                <input type="text" id="charmSearch" placeholder="Search product name..." class="bg-gray-100 rounded-xl px-4 py-2 text-sm border-none focus:ring-2 focus:ring-orange-500 outline-none">
+            </div>
+        </header>
+
+        <div class="flex-grow overflow-y-auto px-10 py-8">
+            <!-- DASHBOARD STATS -->
+            <section class="grid grid-cols-4 gap-6 mb-12">
+                <div class="bg-white p-6 rounded-3xl border shadow-sm">
+                    <p class="text-[10px] font-black text-gray-400 uppercase">Total Items</p>
+                    <p class="text-xl font-black">{{ stats.total_items }}</p>
+                </div>
+                <div class="bg-white p-6 rounded-3xl border shadow-sm">
+                    <p class="text-[10px] font-black text-gray-400 uppercase">Out of Stock</p>
+                    <p class="text-xl font-black text-red-600">{{ stats.out_of_stock }}</p>
+                </div>
+                <!-- ... other stats ... -->
+            </section>
+
+            <!-- PRODUCT LIST -->
+            {% if not grouped %}
+            <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
+                <p class="text-gray-400 font-bold uppercase text-xs">No items found. Click "Add Item" to start.</p>
+            </div>
+            {% else %}
+                {% for subcategory, items in grouped.items() %}
+                <div class="mb-12">
+                    <h3 class="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-4 border-b pb-2">{{ subcategory }}</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                        {% for p in items %}
+                        <div class="charm-card bg-white p-4 rounded-[2rem] border shadow-sm group" data-name="{{ p.name_kh }}">
+                            <div class="relative aspect-square overflow-hidden rounded-2xl mb-4 bg-gray-50">
+                                <img src="{{ p.image }}" class="w-full h-full object-cover {{ 'sold-out' if p.stock <= 0 }}">
+                                {% if p.stock <= 0 %}
+                                <div class="absolute inset-0 flex items-center justify-center"><span class="bg-red-600 text-white text-[8px] font-black px-2 py-1 uppercase rounded">Sold Out</span></div>
+                                {% endif %}
+                            </div>
+                            <p class="text-[10px] font-black truncate mb-3 uppercase">{{ p.name_kh }}</p>
+                            
+                            <!-- THIS IS THE STOCK INPUT -->
+                            <div class="flex items-center gap-1">
+                                <input type="number" value="{{ p.stock }}" id="input-{{ p.id }}" 
+                                       class="w-full bg-gray-50 rounded-xl p-2 text-center text-xs font-black border-none outline-none focus:ring-1 focus:ring-orange-500">
+                                <button onclick="saveStock({{ p.id }})" 
+                                        class="bg-black text-white w-8 h-8 rounded-xl flex items-center justify-center active:scale-90 transition-all">
+                                    <i class="fa-solid fa-check text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </main>
+
+    <script>
+        // JS function to send the Stock Update to the backend
+        async function saveStock(id) {
+            const amount = document.getElementById('input-' + id).value;
+            const btn = event.currentTarget;
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i>';
+
+            try {
+                const res = await fetch('/admin/api/update-stock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id, amount: amount })
+                });
+                if (res.ok) {
+                    btn.classList.add('bg-green-500');
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    setTimeout(() => { btn.classList.remove('bg-green-500'); }, 2000);
+                }
+            } catch (e) {
+                btn.classList.add('bg-red-500');
+            }
+        }
+
+        // Search Filter
+        document.getElementById('charmSearch').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.charm-card').forEach(card => {
+                const name = card.dataset.name.toLowerCase();
+                card.style.display = name.includes(term) ? 'block' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>
 
