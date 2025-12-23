@@ -29,9 +29,7 @@ class Product(db.Model):
     subcategory_str = db.Column(db.String(500), default="") 
     stock = db.Column(db.Integer, default=1)
 
-# --- SECURITY & TELEGRAM ---
-banned_ips = ['123.45.67.89', '45.119.135.70']
-
+# --- TELEGRAM NOTIFY ---
 def notify_telegram(ip, user_agent, event_type="Visitor"):
     message = f"📦 *{event_type} Notification*\n*IP:* `{ip}`\n*Device:* `{user_agent}`"
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -42,26 +40,14 @@ def notify_telegram(ip, user_agent, event_type="Visitor"):
 
 @app.before_request
 def security_check():
+    # Basic IP filter
+    banned_ips = ['123.45.67.89', '45.119.135.70']
     ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
     if ip in banned_ips:
         abort(403)
-    # Basic session check for notifications
     if not session.get('notified') and not request.path.startswith('/static'):
         notify_telegram(ip, request.headers.get('User-Agent'))
         session['notified'] = True
-
-# --- SUBCATEGORIES MAP ---
-subcategories_map = {
-    "Hot Sale": [],
-    "LEGO Ninjago": ["Dragon Rising","Building Set","Season 1", "Season 2", "Season 3", "Season 4", "Season 5", "Season 6", "Season 7", "Season 8","Season 9","Season 10","Season 11","Season 12","Season 13"],
-    "LEGO Anime": ["One Piece","Demon Slayer"],
-    "Accessories": ["Gym Bracelet", "Gem Stone Bracelet","Dragon Bracelet","Bracelet"],
-    "Keychain": ["Gun Keychains"],
-    "LEGO": ["Formula 1"],
-    "Toy": ["Lego Ninjago", "One Piece","Lego WWII"],
-    "Italy Bracelet": ["All","Football","Gem","Flag","Chain"],
-    "Lucky Draw": ["/lucky-draw"], 
-}
 
 # --- STORE ROUTES ---
 
@@ -71,25 +57,19 @@ def home():
 
 @app.route('/category/<category_name>')
 def category(category_name):
-    if category_name == 'Italy Bracelet':
-        return redirect(url_for('custom_bracelet'))
-    if category_name == 'Lucky Draw':
-        return redirect(url_for('lucky_draw'))
+    # Handle specific redirect pages
+    if category_name == 'Italy Bracelet': return redirect(url_for('custom_bracelet'))
+    if category_name == 'Lucky Draw': return redirect(url_for('lucky_draw'))
     
     products = Product.query.filter(Product.categories_str.contains(category_name)).all()
-    subs = subcategories_map.get(category_name, [])
-    return render_template('home.html', products=products, subcategories=subs, current_category=category_name)
+    return render_template('home.html', products=products, current_category=category_name)
 
 @app.route('/custom-bracelet')
 def custom_bracelet():
     charms = Product.query.filter(Product.categories_str.contains('Italy Bracelet')).all()
     return render_template('custom_bracelet.html', charms=charms)
 
-@app.route('/lucky-draw')
-def lucky_draw():
-    return render_template('minifigure_game.html')
-
-# --- ADMIN ROUTES ---
+# --- ADMIN DASHBOARD ---
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -97,7 +77,7 @@ def admin_login():
         if request.form['username'] == ADMIN_USERNAME and request.form['password'] == ADMIN_PASSWORD:
             session['admin'] = True
             return redirect(url_for('admin_panel'))
-        return render_template('admin_login.html', error="Invalid Credentials")
+        return render_template('admin_login.html', error="Incorrect Admin Login")
     return render_template('admin_login.html')
 
 @app.route('/admin/panel')
@@ -107,7 +87,7 @@ def admin_panel():
     
     all_products = Product.query.all()
     
-    # Dashboard Analytics
+    # Calculate stats for the dashboard boxes
     stats = {
         "total_items": len(all_products),
         "out_of_stock": len([p for p in all_products if p.stock <= 0]),
@@ -115,10 +95,10 @@ def admin_panel():
         "total_value": sum([p.price * p.stock for p in all_products if p.stock > 0])
     }
     
-    # Group products by subcategory
+    # Group items by subcategory string
     grouped_data = {}
     for p in all_products:
-        cat = p.subcategory_str if p.subcategory_str else "General"
+        cat = p.subcategory_str if p.subcategory_str else "Uncategorized"
         if cat not in grouped_data: grouped_data[cat] = []
         grouped_data[cat].append(p)
         
@@ -138,7 +118,6 @@ def update_stock():
 @app.route('/admin/add-product', methods=['GET', 'POST'])
 def add_product():
     if not session.get('admin'): return redirect(url_for('admin_login'))
-    
     if request.method == 'POST':
         new_p = Product(
             name_kh=request.form['name_kh'],
@@ -151,8 +130,7 @@ def add_product():
         db.session.add(new_p)
         db.session.commit()
         return redirect(url_for('admin_panel'))
-        
-    return render_template('add_product.html', subcategories_map=subcategories_map)
+    return render_template('add_product.html')
 
 @app.route('/admin/logout')
 def admin_logout():
@@ -163,7 +141,7 @@ def admin_logout():
 def forbidden(e):
     return "Access Denied: Your IP is blocked.", 403
 
-# --- INITIALIZATION ---
+# --- INIT ---
 with app.app_context():
     db.create_all()
 
