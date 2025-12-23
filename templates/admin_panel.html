@@ -9,7 +9,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f9fafb; }
-        .sidebar-item.active { background-color: #fef2f2; color: #ea580c; border-right: 4px solid #ea580c; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -19,112 +18,102 @@
     <aside class="w-72 bg-white border-r flex flex-col h-full z-50">
         <div class="p-8 border-b">
             <h1 class="text-xl font-black uppercase italic tracking-tighter">Somphea <span class="text-orange-600">Reak</span></h1>
-            <div class="flex items-center gap-2 mt-2">
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Systems Online</p>
-            </div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Admin Dashboard</p>
         </div>
 
         <nav class="flex-grow overflow-y-auto py-6 no-scrollbar">
-            <p class="px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Categories</p>
-            {% for category in grouped.keys() %}
-            <a href="#cat-{{ loop.index }}" class="sidebar-item flex items-center justify-between px-8 py-3.5 text-sm font-bold text-slate-500 hover:bg-slate-50 transition-all">
-                <span>{{ category }}</span>
-                <span class="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full text-slate-400">{{ grouped[category]|length }}</span>
+            <p class="px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Quick Links</p>
+            <a href="/admin/panel" class="flex items-center gap-3 px-8 py-3 text-sm font-bold text-orange-600 bg-orange-50 border-r-4 border-orange-600">
+                <i class="fa-solid fa-layer-group"></i> Inventory Manager
             </a>
-            {% endfor %}
+            <a href="/admin/add-product" class="flex items-center gap-3 px-8 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50">
+                <i class="fa-solid fa-plus-circle"></i> Add New Product
+            </a>
+            <div class="mt-8">
+                <p class="px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Categories</p>
+                {% for category in grouped.keys() %}
+                <a href="#cat-{{ loop.index }}" class="flex items-center justify-between px-8 py-2 text-xs font-bold text-slate-500 hover:text-orange-600">
+                    <span>{{ category }}</span>
+                    <span class="bg-slate-100 px-2 py-0.5 rounded-full text-[9px]">{{ grouped[category]|length }}</span>
+                </a>
+                {% endfor %}
+            </div>
         </nav>
 
         <div class="p-6 border-t bg-slate-50/50">
-            <a href="/logout" class="flex items-center gap-3 text-sm font-bold text-red-500 hover:text-red-600 transition-colors">
-                <i class="fa-solid fa-power-off"></i>
-                Sign Out
+            <a href="/admin/logout" class="flex items-center gap-3 text-sm font-bold text-red-500 hover:text-red-600">
+                <i class="fa-solid fa-power-off"></i> Sign Out
             </a>
         </div>
     </aside>
 
-    <!-- MAIN CONTENT AREA -->
+    <!-- MAIN CONTENT -->
     <main class="flex-grow flex flex-col h-full bg-slate-50/30 overflow-hidden">
         
-        <!-- TOP HEADER -->
         <header class="bg-white/80 backdrop-blur-md border-b px-10 py-6 flex justify-between items-center sticky top-0 z-40">
             <div>
-                <h2 class="text-2xl font-black tracking-tight">Management Console</h2>
-                <p class="text-xs font-semibold text-slate-400 mt-1">Manage stock and inventory availability</p>
+                <h2 class="text-2xl font-black tracking-tight">Inventory Console</h2>
+                <p class="text-xs font-semibold text-slate-400 mt-1">Update stock levels in real-time</p>
             </div>
-
-            <div class="flex items-center gap-6">
-                <!-- SEARCH BAR -->
-                <div class="relative group">
-                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-orange-500 transition-colors"></i>
-                    <input type="text" id="charmSearch" placeholder="Find by ID or name..." 
-                           class="bg-slate-100 border-none rounded-2xl pl-12 pr-6 py-3.5 text-sm font-bold w-72 focus:ring-2 focus:ring-orange-500/20 focus:bg-white transition-all outline-none">
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="charmSearch" placeholder="Search product..." 
+                           class="bg-slate-100 border-none rounded-2xl pl-12 pr-6 py-3 text-sm font-bold w-64 focus:ring-2 focus:ring-orange-500 transition-all outline-none">
                 </div>
-                <a href="/admin/add-product" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-orange-600/20">
-                    Add New Charm
-                </a>
+                <a href="/" class="text-xs font-black uppercase text-slate-400 hover:text-slate-600">View Shop</a>
             </div>
         </header>
 
-        <!-- DASHBOARD OVERVIEW -->
-        <div class="flex-grow overflow-y-auto px-10 py-8 no-scrollbar">
+        <div class="flex-grow overflow-y-auto px-10 py-8 no-scrollbar pb-32">
             
+            <!-- STATS -->
             <section class="grid grid-cols-4 gap-6 mb-12">
                 <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-5">
-                    <div class="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-2xl"><i class="fa-solid fa-gem"></i></div>
-                    <div><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Charms</p><p class="text-2xl font-black">{{ stats.total_items }}</p></div>
+                    <div class="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-box"></i></div>
+                    <div><p class="text-[10px] font-black text-slate-400 uppercase">Total SKU</p><p class="text-xl font-black">{{ stats.total_items }}</p></div>
                 </div>
                 <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-5">
-                    <div class="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center text-2xl"><i class="fa-solid fa-ghost"></i></div>
-                    <div><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Out of Stock</p><p class="text-2xl font-black text-red-600">{{ stats.out_of_stock }}</p></div>
+                    <div class="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-circle-xmark"></i></div>
+                    <div><p class="text-[10px] font-black text-slate-400 uppercase">Out of Stock</p><p class="text-xl font-black text-red-600">{{ stats.out_of_stock }}</p></div>
                 </div>
                 <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-5">
-                    <div class="w-14 h-14 bg-yellow-50 text-yellow-600 rounded-2xl flex items-center justify-center text-2xl"><i class="fa-solid fa-bolt-lightning"></i></div>
-                    <div><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Low Stock</p><p class="text-2xl font-black text-yellow-600">{{ stats.low_stock }}</p></div>
+                    <div class="w-14 h-14 bg-yellow-50 text-yellow-600 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-bolt"></i></div>
+                    <div><p class="text-[10px] font-black text-slate-400 uppercase">Low Stock</p><p class="text-xl font-black text-yellow-600">{{ stats.low_stock }}</p></div>
                 </div>
                 <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-5">
-                    <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-2xl"><i class="fa-solid fa-money-bill-trend-up"></i></div>
-                    <div><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inv. Value</p><p class="text-2xl font-black text-green-600">{{ "{:,}".format(stats.total_value) }}៛</p></div>
+                    <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-money-bill-wave"></i></div>
+                    <div><p class="text-[10px] font-black text-slate-400 uppercase">Inv. Value</p><p class="text-xl font-black">{{ stats.total_value }}៛</p></div>
                 </div>
             </section>
 
-            <!-- PRODUCT GROUPS -->
             {% for subcategory, items in grouped.items() %}
             <div id="cat-{{ loop.index }}" class="mb-16 scroll-mt-32">
                 <div class="flex items-center gap-4 mb-8">
-                    <h3 class="text-xl font-black uppercase italic tracking-tighter text-slate-800">{{ subcategory }}</h3>
+                    <h3 class="text-lg font-black uppercase italic tracking-tighter text-slate-800">{{ subcategory }}</h3>
                     <div class="h-[1px] bg-slate-200 flex-grow"></div>
-                    <span class="text-[10px] font-black text-slate-400 bg-white border border-slate-100 px-4 py-1.5 rounded-full uppercase">{{ items|length }} SKU</span>
+                    <span class="text-[10px] font-black text-slate-400 bg-white border px-4 py-1.5 rounded-full uppercase">{{ items|length }} Items</span>
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                     {% for p in items %}
-                    <div class="charm-card bg-white rounded-[2.5rem] p-4 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group" data-name="{{ p.name_kh }}" data-id="{{ p.id }}">
-                        <div class="relative aspect-[3/4] mb-4 overflow-hidden rounded-[1.8rem] bg-slate-50">
-                            <img src="{{ p.image }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <div class="charm-card bg-white rounded-[2rem] p-4 border border-slate-100 shadow-sm hover:shadow-xl transition-all group" data-name="{{ p.name_kh }}">
+                        <div class="relative aspect-square mb-4 overflow-hidden rounded-2xl bg-slate-50">
+                            <img src="{{ p.image }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform">
                             {% if p.stock <= 0 %}
-                            <div class="absolute inset-0 bg-red-600/70 backdrop-blur-sm flex items-center justify-center">
-                                <p class="text-white font-black text-[10px] uppercase tracking-[0.2em] border-2 border-white px-3 py-1">Sold Out</p>
+                            <div class="absolute inset-0 bg-red-600/60 backdrop-blur-sm flex items-center justify-center">
+                                <span class="text-white font-black text-[10px] uppercase border border-white px-2 py-1">Sold Out</span>
                             </div>
-                            {% elif p.stock <= 5 %}
-                            <div class="absolute top-3 right-3 bg-yellow-500 text-white text-[8px] font-black px-2 py-1 rounded-lg uppercase shadow-lg">Low</div>
                             {% endif %}
                         </div>
-
-                        <div class="px-2">
-                            <p class="text-[10px] font-black text-slate-800 truncate uppercase mb-1">{{ p.name_kh }}</p>
-                            <p class="text-[9px] font-bold text-slate-400 mb-4">ID: #{{ p.id }} • {{ p.price }}៛</p>
-
-                            <div class="flex items-center gap-2">
-                                <div class="relative flex-grow">
-                                    <input type="number" value="{{ p.stock }}" id="input-{{ p.id }}"
-                                           class="w-full bg-slate-100 border-none rounded-xl py-3 px-4 text-xs font-black text-center focus:ring-2 focus:ring-orange-500/20 outline-none transition-all">
-                                </div>
-                                <button onclick="saveStock({{ p.id }})" 
-                                        class="save-btn bg-slate-900 text-white w-11 h-11 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-black">
-                                    <i class="fa-solid fa-check"></i>
-                                </button>
-                            </div>
+                        <p class="text-[10px] font-black text-slate-800 truncate uppercase mb-4">{{ p.name_kh }}</p>
+                        <div class="flex items-center gap-2">
+                            <input type="number" value="{{ p.stock }}" id="input-{{ p.id }}"
+                                   class="w-full bg-slate-100 border-none rounded-xl py-2 px-3 text-xs font-black text-center outline-none focus:ring-1 focus:ring-orange-500">
+                            <button onclick="saveStock({{ p.id }})" 
+                                    class="bg-slate-900 text-white w-9 h-9 rounded-xl flex items-center justify-center active:scale-90 transition-all">
+                                <i class="fa-solid fa-check text-[10px]"></i>
+                            </button>
                         </div>
                     </div>
                     {% endfor %}
@@ -135,48 +124,39 @@
     </main>
 
     <script>
-        // SMART SEARCH
+        // Real-time Search
         document.getElementById('charmSearch').addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase();
             document.querySelectorAll('.charm-card').forEach(card => {
                 const name = card.dataset.name.toLowerCase();
-                const id = card.dataset.id.toLowerCase();
-                if(name.includes(term) || id.includes(term)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
+                card.style.display = name.includes(term) ? 'block' : 'none';
             });
         });
 
-        // AJAX STOCK UPDATE
+        // Stock Update
         async function saveStock(id) {
             const amount = document.getElementById('input-' + id).value;
             const btn = event.currentTarget;
-            
-            // Visual feedback
             btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i>';
-            btn.disabled = true;
 
             try {
-                const response = await fetch('/admin/api/update-stock', {
+                const res = await fetch('/admin/api/update-stock', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: id, amount: amount })
                 });
 
-                if(response.ok) {
-                    btn.classList.replace('bg-slate-900', 'bg-green-500');
+                if(res.ok) {
+                    btn.classList.add('bg-green-500');
                     btn.innerHTML = '<i class="fa-solid fa-check"></i>';
                     setTimeout(() => {
-                        btn.classList.replace('bg-green-500', 'bg-slate-900');
+                        btn.classList.remove('bg-green-500');
+                        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
                     }, 2000);
                 }
             } catch (err) {
-                btn.classList.replace('bg-slate-900', 'bg-red-500');
-                btn.innerHTML = '<i class="fa-solid fa-x"></i>';
-            } finally {
-                btn.disabled = false;
+                btn.classList.add('bg-red-500');
+                btn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
             }
         }
     </script>
