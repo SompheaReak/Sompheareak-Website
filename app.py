@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.secret_key = 'somphea_reak_shop_ultra_secure_key'
+app.secret_key = 'somphea_reak_studio_secret_key'
 
 # --- DATABASE SETUP ---
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -12,26 +12,24 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'sh
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- CONFIGURATION ---
-ADMIN_USERNAME = 'AdminSompheaReakVitou'
-ADMIN_PASSWORD = 'Thesong_Admin@2022?!$'
-BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
-CHAT_ID = "-1002654437316"
+# --- ADMIN CONFIG ---
+ADMIN_USER = 'AdminSompheaReakVitou'
+ADMIN_PASS = 'Thesong_Admin@2022?!$'
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name_kh = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Integer, nullable=False)
     image = db.Column(db.String(500), nullable=False)
-    categories_str = db.Column(db.String(500), default="") # e.g. "Italy Bracelet, Hot Sale"
-    subcategory_str = db.Column(db.String(500), default="") # e.g. "Flag"
+    categories_str = db.Column(db.String(500), default="") 
+    subcategory_str = db.Column(db.String(500), default="") 
     stock = db.Column(db.Integer, default=0)
 
 # --- STUDIO ROUTES ---
 
 @app.route('/custom-bracelet')
 def custom_bracelet():
-    # Pass items with their real-time stock to the builder
+    # Pass items with stock data to the frontend
     charms_db = Product.query.filter(Product.categories_str.contains('Italy Bracelet')).all()
     charms_list = []
     for c in charms_db:
@@ -47,10 +45,10 @@ def custom_bracelet():
 
 @app.route('/api/deduct-stock', methods=['POST'])
 def deduct_stock():
-    """Decreases stock when an order is finalized"""
+    """Automatically decreases stock when a design is saved"""
     data = request.json
-    item_ids = data.get('ids', [])
-    for pid in item_ids:
+    ids = data.get('ids', [])
+    for pid in ids:
         p = Product.query.get(pid)
         if p and p.stock > 0:
             p.stock -= 1
@@ -63,13 +61,13 @@ def deduct_stock():
 def admin_products():
     if not session.get('admin'): return redirect(url_for('admin_login'))
     
-    # Group products by subcategory for the stock panel
+    # Group items by subcategory for easier management
     all_products = Product.query.all()
     grouped = {}
     for p in all_products:
-        cat = p.subcategory_str if p.subcategory_str else "General"
-        if cat not in grouped: grouped[cat] = []
-        grouped[cat].append(p)
+        sub = p.subcategory_str if p.subcategory_str else "General"
+        if sub not in grouped: grouped[sub] = []
+        grouped[sub].append(p)
         
     return render_template('admin_products.html', grouped=grouped)
 
@@ -84,27 +82,10 @@ def update_stock():
         return jsonify({"success": True})
     return jsonify({"success": False})
 
-@app.route('/admin/add-product', methods=['GET', 'POST'])
-def add_product():
-    if not session.get('admin'): return redirect(url_for('admin_login'))
-    if request.method == 'POST':
-        new_p = Product(
-            name_kh=request.form['name_kh'],
-            price=int(request.form['price']),
-            image=request.form['image'],
-            categories_str=request.form.get('category', ''),
-            subcategory_str=request.form.get('subcategory', ''),
-            stock=int(request.form.get('stock', 0))
-        )
-        db.session.add(new_p)
-        db.session.commit()
-        return redirect(url_for('admin_products'))
-    return render_template('add_product.html')
-
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
-        if request.form['username'] == ADMIN_USERNAME and request.form['password'] == ADMIN_PASSWORD:
+        if request.form['username'] == ADMIN_USER and request.form['password'] == ADMIN_PASS:
             session['admin'] = True
             return redirect(url_for('admin_products'))
     return render_template('admin_login.html')
