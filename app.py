@@ -1,4 +1,4 @@
-import os 
+import os
 import requests
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, abort
 from flask_sqlalchemy import SQLAlchemy
@@ -42,6 +42,7 @@ def notify_telegram(ip, user_agent, event_type="Visitor"):
 
 @app.before_request
 def security_check():
+    # Only notify for the first visit in a session
     ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
     if ip in banned_ips:
         abort(403)
@@ -62,22 +63,20 @@ subcategories_map = {
     "Lucky Draw": ["/lucky-draw"], 
 }
 
-# --- ROUTES ---
+# --- STORE ROUTES ---
+
 @app.route('/')
 def home():
-    # Automatically start on Hot Sale
     return redirect(url_for('category', category_name='Hot Sale'))
 
 @app.route('/category/<category_name>')
 def category(category_name):
-    # DIRECT REDIRECT LOGIC FOR CUSTOMIZER
     if category_name == 'Italy Bracelet':
         return redirect(url_for('custom_bracelet'))
     
     if category_name == 'Lucky Draw':
         return redirect(url_for('lucky_draw'))
     
-    # Standard category view
     products = Product.query.filter(Product.categories_str.contains(category_name)).all()
     subs = subcategories_map.get(category_name, [])
     return render_template('home.html', 
@@ -88,8 +87,6 @@ def category(category_name):
 
 @app.route('/custom-bracelet')
 def custom_bracelet():
-    # Fetch all items intended for the Italy Bracelet builder
-    # Note: Ensure you add "Italy Bracelet" as a category in the Admin panel for these charms
     charms = Product.query.filter(Product.categories_str.contains('Italy Bracelet')).all()
     return render_template('custom_bracelet.html', charms=charms, cart=session.get('cart', []))
 
@@ -114,40 +111,80 @@ def add_to_cart():
     return jsonify({"success": True, "cart_count": len(cart)})
 
 # --- ADMIN ROUTES ---
+
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
         if request.form['username'] == ADMIN_USERNAME and request.form['password'] == ADMIN_PASSWORD:
             session['admin'] = True
-            return redirect(url_for('admin_products'))
+            return redirect(url_for('admin_panel'))
+        return render_template('admin_login.html', error="Invalid Credentials")
     return render_template('admin_login.html')
 
-@app.route('/admin/products')
-def admin_products():
+@app.route('/admin/panel')
+def admin_panel():
     if not session.get('admin'): return redirect(url_for('admin_login'))
-    return render_template('admin_products.html', products=Product.query.all())
+    
+    all_products = Product.query.all()
+    
+    # Dashboard Analytics
+    stats = {
+        "total_items": len(all_products),
+        "out_of_stock": len([p for p in all_products if p.stock <= 0]),
+        "low_stock": len([p for p in all_products if 0 < p.stock <= 5]),
+        "total_value": sum([p.price * p.stock for p in all_products if p.stock > 0])
+    }
+    
+    # Group products by subcategory for the Dashboard View
+    grouped_data = {}
+    for p in all_products:
+        cat = p.subcategory_str if p.subcategory_str else "General"
+        if cat not in grouped_data: grouped_data[cat] = []
+        grouped_data[cat].append(p)
+        
+    return render_template('admin_panel.html', grouped=grouped_data, stats=stats)
+
+@app.route('/admin/api/update-stock', methods=['POST'])
+def update_stock():
+    if not session.get('admin'): return jsonify({"success": False}), 403
+    data = request.json
+    product = Product.query.get(data.get('id'))
+    if product:
+        product.stock = int(data.get('amount'))
+        db.session.commit()
+        return jsonify({"success": True})
+    return jsonify({"success": False})
 
 @app.route('/admin/add-product', methods=['GET', 'POST'])
 def add_product():
     if not session.get('admin'): return redirect(url_for('admin_login'))
+    
     if request.method == 'POST':
         new_p = Product(
             name_kh=request.form['name_kh'],
+            name_en=request.form.get('name_en', ''),
             price=int(request.form['price']),
             image=request.form['image'],
             categories_str=request.form.get('category', ''),
-            subcategory_str=request.form.get('subcategory', '')
+            subcategory_str=request.form.get('subcategory', ''),
+            stock=int(request.form.get('stock', 1))
         )
         db.session.add(new_p)
         db.session.commit()
-        return redirect(url_for('admin_products'))
-    return render_template('add_product.html')
+        return redirect(url_for('admin_panel'))
+        
+    return render_template('add_product.html', subcategories_map=subcategories_map)
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin', None)
+    return redirect(url_for('admin_login'))
 
 @app.errorhandler(403)
 def forbidden(e):
-    return "Access Denied: Your IP is blocked.", 403
+    return "Access Denied: Your IP is blocked. Please contact support if this is an error.", 403
 
-# Initialize the database file and tables
+# --- INITIALIZATION ---
 with app.app_context():
     db.create_all()
 
