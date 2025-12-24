@@ -1,145 +1,588 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Somphea Reak Studio</title>
+  <title>Somphea Reak - Italy Bracelet Studio Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; user-select: none; }
     
-    .sold-out { filter: grayscale(1) opacity(0.4); pointer-events: none; }
-    .sold-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-10deg); background: #ef4444; color: white; font-size: 8px; font-weight: 900; padding: 2px 4px; border-radius: 4px; z-index: 10; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
+    body { 
+        font-family: 'Plus Jakarta Sans', sans-serif; 
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        background-color: #f8fafc;
+        overscroll-behavior-y: contain;
+    }
+
+    /* STOCK LOGIC CSS (Added to your style) */
+    .sold-out { 
+        filter: grayscale(1) opacity(0.4); 
+        pointer-events: none; 
+    }
+    .sold-badge {
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%) rotate(-10deg);
+        background: #ef4444; color: white;
+        font-size: 8px; font-weight: 900;
+        padding: 2px 4px; border-radius: 4px;
+        z-index: 10;
+        white-space: nowrap;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    
+    .link-pop {
+        animation: linkPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes linkPop {
+        0% { transform: scale(0.5); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* PREMIUM DRAG EFFECTS */
+    .dragging {
+        opacity: 0.5;
+        transform: scale(1.2) rotate(3deg) translateY(-10px);
+        filter: brightness(1.1) drop-shadow(0 20px 13px rgb(0 0 0 / 0.1));
+        z-index: 100;
+        transition: transform 0.2s ease;
+    }
+
+    .drag-over {
+        position: relative;
+    }
+    .drag-over::after {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border: 2px solid #ea580c;
+        border-radius: 8px;
+        background-color: rgba(234, 88, 12, 0.05);
+        animation: pulse 1.5s infinite;
+        z-index: 5;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 0.4; }
+        50% { opacity: 0.8; }
+        100% { opacity: 0.4; }
+    }
+
+    #drawer {
+        transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    /* 10 CHARMS PER VIEW */
+    .bracelet-link-container {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        flex: 0 0 10%; 
+        aspect-ratio: 2 / 4.5;
+        position: relative;
+        margin: 0;
+        padding: 0;
+        cursor: grab;
+        touch-action: none;
+        transition: all 0.2s ease;
+    }
+
+    .bracelet-link-container img {
+        width: 100%;
+        height: 75%;
+        object-fit: cover;
+        display: block;
+        pointer-events: none;
+    }
+
+    .nav-indicator-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 10px;
+    }
+
+    .nav-arrow {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        color: #64748b;
+        font-size: 10px;
+        transition: all 0.2s;
+    }
+
+    #scroll-track {
+        height: 4px;
+        background: #f1f5f9;
+        border-radius: 10px;
+        width: 80px;
+        position: relative;
+        overflow: hidden;
+    }
+    #scroll-thumb {
+        position: absolute;
+        height: 100%;
+        width: 30%;
+        background: #ea580c;
+        border-radius: 10px;
+        left: 0;
+        transition: left 0.1s linear;
+    }
+
+    /* Screenshot Area Branding */
+    .screenshot-frame {
+        background: #fff;
+        padding: 40px 20px;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
   </style>
 </head>
-<body class="text-gray-900 pb-32">
+<body class="text-gray-900 overflow-x-hidden">
 
-  <header class="sticky top-0 z-[50] bg-white/95 backdrop-blur-md border-b px-4 py-3 flex justify-between items-center">
-      <div class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white font-black italic">S</div>
-          <div>
-              <span class="text-xs font-black uppercase tracking-widest block">Studio</span>
-              {% if is_admin %} <span class="text-[8px] font-bold text-orange-600 uppercase bg-orange-100 px-2 rounded-full">Admin Mode</span> {% endif %}
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay" class="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center text-white">
+      <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p class="text-xs font-black uppercase tracking-[0.3em]" id="loadingText">Processing Studio Design</p>
+  </div>
+
+  <!-- RESULT MODAL (GALLERY PREVIEW) -->
+  <div id="resultModal" class="fixed inset-0 z-[1100] bg-black hidden flex-col items-center justify-center p-6">
+      <div class="absolute top-6 right-6">
+          <button onclick="closeResult()" class="w-10 h-10 bg-white/10 rounded-full text-white flex items-center justify-center text-xl">
+              <i class="fa-solid fa-xmark"></i>
+          </button>
+      </div>
+      <div class="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-4">
+          <img id="screenshotPreview" class="w-full h-auto rounded-xl shadow-inner border border-gray-100" src="" alt="Your Design">
+          <div class="mt-4 text-center">
+              <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest" id="modalTitle">Design Saved</p>
+              <p class="text-xs text-gray-600 font-bold mt-1 mb-4">Long press the image to save to your photos</p>
+              <button id="downloadBtn" class="w-full bg-orange-600 text-white font-black py-4 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-transform">
+                  Download Image
+              </button>
           </div>
       </div>
-      {% if is_admin %}
-      <a href="/admin/panel" class="text-[10px] font-bold text-gray-400 uppercase">Back to Inventory</a>
-      {% endif %}
+  </div>
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+    <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 active:scale-90 transition-transform">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <div class="text-center">
+        <h3 class="font-extrabold text-[9px] tracking-[0.2em] uppercase text-gray-400 leading-none">Custom Studio</h3>
+        <p class="font-black text-sm text-gray-900 tracking-tighter uppercase leading-tight">Italy Bracelet</p>
+    </div>
+    <div class="w-10 flex justify-end">
+        {% if is_admin %}
+        <a href="/admin/panel" class="w-8 h-8 flex items-center justify-center bg-orange-100 text-orange-600 rounded-full text-xs active:scale-90 transition-transform">
+            <i class="fa-solid fa-lock"></i>
+        </a>
+        {% endif %}
+    </div>
   </header>
 
-  <!-- WORKSPACE -->
-  <div class="bg-white border-b shadow-sm sticky top-[57px] z-[40]">
-      <div id="workspace" class="flex items-end h-32 overflow-x-auto px-4 py-4 gap-1 no-scrollbar">
-          <div class="m-auto text-gray-300 text-[10px] font-black uppercase tracking-widest">Select items below</div>
-      </div>
-      <div class="px-4 py-2 flex justify-between items-center bg-gray-50 text-[10px] font-bold uppercase border-t">
-          <span class="text-gray-400">Total</span>
-          <span class="text-lg font-black text-gray-900" id="total-price">0៛</span>
-      </div>
-  </div>
-
-  <!-- CHARM LIST -->
-  <div class="p-4" id="charm-container"></div>
-
-  <!-- ACTION BAR -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-[60] flex gap-3">
-      <button onclick="resetSpace()" class="w-12 h-12 rounded-xl bg-gray-100 text-gray-400 flex items-center justify-center"><i class="fa-solid fa-rotate-left"></i></button>
-      
-      {% if is_admin %}
-      <!-- ONLY ADMIN SEES THIS BUTTON -->
-      <button onclick="adminConfirmSale()" class="flex-grow bg-orange-600 text-white rounded-xl font-black uppercase text-xs tracking-widest shadow-xl active:scale-95 transition-transform">
-          Generate Receipt & Sell
-      </button>
-      {% else %}
-      <!-- PUBLIC USERS SEE THIS -->
-      <button class="flex-grow bg-gray-900 text-white rounded-xl font-black uppercase text-xs tracking-widest opacity-80 cursor-default">
-          Review Only
-      </button>
-      {% endif %}
-  </div>
-
-  <!-- RECEIPT MODAL -->
-  <div id="receiptModal" class="fixed inset-0 z-[100] bg-black/90 hidden flex-col items-center justify-center p-6">
-      <div id="receiptCard" class="bg-white w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl relative">
-          <div class="bg-black p-6 text-center text-white">
-              <h2 class="text-lg font-black uppercase tracking-widest italic">Somphea Reak</h2>
-              <p class="text-[10px] opacity-80 uppercase">Official Receipt</p>
-          </div>
-          <div class="p-6" id="receiptContent"></div>
-          <div class="p-4 bg-gray-50 border-t flex gap-3 no-print">
-              <button onclick="location.reload()" class="flex-grow bg-black text-white py-3 rounded-xl text-[10px] font-black uppercase">Done</button>
+  <!-- TOP HERO BANNER (16:9) -->
+  <section class="w-full aspect-video bg-gray-200 overflow-hidden relative shadow-inner">
+      <img src="https://images.unsplash.com/photo-1611085583191-a3b1a308964b?auto=format&fit=crop&q=80&w=1200" alt="Banner" class="w-full h-full object-cover">
+      <div class="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent flex items-end p-6">
+          <div class="transform translate-y-2">
+              <h2 class="text-white text-2xl font-black uppercase italic tracking-tighter leading-none">Craft Your<br><span class="text-orange-500">Identity</span></h2>
+              <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-1">Professional Grade Customization</p>
           </div>
       </div>
+  </section>
+
+  <!-- PREVIEW BOX (Sticky) -->
+  <section class="sticky top-[58px] z-[90] bg-white border-b shadow-lg pb-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Control Bar -->
+        <div class="flex items-center justify-between px-4 py-3">
+            <div class="flex items-center gap-2">
+                <span id="link-count" class="bg-gray-900 text-[9px] font-black text-white px-2.5 py-1 rounded-full tracking-widest uppercase">0 LINKS</span>
+                {% if is_admin %}
+                <span class="bg-orange-100 text-orange-600 text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-wide">Admin Mode</span>
+                {% endif %}
+            </div>
+            <button onclick="clearBracelet()" class="text-[10px] font-black text-red-500 uppercase tracking-widest px-2 py-1">Reset</button>
+        </div>
+
+        <!-- SEAMLESS BRACELET PREVIEW (SCROLLABLE) -->
+        <div id="bracelet-preview" onscroll="handlePreviewScroll(this)" class="flex overflow-x-auto py-4 scrollbar-hide min-h-[120px] items-end bg-gray-50 border-y border-gray-100 gap-0">
+            <div class="w-full text-center py-8 opacity-20">
+                <p class="text-[10px] font-black uppercase tracking-[0.4em]">Designer Workspace</p>
+            </div>
+        </div>
+
+        <!-- Navigation & Scroll Indicator -->
+        <div class="nav-indicator-container">
+            <button onclick="scrollManual(-60)" class="nav-arrow"><i class="fa-solid fa-chevron-left"></i></button>
+            <div id="scroll-track">
+                <div id="scroll-thumb"></div>
+            </div>
+            <button onclick="scrollManual(60)" class="nav-arrow"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+
+        <!-- Price Summary -->
+        <div class="mt-3 flex justify-between items-center px-4">
+            <div class="flex flex-col">
+                <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest">Est. Total</span>
+                <span id="total-price" class="text-xl font-black text-gray-900 leading-none">0៛</span>
+            </div>
+            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-right leading-tight">Pick up & Slide<br>to reorder charms</p>
+        </div>
+    </div>
+  </section>
+
+  <!-- CATEGORY GRID -->
+  <section class="p-4 pb-48">
+    <div class="mb-4">
+        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Collections</h4>
+    </div>
+    <div id="categoryGallery" class="grid grid-cols-6 gap-3">
+      <!-- Injected by JS -->
+    </div>
+  </section>
+
+  <!-- SELECTION DRAWER -->
+  <div id="drawer" class="fixed inset-0 z-[200] translate-y-full pointer-events-none">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" onclick="closeDrawer()"></div>
+    <div class="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-[3rem] shadow-2xl pointer-events-auto flex flex-col border-t border-gray-100">
+        <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto my-4"></div>
+        <div class="px-6 pb-4 flex items-center justify-between">
+            <h4 id="drawer-title" class="text-lg font-black uppercase tracking-tighter text-gray-900">Category</h4>
+            <button onclick="closeDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-400">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        <div class="flex-grow overflow-y-auto px-2 pb-24">
+            <div id="charmGrid" class="grid grid-cols-8 gap-1.5">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- FIXED FOOTER -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-4 z-[110]">
+    <div class="max-w-md mx-auto flex gap-3">
+        <button onclick="addRandom()" class="w-14 h-14 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-xl text-gray-400 active:scale-90 transition-transform">
+            <i class="fa-solid fa-shuffle text-lg"></i>
+        </button>
+        
+        {% if is_admin %}
+        <!-- ADMIN SELL BUTTON -->
+        <button onclick="adminSell()" id="sell-btn" disabled class="flex-grow bg-orange-600 text-white font-black rounded-xl shadow-xl active:scale-95 transition-all disabled:opacity-50 text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+            <i class="fa-solid fa-cash-register text-sm"></i> Sell & Deduct
+        </button>
+        {% endif %}
+
+        <button onclick="takeScreenshot(false)" id="screenshot-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-xl shadow-xl active:scale-95 transition-all disabled:opacity-20 text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+            <i class="fa-solid fa-camera text-sm"></i>
+            Save To Gallery
+        </button>
+    </div>
   </div>
 
   <script>
-    const allProducts = {{ products | tojson }};
-    let currentSelection = [];
+    // --- INTEGRATION: CONNECT TO FLASK DATABASE ---
+    // Replaced the hardcoded list with your Python database
+    const allCharms = {{ products | tojson }}; 
+    
+    // --- APP LOGIC ---
+    const categories = Array.from(new Set(allCharms.flatMap(c => c.categories)));
+    let selectedCharms = JSON.parse(localStorage.getItem('customCharms')) || [];
 
     function init() {
-        const container = document.getElementById('charm-container');
-        const categories = [...new Set(allProducts.flatMap(p => p.categories))];
-        categories.forEach(cat => {
-            const items = allProducts.filter(p => p.categories.includes(cat));
-            if(items.length === 0) return;
-            const html = `
-                <div class="mb-6">
-                    <h3 class="text-xs font-black uppercase text-gray-400 mb-3 tracking-widest">${cat}</h3>
-                    <div class="grid grid-cols-4 gap-2">
-                        ${items.map(p => `
-                            <div onclick="${p.stock > 0 ? `addCharm(${p.id})` : ''}" class="relative bg-white rounded-xl p-1 border shadow-sm active:scale-95 transition-transform ${p.stock <= 0 ? 'sold-out' : ''}">
-                                ${p.stock <= 0 ? '<div class="sold-badge">SOLD OUT</div>' : ''}
-                                <img src="${p.image}" class="w-full aspect-square object-cover rounded-lg mb-1">
-                                <p class="text-[8px] font-bold text-center truncate text-gray-500">${p.price}៛</p>
-                            </div>`).join('')}
+        renderCategories();
+        updateUI();
+    }
+
+    function renderCategories() {
+        const container = document.getElementById('categoryGallery');
+        container.innerHTML = categories.map(cat => {
+            const charm = allCharms.find(c => c.categories.includes(cat));
+            if(!charm) return '';
+            return `
+                <div onclick="openDrawer('${cat}')" class="flex flex-col items-center gap-1 active:scale-95 transition-transform cursor-pointer">
+                    <div class="w-full aspect-[2/3] bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden p-1">
+                        <img src="${charm.image}" class="w-full h-full object-cover rounded-md">
                     </div>
-                </div>`;
-            container.insertAdjacentHTML('beforeend', html);
-        });
+                    <span class="text-[6px] font-black text-gray-500 uppercase truncate w-full text-center">${cat}</span>
+                </div>
+            `;
+        }).join('');
     }
 
-    function addCharm(id) {
-        const product = allProducts.find(p => p.id === id);
-        currentSelection.push({ ...product, uid: Date.now() + Math.random() });
-        renderWorkspace();
-    }
-    function renderWorkspace() {
-        const ws = document.getElementById('workspace');
-        let total = 0;
-        ws.innerHTML = currentSelection.map(item => {
-            total += item.price;
-            return `<div class="flex-none w-10 relative"><img src="${item.image}" class="w-full rounded-md shadow-sm border"><button onclick="removeCharm(${item.uid})" class="absolute -top-1 -right-1 bg-red-500 text-white w-3 h-3 rounded-full flex items-center justify-center text-[6px]">×</button></div>`;
-        }).join('') || '<div class="m-auto text-gray-300 text-[10px] font-black uppercase tracking-widest">Select items below</div>';
-        document.getElementById('total-price').innerText = total.toLocaleString() + '៛';
-    }
-    function removeCharm(uid) { currentSelection = currentSelection.filter(item => item.uid !== uid); renderWorkspace(); }
-    function resetSpace() { currentSelection = []; renderWorkspace(); }
-
-    async function adminConfirmSale() {
-        if(currentSelection.length === 0) return;
+    function openDrawer(cat) {
+        const drawer = document.getElementById('drawer');
+        const title = document.getElementById('drawer-title');
+        const grid = document.getElementById('charmGrid');
         
-        // 1. Generate Receipt HTML
-        let html = '<div class="space-y-2 max-h-[50vh] overflow-y-auto">';
-        currentSelection.forEach(item => {
-            html += `<div class="flex items-center gap-3 border-b pb-2"><img src="${item.image}" class="w-10 h-10 rounded border"><div class="flex-grow"><p class="text-[10px] font-black uppercase">${item.name_kh}</p><p class="text-[10px] text-gray-500">${item.price}៛</p></div></div>`;
-        });
-        html += `</div><div class="flex justify-between border-t border-black pt-3 mt-3"><span class="font-black text-sm">TOTAL</span><span class="font-black text-xl text-orange-600">${document.getElementById('total-price').innerText}</span></div>`;
-        document.getElementById('receiptContent').innerHTML = html;
-        document.getElementById('receiptModal').classList.remove('hidden');
-        document.getElementById('receiptModal').classList.add('flex');
+        title.innerText = cat;
+        
+        // Filter Items & Add Stock Logic
+        grid.innerHTML = allCharms.filter(c => c.categories.includes(cat)).map(c => `
+            <div onclick="${c.stock > 0 ? `addCharmById(${c.id})` : ''}" class="relative flex flex-col items-center bg-gray-50 rounded-lg p-1 active:bg-orange-50 transition-all cursor-pointer ${c.stock <= 0 ? 'sold-out' : ''}">
+                ${c.stock <= 0 ? '<div class="sold-badge">SOLD OUT</div>' : ''}
+                <img src="${c.image}" class="w-full aspect-[2/3.5] object-cover rounded shadow-sm">
+                <p class="text-[6px] font-black mt-1 text-gray-400">${c.price}៛</p>
+            </div>
+        `).join('');
 
-        // 2. Call API to deduct stock
-        const ids = currentSelection.map(c => c.id);
-        await fetch('/admin/api/sell-items', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ ids: ids })
-        });
+        drawer.classList.remove('translate-y-full');
+        drawer.classList.add('pointer-events-auto');
     }
+
+    function closeDrawer() { 
+        const drawer = document.getElementById('drawer');
+        drawer.classList.add('translate-y-full'); 
+        drawer.classList.remove('pointer-events-auto');
+    }
+
+    function addCharmById(id) {
+        const charm = allCharms.find(c => c.id === id);
+        // Stock Check
+        if(charm.stock <= 0) return alert("Item sold out!");
+        
+        selectedCharms.push({ ...charm, uid: Math.random().toString(36).substr(2, 9) });
+        updateUI();
+    }
+
+    function removeCharm(uid) {
+        selectedCharms = selectedCharms.filter(c => c.uid !== uid);
+        updateUI();
+    }
+
+    function updateUI() {
+        const preview = document.getElementById('bracelet-preview');
+        const totalDisplay = document.getElementById('total-price');
+        const countDisplay = document.getElementById('link-count');
+        const screenshotBtn = document.getElementById('screenshot-btn');
+        const sellBtn = document.getElementById('sell-btn');
+
+        localStorage.setItem('customCharms', JSON.stringify(selectedCharms));
+        
+        // Enable/Disable buttons
+        const hasItems = selectedCharms.length > 0;
+        if(screenshotBtn) screenshotBtn.disabled = !hasItems;
+        if(sellBtn) sellBtn.disabled = !hasItems;
+
+        if (!hasItems) {
+            preview.innerHTML = `<div class="w-full text-center py-8 opacity-20 uppercase tracking-[0.4em] text-[10px] font-black">Designer Workspace</div>`;
+            totalDisplay.innerText = "0៛";
+            countDisplay.innerText = "0 LINKS";
+            document.querySelector('.nav-indicator-container').style.opacity = '0';
+            return;
+        }
+
+        document.querySelector('.nav-indicator-container').style.opacity = '1';
+        let total = 0;
+        preview.innerHTML = selectedCharms.map((c, index) => {
+            total += c.price;
+            return `
+                <div class="bracelet-link-container link-pop" 
+                     draggable="true" 
+                     data-index="${index}"
+                     ontouchstart="handleTouchStart(event)"
+                     ontouchmove="handleTouchMove(event)"
+                     ontouchend="handleTouchEnd(event)"
+                     ondragstart="handleDragStart(event)"
+                     ondragover="handleDragOver(event)"
+                     ondragleave="handleDragLeave(event)"
+                     ondrop="handleDrop(event)">
+                    <button onclick="removeCharm('${c.uid}')" class="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[7px] shadow-lg z-10 active:scale-90">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <img src="${c.image}">
+                </div>
+            `;
+        }).join('');
+
+        totalDisplay.innerText = total.toLocaleString() + "៛";
+        countDisplay.innerText = `${selectedCharms.length} LINKS`;
+        
+        setTimeout(() => handlePreviewScroll(preview), 50);
+
+        if (selectedCharms.length > 5) {
+             preview.scrollTo({ left: preview.scrollWidth, behavior: 'smooth' });
+        }
+    }
+
+    // --- ADMIN SELL FUNCTION ---
+    async function adminSell() {
+        if (!confirm("Confirm sale and deduct stock?")) return;
+        
+        document.getElementById('loadingText').innerText = "Updating Stock...";
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+        document.getElementById('loadingOverlay').classList.add('flex');
+
+        try {
+            // 1. Deduct Stock via API
+            const ids = selectedCharms.map(c => c.id);
+            const res = await fetch('/admin/api/sell-items', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ ids: ids })
+            });
+            const data = await res.json();
+            
+            if(!data.success) throw new Error("Stock update failed");
+
+            // 2. Generate Receipt Image
+            await takeScreenshot(true); // true = isReceipt mode
+
+        } catch (e) {
+            alert("Error: " + e.message);
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            document.getElementById('loadingOverlay').classList.remove('flex');
+        }
+    }
+
+    // --- SCREENSHOT LOGIC (UPDATED FOR RECEIPT) ---
+    async function takeScreenshot(isReceipt = false) {
+        const overlay = document.getElementById('loadingOverlay');
+        const previewModal = document.getElementById('resultModal');
+        const previewImg = document.getElementById('screenshotPreview');
+        const modalTitle = document.getElementById('modalTitle');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        if(!isReceipt) {
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            document.getElementById('loadingText').innerText = "Rendering Image...";
+        }
+
+        try {
+            // Create a hidden workspace for a perfect 1080px capture
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            tempDiv.className = 'screenshot-frame';
+            
+            const title = document.createElement('h2');
+            title.innerText = isReceipt ? "OFFICIAL RECEIPT" : "ITALY BRACELET STUDIO";
+            title.style.fontSize = "24px";
+            title.style.fontWeight = "900";
+            title.style.letterSpacing = "0.2em";
+            title.style.textAlign = "center";
+            
+            const braceletContainer = document.createElement('div');
+            braceletContainer.style.display = 'flex';
+            braceletContainer.style.background = '#f8fafc';
+            braceletContainer.style.padding = '40px';
+            braceletContainer.style.borderRadius = '20px';
+            braceletContainer.style.border = '1px solid #e2e8f0';
+
+            selectedCharms.forEach(c => {
+                const img = document.createElement('img');
+                img.src = c.image;
+                img.style.width = '60px';
+                img.style.height = '100px';
+                img.style.objectFit = 'cover';
+                braceletContainer.appendChild(img);
+            });
+
+            const footer = document.createElement('p');
+            footer.innerText = `Total: ${document.getElementById('total-price').innerText} • ${selectedCharms.length} Pieces`;
+            footer.style.fontSize = "12px";
+            footer.style.fontWeight = "bold";
+            footer.style.color = "#94a3b8";
+
+            tempDiv.appendChild(title);
+            tempDiv.appendChild(braceletContainer);
+            tempDiv.appendChild(footer);
+            document.body.appendChild(tempDiv);
+
+            const canvas = await html2canvas(tempDiv, {
+                useCORS: true,
+                scale: 3, // Higher quality
+                backgroundColor: "#ffffff"
+            });
+
+            const dataUrl = canvas.toDataURL("image/png");
+            previewImg.src = dataUrl;
+            
+            modalTitle.innerText = isReceipt ? "Receipt Generated" : "Design Saved";
+
+            downloadBtn.onclick = () => {
+                const link = document.createElement('a');
+                link.download = isReceipt ? `receipt-${Date.now()}.png` : `bracelet-design-${Date.now()}.png`;
+                link.href = dataUrl;
+                link.click();
+            };
+
+            document.body.removeChild(tempDiv);
+            previewModal.classList.remove('hidden');
+            previewModal.classList.add('flex');
+        } catch (err) {
+            console.error(err);
+        } finally {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+        }
+    }
+
+    function closeResult() {
+        document.getElementById('resultModal').classList.add('hidden');
+        document.getElementById('resultModal').classList.remove('flex');
+    }
+
+    // --- SCROLLING LOGIC ---
+
+    function handlePreviewScroll(el) {
+        const thumb = document.getElementById('scroll-thumb');
+        const scrollWidth = el.scrollWidth - el.clientWidth;
+        if (scrollWidth <= 0) {
+            thumb.style.width = '100%';
+            thumb.style.left = '0%';
+            return;
+        }
+        const percentage = (el.scrollLeft / scrollWidth) * 100;
+        thumb.style.width = '30%';
+        thumb.style.left = `${percentage * 0.7}%`;
+    }
+
+    function scrollManual(val) {
+        document.getElementById('bracelet-preview').scrollBy({ left: val, behavior: 'smooth' });
+    }
+
+    // --- REORDERING LOGIC ---
+
+    let touchStartIndex = null;
+    let currentHoverIndex = null;
+
+    function handleDragStart(e) {
+        e.target.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', e.target.dataset.index);
+    }
+
+    function handleDragOver(e) { e.preventDefault(); const target = e.target.closest('.bracelet-link-container'); if (target) target.classList.add('drag-over'); }
+    function handleDragLeave(e) { const target = e.target.closest('.bracelet-link-container'); if (target) target.classList.remove('drag-over'); }
+    function handleDrop(e) { e.preventDefault(); const target = e.target.closest('.bracelet-link-container'); if (!target) return; target.classList.remove('drag-over'); const from = parseInt(e.dataTransfer.getData('text/plain')); const to = parseInt(target.dataset.index); reorderArray(from, to); }
+
+    function handleTouchStart(e) { const container = e.target.closest('.bracelet-link-container'); if (!container) return; touchStartIndex = parseInt(container.dataset.index); container.classList.add('dragging'); }
+    function handleTouchMove(e) { e.preventDefault(); const touch = e.touches[0]; const target = document.elementFromPoint(touch.clientX, touch.clientY); const container = target?.closest('.bracelet-link-container'); document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('drag-over')); if (container) { currentHoverIndex = parseInt(container.dataset.index); container.classList.add('drag-over'); } }
+    function handleTouchEnd(e) { document.querySelectorAll('.bracelet-link-container').forEach(el => { el.classList.remove('dragging'); el.classList.remove('drag-over'); }); if (touchStartIndex !== null && currentHoverIndex !== null && touchStartIndex !== currentHoverIndex) reorderArray(touchStartIndex, currentHoverIndex); touchStartIndex = null; currentHoverIndex = null; }
+
+    function reorderArray(from, to) { const item = selectedCharms.splice(from, 1)[0]; selectedCharms.splice(to, 0, item); updateUI(); }
+    function clearBracelet() { if (confirm("Reset current design?")) { selectedCharms = []; updateUI(); } }
+    function addRandom() { const rand = allCharms[Math.floor(Math.random() * allCharms.length)]; if(rand) addCharmById(rand.id); }
+
     init();
   </script>
 </body>
