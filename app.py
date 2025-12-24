@@ -17,32 +17,44 @@ ADMIN_USER = 'AdminSompheaReakVitou'
 ADMIN_PASS = 'Thesong_Admin@2022?!$'
 
 # ==========================================
-# 1. PRODUCT CATALOG (ADD ALL ITEMS HERE)
+# 1. PRODUCT CATALOG
 # ==========================================
 PRODUCT_CATALOG = [
-    # --- ITALY BRACELET CHARMS (Category: Italy Bracelet) ---
+    # --- ITALY BRACELET ---
     {"id": 1, "name_kh": "Silver Charm", "price": 400, "image": "/static/images/c01.jpg", "categories": ["Italy Bracelet"], "subcategory": "Charms"},
     {"id": 2001, "name_kh": "Flag Charm", "price": 3000, "image": "/static/images/cf01.jpg", "categories": ["Italy Bracelet"], "subcategory": "Flags"},
 
-    # --- LEGO (Category: LEGO) ---
-    {"id": 9001, "name_kh": "Kai - Ninjago", "price": 5000, "image": "https://m.media-amazon.com/images/I/51+u+A-uG+L._AC_UF894,1000_QL80_.jpg", "categories": ["LEGO"], "subcategory": "Ninjago"},
-    {"id": 9002, "name_kh": "Luffy - One Piece", "price": 6000, "image": "https://m.media-amazon.com/images/I/61Itk-lF+PL.jpg", "categories": ["LEGO"], "subcategory": "Anime"},
+    # --- LEGO ---
+    {"id": 9001, "name_kh": "Kai - Ninjago", "price": 5000, "image": "https://m.media-amazon.com/images/I/51+u+A-uG+L._AC_UF894,1000_QL80_.jpg", "categories": ["LEGO", "LEGO Ninjago"], "subcategory": "Season 1"},
+    {"id": 9002, "name_kh": "Luffy - One Piece", "price": 6000, "image": "https://m.media-amazon.com/images/I/61Itk-lF+PL.jpg", "categories": ["LEGO", "LEGO Anime"], "subcategory": "One Piece"},
     
-    # --- KEYCHAINS (Category: Keychain) ---
-    {"id": 8001, "name_kh": "Gun Keychain A", "price": 2500, "image": "https://down-ph.img.susercontent.com/file/sg-11134201-22100-bf65465465iv8c", "categories": ["Keychain"], "subcategory": "Metal"},
+    # --- KEYCHAINS ---
+    {"id": 8001, "name_kh": "Gun Keychain A", "price": 2500, "image": "https://down-ph.img.susercontent.com/file/sg-11134201-22100-bf65465465iv8c", "categories": ["Keychain"], "subcategory": "Gun Keychains"},
 
-    # --- HOT SALE (Items can belong to multiple categories) ---
+    # --- HOT SALE ---
     {"id": 9999, "name_kh": "Special Set", "price": 10000, "image": "/static/images/special.jpg", "categories": ["Hot Sale", "LEGO"], "subcategory": "Sets"},
 ]
 
-# --- NAVIGATION MENU (Your Categories) ---
+# --- 2. SUBCATEGORIES MAP (Added this back) ---
+SUBCATEGORIES_MAP = {
+    "Hot Sale": [],
+    "LEGO": ["LEGO Ninjago", "LEGO Anime", "Formula 1", "Lego WWII"],
+    "LEGO Ninjago": ["Dragon Rising", "Season 1", "Season 2", "Season 13"],
+    "LEGO Anime": ["One Piece", "Demon Slayer"],
+    "Keychain": ["Gun Keychains", "Anime Keychains"],
+    "Accessories": ["Gym Bracelet", "Gem Stone Bracelet", "Dragon Bracelet"],
+    "Toy": ["General Toys"],
+}
+
+# --- MAIN NAVIGATION ---
 NAV_MENU = [
     "Hot Sale",
     "LEGO", 
     "Keychain",
     "Accessories",
-    "Italy Bracelet", # Special Redirect
-    "Lucky Draw"      # Special Redirect
+    "Toy",
+    "Italy Bracelet", # Redirects to Studio
+    "Lucky Draw"      # Redirects to Game
 ]
 
 # --- DATABASE MODEL ---
@@ -88,7 +100,6 @@ def sync_catalog():
 
 @app.route('/')
 def home():
-    # Default to Hot Sale
     return redirect(url_for('category_view', category_name='Hot Sale'))
 
 @app.route('/category/<category_name>')
@@ -97,21 +108,23 @@ def category_view(category_name):
     if category_name == 'Italy Bracelet': return redirect(url_for('custom_bracelet'))
     if category_name == 'Lucky Draw': return redirect(url_for('lucky_draw'))
 
-    # 2. Fetch Products for this Category
-    # We check if the category string is inside the product's list
+    # 2. Get Products
     all_products = Product.query.all()
+    # Filter: Show product if category_name matches ANY of its categories
     filtered_products = [p for p in all_products if category_name in p.categories_str]
+
+    # 3. Get Subcategories (Added this logic back)
+    subs = SUBCATEGORIES_MAP.get(category_name, [])
 
     return render_template('home.html', 
                            products=filtered_products, 
                            current_category=category_name, 
-                           menu=NAV_MENU)
+                           menu=NAV_MENU,
+                           subcategories=subs)
 
 @app.route('/custom-bracelet')
 def custom_bracelet():
-    # Only fetch items meant for the studio
     all_products = Product.query.all()
-    # Filter for charms only
     studio_items = [p for p in all_products if "Italy Bracelet" in p.categories_str]
     
     products_json = [{
@@ -124,7 +137,7 @@ def custom_bracelet():
 
 @app.route('/lucky-draw')
 def lucky_draw():
-    return render_template('lucky_draw.html') # You need to create this file if you haven't
+    return render_template('lucky_draw.html') 
 
 # --- ADMIN ROUTES ---
 @app.route('/admin/panel')
@@ -138,10 +151,8 @@ def admin_panel():
         "low": len([p for p in all_products if 0 < p.stock <= 5])
     }
     
-    # Group by Category (First category in list)
     grouped = {}
     for p in all_products:
-        # Use first category as main group
         cat = p.categories_str.split(', ')[0] if p.categories_str else "Uncategorized"
         if cat not in grouped: grouped[cat] = []
         grouped[cat].append(p)
