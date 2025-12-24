@@ -1,10 +1,9 @@
 import os
-import requests
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.secret_key = 'somphea_reak_fixed_key_2025'
+app.secret_key = 'somphea_reak_ultimate_2025'
 
 # --- DATABASE SETUP ---
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -18,34 +17,32 @@ ADMIN_USER = 'AdminSompheaReakVitou'
 ADMIN_PASS = 'Thesong_Admin@2022?!$'
 
 # ==========================================
-# 1. PRODUCT CATALOG
+# 1. PRODUCT CATALOG (ADD ALL ITEMS HERE)
 # ==========================================
 PRODUCT_CATALOG = [
-    # --- Charms ---
-    {"id": 1, "name_kh": "Silver Charm", "price": 400, "image": "/static/images/c01.jpg", "categories": ["Charm"], "subcategory": "General"},
+    # --- ITALY BRACELET CHARMS (Category: Italy Bracelet) ---
+    {"id": 1, "name_kh": "Silver Charm", "price": 400, "image": "/static/images/c01.jpg", "categories": ["Italy Bracelet"], "subcategory": "Charms"},
+    {"id": 2001, "name_kh": "Flag Charm", "price": 3000, "image": "/static/images/cf01.jpg", "categories": ["Italy Bracelet"], "subcategory": "Flags"},
 
-    # --- F1 Logos ---
-    {"id": 1100, "name_kh": "Classic F1 Logo", "price": 3000, "image": "/static/images/charm-f1–101.jpg", "categories": ["Class F1🏎️"], "subcategory": "F1 Logos"},
-    {"id": 1191, "name_kh": "Classic F1", "price": 3000, "image": "/static/images/charm-chain-03.jpg", "categories": ["Class F1🏎️"], "subcategory": "F1 Logos"},
+    # --- LEGO (Category: LEGO) ---
+    {"id": 9001, "name_kh": "Kai - Ninjago", "price": 5000, "image": "https://m.media-amazon.com/images/I/51+u+A-uG+L._AC_UF894,1000_QL80_.jpg", "categories": ["LEGO"], "subcategory": "Ninjago"},
+    {"id": 9002, "name_kh": "Luffy - One Piece", "price": 6000, "image": "https://m.media-amazon.com/images/I/61Itk-lF+PL.jpg", "categories": ["LEGO"], "subcategory": "Anime"},
     
-    # --- Car Logos ---
-    {"id": 1001, "name_kh": "Car Charm 01", "price": 3000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"], "subcategory": "Car Brands"},
-    {"id": 1002, "name_kh": "Car Charm 02", "price": 3000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"], "subcategory": "Car Brands"},
+    # --- KEYCHAINS (Category: Keychain) ---
+    {"id": 8001, "name_kh": "Gun Keychain A", "price": 2500, "image": "https://down-ph.img.susercontent.com/file/sg-11134201-22100-bf65465465iv8c", "categories": ["Keychain"], "subcategory": "Metal"},
 
-    # --- Flags ---
-    {"id": 2001, "name_kh": "Flag Charm 01", "price": 3000, "image": "/static/images/cf01.jpg", "categories": ["Flag"], "subcategory": "National Flags"},
+    # --- HOT SALE (Items can belong to multiple categories) ---
+    {"id": 9999, "name_kh": "Special Set", "price": 10000, "image": "/static/images/special.jpg", "categories": ["Hot Sale", "LEGO"], "subcategory": "Sets"},
+]
 
-    # --- Gemstones ---
-    {"id": 3001, "name_kh": "Gemstone Charm 01", "price": 3500, "image": "/static/images/cg01.jpg", "categories": ["Gemstone"], "subcategory": "Gemstones"},
-    
-    # --- Chains ---
-    {"id": 4001, "name_kh": "Chain Charm 01", "price": 3000, "image": "/static/images/charm-chain-01.jpg", "categories": ["Chain"], "subcategory": "Chains"},
-
-    # --- Football ---
-    {"id": 5001, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-01.jpg", "categories": ["Football Club Logo"], "subcategory": "Football"},
-
-    # --- Letters ---
-    {"id": 1101, "name_kh": "Letter A", "price": 1200, "image": "/static/images/a.jpg", "categories": ["Letter"], "subcategory": "Letters"},
+# --- NAVIGATION MENU (Your Categories) ---
+NAV_MENU = [
+    "Hot Sale",
+    "LEGO", 
+    "Keychain",
+    "Accessories",
+    "Italy Bracelet", # Special Redirect
+    "Lucky Draw"      # Special Redirect
 ]
 
 # --- DATABASE MODEL ---
@@ -61,11 +58,9 @@ class Product(db.Model):
 # --- SYNC ENGINE ---
 def sync_catalog():
     try:
-        # Check if table exists to avoid crash
         inspector = db.inspect(db.engine)
-        if not inspector.has_table("product"):
-            db.create_all()
-            
+        if not inspector.has_table("product"): db.create_all()
+        
         print("🔄 Syncing Catalog...")
         for item in PRODUCT_CATALOG:
             existing = Product.query.get(item['id'])
@@ -80,40 +75,58 @@ def sync_catalog():
                 existing.subcategory_str = sub_str
             else:
                 new_p = Product(
-                    id=item['id'],
-                    name_kh=item['name_kh'],
-                    price=item['price'],
-                    image=item['image'],
-                    categories_str=cat_str,
-                    subcategory_str=sub_str,
-                    stock=0
+                    id=item['id'], name_kh=item['name_kh'], price=item['price'],
+                    image=item['image'], categories_str=cat_str, subcategory_str=sub_str, stock=0
                 )
                 db.session.add(new_p)
         db.session.commit()
         print("✅ Sync Complete!")
     except Exception as e:
-        print(f"⚠️ Database Error (Ignored to keep app alive): {e}")
+        print(f"⚠️ DB Error: {e}")
 
 # --- ROUTES ---
+
 @app.route('/')
 def home():
-    return redirect(url_for('custom_bracelet'))
+    # Default to Hot Sale
+    return redirect(url_for('category_view', category_name='Hot Sale'))
+
+@app.route('/category/<category_name>')
+def category_view(category_name):
+    # 1. Special Redirects
+    if category_name == 'Italy Bracelet': return redirect(url_for('custom_bracelet'))
+    if category_name == 'Lucky Draw': return redirect(url_for('lucky_draw'))
+
+    # 2. Fetch Products for this Category
+    # We check if the category string is inside the product's list
+    all_products = Product.query.all()
+    filtered_products = [p for p in all_products if category_name in p.categories_str]
+
+    return render_template('home.html', 
+                           products=filtered_products, 
+                           current_category=category_name, 
+                           menu=NAV_MENU)
 
 @app.route('/custom-bracelet')
 def custom_bracelet():
-    try:
-        all_products = Product.query.all()
-        products_json = [{
-            "id": p.id, "name_kh": p.name_kh, "price": p.price, 
-            "image": p.image, "stock": p.stock, 
-            "categories": p.categories_str.split(', ')
-        } for p in all_products]
-    except:
-        products_json = [] # Fallback if DB fails
+    # Only fetch items meant for the studio
+    all_products = Product.query.all()
+    # Filter for charms only
+    studio_items = [p for p in all_products if "Italy Bracelet" in p.categories_str]
     
-    is_admin = session.get('admin', False)
-    return render_template('custom_bracelet.html', products=products_json, is_admin=is_admin)
+    products_json = [{
+        "id": p.id, "name_kh": p.name_kh, "price": p.price, 
+        "image": p.image, "stock": p.stock, 
+        "categories": p.categories_str.split(', ')
+    } for p in studio_items]
+    
+    return render_template('custom_bracelet.html', products=products_json)
 
+@app.route('/lucky-draw')
+def lucky_draw():
+    return render_template('lucky_draw.html') # You need to create this file if you haven't
+
+# --- ADMIN ROUTES ---
 @app.route('/admin/panel')
 def admin_panel():
     if not session.get('admin'): return redirect(url_for('admin_login'))
@@ -125,11 +138,13 @@ def admin_panel():
         "low": len([p for p in all_products if 0 < p.stock <= 5])
     }
     
+    # Group by Category (First category in list)
     grouped = {}
     for p in all_products:
-        sub = p.subcategory_str if p.subcategory_str else "General"
-        if sub not in grouped: grouped[sub] = []
-        grouped[sub].append(p)
+        # Use first category as main group
+        cat = p.categories_str.split(', ')[0] if p.categories_str else "Uncategorized"
+        if cat not in grouped: grouped[cat] = []
+        grouped[cat].append(p)
         
     return render_template('admin_panel.html', grouped=grouped, stats=stats)
 
@@ -144,18 +159,6 @@ def update_stock():
         return jsonify({"success": True})
     return jsonify({"success": False})
 
-@app.route('/admin/api/sell-items', methods=['POST'])
-def sell_items():
-    if not session.get('admin'): return jsonify({"success": False, "msg": "Unauthorized"}), 403
-    data = request.json
-    ids = data.get('ids', [])
-    for pid in ids:
-        p = Product.query.get(pid)
-        if p and p.stock > 0:
-            p.stock -= 1
-    db.session.commit()
-    return jsonify({"success": True})
-
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -164,21 +167,14 @@ def admin_login():
             return redirect(url_for('admin_panel'))
     return render_template('admin_login.html')
 
-@app.route('/admin/logout')
-def logout():
-    session.pop('admin', None)
-    return redirect(url_for('admin_login'))
-
-# --- INIT & RUN ---
+# --- STARTUP ---
 with app.app_context():
     try:
         db.create_all()
         sync_catalog()
-    except:
-        pass
+    except: pass
 
 if __name__ == '__main__':
-    # CRITICAL FIX FOR RENDER: Bind to 0.0.0.0 and use PORT env var
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
 
