@@ -4,238 +4,569 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Somphea Reak Shop</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Use Tailwind CSS for utility classes if desired, but custom CSS below handles the specific look -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Hanuman:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for clean icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        body { font-family: 'Hanuman', sans-serif; margin: 0; padding-bottom: 90px; background: #f4f6f8; }
+        :root {
+            --primary: #e44d26; /* Your Brand Orange */
+            --primary-dark: #c73e1b;
+            --bg: #f8f9fa;
+            --surface: #ffffff;
+            --text-main: #1f2937;
+            --text-sub: #6b7280;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            --radius: 16px;
+        }
 
-        /* --- SEARCH BAR (Restored) --- */
-        .search-container {
-            padding: 10px 15px;
-            background: white;
+        body { 
+            font-family: 'Plus Jakarta Sans', 'Hanuman', sans-serif; 
+            margin: 0; 
+            padding-bottom: 100px; /* Space for floating cart */
+            background: var(--bg); 
+            color: var(--text-main);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* --- 1. HEADER & SEARCH --- */
+        .app-header {
+            background: var(--surface);
             position: sticky;
             top: 0;
-            z-index: 1001;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            z-index: 1000;
+            padding: 12px 16px 16px; /* Extra bottom padding for search overlap look */
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            box-shadow: var(--shadow-md);
         }
-        .search-form { display: flex; gap: 5px; }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .brand-logo {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+        
+        .header-icons {
+            display: flex;
+            gap: 16px;
+            color: var(--text-main);
+            font-size: 20px;
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
         .search-form input {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background: #f9f9f9;
-            font-family: 'Hanuman', sans-serif;
+            padding: 12px 16px 12px 42px; /* Left padding for icon */
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #f3f4f6;
+            font-family: inherit;
             font-size: 14px;
-        }
-        .search-form button {
-            padding: 0 15px;
-            background: #e44d26;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+            box-sizing: border-box; /* Important for width: 100% */
         }
 
-        /* --- 4-COLUMN GRID --- */
-        .category-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 15px 10px;
-            padding: 15px;
+        .search-form input:focus {
             background: white;
-            margin-bottom: 10px;
-            justify-items: center; 
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(228, 77, 38, 0.1);
         }
 
-        .category-bar a {
-            display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; text-decoration: none; color: #333;
+        .search-icon-abs {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-sub);
+            pointer-events: none;
         }
 
-        /* FIX: Make Italy Bracelet span 2 columns so it looks intentional, not lonely */
-        .italy-link {
-            grid-column: span 2; 
-            width: 100% !important;
-            background: #fdfdfd;
-            border-radius: 10px;
-            padding: 5px 0;
+        /* --- 2. BANNER SLIDER --- */
+        .section-container {
+            padding: 16px;
         }
 
-        .category-bar img {
-            width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #f0f0f0; margin-bottom: 6px;
+        .slider { 
+            border-radius: var(--radius); 
+            overflow: hidden; 
+            box-shadow: var(--shadow-sm);
+            aspect-ratio: 16/9; /* Consistent height */
+            position: relative;
         }
-        .category-bar span { font-size: 11px; font-weight: bold; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .slides { display: flex; width: 100%; height: 100%; } 
+        .slide { min-width: 100%; height: 100%; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-        /* Full Width Customize Button */
-        .custom-link {
-            grid-column: 1 / -1; width: 100% !important;
-            background: linear-gradient(45deg, #007bff, #0056b3);
-            color: white !important; padding: 12px; border-radius: 10px;
-            margin-top: 5px; display: flex !important; flex-direction: row !important; justify-content: center; align-items: center; gap: 8px;
-            box-shadow: 0 4px 10px rgba(0,123,255,0.3);
+        /* --- 3. CATEGORY GRID (Modern) --- */
+        .category-grid {
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 16px 12px;
+            padding: 0 16px 16px;
         }
-        .custom-link span { color: white; font-size: 14px; width: auto; }
+
+        .cat-item {
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 6px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .cat-item:active { transform: scale(0.95); }
+
+        .cat-icon-box {
+            width: 56px; 
+            height: 56px; 
+            border-radius: 18px; 
+            background: white;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid #f0f0f0;
+            overflow: hidden;
+        }
         
-        /* BANNER & SLIDER */
-        .banner-container { padding: 10px; background: white; margin-bottom: 10px; }
-        .banner img { width: 100%; border-radius: 10px; display: block; }
-        .slider { overflow: hidden; border-radius: 10px; margin-top: 10px; }
-        .slides { display: flex; } .slide { min-width: 100%; }
+        .cat-icon-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
-        /* PRODUCT GRID */
-        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 10px; }
+        .cat-item span { 
+            font-size: 11px; 
+            font-weight: 600; 
+            color: var(--text-main); 
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        /* --- FEATURE CARDS (Italy & Custom) --- */
+        .feature-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 0 16px 16px;
+        }
+
+        .feature-card {
+            border-radius: var(--radius);
+            padding: 16px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-italy {
+            background: linear-gradient(135deg, #FF6B6B, #EE5D5D);
+            grid-column: span 1;
+        }
+        
+        .card-custom {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            grid-column: span 1;
+        }
+
+        .feature-card h3 { margin: 0; font-size: 14px; font-weight: 800; z-index: 1; }
+        .feature-card p { margin: 4px 0 0; font-size: 10px; opacity: 0.9; z-index: 1; }
+        .feature-card i {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            font-size: 60px;
+            opacity: 0.2;
+            transform: rotate(-15deg);
+        }
+
+        /* --- 4. SUBCATEGORY PILLS --- */
+        .sub-sticky { 
+            position: sticky; 
+            top: 74px; /* Adjust based on header height */
+            z-index: 900; 
+            background: rgba(248, 249, 250, 0.95); 
+            backdrop-filter: blur(5px);
+            padding: 10px 0; 
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .scroll-bar { 
+            display: flex; 
+            gap: 8px; 
+            overflow-x: auto; 
+            padding: 0 16px; 
+            scrollbar-width: none; /* Firefox */
+        }
+        .scroll-bar::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+        .pill { 
+            background: white; 
+            padding: 8px 16px; 
+            border-radius: 24px; 
+            color: var(--text-sub); 
+            border: 1px solid #e5e7eb; 
+            white-space: nowrap; 
+            font-size: 13px; 
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+        .pill.active { 
+            background: var(--text-main); 
+            color: white; 
+            border-color: var(--text-main);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* --- 5. PRODUCT GRID --- */
+        .product-section { padding: 8px 16px; }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 2px;
+            display: block;
+        }
+
+        .product-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 12px; 
+        }
         @media(min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
 
         .product-card {
-            background: white; border-radius: 12px; padding: 10px; position: relative;
-            display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            background: white; 
+            border-radius: var(--radius); 
+            padding: 8px; 
+            position: relative;
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #f0f0f0;
         }
-        .product-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 10px; margin-bottom: 8px; }
-        .product-card h3 { font-size: 13px; margin: 0 0 5px 0; height: 2.4em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .price-line { color: #e44d26; font-weight: bold; font-size: 16px; margin-bottom: 8px; }
-
-        /* Simple Add Button (Better UX than quantity selectors on grid) */
-        .add-cart-button {
-            width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: auto;
-        }
-        .add-cart-button:active { transform: scale(0.98); }
-
-        /* Floating Cart */
-        .floating-cart {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: #222; color: white; padding: 15px 30px; border-radius: 50px;
-            text-decoration: none; font-weight: bold; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 2000;
-            display: flex; align-items: center; gap: 10px;
-        }
-
-        /* Subcategories */
-        .sub-sticky { position: sticky; top: 58px; z-index: 1000; background: #f4f6f8; padding: 10px 0; }
-        .scroll-bar { display: flex; gap: 10px; overflow-x: auto; padding: 0 10px; scrollbar-width: none; }
-        .scroll-bar a { background: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; color: #333; border: 1px solid #ddd; white-space: nowrap; font-size: 13px; }
-        .scroll-bar a.active { background: #333; color: white; border-color: #333; }
         
-        /* Modal */
-        .image-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; }
-        .image-modal img { max-width: 90%; max-height: 80%; border-radius: 10px; }
-        .close-button { position: absolute; top: 20px; right: 20px; color: white; font-size: 40px; cursor: pointer; }
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .img-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* New Tag Example */
+        .tag-new {
+            position: absolute; top: 6px; left: 6px;
+            background: rgba(0,0,0,0.7); color: white;
+            font-size: 9px; font-weight: bold; padding: 3px 8px;
+            border-radius: 4px; backdrop-filter: blur(2px);
+        }
+
+        .p-details { padding: 0 4px 4px; flex-grow: 1; display: flex; flex-direction: column; }
+
+        .p-title { 
+            font-size: 13px; 
+            font-weight: 600; 
+            margin: 0 0 4px 0; 
+            color: var(--text-main);
+            line-height: 1.4;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; 
+        }
+        
+        .p-footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .p-price { 
+            color: var(--primary); 
+            font-weight: 800; 
+            font-size: 15px; 
+        }
+
+        .btn-add-mini {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            color: var(--text-main);
+            border: none;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-add-mini:hover {
+            background: var(--text-main);
+            color: white;
+        }
+
+        /* --- 6. FLOATING CART --- */
+        .floating-cart {
+            position: fixed; 
+            bottom: 24px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            background: #111827; 
+            color: white; 
+            padding: 14px 24px; 
+            border-radius: 50px;
+            text-decoration: none; 
+            font-weight: 700; 
+            font-size: 14px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25); 
+            z-index: 2000;
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+            transition: transform 0.2s;
+            width: auto;
+            white-space: nowrap;
+        }
+        .floating-cart:active { transform: translateX(-50%) scale(0.95); }
+        .cart-badge {
+            background: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        /* --- MODAL --- */
+        .image-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .image-modal img { max-width: 90%; max-height: 80%; border-radius: 12px; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        .close-button { position: absolute; top: 20px; right: 20px; color: white; font-size: 32px; cursor: pointer; background: rgba(255,255,255,0.1); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+
     </style>
 </head>
 
 <body>
-    <!-- 1. SEARCH BAR (Restored) -->
-    <div class="search-container">
+    <!-- 1. MODERN HEADER -->
+    <header class="app-header">
+        <div class="header-top">
+            <div class="brand-logo">
+                <i class="fa-solid fa-shapes"></i> Somphea Reak
+            </div>
+            <div class="header-icons">
+                <a href="#"><i class="fa-regular fa-bell"></i></a>
+                <!-- Cart icon fallback if floating isn't enough -->
+                <!-- <a href="/cart"><i class="fa-solid fa-bag-shopping"></i></a> -->
+            </div>
+        </div>
         <form class="search-form" action="/search" method="GET">
-            <input type="text" name="q" placeholder="🔍 Search products..." required>
-            <button type="submit">GO</button>
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon-abs"></i>
+                <input type="text" name="q" placeholder="Search for Lego, Charms..." required autocomplete="off">
+            </div>
         </form>
-    </div>
+    </header>
 
-    <!-- 2. BANNER & SLIDER -->
-    <div class="banner-container">
-        <h1 style="text-align: center; margin: 5px 0 15px; color: #e44d26;">Somphea Reak Shop</h1>
+    <!-- 2. BANNER SLIDER -->
+    <div class="section-container">
         <div class="slider">
           <div class="slides" id="slides">
-            <div class="slide"><img src="/static/images/testslide1.jpg" onerror="this.src='https://via.placeholder.com/800x400?text=Promo+1'"></div>
-            <div class="slide"><img src="/static/images/testslide2.jpg" onerror="this.src='https://via.placeholder.com/800x400?text=Promo+2'"></div>
+            <div class="slide"><img src="/static/images/testslide1.jpg" onerror="this.src='https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&w=800&q=80'"></div>
+            <div class="slide"><img src="/static/images/testslide2.jpg" onerror="this.src='https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?auto=format&fit=crop&w=800&q=80'"></div>
           </div>
         </div>
     </div>
 
-    <!-- 3. CATEGORY GRID -->
-    <div class="category-bar">
-        <a href="/category/Hot Sale"><img src="/static/images/categoryhotsale.jpg" onerror="this.src='https://via.placeholder.com/100'"><span>🔥 Hot Sale</span></a>
-        <a href="/category/LEGO"><img src="/static/images/categorylego.jpg" onerror="this.src='https://via.placeholder.com/100'"><span>LEGO</span></a>
-        <a href="/category/Toy"><img src="/static/images/categorytoy.jpg" onerror="this.src='https://via.placeholder.com/100'"><span>Toy</span></a>
-        <a href="/category/Keychain"><img src="/static/images/categorykey.jpg" onerror="this.src='https://via.placeholder.com/100'"><span>Keychain</span></a>
-        
-        <a href="/category/LEGO Anime"><img src="/static/images/categoryanime.jpg" onerror="this.src='https://via.placeholder.com/100'"><span>Anime</span></a>
-        <a href="/category/LEGO Ninjago"><img src="/static/images/categoryninjago.jpg" onerror="this.src='https://via.placeholder.com/100'"><span>Ninjago</span></a>
-        <a href="/category/Accessories"><img src="/static/images/categorybracelet.jpg" onerror="this.src='https://via.placeholder.com/100'"><span>Bracelet</span></a>
-        <a href="{{ url_for('lucky_draw') }}"><img src="/static/images/categoryluckydraw.jpg" onerror="this.src='https://via.placeholder.com/100'"><span>💎 Game</span></a>
-        
-        <!-- FIX: Spanning 2 columns to center it better in the 3rd row -->
-        <a href="/category/Italy Bracelet" class="italy-link">
-          <img src="/static/images/italybracelet.jpg" onerror="this.src='https://via.placeholder.com/100'">
-          <span>🇮🇹 Italy Bracelet</span>
+    <!-- 3. CATEGORY GRID (Refined) -->
+    <div class="category-grid">
+        <a href="/category/Hot Sale" class="cat-item">
+            <div class="cat-icon-box"><img src="/static/images/categoryhotsale.jpg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/7626/7626666.png'"></div>
+            <span>Hot Sale</span>
         </a>
-
-        <!-- Full Width Customize -->
-        <a href="/custom-bracelet" class="custom-link">
-           <span>✨ Customize Your Own Bracelet</span>
+        <a href="/category/LEGO" class="cat-item">
+            <div class="cat-icon-box"><img src="/static/images/categorylego.jpg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3063/3063823.png'"></div>
+            <span>LEGO</span>
+        </a>
+        <a href="/category/Toy" class="cat-item">
+            <div class="cat-icon-box"><img src="/static/images/categorytoy.jpg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3082/3082060.png'"></div>
+            <span>Toys</span>
+        </a>
+        <a href="/category/Keychain" class="cat-item">
+            <div class="cat-icon-box"><img src="/static/images/categorykey.jpg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2913/2913520.png'"></div>
+            <span>Keychain</span>
+        </a>
+        
+        <a href="/category/LEGO Anime" class="cat-item">
+            <div class="cat-icon-box"><img src="/static/images/categoryanime.jpg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/188/188987.png'"></div>
+            <span>Anime</span>
+        </a>
+        <a href="/category/LEGO Ninjago" class="cat-item">
+            <div class="cat-icon-box"><img src="/static/images/categoryninjago.jpg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/614/614131.png'"></div>
+            <span>Ninjago</span>
+        </a>
+        <a href="/category/Accessories" class="cat-item">
+            <div class="cat-icon-box"><img src="/static/images/categorybracelet.jpg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/5906/5906180.png'"></div>
+            <span>Bracelet</span>
+        </a>
+        <a href="{{ url_for('lucky_draw') }}" class="cat-item">
+            <div class="cat-icon-box" style="background: #FFF8E1; border-color: #FFD54F;"><img src="/static/images/categoryluckydraw.jpg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/8054/8054992.png'"></div>
+            <span>Game</span>
         </a>
     </div>
 
-    <!-- 4. SUBCATEGORIES -->
+    <!-- FEATURE CARDS (Italy & Custom) -->
+    <div class="feature-cards">
+        <a href="/category/Italy Bracelet" class="feature-card card-italy">
+            <h3>Italy Bracelet</h3>
+            <p>Exclusive Italian Style</p>
+            <i class="fa-solid fa-gem"></i>
+        </a>
+        <a href="/custom-bracelet" class="feature-card card-custom">
+            <h3>DIY Studio</h3>
+            <p>Create Your Own</p>
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </a>
+    </div>
+
+    <!-- 4. SUBCATEGORIES (Pills) -->
     {% if subcategories %}
     <div class="sub-sticky">
         <div class="scroll-bar">
-            <a href="/">🏠 All</a>
+            <a href="/" class="pill {{ 'active' if not current_subcategory else '' }}">All</a>
             {% for sub in subcategories %}
-            <a href="/subcategory/{{ sub }}" class="{% if current_subcategory == sub %}active{% endif %}">{{ sub }}</a>
+            <a href="/subcategory/{{ sub }}" class="pill {% if current_category == sub %}active{% endif %}">{{ sub }}</a>
             {% endfor %}
         </div>
     </div>
     {% endif %}
 
     <!-- 5. PRODUCTS -->
-    <div class="product-grid">
-      {% for product in products %}
-      <div class="product-card">
-        <img src="{{ product.image }}" onclick="openImageModal(this.src)" onerror="this.src='https://via.placeholder.com/150'">
-        <h3>{% if language == 'kh' %}{{ product.name_kh }}{% else %}{{ product.name_kh }}{% endif %}</h3>
-        <div class="price-line">{{ "{:,}".format(product.price) }}៛</div>
-        
-        <form class="add-to-cart-form">
-          <input type="hidden" name="product_id" value="{{ product.id }}">
-          <input type="hidden" name="quantity" value="1">
-          <button type="submit" class="add-cart-button">🛒 Add</button>
-        </form>
-      </div> 
-      {% endfor %}
+    <div class="product-section">
+        <div class="section-title">Recommended For You</div>
+        <div class="product-grid">
+          {% for product in products %}
+          <div class="product-card">
+            <div class="img-wrapper" onclick="openImageModal(this.querySelector('img').src)">
+                <img src="{{ product.image }}" onerror="this.src='https://via.placeholder.com/150/f3f4f6/999999?text=No+Image'">
+                <!-- <div class="tag-new">NEW</div> -->
+            </div>
+            
+            <div class="p-details">
+                <h3 class="p-title">{{ product.name_kh }}</h3>
+                <div class="p-footer">
+                    <div class="p-price">{{ "{:,}".format(product.price) }}៛</div>
+                    
+                    <form class="add-to-cart-form">
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn-add-mini">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+          </div> 
+          {% else %}
+            <div style="grid-column: span 2; text-align: center; padding: 40px; color: #9ca3af;">
+                <i class="fa-solid fa-box-open" style="font-size: 40px; margin-bottom: 10px; opacity: 0.5;"></i>
+                <p>No items found in this category.</p>
+            </div>
+          {% endfor %}
+        </div>
     </div>
 
     <!-- 6. FLOATING CART -->
     <a href="/cart" class="floating-cart">
-        🛒 My Cart (<span id="cart-count">{{ cart|length }}</span>)
+        <i class="fa-solid fa-bag-shopping"></i> 
+        <span>My Cart</span>
+        <span class="cart-badge" id="cart-count">{{ cart|length }}</span>
     </a>
 
-    <!-- Success Message & Modal -->
-    <div id="success" style="display:none; position:fixed; top:70px; right:20px; background:#28a745; color:white; padding:12px; border-radius:8px; z-index:9999; box-shadow:0 4px 10px rgba(0,0,0,0.2);">✅ Added to Cart!</div>
+    <!-- Success Message -->
+    <div id="success" style="display:none; position:fixed; top:80px; left:50%; transform:translateX(-50%); background:#10b981; color:white; padding:8px 16px; border-radius:30px; z-index:9999; box-shadow:0 4px 15px rgba(16, 185, 129, 0.4); font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px;">
+        <i class="fa-solid fa-circle-check"></i> Added to Cart!
+    </div>
     
+    <!-- Modal -->
     <div id="image-modal" class="image-modal" onclick="closeImageModal()">
         <span class="close-button" onclick="closeImageModal()">&times;</span>
         <img id="modal-image" src="">
     </div>
 
     <script>
-        // Modal Logic
         function openImageModal(src) { document.getElementById('modal-image').src = src; document.getElementById('image-modal').style.display = 'flex'; }
         function closeImageModal() { document.getElementById('image-modal').style.display = 'none'; }
         
-        // Simple Auto Slider
-        setInterval(() => {
-           // Basic placeholder for slider logic if needed
-        }, 3000);
-
-        // Add to Cart Logic
         document.querySelectorAll('.add-to-cart-form').forEach(form => {
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
+                const btn = form.querySelector('button');
+                btn.classList.add('fa-bounce'); // Animation on click
+                
                 const formData = new FormData(form);
                 fetch('/add-to-cart', { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
+                    setTimeout(() => btn.classList.remove('fa-bounce'), 500);
                     if (data.success) {
                         document.getElementById('cart-count').innerText = data.cart_count;
                         const s = document.getElementById('success');
-                        s.style.display = 'block';
+                        s.style.display = 'flex';
                         setTimeout(() => s.style.display = 'none', 1500);
                     }
                 });
             });
         });
+
+        // Simple Auto Slider
+        const slider = document.getElementById('slides');
+        let index = 0;
+        setInterval(() => {
+           index = (index + 1) % 2; // Assuming 2 slides
+           slider.style.transition = 'transform 0.5s ease-in-out';
+           slider.style.transform = `translateX(-${index * 100}%)`;
+        }, 4000);
     </script>
 </body>
 </html>
+
+
