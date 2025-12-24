@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Somphea Reak - Inventory Command</title>
+    <title>Somphea Reak - Inventory Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -11,142 +11,68 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         .sold-out { filter: grayscale(1) opacity(0.4); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .safe-area-bottom { padding-bottom: calc(env(safe-area-inset-bottom) + 100px); }
         
-        /* Dense grid for charms - 8 per row on desktop, 4 on mobile */
-        .charm-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-        }
-        @media (min-width: 1024px) {
-            .charm-grid {
-                grid-template-columns: repeat(8, 1fr);
-                gap: 12px;
-            }
-        }
-
-        /* Dense grid for categories - 6 per row on desktop, 3 on mobile */
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
-        @media (min-width: 1024px) {
-            .category-grid {
-                grid-template-columns: repeat(6, 1fr);
-                gap: 10px;
-            }
-        }
-
-        .card-shadow { box-shadow: 0 2px 10px -2px rgba(0,0,0,0.05); }
+        /* HIGH DENSITY GRID */
+        .charm-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        @media (min-width: 1024px) { .charm-grid { grid-template-columns: repeat(8, 1fr); gap: 12px; } }
+        
+        .category-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        @media (min-width: 1024px) { .category-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; } }
     </style>
 </head>
-<body class="text-slate-900 overflow-x-hidden">
+<body class="text-slate-900">
 
-    <!-- TOP HEADER -->
-    <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-slate-100 px-4 md:px-8 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-orange-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-600/20">
-                <i class="fa-solid fa-gauge-high text-sm"></i>
-            </div>
-            <div>
-                <h1 class="text-lg font-black uppercase italic leading-none tracking-tighter">Inventory <span class="text-orange-600">Pro</span></h1>
-                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Management Console</p>
-            </div>
+    <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-slate-100 px-4 py-4 flex items-center justify-between">
+        <div>
+            <h1 class="text-lg font-black uppercase italic leading-none tracking-tighter">Inventory <span class="text-orange-600">Pro</span></h1>
+            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Stock Control</p>
         </div>
-        
-        <div class="flex items-center gap-3">
-            <div class="relative hidden md:block">
-                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" oninput="searchCharms(this.value)" placeholder="Quick find charm..." 
-                       class="bg-slate-100 border-none rounded-xl pl-11 pr-4 py-2.5 text-xs font-bold w-64 focus:ring-2 focus:ring-orange-500 transition-all outline-none">
-            </div>
-            <button onclick="toggleMobileSearch()" class="md:hidden w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                <i class="fa-solid fa-magnifying-glass text-sm"></i>
-            </button>
+        <div class="relative hidden md:block">
+            <input type="text" oninput="searchCharms(this.value)" placeholder="Search..." class="bg-slate-100 border-none rounded-xl px-4 py-2 text-xs font-bold w-48 outline-none">
         </div>
     </header>
 
-    <!-- MOBILE SEARCH OVERLAY -->
-    <div id="mobileSearch" class="hidden sticky top-[73px] z-[90] bg-white border-b p-4">
-        <input type="text" oninput="searchCharms(this.value)" placeholder="Search items..." 
-               class="w-full bg-slate-100 border-none rounded-xl p-4 text-xs font-bold outline-none focus:ring-2 focus:ring-orange-500">
-    </div>
-
-    <!-- MAIN DASHBOARD -->
-    <main class="max-w-[1600px] mx-auto p-4 md:p-8 safe-area-bottom">
-
-        <!-- CATEGORY NAVIGATION (6 PER ROW) -->
-        <section class="mb-10">
-            <div class="flex items-center gap-3 mb-4 px-1">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Collection Shortcuts</p>
-                <div class="h-[1px] bg-slate-200 flex-grow"></div>
-            </div>
+    <main class="max-w-[1600px] mx-auto p-4 pb-32">
+        <!-- SHORTCUTS -->
+        <section class="mb-8">
             <div class="category-grid">
                 {% for category in grouped.keys() %}
-                <a href="#cat-{{ loop.index }}" class="bg-white border border-slate-100 p-3 rounded-2xl flex flex-col items-center justify-center text-center card-shadow hover:border-orange-500 hover:shadow-lg transition-all active:scale-95 group">
-                    <span class="text-[9px] font-black text-slate-800 uppercase line-clamp-1 group-hover:text-orange-600">{{ category }}</span>
-                    <span class="text-[7px] font-bold text-slate-300 mt-1 uppercase">{{ grouped[category]|length }} SKUs</span>
+                <a href="#cat-{{ loop.index }}" class="bg-white border border-slate-100 p-2 rounded-xl flex flex-col items-center justify-center text-center shadow-sm active:scale-95">
+                    <span class="text-[9px] font-black text-slate-800 uppercase line-clamp-1">{{ category }}</span>
                 </a>
                 {% endfor %}
             </div>
         </section>
 
-        <!-- STATS OVERVIEW -->
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-            <div class="bg-white p-5 rounded-[2rem] border border-slate-100 card-shadow flex items-center gap-4">
-                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-lg"><i class="fa-solid fa-box"></i></div>
-                <div><p class="text-[8px] font-black text-slate-400 uppercase">Total SKU</p><p class="text-lg font-black">{{ stats.total }}</p></div>
-            </div>
-            <div class="bg-white p-5 rounded-[2rem] border border-slate-100 card-shadow flex items-center gap-4">
-                <div class="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center text-lg"><i class="fa-solid fa-ghost"></i></div>
-                <div><p class="text-[8px] font-black text-slate-400 uppercase">Sold Out</p><p class="text-lg font-black text-red-600">{{ stats.out }}</p></div>
-            </div>
-            <div class="bg-white p-5 rounded-[2rem] border border-slate-100 card-shadow flex items-center gap-4">
-                <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-lg"><i class="fa-solid fa-bolt"></i></div>
-                <div><p class="text-[8px] font-black text-slate-400 uppercase">Low Stock</p><p class="text-lg font-black text-orange-600">{{ stats.low }}</p></div>
-            </div>
-            <div class="bg-white p-5 rounded-[2rem] border border-slate-100 card-shadow flex items-center gap-4">
-                <div class="w-12 h-12 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-lg"><i class="fa-solid fa-coins"></i></div>
-                <div><p class="text-[8px] font-black text-slate-400 uppercase">Inv. Status</p><p class="text-lg font-black text-green-600">Active</p></div>
-            </div>
+        <!-- STATS -->
+        <section class="grid grid-cols-3 gap-3 mb-8">
+            <div class="bg-white p-4 rounded-2xl border border-slate-100"><p class="text-[8px] font-black uppercase text-slate-400">Total Items</p><p class="text-xl font-black">{{ stats.total }}</p></div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-100"><p class="text-[8px] font-black uppercase text-red-400">Sold Out</p><p class="text-xl font-black text-red-600">{{ stats.out }}</p></div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-100"><p class="text-[8px] font-black uppercase text-orange-400">Low Stock</p><p class="text-xl font-black text-orange-600">{{ stats.low }}</p></div>
         </section>
 
-        <!-- PRODUCT LISTINGS (8 PER ROW) -->
-        {% for subcategory, items in grouped.items() %}
-        <div id="cat-{{ loop.index }}" class="mb-16 scroll-mt-24">
-            <div class="flex items-center justify-between mb-6 px-1 border-l-4 border-orange-500 pl-4">
-                <div>
-                    <h3 class="text-lg font-black uppercase italic tracking-tighter text-slate-800">{{ subcategory }}</h3>
-                    <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Inventory Batch {{ loop.index }}</p>
-                </div>
-                <span class="text-[10px] font-black text-slate-500 bg-slate-100 px-4 py-1.5 rounded-full uppercase">{{ items|length }} Items</span>
+        <!-- CHARMS GRID -->
+        {% for sub, items in grouped.items() %}
+        <div id="cat-{{ loop.index }}" class="mb-12 scroll-mt-24">
+            <div class="flex items-center gap-3 mb-4 border-l-4 border-orange-500 pl-3">
+                <h3 class="text-sm font-black uppercase italic text-slate-800">{{ sub }}</h3>
+                <span class="text-[9px] font-bold text-slate-400">{{ items|length }} Items</span>
             </div>
 
             <div class="charm-grid">
                 {% for p in items %}
-                <div class="charm-card bg-white rounded-[2rem] p-3 border border-slate-100 card-shadow hover:shadow-2xl hover:-translate-y-1 transition-all group" data-name="{{ p.name_kh }}">
-                    <div class="relative aspect-square overflow-hidden rounded-2xl mb-3 bg-slate-50">
-                        <img src="{{ p.image }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 {{ 'sold-out' if p.stock <= 0 }}">
+                <div class="bg-white rounded-2xl p-2 border border-slate-100 shadow-sm group" data-name="{{ p.name_kh }}">
+                    <div class="relative aspect-square overflow-hidden rounded-xl mb-2 bg-slate-50">
+                        <img src="{{ p.image }}" class="w-full h-full object-cover {{ 'sold-out' if p.stock <= 0 }}">
                         {% if p.stock <= 0 %}
-                        <div class="absolute inset-0 flex items-center justify-center bg-black/10">
-                            <span class="bg-red-600 text-white text-[7px] font-black px-2 py-1 uppercase rounded-md shadow-lg">Sold Out</span>
-                        </div>
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/10"><span class="bg-red-600 text-white text-[6px] font-black px-2 py-1 uppercase rounded shadow-lg">Out</span></div>
                         {% endif %}
                     </div>
-
-                    <div class="px-1 text-center">
-                        <p class="text-[9px] font-black text-slate-800 truncate uppercase mb-3 leading-tight">{{ p.name_kh }}</p>
-                        
-                        <div class="flex items-center gap-1.5">
-                            <input type="number" value="{{ p.stock }}" id="stock-{{ p.id }}"
-                                   class="w-full bg-slate-50 border border-slate-100 rounded-xl py-2 px-1 text-center text-[11px] font-black outline-none focus:ring-2 focus:ring-orange-500 transition-all">
-                            <button onclick="saveStock({{ p.id }})" 
-                                    class="save-btn bg-slate-900 text-white w-8 h-8 rounded-xl flex-none flex items-center justify-center active:scale-75 transition-all shadow-md">
-                                <i class="fa-solid fa-check text-[10px]"></i>
-                            </button>
-                        </div>
+                    <div class="flex items-center gap-1">
+                        <input type="number" value="{{ p.stock }}" id="stock-{{ p.id }}" class="w-full bg-slate-50 border-none rounded-lg py-1 px-1 text-center text-[10px] font-black outline-none focus:ring-1 focus:ring-orange-500">
+                        <button onclick="saveStock({{ p.id }})" class="bg-slate-900 text-white w-6 h-6 rounded-lg flex-none flex items-center justify-center active:scale-75 transition-all">
+                            <i class="fa-solid fa-check text-[8px]"></i>
+                        </button>
                     </div>
                 </div>
                 {% endfor %}
@@ -155,62 +81,41 @@
         {% endfor %}
     </main>
 
-    <!-- FLOATING TAB NAVIGATION -->
-    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 h-16 w-[90%] max-w-md bg-slate-900/95 backdrop-blur-xl rounded-[2rem] shadow-2xl z-[200] flex items-center justify-around px-6 border border-white/10">
-        <a href="/" class="flex flex-col items-center gap-1 text-orange-500">
-            <i class="fa-solid fa-house-chimney text-lg"></i>
-            <span class="text-[8px] font-black uppercase tracking-widest">Home</span>
+    <!-- NAVIGATION -->
+    <nav class="fixed bottom-6 left-5 right-5 h-16 bg-slate-900 rounded-[2rem] shadow-2xl z-[200] flex items-center justify-around px-4 border border-white/10">
+        <a href="/admin/panel" class="flex flex-col items-center gap-1 text-orange-500">
+            <i class="fa-solid fa-boxes-stacked text-lg"></i>
+            <span class="text-[7px] font-black uppercase tracking-widest">Inventory</span>
         </a>
-        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center text-white shadow-lg active:scale-75 transition-transform -translate-y-4">
-            <i class="fa-solid fa-chevron-up"></i>
-        </button>
-        <a href="/admin/logout" class="flex flex-col items-center gap-1 text-slate-400">
+        <a href="/custom-bracelet" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white">
+            <i class="fa-solid fa-receipt text-lg"></i>
+            <span class="text-[7px] font-black uppercase tracking-widest">Recipe Maker</span>
+        </a>
+        <a href="/admin/logout" class="flex flex-col items-center gap-1 text-slate-400 hover:text-red-500">
             <i class="fa-solid fa-power-off text-lg"></i>
-            <span class="text-[8px] font-black uppercase tracking-widest">Exit</span>
+            <span class="text-[7px] font-black uppercase tracking-widest">Logout</span>
         </a>
     </nav>
 
     <script>
-        function toggleMobileSearch() {
-            const el = document.getElementById('mobileSearch');
-            el.classList.toggle('hidden');
-        }
-
         function searchCharms(query) {
             const term = query.toLowerCase();
-            document.querySelectorAll('.charm-card').forEach(card => {
+            document.querySelectorAll('[data-name]').forEach(card => {
                 const name = card.dataset.name.toLowerCase();
                 card.style.display = name.includes(term) ? 'block' : 'none';
             });
         }
-
         async function saveStock(id) {
             const amount = document.getElementById('stock-' + id).value;
             const btn = event.currentTarget;
-            const originalIcon = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i>';
-
-            try {
-                const response = await fetch('/admin/api/update-stock', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id, amount: amount })
-                });
-
-                if(response.ok) {
-                    btn.classList.replace('bg-slate-900', 'bg-green-500');
-                    btn.innerHTML = '<i class="fa-solid fa-check-double"></i>';
-                    setTimeout(() => {
-                        btn.classList.replace('bg-green-500', 'bg-slate-900');
-                        btn.innerHTML = originalIcon;
-                    }, 2000);
-                }
-            } catch (err) {
-                btn.classList.replace('bg-slate-900', 'bg-red-500');
-                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-            }
+            btn.classList.add('opacity-50');
+            await fetch('/admin/api/update-stock', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id, amount}) });
+            btn.classList.remove('opacity-50');
+            btn.innerHTML = '<i class="fa-solid fa-check text-green-400 text-[8px]"></i>';
+            setTimeout(() => btn.innerHTML = '<i class="fa-solid fa-check text-[8px]"></i>', 1000);
         }
     </script>
 </body>
 </html>
+
 
