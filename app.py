@@ -21,31 +21,71 @@ ADMIN_PASS = 'Thesong_Admin@2022?!$'
 # 1. PRODUCT CATALOG
 # ==========================================
 PRODUCT_CATALOG = [
-    # --- Charms ---
-    {"id": 1, "name_kh": "Silver Charm", "price": 400, "image": "/static/images/c01.jpg", "categories": ["Charm"], "subcategory": "General"},
-
-    # --- F1 Logos ---
-    {"id": 1100, "name_kh": "Classic F1 Logo", "price": 3000, "image": "/static/images/charm-f1–101.jpg", "categories": ["Class F1🏎️"], "subcategory": "F1 Logos"},
-    {"id": 1191, "name_kh": "Classic F1", "price": 3000, "image": "/static/images/charm-chain-03.jpg", "categories": ["Class F1🏎️"], "subcategory": "F1 Logos"},
+       # --- Charm
+    {"id": 1, "name_kh": "Silver Charm", "price": 400, "image": "/static/images/c01.jpg", "categories": ["Charm"]},
+   
+     # --- F1 LOGOS (1001 - 1015) ---
+    {"id": 1100, "name_kh": "Classic F1 Logo", "price": 3000, "image": "/static/images/charm-f1–101.jpg", "categories": ["Class F1🏎️"]},
+    {"id": 1191, "name_kh": "Classic F1", "price": 3000, "image": "/static/images/charm-chain-03.jpg", "categories": ["Class F1🏎️"]},
+    {"id": 1192, "name_kh": "Classic F1 - Ferri", "price": 3000, "image": "/static/images/charm-f1-301.jpg", "categories": ["Class F1🏎️"]},
+    {"id": 1193, "name_kh": "Classic F1 - Porsche", "price": 3000, "image": "/static/images/charm-f1-302.jpg", "categories": ["Class F1🏎️"]},
+    {"id": 1194, "name_kh": "Classic F1 - BMW", "price": 3000, "image": "/static/images/charm-f1-303.jpg", "categories": ["Class F1🏎️"]},
+    {"id": 1195, "name_kh": "Classic F1 - BMW", "price": 3000, "image": "/static/images/charm-f1-304.jpg", "categories": ["Class F1🏎️"]},
     
-    # --- Car Logos ---
-    {"id": 1001, "name_kh": "Car Charm 01", "price": 3000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"], "subcategory": "Car Brands"},
-    {"id": 1002, "name_kh": "Car Charm 02", "price": 3000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"], "subcategory": "Car Brands"},
+    {"id": 1101, "name_kh": "Classic F1 - Mercedes", "price": 3000, "image": "/static/images/cc15.jpg", "categories": ["Class F1🏎️"]},
+    {"id": 1102, "name_kh": "Classic F1 - Ferrari", "price": 3000, "image": "/static/images/cc04.jpg", "categories": ["Class F1🏎️"]},
+    {"id": 1103, "name_kh": "Classic F1 - Porsche", "price": 3000, "image": "/static/images/cc12.jpg", "categories": ["Class F1🏎️"]},
+    {"id": 1104, "name_kh": "Classic F1 - BMW", "price": 3000, "image": "/static/images/cc06.jpg", "categories": ["Class F1🏎️"]},
 
-    # --- Flags ---
-    {"id": 2001, "name_kh": "Flag Charm 01", "price": 3000, "image": "/static/images/cf01.jpg", "categories": ["Flag"], "subcategory": "National Flags"},
+     # --- Pink F1 
+    {"id": 1200, "name_kh": "Pink F1 Logo", "price": 3000, "image": "/static/images/charm-f1-201.jpg", "categories": ["Pink F1🏎️"]},
+    {"id": 1291, "name_kh": "Classic F1 - Mercedes", "price": 3000, "image": "/static/images/charm-chain-03.jpg", "categories": ["pink F1🏎️"]},
+    {"id": 1292, "name_kh": "Classic F1 - Ferri", "price": 3000, "image": "/static/images/charm-f1-301.jpg", "categories": ["Pink F1🏎️"]},
+    {"id": 1293, "name_kh": "Classic F1 - Porsche", "price": 3000, "image": "/static/images/charm-f1-302.jpg", "categories": ["Pink F1🏎️"]},
+    {"id": 1294, "name_kh": "Classic F1 - BMW", "price": 3000, "image": "/static/images/charm-f1-303.jpg", "categories": ["Pink F1🏎️"]},
+    {"id": 1295, "name_kh": "Classic F1 - BMW", "price": 3000, "image": "/static/images/charm-f1-304.jpg", "categories": ["Pink F1🏎️"]},
 
-    # --- Gemstones ---
-    {"id": 3001, "name_kh": "Gemstone Charm 01", "price": 3500, "image": "/static/images/cg01.jpg", "categories": ["Gemstone"], "subcategory": "Gemstones"},
-    
-    # --- Chains ---
-    {"id": 4001, "name_kh": "Chain Charm 01", "price": 3000, "image": "/static/images/charm-chain-01.jpg", "categories": ["Chain"], "subcategory": "Chains"},
+    {"id": 1201, "name_kh": "Pink F1 - Mercedes", "price": 3000, "image": "/static/images/charm-f1-202.jpg", "categories": ["Pink F1🏎️"]},
+    {"id": 1202, "name_kh": "Pink F1 - Ferrari", "price": 3000, "image": "/static/images/charm-f1-203.jpg", "categories": ["Pink F1🏎️"]},
+    {"id": 1203, "name_kh": "Pink F1 - Porsche", "price": 3000, "image": "/static/images/charm-f1-204.jpg", "categories": ["Pink F1🏎️"]},
+    {"id": 1204, "name_kh": "Pink F1 - BMW", "price": 3000, "image": "/static/images/charm-f1-205.jpg", "categories": ["Pink F1🏎️"]},
 
-    # --- Football ---
-    {"id": 5001, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-01.jpg", "categories": ["Football Club Logo"], "subcategory": "Football"},
-
-    # --- Letters ---
-    {"id": 1101, "name_kh": "Letter A", "price": 1200, "image": "/static/images/a.jpg", "categories": ["Letter"], "subcategory": "Letters"},
+     # --- CAR LOGOS (1001 - 1015) ---
+    {"id": 1001, "name_kh": "Car Charm 01", "price": 3000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"]},
+    {"id": 1002, "name_kh": "Car Charm 02", "price": 3000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"]},
+    {"id": 1003, "name_kh": "Car Charm 03", "price": 3000, "image": "/static/images/cc03.jpg", "categories": ["Car Logo"]},
+    {"id": 1004, "name_kh": "Car Charm 04", "price": 3000, "image": "/static/images/cc04.jpg", "categories": ["Car Logo"]},
+    {"id": 1005, "name_kh": "Car Charm 05", "price": 3000, "image": "/static/images/cc05.jpg", "categories": ["Car Logo"]},
+    {"id": 1006, "name_kh": "Car Charm 06", "price": 3000, "image": "/static/images/cc06.jpg", "categories": ["Car Logo"]},
+    {"id": 1007, "name_kh": "Car Charm 07", "price": 3000, "image": "/static/images/cc07.jpg", "categories": ["Car Logo"]}, 
+    {"id": 1008, "name_kh": "Car Charm 08", "price": 3000, "image": "/static/images/cc08.jpg", "categories": ["Car Logo"]},
+    {"id": 1009, "name_kh": "Car Charm 09", "price": 3000, "image": "/static/images/cc09.jpg", "categories": ["Car Logo"]},
+    {"id": 1010, "name_kh": "Car Charm 10", "price": 3000, "image": "/static/images/cc10.jpg", "categories": ["Car Logo"]},
+    {"id": 1011, "name_kh": "Car Charm 11", "price": 3000, "image": "/static/images/cc11.jpg", "categories": ["Car Logo"]},
+    {"id": 1012, "name_kh": "Car Charm 12", "price": 3000, "image": "/static/images/cc12.jpg", "categories": ["Car Logo"]},
+    {"id": 1013, "name_kh": "Car Charm 13", "price": 3000, "image": "/static/images/cc13.jpg", "categories": ["Car Logo"]},
+    {"id": 1014, "name_kh": "Car Charm 14", "price": 3000, "image": "/static/images/cc14.jpg", "categories": ["Car Logo"]},
+    {"id": 1015, "name_kh": "Car Charm 15", "price": 3000, "image": "/static/images/cc15.jpg", "categories": ["Car Logo"]},
+    # --- FLAGS (2001 - 2019) ---
+    {"id": 2001, "name_kh": "Flag Charm 01", "price": 3000, "image": "/static/images/cf01.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 2002, "name_kh": "Flag Charm 02", "price": 3000, "image": "/static/images/cf02.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 2003, "name_kh": "Flag Charm 03", "price": 3000, "image": "/static/images/cf03.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 2004, "name_kh": "Flag Charm 04", "price": 3000, "image": "/static/images/cf04.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 2005, "name_kh": "Flag Charm 05", "price": 3000, "image": "/static/images/cf05.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 2006, "name_kh": "Flag Charm 06", "price": 3000, "image": "/static/images/cf06.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 2007, "name_kh": "Flag Charm 07", "price": 3000, "image": "/static/images/cf07.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 2008, "name_kh": "Flag Charm 08", "price": 3000, "image": "/static/images/cf08.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 2009, "name_kh": "Flag Charm 09", "price": 3000, "image": "/static/images/cf09.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 2010, "name_kh": "Flag Charm 10", "price": 3000, "image": "/static/images/cf10.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 2011, "name_kh": "Flag Charm 11", "price": 3000, "image": "/static/images/cf11.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 2012, "name_kh": "Flag Charm 12", "price": 3000, "image": "/static/images/cf12.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 2013, "name_kh": "Flag Charm 13", "price": 3000, "image": "/static/images/cf13.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 2014, "name_kh": "Flag Charm 14", "price": 3000, "image": "/static/images/cf14.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 2015, "name_kh": "Flag Charm 15", "price": 3000, "image": "/static/images/cf15.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 2016, "name_kh": "Flag Charm 16", "price": 3000, "image": "/static/images/cf16.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 2017, "name_kh": "Flag Charm 17", "price": 3000, "image": "/static/images/cf17.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 2018, "name_kh": "Flag Charm 18", "price": 3000, "image": "/static/images/cf18.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 2019, "name_kh": "Flag Charm 19", "price": 3000, "image": "/static/images/cf19.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
 ]
 
 # --- DATABASE MODEL ---
