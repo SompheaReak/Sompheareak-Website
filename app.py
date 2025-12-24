@@ -1,5 +1,3 @@
-App.py Perfect 
-
 import os
 import requests
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
