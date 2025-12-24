@@ -204,6 +204,28 @@ def admin_login():
             session['admin'] = True
             return redirect(url_for('admin_panel'))
     return render_template('admin_login.html')
+# Add this route to your existing app.py
+
+@app.route('/admin/api/process-receipt', methods=['POST'])
+def process_receipt():
+    """Batch deducts stock based on items in the receipt drawer"""
+    if not session.get('admin'): return jsonify({"success": False}), 403
+    data = request.json # { items: [{id: 1, qty: 2}, ...] }
+    
+    try:
+        items = data.get('items', [])
+        for item in items:
+            product = Product.query.get(item['id'])
+            if product:
+                # Subtract quantity, but don't go below 0
+                product.stock = max(0, product.stock - int(item['qty']))
+        
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 @app.route('/admin/logout')
 def logout():
