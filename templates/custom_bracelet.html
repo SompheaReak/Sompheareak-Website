@@ -18,7 +18,7 @@
         overscroll-behavior-y: contain;
     }
 
-    /* STOCK LOGIC CSS (Added to your style) */
+    /* STOCK LOGIC CSS */
     .sold-out { 
         filter: grayscale(1) opacity(0.4); 
         pointer-events: none; 
@@ -187,13 +187,8 @@
         <h3 class="font-extrabold text-[9px] tracking-[0.2em] uppercase text-gray-400 leading-none">Custom Studio</h3>
         <p class="font-black text-sm text-gray-900 tracking-tighter uppercase leading-tight">Italy Bracelet</p>
     </div>
-    <div class="w-10 flex justify-end">
-        {% if is_admin %}
-        <a href="/admin/panel" class="w-8 h-8 flex items-center justify-center bg-orange-100 text-orange-600 rounded-full text-xs active:scale-90 transition-transform">
-            <i class="fa-solid fa-lock"></i>
-        </a>
-        {% endif %}
-    </div>
+    <!-- Clean spacer to maintain center alignment -->
+    <div class="w-10"></div>
   </header>
 
   <!-- TOP HERO BANNER (16:9) -->
@@ -214,9 +209,6 @@
         <div class="flex items-center justify-between px-4 py-3">
             <div class="flex items-center gap-2">
                 <span id="link-count" class="bg-gray-900 text-[9px] font-black text-white px-2.5 py-1 rounded-full tracking-widest uppercase">0 LINKS</span>
-                {% if is_admin %}
-                <span class="bg-orange-100 text-orange-600 text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-wide">Admin Mode</span>
-                {% endif %}
             </div>
             <button onclick="clearBracelet()" class="text-[10px] font-black text-red-500 uppercase tracking-widest px-2 py-1">Reset</button>
         </div>
@@ -284,13 +276,6 @@
             <i class="fa-solid fa-shuffle text-lg"></i>
         </button>
         
-        {% if is_admin %}
-        <!-- ADMIN SELL BUTTON -->
-        <button onclick="adminSell()" id="sell-btn" disabled class="flex-grow bg-orange-600 text-white font-black rounded-xl shadow-xl active:scale-95 transition-all disabled:opacity-50 text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
-            <i class="fa-solid fa-cash-register text-sm"></i> Sell & Deduct
-        </button>
-        {% endif %}
-
         <button onclick="takeScreenshot(false)" id="screenshot-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-xl shadow-xl active:scale-95 transition-all disabled:opacity-20 text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
             <i class="fa-solid fa-camera text-sm"></i>
             Save To Gallery
@@ -300,7 +285,6 @@
 
   <script>
     // --- INTEGRATION: CONNECT TO FLASK DATABASE ---
-    // Replaced the hardcoded list with your Python database
     const allCharms = {{ products | tojson }}; 
     
     // --- APP LOGIC ---
@@ -373,14 +357,12 @@
         const totalDisplay = document.getElementById('total-price');
         const countDisplay = document.getElementById('link-count');
         const screenshotBtn = document.getElementById('screenshot-btn');
-        const sellBtn = document.getElementById('sell-btn');
 
         localStorage.setItem('customCharms', JSON.stringify(selectedCharms));
         
         // Enable/Disable buttons
         const hasItems = selectedCharms.length > 0;
         if(screenshotBtn) screenshotBtn.disabled = !hasItems;
-        if(sellBtn) sellBtn.disabled = !hasItems;
 
         if (!hasItems) {
             preview.innerHTML = `<div class="w-full text-center py-8 opacity-20 uppercase tracking-[0.4em] text-[10px] font-black">Designer Workspace</div>`;
@@ -423,37 +405,7 @@
         }
     }
 
-    // --- ADMIN SELL FUNCTION ---
-    async function adminSell() {
-        if (!confirm("Confirm sale and deduct stock?")) return;
-        
-        document.getElementById('loadingText').innerText = "Updating Stock...";
-        document.getElementById('loadingOverlay').classList.remove('hidden');
-        document.getElementById('loadingOverlay').classList.add('flex');
-
-        try {
-            // 1. Deduct Stock via API
-            const ids = selectedCharms.map(c => c.id);
-            const res = await fetch('/admin/api/sell-items', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ ids: ids })
-            });
-            const data = await res.json();
-            
-            if(!data.success) throw new Error("Stock update failed");
-
-            // 2. Generate Receipt Image
-            await takeScreenshot(true); // true = isReceipt mode
-
-        } catch (e) {
-            alert("Error: " + e.message);
-            document.getElementById('loadingOverlay').classList.add('hidden');
-            document.getElementById('loadingOverlay').classList.remove('flex');
-        }
-    }
-
-    // --- SCREENSHOT LOGIC (UPDATED FOR RECEIPT) ---
+    // --- SCREENSHOT LOGIC ---
     async function takeScreenshot(isReceipt = false) {
         const overlay = document.getElementById('loadingOverlay');
         const previewModal = document.getElementById('resultModal');
@@ -475,7 +427,7 @@
             tempDiv.className = 'screenshot-frame';
             
             const title = document.createElement('h2');
-            title.innerText = isReceipt ? "OFFICIAL RECEIPT" : "ITALY BRACELET STUDIO";
+            title.innerText = "ITALY BRACELET STUDIO";
             title.style.fontSize = "24px";
             title.style.fontWeight = "900";
             title.style.letterSpacing = "0.2em";
@@ -517,11 +469,11 @@
             const dataUrl = canvas.toDataURL("image/png");
             previewImg.src = dataUrl;
             
-            modalTitle.innerText = isReceipt ? "Receipt Generated" : "Design Saved";
+            modalTitle.innerText = "Design Saved";
 
             downloadBtn.onclick = () => {
                 const link = document.createElement('a');
-                link.download = isReceipt ? `receipt-${Date.now()}.png` : `bracelet-design-${Date.now()}.png`;
+                link.download = `bracelet-design-${Date.now()}.png`;
                 link.href = dataUrl;
                 link.click();
             };
