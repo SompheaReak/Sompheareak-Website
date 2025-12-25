@@ -14,6 +14,7 @@
         @media (min-width: 768px) { .admin-grid { grid-template-columns: repeat(6, 1fr); } }
         .receipt-sidebar { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .loading-screen { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        .msg-box { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: none; }
     </style>
 </head>
 <body class="pb-20">
@@ -21,9 +22,12 @@
     <div id="loading" class="loading-screen">
         <div class="text-center">
             <div class="w-10 h-10 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Connecting to Shop...</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading Catalog...</p>
         </div>
     </div>
+
+    <!-- Custom Message Box -->
+    <div id="msg-box" class="msg-box bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl text-xs font-bold animate-bounce"></div>
 
     <div id="app" class="hidden">
         <nav class="sticky top-0 z-[100] bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 py-3 flex justify-between items-center shadow-sm">
@@ -38,7 +42,6 @@
             </div>
         </nav>
 
-        <!-- PAGE: SHOP -->
         <div id="page-shop" class="p-4 max-w-4xl mx-auto">
             <div class="mb-6 bg-slate-900 rounded-[2rem] p-6 text-white shadow-xl relative overflow-hidden">
                 <h2 class="text-2xl font-black italic uppercase relative z-10">Italy Bracelet<br>Studio</h2>
@@ -47,11 +50,10 @@
             <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
         </div>
 
-        <!-- PAGE: ADMIN -->
         <div id="page-admin" class="hidden p-4">
             <div id="admin-login" class="max-w-sm mx-auto mt-10">
                 <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 text-center">
-                    <h3 class="font-black text-xl mb-6 uppercase italic">Authorized Access</h3>
+                    <h3 class="font-black text-xl mb-6 uppercase italic">Admin Access</h3>
                     <input type="password" id="admin-pass" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-4 mb-4 text-center font-bold outline-none ring-2 ring-slate-100 focus:ring-orange-500" placeholder="Password">
                     <button onclick="tryLogin()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg">Login</button>
                 </div>
@@ -59,7 +61,7 @@
 
             <div id="admin-dashboard" class="hidden">
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-black uppercase italic">Inventory</h2>
+                    <h2 class="text-xl font-black uppercase italic text-slate-400">Inventory <span class="text-orange-600">Pro</span></h2>
                     <div class="flex gap-2">
                         <button onclick="toggleReceipt()" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-bold shadow-lg"><i class="fa-solid fa-receipt mr-1"></i> Receipt</button>
                         <button onclick="logout()" class="bg-slate-100 text-slate-300 w-10 h-10 rounded-xl"><i class="fa-solid fa-power-off"></i></button>
@@ -70,7 +72,6 @@
         </div>
     </div>
 
-    <!-- RECEIPT DRAWER -->
     <div id="drawer" class="fixed inset-y-0 right-0 w-full md:w-80 bg-white z-[300] shadow-2xl translate-x-full receipt-sidebar flex flex-col border-l border-slate-200">
         <div class="p-4 border-b flex items-center justify-between bg-slate-50">
             <h3 class="font-black uppercase italic text-xs tracking-wide">Current Order</h3>
@@ -92,20 +93,95 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- CHANGE THESE ---
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'somphea-reak-official';
         const IMG_BASE = "https://raw.githubusercontent.com/sompheareak/Sompheareak-Website/main"; 
         const ADMIN_PASS = "Thesong_Admin@2022?!$";
 
-        const CATALOG = [
+        // --- CATALOG DATA (Properly Translated from Python to JavaScript) ---
+        let CATALOG = [
             { id: 1, name: "Silver Charm", price: 400, img: "c01.jpg", cat: "Italy Bracelet" },
-            { id: 1100, name: "Classic F1", price: 3000, img: "charm-f1–101.jpg", cat: "F1 Logo" },
-            { id: 1001, name: "Car Charm 01", price: 3000, img: "cc01.jpg", cat: "Toy Car" },
-            { id: 1002, name: "Car Charm 02", price: 3000, img: "cc02.jpg", cat: "Toy Car" },
-            { id: 1003, name: "Car Charm 03", price: 3000, img: "cc03.jpg", cat: "Toy Car" },
+            { id: 1100, name: "Classic F1 Logo", price: 3000, img: "charm-f1–101.jpg", cat: "Class F1🏎️" },
+            { id: 1191, name: "Classic F1", price: 3000, img: "charm-chain-03.jpg", cat: "Class F1🏎️" },
+            { id: 1192, name: "Classic F1 - Ferri", price: 3000, img: "charm-f1-301.jpg", cat: "Class F1🏎️" },
+            { id: 1193, name: "Classic F1 - Porsche", price: 3000, img: "charm-f1-302.jpg", cat: "Class F1🏎️" },
+            { id: 1194, name: "Classic F1 - BMW", price: 3000, img: "charm-f1-303.jpg", cat: "Class F1🏎️" },
+            { id: 1195, name: "Classic F1 - BMW", price: 3000, img: "charm-f1-304.jpg", cat: "Class F1🏎️" },
+            { id: 1101, name: "Classic F1 - Mercedes", price: 3000, img: "cc15.jpg", cat: "Class F1🏎️" },
+            { id: 1102, name: "Classic F1 - Ferrari", price: 3000, img: "cc04.jpg", cat: "Class F1🏎️" },
+            { id: 1103, name: "Classic F1 - Porsche", price: 3000, img: "cc12.jpg", cat: "Class F1🏎️" },
+            { id: 1104, name: "Classic F1 - BMW", price: 3000, img: "cc06.jpg", cat: "Class F1🏎️" },
+            { id: 1200, name: "Pink F1 Logo", price: 3000, img: "charm-f1-201.jpg", cat: "Pink F1🏎️" },
+            { id: 1201, name: "Pink F1 - Mercedes", price: 3000, img: "charm-f1-202.jpg", cat: "Pink F1🏎️" },
+            { id: 1202, name: "Pink F1 - Ferrari", price: 3000, img: "charm-f1-203.jpg", cat: "Pink F1🏎️" },
+            { id: 1203, name: "Pink F1 - Porsche", price: 3000, img: "charm-f1-204.jpg", cat: "Pink F1🏎️" },
+            { id: 1204, name: "Pink F1 - BMW", price: 3000, img: "charm-f1-205.jpg", cat: "Pink F1🏎️" }
         ];
 
+        // Adding Car Logos
+        for(let i=1; i<=15; i++) {
+            CATALOG.push({ id: 1000+i, name: `Car Charm ${i.toString().padStart(2, '0')}`, price: 3000, img: `cc${i.toString().padStart(2, '0')}.jpg`, cat: "Car Logo" });
+        }
+
+        // Adding Flags (2001-2019)
+        for(let i=1; i<=19; i++) {
+            CATALOG.push({ id: 2000+i, name: `Flag Charm ${i.toString().padStart(2, '0')}`, price: 3000, img: `cf${i.toString().padStart(2, '0')}.jpg`, cat: "Flag" });
+        }
+
+        // Adding Gemstones
+        for(let i=1; i<=24; i++) {
+            CATALOG.push({ id: 3000+i, name: `Gemstone ${i.toString().padStart(2, '0')}`, price: (i < 21 ? 3500 : 5000), img: `cg${i.toString().padStart(2, '0')}.jpg`, cat: "Gemstone" });
+        }
+
+        // Adding Chains
+        for(let i=1; i<=16; i++) {
+            CATALOG.push({ id: 4000+i, name: `Chain ${i.toString().padStart(2, '0')}`, price: 3000, img: `charm-chain-${i.toString().padStart(2, '0')}.jpg`, cat: "Chain" });
+        }
+
+        // Adding Football Logos
+        for(let i=1; i<=15; i++) {
+            CATALOG.push({ id: 5000+i, name: `Club Logo ${i.toString().padStart(2, '0')}`, price: 3000, img: `charm-footballclub-${i.toString().padStart(2, '0')}.jpg`, cat: "Football Club Logo" });
+        }
+
+        // Letters, Animals, etc.
+        const addRange = (startId, prefix, count, price, imgPrefix, cat) => {
+            for(let i=1; i<=count; i++) {
+                CATALOG.push({ id: startId+i, name: `${prefix} ${i.toString().padStart(2, '0')}`, price: price, img: `${imgPrefix}${i.toString().padStart(2, '0')}.jpg`, cat: cat });
+            }
+        };
+
+        addRange(6000, "Black", 7, 3000, "cb", "Black Lover");
+        addRange(7000, "Pet", 7, 3000, "charm-animal-", "Dog&Cat Lover");
+        addRange(7010, "Blue", 15, 3000, "charm-bluesealover-", "Blue Sea Lover🌊");
+        addRange(8000, "Pink", 9, 3000, "cp", "Pink Lover");
+
+        // Alphabet ranges
+        for(let i=1; i<=26; i++) {
+            let letter = String.fromCharCode(64+i);
+            let imgCode = String.fromCharCode(96+i);
+            CATALOG.push({ id: 9000+i, name: `Pink Letter ${letter}`, price: 1200, img: `${imgCode}p.jpg`, cat: "Pink Letter" });
+            CATALOG.push({ id: 11000+i, name: `Silver Letter ${letter}`, price: 1200, img: `${imgCode}.jpg`, cat: "Letter" });
+        }
+
+        addRange(12000, "Steav", 13, 3000, "cm", "Steav");
+        addRange(14000, "Cutie", 16, 3000, "cw", "Cutie");
+        addRange(15000, "Bubble", 12, 3000, "charm-bubble-", "Slay💅");
+        addRange(16000, "Cute Cat", 12, 3000, "charm-cutecat-", "Cute Cat");
+        addRange(17000, "Rok Jit", 8, 3000, "charm-rokjit-", "Rok Jit💔");
+
+        CATALOG.push({ id: 1801, name: "8 Ball 01", price: 3000, img: "charm-8ball-01.jpg", cat: "8 Ball 🎱" });
+        CATALOG.push({ id: 1802, name: "8 Ball 02", price: 3000, img: "charm-8ball-02.jpg", cat: "8 Ball 🎱" });
+        CATALOG.push({ id: 1803, name: "8 Ball 03", price: 3000, img: "charm-8ball-03.jpg", cat: "8 Ball 🎱" });
+        CATALOG.push({ id: 1901, name: "Cherry 01", price: 3000, img: "charm-cherry-01.jpg", cat: "Cherry 🍒" });
+
+        for(let i=1; i<=30; i++) {
+            CATALOG.push({ id: 20000+i, name: `Xmas ${i.toString().padStart(2, '0')}`, price: 3000, img: `charm-christmas-${i.toString().padStart(2, '0')}.jpg`, cat: "Christmas 🎄" });
+        }
+        for(let i=1; i<=9; i++) {
+            CATALOG.push({ id: 21000+i, name: `Flower ${i.toString().padStart(2, '0')}`, price: 3000, img: `charm-flower-${i.toString().padStart(2, '0')}.jpg`, cat: "Flower 🌹" });
+        }
+
+        // --- CORE LOGIC ---
         let stock = JSON.parse(localStorage.getItem('shop_stock')) || {};
         let currentSale = [];
         let db;
@@ -134,25 +210,22 @@
             const shop = document.getElementById('shop-grid');
             const admin = document.getElementById('admin-container');
             shop.innerHTML = ''; admin.innerHTML = '';
-            
             const groups = {};
             CATALOG.forEach(p => { if(!groups[p.cat]) groups[p.cat] = []; groups[p.cat].push(p); });
-
             for (const [cat, items] of Object.entries(groups)) {
-                admin.insertAdjacentHTML('beforeend', `<div class="mb-6"><h2 class="text-[10px] font-black uppercase text-slate-400 mb-3">${cat}</h2><div class="admin-grid">${items.map(p => renderAdminCard(p)).join('')}</div></div>`);
+                admin.insertAdjacentHTML('beforeend', `<div class="mb-6"><h2 class="text-[10px] font-black uppercase text-slate-400 mb-3 border-b border-slate-100 pb-1">${cat}</h2><div class="admin-grid">${items.map(p => renderAdminCard(p)).join('')}</div></div>`);
             }
-
             CATALOG.forEach(p => {
                 const q = stock[p.id] || 0;
-                const url = p.img.startsWith('http') ? p.img : `${IMG_BASE}/${p.img}`;
-                shop.insertAdjacentHTML('beforeend', `<div class="bg-white p-2.5 rounded-[2rem] border border-slate-100 shadow-sm ${q<=0?'opacity-40 grayscale':''}"><img src="${url}" class="w-full aspect-square object-cover rounded-2xl mb-2"><p class="text-[9px] font-black uppercase truncate px-1">${p.name}</p><div class="flex justify-between items-center px-1"><span class="text-[10px] font-bold text-pink-500">${p.price}៛</span><span class="text-[8px] font-bold text-slate-300">${q<=0?'Sold':q+' Left'}</span></div></div>`);
+                const url = `${IMG_BASE}/${p.img}`;
+                shop.insertAdjacentHTML('beforeend', `<div class="bg-white p-2.5 rounded-[2rem] border border-slate-100 shadow-sm ${q<=0?'opacity-40 grayscale':''}"><img src="${url}" class="w-full aspect-square object-cover rounded-2xl mb-2" onerror="this.src='https://placehold.co/400x400?text=No+Img'"><p class="text-[9px] font-black uppercase truncate px-1">${p.name}</p><div class="flex justify-between items-center px-1"><span class="text-[10px] font-bold text-pink-500">${p.price}៛</span><span class="text-[8px] font-bold text-slate-300">${q<=0?'Sold':q+' Left'}</span></div></div>`);
             });
         };
 
         function renderAdminCard(p) {
             const q = stock[p.id] || 0;
-            const url = p.img.startsWith('http') ? p.img : `${IMG_BASE}/${p.img}`;
-            return `<div class="admin-item bg-white p-2 rounded-2xl border border-slate-200 shadow-sm" data-name="${p.name.toLowerCase()}"><div class="aspect-[3/4] rounded-xl overflow-hidden mb-2 relative"><img src="${url}" class="w-full h-full object-cover"><div class="absolute bottom-1 right-1 bg-white/90 px-1.5 py-0.5 rounded-lg border text-[8px] font-black">Qty: ${q}</div></div><p class="text-[8px] font-black truncate mb-2 uppercase px-1">${p.name}</p><div class="flex items-center justify-between bg-slate-50 rounded-lg p-0.5 mb-1"><button onclick="changeQty(${p.id},-1)" class="w-6 h-6 text-slate-400"><i class="fa-solid fa-minus text-[8px]"></i></button><span class="text-[9px] font-black">${q}</span><button onclick="changeQty(${p.id},1)" class="w-6 h-6 text-slate-400"><i class="fa-solid fa-plus text-[8px]"></i></button></div><button onclick="addToReceipt(${p.id})" class="w-full bg-slate-900 text-white py-1.5 rounded-lg text-[8px] font-black uppercase ${q<=0?'opacity-30':''}" ${q<=0?'disabled':''}>+ Receipt</button></div>`;
+            const url = `${IMG_BASE}/${p.img}`;
+            return `<div class="admin-item bg-white p-2 rounded-2xl border border-slate-200 shadow-sm" data-name="${p.name.toLowerCase()}"><div class="aspect-[3/4] rounded-xl overflow-hidden mb-2 relative"><img src="${url}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x400?text=No+Img'"><div class="absolute bottom-1 right-1 bg-white/90 px-1.5 py-0.5 rounded-lg border text-[8px] font-black">Qty: ${q}</div></div><p class="text-[8px] font-black truncate mb-2 uppercase px-1">${p.name}</p><div class="flex items-center justify-between bg-slate-50 rounded-lg p-0.5 mb-1"><button onclick="changeQty(${p.id},-1)" class="w-6 h-6 text-slate-400"><i class="fa-solid fa-minus text-[8px]"></i></button><span class="text-[9px] font-black">${q}</span><button onclick="changeQty(${p.id},1)" class="w-6 h-6 text-slate-400"><i class="fa-solid fa-plus text-[8px]"></i></button></div><button onclick="addToReceipt(${p.id})" class="w-full bg-slate-900 text-white py-1.5 rounded-lg text-[8px] font-black uppercase ${q<=0?'opacity-30':''}" ${q<=0?'disabled':''}>+ Receipt</button></div>`;
         }
 
         window.changeQty = async (id, delta) => {
@@ -166,6 +239,7 @@
             const ex = currentSale.find(x => x.id === id);
             if (ex) ex.qty++; else currentSale.push({ ...p, qty: 1 });
             updateReceiptUI();
+            showMsg("Item added to receipt");
         };
 
         window.updateReceiptUI = () => {
@@ -174,8 +248,7 @@
             let sum = 0;
             list.innerHTML = currentSale.map(i => {
                 sum += (i.price * i.qty);
-                const url = i.img.startsWith('http') ? i.img : `${IMG_BASE}/${i.img}`;
-                return `<div class="flex items-center gap-3 bg-white p-3 rounded-2xl border border-slate-100"><img src="${url}" class="w-10 h-14 rounded-lg object-cover"><div class="flex-1"><p class="text-[9px] font-black uppercase truncate">${i.name}</p><p class="text-[9px] font-bold text-slate-400">${i.qty} x ${i.price}៛</p></div><button onclick="removeFromReceipt(${i.id})" class="text-red-400 px-2"><i class="fa-solid fa-trash-can text-sm"></i></button></div>`;
+                return `<div class="flex items-center gap-3 bg-white p-3 rounded-2xl border border-slate-100"><img src="${IMG_BASE}/${i.img}" class="w-10 h-14 rounded-lg object-cover"><div class="flex-1"><p class="text-[9px] font-black uppercase truncate">${i.name}</p><p class="text-[9px] font-bold text-slate-400">${i.qty} x ${i.price}៛</p></div><button onclick="removeFromReceipt(${i.id})" class="text-red-400 px-2"><i class="fa-solid fa-trash-can text-sm"></i></button></div>`;
             }).join('');
             total.innerText = sum.toLocaleString() + "៛";
             document.getElementById('badge').innerText = currentSale.length;
@@ -185,11 +258,18 @@
         window.removeFromReceipt = (id) => { currentSale = currentSale.filter(x => x.id !== id); updateReceiptUI(); };
 
         window.confirmReceipt = async () => {
-            if (currentSale.length === 0 || !confirm("Deduct stock?")) return;
+            if (currentSale.length === 0) return;
+            if(!confirm("Deduct stock for this sale?")) return;
             currentSale.forEach(i => stock[i.id] = Math.max(0, (stock[i.id] || 0) - i.qty));
             localStorage.setItem('shop_stock', JSON.stringify(stock));
             if(db) await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'inventory'), stock);
-            currentSale = []; updateReceiptUI(); toggleReceipt(false); renderAll(); alert("Stock Updated!");
+            currentSale = []; updateReceiptUI(); toggleReceipt(false); renderAll(); showMsg("Sale Confirmed!");
+        };
+
+        window.showMsg = (text) => {
+            const box = document.getElementById('msg-box');
+            box.innerText = text; box.style.display = 'block';
+            setTimeout(() => { box.style.display = 'none'; }, 2000);
         };
 
         window.showPage = (p) => {
@@ -213,7 +293,7 @@
             document.querySelectorAll('.admin-item').forEach(el => el.style.display = el.dataset.name.includes(term) ? 'block' : 'none');
         };
 
-        window.tryLogin = () => { if(document.getElementById('admin-pass').value === ADMIN_PASS) { document.getElementById('admin-login').classList.add('hidden'); document.getElementById('admin-dashboard').classList.remove('hidden'); } else alert('Wrong Password'); };
+        window.tryLogin = () => { if(document.getElementById('admin-pass').value === ADMIN_PASS) { document.getElementById('admin-login').classList.add('hidden'); document.getElementById('admin-dashboard').classList.remove('hidden'); } else showMsg('Wrong Password'); };
         window.logout = () => { document.getElementById('admin-login').classList.remove('hidden'); document.getElementById('admin-dashboard').classList.add('hidden'); document.getElementById('admin-pass').value = ''; };
 
         init();
