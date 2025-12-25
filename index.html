@@ -2,313 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Somphea Reak - Professional Shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Somphea Reak - Welcome</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .admin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        @media (min-width: 768px) { .admin-grid { grid-template-columns: repeat(6, 1fr); } }
-        .receipt-sidebar { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .loading-screen { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .menu-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .menu-card:active { transform: scale(0.95); }
     </style>
 </head>
-<body class="pb-20">
+<body class="flex items-center justify-center min-h-screen p-6">
+    <div class="max-w-md w-full text-center">
+        <h1 class="text-4xl font-black uppercase italic tracking-tighter mb-2 text-slate-800">Somphea <span class="text-pink-500">Reak</span></h1>
+        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-12">Select Department</p>
 
-    <!-- Loading Screen -->
-    <div id="loading" class="loading-screen">
-        <div class="text-center">
-            <div class="w-10 h-10 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Syncing Cloud Vault...</p>
+        <div class="grid gap-4">
+            <!-- Bracelet Dept -->
+            <a href="custom-bracelet.html" class="menu-card bg-white p-6 rounded-[2.5rem] shadow-xl shadow-pink-100/50 border border-pink-50 flex items-center gap-6">
+                <div class="w-16 h-16 bg-pink-500 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-pink-200"><i class="fa-solid fa-gem"></i></div>
+                <div class="text-left">
+                    <h3 class="font-black text-lg text-slate-800">Italy Bracelet</h3>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase">Custom Studio</p>
+                </div>
+            </a>
+
+            <!-- LEGO Dept -->
+            <div class="menu-card bg-white p-6 rounded-[2.5rem] shadow-xl shadow-orange-100/50 border border-orange-50 flex items-center gap-6 opacity-60">
+                <div class="w-16 h-16 bg-orange-500 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-orange-200"><i class="fa-solid fa-cubes"></i></div>
+                <div class="text-left">
+                    <h3 class="font-black text-lg text-slate-800">LEGO World</h3>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase">Coming Soon</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12">
+            <a href="admin-panel.html" class="text-slate-200 hover:text-orange-500 transition-colors"><i class="fa-solid fa-screwdriver-wrench"></i> Admin Panel</a>
         </div>
     </div>
-
-    <div id="app" class="hidden">
-        <!-- NAVIGATION (Same as app.py) -->
-        <nav class="sticky top-0 z-[100] bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 py-3 flex justify-between items-center shadow-sm">
-            <h1 onclick="showPage('shop')" class="text-lg font-black uppercase italic tracking-tighter text-slate-800 cursor-pointer">Somphea <span class="text-pink-500">Reak</span></h1>
-            <div class="flex items-center gap-3">
-                <input id="admin-search" type="text" oninput="filterAdmin(this.value)" placeholder="Search charm..." class="hidden bg-slate-100 rounded-lg px-3 py-1.5 text-[10px] font-bold outline-none w-24 focus:w-32 transition-all">
-                <button onclick="showPage('shop')" id="btn-shop" class="text-pink-500 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-house"></i></button>
-                <button onclick="showPage('admin')" id="btn-admin" class="text-slate-300 w-8 h-8 flex items-center justify-center relative">
-                    <i class="fa-solid fa-screwdriver-wrench"></i>
-                    <span id="badge" class="hidden absolute -top-1 -right-1 bg-orange-600 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">0</span>
-                </button>
-            </div>
-        </nav>
-
-        <!-- PAGE: SHOP -->
-        <div id="page-shop" class="p-4 max-w-4xl mx-auto">
-            <div class="mb-6 bg-slate-900 rounded-[2rem] p-6 text-white shadow-xl relative overflow-hidden">
-                <div class="relative z-10">
-                    <p class="text-[10px] font-bold text-pink-400 uppercase tracking-widest mb-1">Authentic Custom</p>
-                    <h2 class="text-2xl font-black italic uppercase leading-tight">Italy Bracelet<br>Studio</h2>
-                </div>
-                <div class="absolute -right-6 -bottom-6 opacity-10 text-[8rem] rotate-12"><i class="fa-solid fa-gem"></i></div>
-            </div>
-            <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
-        </div>
-
-        <!-- PAGE: ADMIN (Your Restored Panel) -->
-        <div id="page-admin" class="hidden p-4">
-            <!-- Login -->
-            <div id="admin-login" class="max-w-sm mx-auto mt-10">
-                <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 text-center">
-                    <div class="w-16 h-16 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-shield-halved text-2xl"></i></div>
-                    <h3 class="font-black text-xl mb-6 italic uppercase">Admin Access</h3>
-                    <input type="password" id="admin-pass" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-4 mb-4 text-center font-bold outline-none ring-2 ring-slate-100 focus:ring-orange-500" placeholder="Password">
-                    <button onclick="tryLogin()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg">Login</button>
-                </div>
-            </div>
-
-            <!-- Dashboard -->
-            <div id="admin-dashboard" class="hidden animate-fade-in">
-                <div class="flex items-center justify-between mb-8">
-                    <div>
-                        <h2 class="text-xl font-black uppercase italic tracking-tighter">Inventory <span class="text-orange-600">Pro</span></h2>
-                        <p class="text-[8px] text-green-500 font-bold uppercase tracking-widest">● Cloud Synchronized</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="toggleReceipt()" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-bold shadow-lg">
-                            <i class="fa-solid fa-receipt mr-1"></i> Order
-                        </button>
-                        <button onclick="logout()" class="bg-slate-100 text-slate-300 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-power-off"></i></button>
-                    </div>
-                </div>
-                <div id="admin-container"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- RECEIPT DRAWER -->
-    <div id="drawer" class="fixed inset-y-0 right-0 w-full md:w-80 bg-white z-[300] shadow-2xl translate-x-full receipt-sidebar flex flex-col border-l border-slate-200">
-        <div class="p-4 border-b flex items-center justify-between bg-slate-50">
-            <h3 class="font-black uppercase italic text-xs tracking-wide">Current Order</h3>
-            <button onclick="toggleReceipt()" class="text-slate-400 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div id="sale-list" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar"></div>
-        <div class="p-5 border-t bg-slate-50 space-y-4">
-            <div class="flex justify-between items-center px-1">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Bill</span>
-                <span id="total-val" class="text-xl font-black text-orange-600">0៛</span>
-            </div>
-            <button onclick="confirmReceipt()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-all">Confirm & Deduct</button>
-        </div>
-    </div>
-    <div id="overlay" onclick="toggleReceipt()" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-[250] hidden"></div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // --- 1. CONFIGURATION (Same as app.py) ---
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'somphea-reak-official-pro';
-        const IMG_BASE = "https://raw.githubusercontent.com/sompheareak/Sompheareak-Website/main"; 
-        const ADMIN_PASS = "Thesong_Admin@2022?!$";
-        
-        // Telegram Config from your app.py
-        const BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8";
-        const CHAT_ID = "-1002654437316";
-
-        // --- 2. THE CATALOG (Built like your app.py) ---
-        let CATALOG = [
-            { id: 1, name: "Silver Charm", price: 400, img: "c01.jpg", cat: "Italy Bracelet" },
-            { id: 1100, name: "Classic F1 Logo", price: 3000, img: "charm-f1–101.jpg", cat: "Class F1🏎️" },
-            { id: 1191, name: "Classic F1", price: 3000, img: "charm-chain-03.jpg", cat: "Class F1🏎️" },
-            { id: 1192, name: "Classic F1 - Ferri", price: 3000, img: "charm-f1-301.jpg", cat: "Class F1🏎️" },
-            { id: 1193, name: "Classic F1 - Porsche", price: 3000, img: "charm-f1-302.jpg", cat: "Class F1🏎️" },
-            { id: 1194, name: "Classic F1 - BMW", price: 3000, img: "charm-f1-303.jpg", cat: "Class F1🏎️" },
-            { id: 1195, name: "Classic F1 - BMW", price: 3000, img: "charm-f1-304.jpg", cat: "Class F1🏎️" },
-            { id: 1101, name: "Classic F1 - Mercedes", price: 3000, img: "cc15.jpg", cat: "Class F1🏎️" },
-            { id: 1102, name: "Classic F1 - Ferrari", price: 3000, img: "cc04.jpg", cat: "Class F1🏎️" },
-            { id: 1103, name: "Classic F1 - Porsche", price: 3000, img: "cc12.jpg", cat: "Class F1🏎️" },
-            { id: 1104, name: "Classic F1 - BMW", price: 3000, img: "cc06.jpg", cat: "Class F1🏎️" },
-            { id: 1200, name: "Pink F1 Logo", price: 3000, img: "charm-f1-201.jpg", cat: "Pink F1🏎️" },
-            { id: 1201, name: "Pink F1 - Mercedes", price: 3000, img: "charm-f1-202.jpg", cat: "Pink F1🏎️" },
-            { id: 1202, name: "Pink F1 - Ferrari", price: 3000, img: "charm-f1-203.jpg", cat: "Pink F1🏎️" },
-            { id: 1203, name: "Pink F1 - Porsche", price: 3000, img: "charm-f1-204.jpg", cat: "Pink F1🏎️" },
-            { id: 1204, name: "Pink F1 - BMW", price: 3000, img: "charm-f1-205.jpg", cat: "Pink F1🏎️" },
-        ];
-
-        // Helper to add ranges quickly
-        const addBatch = (start, count, price, prefix, imgSuffix, cat) => {
-            for(let i=1; i<=count; i++) {
-                CATALOG.push({ id: start+i, name: `${prefix} ${i.toString().padStart(2, '0')}`, price, img: `${imgSuffix}${i.toString().padStart(2, '0')}.jpg`, cat });
-            }
-        };
-
-        addBatch(1000, 15, 3000, "Car Charm", "cc", "Car Logo");
-        addBatch(2000, 19, 3000, "Flag Charm", "cf", "Flag");
-        addBatch(4000, 16, 3000, "Chain", "charm-chain-", "Chain");
-        addBatch(5000, 15, 3000, "Club Logo", "charm-footballclub-", "Football Club Logo");
-        addBatch(6000, 7, 3000, "Black", "cb", "Black Lover");
-        addBatch(7000, 7, 3000, "Pet", "charm-animal-", "Dog&Cat Lover");
-        addBatch(7010, 15, 3000, "Blue", "charm-bluesealover-", "Blue Sea Lover🌊");
-        addBatch(8000, 9, 3000, "Pink", "cp", "Pink Lover");
-        addBatch(15000, 12, 3000, "Bubble", "charm-bubble-", "Slay💅");
-        addBatch(16000, 12, 3000, "Cute Cat", "charm-cutecat-", "Cute Cat");
-        addBatch(17000, 8, 3000, "Rok Jit", "charm-rokjit-", "Rok Jit💔");
-
-        // --- 3. CORE LOGIC ---
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        let stock = {};
-        let currentSale = [];
-
-        // Telegram Notification (Like app.py)
-        function notifyTelegram() {
-            if (sessionStorage.getItem('notified')) return;
-            const msg = `📦 *New Website Visitor*\n*User:* Somphea Reak Shop\n*Status:* Live on GitHub Pages`;
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}&parse_mode=Markdown`)
-            .then(() => sessionStorage.setItem('notified', 'true'));
-        }
-
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) await signInAnonymously(auth);
-            notifyTelegram();
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'inventory');
-            onSnapshot(docRef, (snap) => {
-                if (snap.exists()) stock = snap.data();
-                else CATALOG.forEach(p => stock[p.id] = 0);
-                renderAll();
-                document.getElementById('loading').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('app').classList.remove('hidden');
-                }, 500);
-            });
-        });
-
-        // 4. UI RENDERING
-        window.renderAll = () => {
-            const shop = document.getElementById('shop-grid');
-            const admin = document.getElementById('admin-container');
-            shop.innerHTML = ''; admin.innerHTML = '';
-            
-            const groups = {};
-            CATALOG.forEach(p => { if(!groups[p.cat]) groups[p.cat] = []; groups[p.cat].push(p); });
-
-            for (const [cat, items] of Object.entries(groups)) {
-                admin.insertAdjacentHTML('beforeend', `
-                    <div class="mb-8">
-                        <div class="flex items-center gap-2 mb-3 bg-f8fafc py-2 sticky top-[64px] z-20 border-b border-slate-100">
-                            <div class="h-2 w-2 rounded-full bg-orange-600"></div>
-                            <h2 class="text-[10px] font-black uppercase text-slate-400 tracking-widest">${cat}</h2>
-                            <span class="text-[8px] bg-slate-100 px-1 rounded">${items.length}</span>
-                        </div>
-                        <div class="admin-grid">${items.map(p => renderAdminCard(p)).join('')}</div>
-                    </div>
-                `);
-            }
-
-            CATALOG.forEach(p => {
-                const q = stock[p.id] || 0;
-                const url = `${IMG_BASE}/${p.img}`;
-                shop.insertAdjacentHTML('beforeend', `
-                    <div class="bg-white p-2 rounded-3xl border border-slate-100 shadow-sm ${q<=0?'opacity-40 grayscale':''}">
-                        <img src="${url}" class="w-full aspect-square object-cover rounded-2xl mb-2">
-                        <p class="text-[9px] font-black uppercase truncate px-1">${p.name}</p>
-                        <div class="flex justify-between items-center px-1">
-                            <span class="text-[10px] font-bold text-pink-500">${p.price}៛</span>
-                            <span class="text-[8px] font-bold text-slate-300">${q<=0?'Sold Out':q+' Left'}</span>
-                        </div>
-                    </div>
-                `);
-            });
-        };
-
-        function renderAdminCard(p) {
-            const q = stock[p.id] || 0;
-            const url = `${IMG_BASE}/${p.img}`;
-            return `
-                <div class="admin-item bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm" data-name="${p.name.toLowerCase()}">
-                    <div class="aspect-square rounded-xl overflow-hidden mb-2 relative">
-                        <img src="${url}" class="w-full h-full object-cover">
-                        <div class="absolute bottom-1 right-1 bg-white/90 px-1 py-0.5 rounded-lg border text-[8px] font-black">Qty: ${q}</div>
-                    </div>
-                    <p class="text-[8px] font-black truncate mb-2 uppercase px-1">${p.name}</p>
-                    <div class="flex items-center justify-between bg-slate-50 rounded-lg p-0.5 mb-1 border border-slate-100">
-                        <button onclick="changeQty(${p.id},-1)" class="w-6 h-6 text-slate-400"><i class="fa-solid fa-minus text-[8px]"></i></button>
-                        <span class="text-[9px] font-black">${q}</span>
-                        <button onclick="changeQty(${p.id},1)" class="w-6 h-6 text-slate-400"><i class="fa-solid fa-plus text-[8px]"></i></button>
-                    </div>
-                    <button onclick="addToReceipt(${p.id})" class="w-full bg-slate-900 text-white py-1.5 rounded-lg text-[8px] font-black uppercase active:bg-orange-600 transition-colors ${q<=0?'opacity-30':''}" ${q<=0?'disabled':''}>+ Order</button>
-                </div>
-            `;
-        }
-
-        // 5. ACTIONS
-        window.changeQty = async (id, delta) => {
-            stock[id] = Math.max(0, (stock[id] || 0) + delta);
-            renderAll();
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'inventory'), stock);
-        };
-
-        window.addToReceipt = (id) => {
-            const p = CATALOG.find(x => x.id === id);
-            const ex = currentSale.find(x => x.id === id);
-            if (ex) ex.qty++; else currentSale.push({ ...p, qty: 1 });
-            updateReceiptUI();
-        };
-
-        window.updateReceiptUI = () => {
-            const list = document.getElementById('sale-list');
-            const total = document.getElementById('total-val');
-            let sum = 0;
-            list.innerHTML = currentSale.map(i => {
-                sum += (i.price * i.qty);
-                return `
-                    <div class="flex items-center gap-3 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
-                        <img src="${IMG_BASE}/${i.img}" class="w-10 h-14 rounded-lg object-cover">
-                        <div class="flex-1"><p class="text-[9px] font-black uppercase truncate">${i.name}</p><p class="text-[9px] font-bold text-slate-400">${i.qty} x ${i.price}៛</p></div>
-                        <button onclick="removeFromReceipt(${i.id})" class="text-red-400 px-2"><i class="fa-solid fa-trash-can text-sm"></i></button>
-                    </div>`;
-            }).join('');
-            total.innerText = sum.toLocaleString() + "៛";
-            document.getElementById('badge').innerText = currentSale.length;
-            document.getElementById('badge').classList.toggle('hidden', currentSale.length === 0);
-        };
-
-        window.removeFromReceipt = (id) => { currentSale = currentSale.filter(x => x.id !== id); updateReceiptUI(); };
-
-        window.confirmReceipt = async () => {
-            if (currentSale.length === 0 || !confirm("Process this order and deduct stock?")) return;
-            currentSale.forEach(i => stock[i.id] = Math.max(0, (stock[i.id] || 0) - i.qty));
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'inventory'), stock);
-            currentSale = []; updateReceiptUI(); toggleReceipt(false); renderAll(); alert("Stock Deducted Successfully!");
-        };
-
-        window.showPage = (p) => {
-            document.getElementById('page-shop').classList.toggle('hidden', p !== 'shop');
-            document.getElementById('page-admin').classList.toggle('hidden', p !== 'admin');
-            document.getElementById('admin-search').classList.toggle('hidden', p !== 'admin');
-            document.getElementById('btn-shop').classList.replace('text-pink-500', 'text-slate-300');
-            document.getElementById('btn-admin').classList.replace('text-orange-500', 'text-slate-300');
-            if(p==='shop') document.getElementById('btn-shop').classList.replace('text-slate-300', 'text-pink-500');
-            else document.getElementById('btn-admin').classList.replace('text-slate-300', 'text-orange-500');
-        };
-
-        window.toggleReceipt = (f) => {
-            const t = f !== undefined ? f : document.getElementById('drawer').classList.contains('translate-x-full');
-            document.getElementById('drawer').classList.toggle('translate-x-full', !t);
-            document.getElementById('overlay').classList.toggle('hidden', !t);
-        };
-
-        window.filterAdmin = (q) => {
-            const term = q.toLowerCase();
-            document.querySelectorAll('.admin-item').forEach(el => el.style.display = el.dataset.name.includes(term) ? 'block' : 'none');
-        };
-
-        window.tryLogin = () => { if(document.getElementById('admin-pass').value === ADMIN_PASS) { document.getElementById('admin-login').classList.add('hidden'); document.getElementById('admin-dashboard').classList.remove('hidden'); } else alert('Wrong Password'); };
-        window.logout = () => { document.getElementById('admin-login').classList.remove('hidden'); document.getElementById('admin-dashboard').classList.add('hidden'); document.getElementById('admin-pass').value = ''; };
-
-    </script>
 </body>
 </html>
 
