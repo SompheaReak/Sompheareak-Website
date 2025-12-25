@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Somphea Reak Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        .charm-card { transition: transform 0.1s; }
+        .charm-card:active { transform: scale(0.96); }
+        .loading-screen { position: fixed; inset: 0; background: white; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body class="pb-20">
+
+    <div id="loading" class="loading-screen">
+        <div class="text-center">
+            <div class="w-10 h-10 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Somphea Reak Cloud</p>
+        </div>
+    </div>
+
+    <div id="app" class="hidden">
+        <!-- Header -->
+        <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 px-5 py-4 flex justify-between items-center">
+            <h1 onclick="location.reload()" class="text-xl font-black uppercase italic tracking-tighter text-slate-800">
+                Somphea <span class="text-pink-500">Reak</span>
+            </h1>
+            <div class="flex gap-4">
+                <button onclick="showPage('shop')" id="btn-shop" class="text-pink-500 text-lg"><i class="fa-solid fa-house"></i></button>
+                <button onclick="showPage('admin')" id="btn-admin" class="text-slate-300 text-lg"><i class="fa-solid fa-screwdriver-wrench"></i></button>
+            </div>
+        </nav>
+
+        <!-- PAGE: SHOP -->
+        <div id="page-shop" class="p-4 animate-fade-in">
+            <div class="grid grid-cols-2 gap-3" id="shop-grid"></div>
+        </div>
+
+        <!-- PAGE: ADMIN -->
+        <div id="page-admin" class="hidden p-5">
+            <div id="admin-login" class="max-w-sm mx-auto mt-10">
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 text-center">
+                    <h3 class="font-black text-xl mb-6">Admin Login</h3>
+                    <input type="password" id="admin-pass" class="w-full bg-slate-50 border-none rounded-2xl px-4 py-4 mb-4 text-center font-bold outline-none ring-2 ring-slate-100 focus:ring-orange-500" placeholder="Password">
+                    <button onclick="tryLogin()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest">Unlock</button>
+                </div>
+            </div>
+
+            <div id="admin-dashboard" class="hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-black uppercase italic">Inventory</h2>
+                    <button onclick="logout()" class="text-slate-300"><i class="fa-solid fa-power-off"></i></button>
+                </div>
+                <div class="grid grid-cols-3 gap-2" id="admin-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'somphea-reak-official';
+        
+        // --- CHANGE YOUR GITHUB RAW LINK HERE ---
+        const IMG_BASE = "https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main"; 
+        
+        const ADMIN_PASS = "Thesong_Admin@2022?!$";
+
+        const CATALOG = [
+            { id: 1, name: "Silver Charm", price: 400, img: "c01.jpg" },
+            { id: 1100, name: "Classic F1", price: 3000, img: "charm-f1–101.jpg" },
+            { id: 1001, name: "Car 01", price: 3000, img: "cc01.jpg" },
+            { id: 1002, name: "Car 02", price: 3000, img: "cc02.jpg" },
+            { id: 1003, name: "Car 03", price: 3000, img: "cc03.jpg" }
+        ];
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let stock = {};
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) await signInAnonymously(auth);
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'inventory');
+            onSnapshot(docRef, (snap) => {
+                if(snap.exists()) stock = snap.data();
+                else CATALOG.forEach(p => stock[p.id] = 0);
+                render();
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('app').classList.remove('hidden');
+            });
+        });
+
+        window.render = () => {
+            const shop = document.getElementById('shop-grid');
+            const admin = document.getElementById('admin-grid');
+            shop.innerHTML = ''; admin.innerHTML = '';
+            
+            CATALOG.forEach(p => {
+                const q = stock[p.id] || 0;
+                const url = p.img.startsWith('http') ? p.img : `${IMG_BASE}/${p.img}`;
+                
+                shop.insertAdjacentHTML('beforeend', `
+                    <div class="charm-card bg-white p-2 rounded-3xl border border-slate-100 shadow-sm ${q<=0?'opacity-40':''}">
+                        <div class="aspect-square rounded-2xl overflow-hidden mb-2 bg-slate-50">
+                            <img src="${url}" class="w-full h-full object-cover">
+                        </div>
+                        <p class="text-[9px] font-black uppercase truncate px-1">${p.name}</p>
+                        <div class="flex justify-between items-center px-1">
+                            <span class="text-[10px] font-bold text-pink-500">${p.price}៛</span>
+                            <span class="text-[8px] font-bold text-slate-300">${q<=0?'Sold':q+' Left'}</span>
+                        </div>
+                    </div>
+                `);
+
+                admin.insertAdjacentHTML('beforeend', `
+                    <div class="bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm">
+                        <img src="${url}" class="w-full aspect-square object-cover rounded-xl mb-2">
+                        <div class="flex items-center justify-between bg-slate-50 rounded-xl p-1">
+                            <button onclick="change(${p.id},-1)" class="w-6 h-6 text-slate-300"><i class="fa-solid fa-minus text-[8px]"></i></button>
+                            <span class="text-[10px] font-black">${q}</span>
+                            <button onclick="change(${p.id},1)" class="w-6 h-6 text-slate-300"><i class="fa-solid fa-plus text-[8px]"></i></button>
+                        </div>
+                    </div>
+                `);
+            });
+        };
+
+        window.change = async (id, d) => {
+            stock[id] = Math.max(0, (stock[id]||0)+d);
+            render();
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'inventory'), stock);
+        };
+
+        window.showPage = (p) => {
+            document.getElementById('page-shop').classList.toggle('hidden', p !== 'shop');
+            document.getElementById('page-admin').classList.toggle('hidden', p !== 'admin');
+            document.getElementById('btn-shop').classList.toggle('text-pink-500', p === 'shop');
+            document.getElementById('btn-shop').classList.toggle('text-slate-300', p !== 'shop');
+            document.getElementById('btn-admin').classList.toggle('text-orange-500', p === 'admin');
+            document.getElementById('btn-admin').classList.toggle('text-slate-300', p !== 'admin');
+        };
+
+        window.tryLogin = () => {
+            if(document.getElementById('admin-pass').value === ADMIN_PASS) {
+                document.getElementById('admin-login').classList.add('hidden');
+                document.getElementById('admin-dashboard').classList.remove('hidden');
+            } else alert('Wrong Password');
+        };
+
+        window.logout = () => {
+            document.getElementById('admin-login').classList.remove('hidden');
+            document.getElementById('admin-dashboard').classList.add('hidden');
+            document.getElementById('admin-pass').value = '';
+        };
+    </script>
+</body>
+</html>
+
