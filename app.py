@@ -34,8 +34,11 @@ CHAT_ID = "-1002654437316"
 # --- 4. HELPERS ---
 def get_menu():
     """Gets unique categories for the navbar"""
-    cats = db.session.query(Product.category).distinct().all()
-    return [c[0] for c in cats if c[0]]
+    try:
+        cats = db.session.query(Product.category).distinct().all()
+        return [c[0] for c in cats if c[0]]
+    except:
+        return []
 
 def send_telegram(message):
     """Sends notification to Telegram Group"""
@@ -44,11 +47,16 @@ def send_telegram(message):
     try: requests.post(url, json=payload)
     except: pass
 
-# --- 5. SHOP ROUTES ---
+# --- 5. MAIN ROUTES ---
 
 @app.route('/')
 def home():
-    # Redirect to first category or show all
+    # FIXED: Bracelet Studio is now the homepage
+    return render_template('custom_bracelet.html')
+
+@app.route('/shop')
+def shop():
+    # E-commerce Storefront moved here
     menu = get_menu()
     products = Product.query.all()
     return render_template('home.html', products=products, menu=menu, current_category="All Products")
@@ -102,11 +110,7 @@ def view_cart():
             total += p.price
     return render_template('home.html', products=products, total=total, menu=menu, is_cart=True, current_category="Your Cart")
 
-# --- 7. BRACELET STUDIO ROUTES ---
-
-@app.route('/studio')
-def studio():
-    return render_template('custom_bracelet.html')
+# --- 7. STUDIO API ---
 
 @app.route('/api/get-data')
 def get_data():
@@ -136,7 +140,7 @@ def sync_catalog():
     db.session.commit()
     return jsonify(success=True)
 
-# --- 8. ADMIN PANEL & AUTH ---
+# --- 8. ADMIN PANEL ---
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -187,20 +191,16 @@ def process_receipt():
     data = request.json
     items_list = []
     total_bill = 0
-    
     for item in data['items']:
         p = Product.query.get(item['id'])
         if p:
             p.stock = max(0, p.stock - int(item['qty']))
             items_list.append(f"• {p.name} x{item['qty']} ({p.price * item['qty']}៛)")
             total_bill += (p.price * item['qty'])
-    
     db.session.commit()
     
-    # Send Notification to Telegram
     msg = f"<b>🔔 NEW SALE CONFIRMED</b>\n\n" + "\n".join(items_list) + f"\n\n<b>Total: {total_bill}៛</b>"
     send_telegram(msg)
-    
     return jsonify(success=True)
 
 # --- 9. INITIALIZATION ---
