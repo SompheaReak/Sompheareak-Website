@@ -21,15 +21,12 @@
     <header class="sticky top-0 z-[100] bg-white border-b p-4 shadow-sm">
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-sm font-black uppercase italic">Control <span class="text-orange-600">Pro</span></h1>
-            <div class="flex gap-3">
-                 <button onclick="toggleReceipt()" class="relative bg-black text-white w-10 h-10 rounded-xl flex items-center justify-center">
-                    <i class="fa-solid fa-receipt"></i>
-                    <span id="badge" class="absolute -top-1 -right-1 bg-orange-600 text-white text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">0</span>
-                </button>
-            </div>
+            <button onclick="toggleReceipt()" class="relative bg-black text-white w-10 h-10 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-receipt"></i>
+                <span id="badge" class="absolute -top-1 -right-1 bg-orange-600 text-white text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">0</span>
+            </button>
         </div>
 
-        <!-- MASTER OVERRIDE BUTTON -->
         <div class="bg-slate-50 border rounded-2xl p-4 flex items-center justify-between">
             <div>
                 <p class="text-[10px] font-black uppercase text-slate-500">Master Stock Override</p>
@@ -51,8 +48,8 @@
                 {% for p in items %}
                 <div class="bg-white rounded-[1.5rem] p-2 border shadow-sm flex flex-col relative">
                     <div class="relative w-full aspect-[3/5] overflow-hidden rounded-[1rem] mb-2 bg-slate-100">
-                         {% if p.stock <= 0 %}<div class="absolute inset-0 bg-white/50 flex items-center justify-center"><span class="bg-red-500 text-white text-[8px] font-black px-2 py-1 rounded">SOLD</span></div>{% endif %}
-                        <img src="{{ p.image }}" class="w-full h-full object-cover">
+                         {% if p.stock <= 0 %}<div class="absolute inset-0 bg-white/50 flex items-center justify-center z-10"><span class="bg-red-500 text-white text-[8px] font-black px-2 py-1 rounded">SOLD</span></div>{% endif %}
+                        <img src="{{ p.image }}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/300x500?text=No+Image'">
                         <div class="absolute bottom-1 right-1 bg-white/90 px-2 py-1 rounded-lg text-[8px] font-black">Qty: {{ p.stock }}</div>
                     </div>
                     <h4 class="text-[9px] font-black uppercase truncate px-1 mb-2">{{ p.name }}</h4>
@@ -69,7 +66,6 @@
         {% endfor %}
     </main>
 
-    <!-- DRAWER -->
     <div id="drawer" class="fixed inset-y-0 right-0 w-80 bg-white z-[300] shadow-2xl translate-x-full transition-transform flex flex-col border-l">
         <div class="p-4 border-b flex justify-between items-center">
             <h3 class="font-black uppercase text-xs">Current Invoice</h3>
@@ -85,19 +81,15 @@
         </div>
     </div>
 
-    <!-- HIDDEN RECEIPT TEMPLATE -->
     <div id="receipt-capture" style="position:fixed; left:-9999px; top:0; width:350px; background:white; padding:30px; color:black;">
         <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:15px; margin-bottom:15px;">
             <h2 style="font-weight:900; font-size:24px; margin:0; letter-spacing:-1px;">SOMPHEA REAK</h2>
-            <p style="font-size:10px; font-weight:700; color:#666; text-transform:uppercase;">Official Studio Receipt</p>
+            <p style="font-size:10px; font-weight:700; color:#666;">Official Studio Receipt</p>
         </div>
         <div id="receipt-items-content"></div>
         <div style="border-top:2px solid #000; margin-top:20px; padding-top:10px; display:flex; justify-content:space-between; align-items:flex-end;">
             <span style="font-weight:900; font-size:12px;">TOTAL PAID</span>
             <span id="receipt-total-content" style="font-weight:900; font-size:24px; color:#ea580c;">0៛</span>
-        </div>
-        <div style="text-align:center; margin-top:30px;">
-            <p style="font-size:8px; font-weight:700; color:#999;">THANK YOU FOR YOUR SUPPORT</p>
         </div>
     </div>
 
@@ -119,7 +111,6 @@
         }
 
         function toggleReceipt() { document.getElementById('drawer').classList.toggle('translate-x-full'); }
-        
         function addToSale(id, name, price) {
             const ex = currentSale.find(i => i.id === id);
             if (ex) ex.qty++; else currentSale.push({id, name, price, qty: 1});
@@ -130,52 +121,32 @@
             let t = 0;
             document.getElementById('sale-list').innerHTML = currentSale.map(i => { 
                 t += (i.price * i.qty); 
-                return `
-                <div class="flex justify-between items-center bg-white p-2 rounded-lg border text-[10px] font-black uppercase">
-                    <div>${i.name} <span class="text-orange-500">x${i.qty}</span></div>
-                    <div>${(i.price*i.qty).toLocaleString()}៛</div>
-                </div>`;
+                return `<div class="flex justify-between items-center bg-white p-2 rounded-lg border text-[10px] font-black uppercase"><div>${i.name} <span class="text-orange-500">x${i.qty}</span></div><div>${(i.price*i.qty).toLocaleString()}៛</div></div>`;
             }).join('');
             document.getElementById('total-val').innerText = t.toLocaleString() + "៛";
             document.getElementById('badge').innerText = currentSale.length;
         }
 
         function downloadInvoice() {
-            if (currentSale.length === 0) return alert("Invoice is empty");
-            
+            if (currentSale.length === 0) return alert("Empty");
             const content = document.getElementById('receipt-items-content');
             let total = 0;
-            
-            content.innerHTML = currentSale.map(item => {
-                total += (item.price * item.qty);
-                return `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-weight:800; font-size:12px;">
-                        <span>${item.name} <span style="color:#666; font-size:10px;">x${item.qty}</span></span>
-                        <span>${(item.price * item.qty).toLocaleString()}៛</span>
-                    </div>
-                `;
+            content.innerHTML = currentSale.map(i => {
+                total += (i.price * i.qty);
+                return `<div style="display:flex; justify-content:space-between; margin-bottom:8px; font-weight:800; font-size:12px;"><span>${i.name} x${i.qty}</span><span>${(i.price*i.qty).toLocaleString()}៛</span></div>`;
             }).join('');
-            
             document.getElementById('receipt-total-content').innerText = total.toLocaleString() + "៛";
-
-            html2canvas(document.getElementById('receipt-capture'), {
-                scale: 2,
-                backgroundColor: '#ffffff'
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = 'Receipt-' + Date.now() + '.png';
-                link.href = canvas.toDataURL("image/png");
-                link.click();
+            html2canvas(document.getElementById('receipt-capture'), {scale: 2}).then(canvas => {
+                const link = document.createElement('a'); link.download = 'Receipt.png'; link.href = canvas.toDataURL(); link.click();
             });
         }
 
         async function confirmOrder() {
-            if(!currentSale.length || !confirm("Confirm items and deduct stock?")) return;
+            if(!currentSale.length || !confirm("Deduct?")) return;
             await fetch('/admin/api/process-receipt', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({items: currentSale})});
             location.reload();
         }
     </script>
 </body>
 </html>
-
 
