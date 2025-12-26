@@ -30,7 +30,7 @@
         <div class="bg-slate-50 border rounded-2xl p-4 flex items-center justify-between">
             <div>
                 <p class="text-[10px] font-black uppercase text-slate-500">Master Stock Override</p>
-                <p class="text-[8px] font-bold text-slate-400">ON = All items available (Ignore 0 stock)</p>
+                <p class="text-[8px] font-bold text-slate-400">ON = Ignore 0 stock in Studio</p>
             </div>
             <div id="override-switch" onclick="toggleMasterMode()" class="flex items-center cursor-pointer {{ 'active-toggle' if override == 'on' }}">
                 <div class="w-12 h-6 toggle-bg rounded-full relative p-1">
@@ -54,9 +54,9 @@
                     </div>
                     <h4 class="text-[9px] font-black uppercase truncate px-1 mb-2">{{ p.name }}</h4>
                     <div class="mt-auto flex justify-between items-center bg-slate-50 rounded-xl p-1 border mb-2">
-                        <button onclick="updateQty({{ p.id }}, -1)" class="w-8 h-8 text-slate-400 flex items-center justify-center"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                        <button onclick="updateQty({{ p.id }}, -1)" class="w-8 h-8 text-slate-900 flex items-center justify-center active:bg-slate-200 rounded-lg"><i class="fa-solid fa-minus text-[10px]"></i></button>
                         <span id="val-{{ p.id }}" class="text-xs font-black">{{ p.stock }}</span>
-                        <button onclick="updateQty({{ p.id }}, 1)" class="w-8 h-8 text-slate-400 flex items-center justify-center"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                        <button onclick="updateQty({{ p.id }}, 1)" class="w-8 h-8 text-slate-900 flex items-center justify-center active:bg-slate-200 rounded-lg"><i class="fa-solid fa-plus text-[10px]"></i></button>
                     </div>
                     <button onclick="addToSale({{ p.id }}, '{{ p.name }}', {{ p.price }})" class="w-full bg-slate-900 text-white py-2 rounded-xl text-[9px] font-black uppercase">+ Invoice</button>
                 </div>
@@ -101,16 +101,25 @@
             const el = document.getElementById('val-'+id);
             let n = Math.max(0, parseInt(el.innerText) + d);
             el.innerText = n;
-            await fetch('/admin/api/update-stock', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, amount:n})});
+            await fetch('/admin/api/update-stock', {
+                method:'POST', 
+                headers:{'Content-Type':'application/json'}, 
+                body:JSON.stringify({id: id, amount: n})
+            });
         }
 
         async function toggleMasterMode() {
-            overrideStatus = overrideStatus === "on" ? "off" : "on";
+            overrideStatus = (overrideStatus === "on") ? "off" : "on";
             document.getElementById('override-switch').classList.toggle('active-toggle');
-            await fetch('/admin/api/toggle-override', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({value: overrideStatus})});
+            await fetch('/admin/api/toggle-override', {
+                method:'POST', 
+                headers:{'Content-Type':'application/json'}, 
+                body:JSON.stringify({value: overrideStatus})
+            });
         }
 
         function toggleReceipt() { document.getElementById('drawer').classList.toggle('translate-x-full'); }
+        
         function addToSale(id, name, price) {
             const ex = currentSale.find(i => i.id === id);
             if (ex) ex.qty++; else currentSale.push({id, name, price, qty: 1});
@@ -128,7 +137,7 @@
         }
 
         function downloadInvoice() {
-            if (currentSale.length === 0) return alert("Empty");
+            if (currentSale.length === 0) return alert("Invoice is empty");
             const content = document.getElementById('receipt-items-content');
             let total = 0;
             content.innerHTML = currentSale.map(i => {
@@ -137,13 +146,20 @@
             }).join('');
             document.getElementById('receipt-total-content').innerText = total.toLocaleString() + "៛";
             html2canvas(document.getElementById('receipt-capture'), {scale: 2}).then(canvas => {
-                const link = document.createElement('a'); link.download = 'Receipt.png'; link.href = canvas.toDataURL(); link.click();
+                const link = document.createElement('a'); 
+                link.download = `Receipt-${Date.now()}.png`; 
+                link.href = canvas.toDataURL(); 
+                link.click();
             });
         }
 
         async function confirmOrder() {
-            if(!currentSale.length || !confirm("Deduct?")) return;
-            await fetch('/admin/api/process-receipt', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({items: currentSale})});
+            if(!currentSale.length || !confirm("Confirm items and deduct stock?")) return;
+            await fetch('/admin/api/process-receipt', {
+                method:'POST', 
+                headers:{'Content-Type':'application/json'}, 
+                body:JSON.stringify({items: currentSale})
+            });
             location.reload();
         }
     </script>
