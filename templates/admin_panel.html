@@ -2,39 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin - Somphea Reak</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap'); body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
+        .admin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        @media (min-width: 1024px) { .admin-grid { grid-template-columns: repeat(6, 1fr); gap: 15px; } }
+        .toggle-bg { background: #cbd5e1; transition: background 0.3s; }
+        .toggle-dot { transform: translateX(0); transition: transform 0.3s; }
+        .active-toggle .toggle-bg { background: #22c55e; }
+        .active-toggle .toggle-dot { transform: translateX(20px); }
+    </style>
 </head>
-<body class="bg-slate-50 pb-20 text-slate-900">
-    <header class="sticky top-0 z-50 bg-white p-4 border-b flex justify-between items-center">
-        <h1 class="font-black text-sm">ADMIN <span class="text-orange-600">PRO</span></h1>
-        <div class="flex gap-2">
-            <input oninput="filter(this.value)" placeholder="Search..." class="bg-slate-100 rounded px-2 text-xs w-24">
-            <button onclick="toggleReceipt()" class="bg-black text-white w-8 h-8 rounded flex items-center justify-center relative"><i class="fa-solid fa-receipt"></i><span id="badge" class="absolute -top-1 -right-1 bg-red-500 w-4 h-4 rounded-full text-[8px] flex items-center justify-center">0</span></button>
+<body class="pb-20">
+
+    <header class="sticky top-0 z-[100] bg-white/90 backdrop-blur-xl border-b p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+            <h1 class="text-sm font-black uppercase italic">Control <span class="text-orange-600">Pro</span></h1>
+            <button onclick="toggleReceipt()" class="relative bg-black text-white w-10 h-10 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-receipt"></i>
+                <span id="badge" class="absolute -top-1 -right-1 bg-orange-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">0</span>
+            </button>
+        </div>
+
+        <!-- MASTER OVERRIDE BUTTON -->
+        <div class="bg-slate-50 border rounded-2xl p-4 flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-black uppercase text-slate-500">Master Stock Override</p>
+                <p class="text-[8px] font-bold text-slate-400">ON = All items in stock regardless of number</p>
+            </div>
+            <div id="override-switch" onclick="toggleMasterMode()" class="flex items-center cursor-pointer {{ 'active-toggle' if override == 'on' }}">
+                <div class="w-12 h-6 toggle-bg rounded-full relative p-1">
+                    <div class="w-4 h-4 bg-white rounded-full toggle-dot shadow-sm"></div>
+                </div>
+            </div>
         </div>
     </header>
 
-    <main class="p-2 max-w-6xl mx-auto">
+    <main class="p-4">
         {% for cat, items in grouped.items() %}
-        <div class="mb-6">
-            <h2 class="text-xs font-black text-slate-400 mb-2 uppercase">{{ cat }}</h2>
-            <div class="grid grid-cols-3 md:grid-cols-6 gap-2">
+        <div class="mb-10">
+            <h2 class="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest">{{ cat }}</h2>
+            <div class="admin-grid">
                 {% for p in items %}
-                <div class="bg-white p-2 rounded-xl border flex flex-col" data-name="{{ p.name|lower }}">
-                    <div class="relative mb-2">
-                        {% if p.stock <= 0 %}<div class="absolute inset-0 flex items-center justify-center bg-white/50"><span class="bg-red-500 text-white text-[8px] font-black px-2 py-1 rounded">SOLD</span></div>{% endif %}
-                        <img src="{{ p.image }}" class="w-full aspect-[2/3] object-cover rounded">
+                <div class="bg-white rounded-[2rem] p-2 border shadow-sm flex flex-col">
+                    <div class="relative w-full aspect-[3/5] overflow-hidden rounded-[1.5rem] mb-2">
+                        <img src="{{ p.image }}" class="w-full h-full object-cover">
+                        <div class="absolute bottom-1 right-1 bg-white/90 px-2 py-1 rounded-lg text-[10px] font-black">Qty: {{ p.stock }}</div>
                     </div>
-                    <div class="flex justify-between items-center mb-2">
-                        <button onclick="upd({{ p.id }},-1)" class="text-slate-400"><i class="fa-minus"></i></button>
-                        <span id="v-{{ p.id }}" class="text-xs font-black">{{ p.stock }}</span>
-                        <button onclick="upd({{ p.id }},1)" class="text-slate-400"><i class="fa-plus"></i></button>
+                    <div class="mt-auto flex justify-between items-center bg-slate-50 rounded-xl p-1 border">
+                        <button onclick="updateQty({{ p.id }}, -1)" class="w-8 h-8 text-slate-400"><i class="fa-solid fa-minus"></i></button>
+                        <span id="val-{{ p.id }}" class="text-xs font-black">{{ p.stock }}</span>
+                        <button onclick="updateQty({{ p.id }}, 1)" class="w-8 h-8 text-slate-400"><i class="fa-solid fa-plus"></i></button>
                     </div>
-                    <button onclick="add({{ p.id }}, '{{ p.name }}', {{ p.price }})" class="bg-black text-white text-[8px] font-black py-1 rounded w-full uppercase">+ Invoice</button>
+                    <button onclick="addToSale({{ p.id }}, '{{ p.name }}', {{ p.price }})" class="mt-2 w-full bg-black text-white py-2 rounded-xl text-[9px] font-black uppercase">+ Invoice</button>
                 </div>
                 {% endfor %}
             </div>
@@ -42,57 +66,50 @@
         {% endfor %}
     </main>
 
-    <div id="drawer" class="fixed inset-y-0 right-0 w-80 bg-white shadow-xl translate-x-full transition-transform z-50 flex flex-col">
-        <div class="p-4 border-b flex justify-between"><h3 class="font-black">INVOICE</h3><button onclick="toggleReceipt()">X</button></div>
-        <div id="list" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
-        <div class="p-4 border-t space-y-2">
-            <div class="flex justify-between font-black"><span>TOTAL</span><span id="tot">0៛</span></div>
-            <button onclick="genImg()" class="w-full bg-slate-800 text-white py-2 rounded font-black text-xs">DOWNLOAD IMG</button>
-            <button onclick="confirm()" class="w-full bg-orange-600 text-white py-2 rounded font-black text-xs">CONFIRM & DEDUCT</button>
+    <div id="drawer" class="fixed inset-y-0 right-0 w-80 bg-white z-[300] shadow-2xl translate-x-full transition-transform flex flex-col border-l">
+        <div class="p-4 border-b flex justify-between font-black uppercase text-xs"><span>Invoice</span><button onclick="toggleReceipt()">X</button></div>
+        <div id="sale-list" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
+        <div class="p-6 border-t bg-slate-50">
+            <div class="flex justify-between font-black mb-4"><span>Total</span><span id="total-val">0៛</span></div>
+            <button onclick="confirmOrder()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black uppercase text-xs">Confirm Sale</button>
         </div>
-    </div>
-    
-    <!-- Hidden Invoice -->
-    <div id="inv-box" style="position:fixed;left:-9999px;width:300px;background:white;padding:20px;color:black;">
-        <h2 style="text-align:center;border-bottom:2px solid black;margin-bottom:10px;">RECEIPT</h2>
-        <div id="inv-items"></div>
-        <div style="display:flex;justify-content:space-between;border-top:2px solid black;margin-top:10px;font-weight:bold;"><span>TOTAL</span><span id="inv-tot"></span></div>
     </div>
 
     <script>
-        let sale=[];
-        async function upd(id,d){
-            const e=document.getElementById('v-'+id);
-            let n=Math.max(0,parseInt(e.innerText)+d);
-            e.innerText=n;
-            await fetch('/admin/api/update-stock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,amount:n})});
+        let currentSale = [];
+        let overrideStatus = "{{ override }}";
+
+        async function updateQty(id, d) {
+            const el = document.getElementById('val-'+id);
+            let n = Math.max(0, parseInt(el.innerText) + d);
+            el.innerText = n;
+            await fetch('/admin/api/update-stock', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, amount:n})});
         }
-        function toggleReceipt(){document.getElementById('drawer').classList.toggle('translate-x-full');}
-        function add(id,n,p){
-            const x=sale.find(i=>i.id===id);
-            if(x)x.q++; else sale.push({id,n,p,q:1});
-            render();
+
+        async function toggleMasterMode() {
+            overrideStatus = overrideStatus === "on" ? "off" : "on";
+            document.getElementById('override-switch').classList.toggle('active-toggle');
+            await fetch('/admin/api/toggle-override', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({value: overrideStatus})});
         }
-        function render(){
-            let t=0;
-            document.getElementById('list').innerHTML=sale.map(i=>{t+=i.p*i.q;return `<div class="flex justify-between text-xs font-bold"><span>${i.n} x${i.q}</span><span>${i.p*i.q}៛</span></div>`}).join('');
-            document.getElementById('tot').innerText=t+"៛";
-            document.getElementById('badge').innerText=sale.length;
+
+        function toggleReceipt() { document.getElementById('drawer').classList.toggle('translate-x-full'); }
+        function addToSale(id, name, price) {
+            const ex = currentSale.find(i => i.id === id);
+            if (ex) ex.qty++; else currentSale.push({id, name, price, qty: 1});
+            updateUI();
         }
-        function genImg(){
-            let t=0;
-            document.getElementById('inv-items').innerHTML=sale.map(i=>{t+=i.p*i.q;return `<div style="display:flex;justify-content:space-between;font-size:12px;"><span>${i.n} x${i.q}</span><span>${i.p*i.q}</span></div>`}).join('');
-            document.getElementById('inv-tot').innerText=t+"៛";
-            html2canvas(document.getElementById('inv-box')).then(c=>{const l=document.createElement('a');l.download='inv.png';l.href=c.toDataURL();l.click();});
+        function updateUI() {
+            let t = 0;
+            document.getElementById('sale-list').innerHTML = currentSale.map(i => { t += (i.price * i.qty); return `<div class="flex justify-between text-[10px] font-black uppercase border-b pb-2"><span>${i.name} x${i.qty}</span><span>${i.price*i.qty}៛</span></div>`}).join('');
+            document.getElementById('total-val').innerText = t.toLocaleString() + "៛";
+            document.getElementById('badge').innerText = currentSale.length;
         }
-        async function confirm(){
-            if(!confirm("Deduct?"))return;
-            await fetch('/admin/api/process-receipt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:sale.map(i=>({id:i.id,qty:i.q}))})});
+        async function confirmOrder() {
+            if(!currentSale.length || !confirm("Confirm items?")) return;
+            await fetch('/admin/api/process-receipt', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({items: currentSale})});
             location.reload();
         }
-        function filter(q){document.querySelectorAll('[data-name]').forEach(e=>e.style.display=e.dataset.name.includes(q.toLowerCase())?'flex':'none');}
     </script>
 </body>
 </html>
-
 
