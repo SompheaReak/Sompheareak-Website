@@ -4,183 +4,127 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.secret_key = 'somphea_reak_fixed_key_2025'
+app.secret_key = 'somphea_reak_studio_pro_2025'
 
-# --- DATABASE SETUP ---
+# --- 1. DATABASE SETUP (Permanent Storage) ---
 basedir = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.join(basedir, 'shop.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'shop.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- CONFIGURATION ---
-ADMIN_USER = 'AdminSompheaReakVitou'
+# --- 2. CONFIGURATION ---
 ADMIN_PASS = 'Thesong_Admin@2022?!$'
+# Telegram settings
+BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
+CHAT_ID = "-1002654437316"
 
-# ==========================================
-# 1. PRODUCT CATALOG
-# ==========================================
-PRODUCT_CATALOG = [
-    # --- Charms ---
-    {"id": 1, "name_kh": "Silver Charm", "price": 400, "image": "/static/images/c01.jpg", "categories": ["Charm"], "subcategory": "General"},
-
-    # --- F1 Logos ---
-    {"id": 1100, "name_kh": "Classic F1 Logo", "price": 3000, "image": "/static/images/charm-f1–101.jpg", "categories": ["Class F1🏎️"], "subcategory": "F1 Logos"},
-    {"id": 1191, "name_kh": "Classic F1", "price": 3000, "image": "/static/images/charm-chain-03.jpg", "categories": ["Class F1🏎️"], "subcategory": "F1 Logos"},
-    
-    # --- Car Logos ---
-    {"id": 1001, "name_kh": "Car Charm 01", "price": 3000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"], "subcategory": "Car Brands"},
-    {"id": 1002, "name_kh": "Car Charm 02", "price": 3000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"], "subcategory": "Car Brands"},
-
-    # --- Flags ---
-    {"id": 2001, "name_kh": "Flag Charm 01", "price": 3000, "image": "/static/images/cf01.jpg", "categories": ["Flag"], "subcategory": "National Flags"},
-
-    # --- Gemstones ---
-    {"id": 3001, "name_kh": "Gemstone Charm 01", "price": 3500, "image": "/static/images/cg01.jpg", "categories": ["Gemstone"], "subcategory": "Gemstones"},
-    
-    # --- Chains ---
-    {"id": 4001, "name_kh": "Chain Charm 01", "price": 3000, "image": "/static/images/charm-chain-01.jpg", "categories": ["Chain"], "subcategory": "Chains"},
-
-    # --- Football ---
-    {"id": 5001, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-01.jpg", "categories": ["Football Club Logo"], "subcategory": "Football"},
-
-    # --- Letters ---
-    {"id": 1101, "name_kh": "Letter A", "price": 1200, "image": "/static/images/a.jpg", "categories": ["Letter"], "subcategory": "Letters"},
-]
-
-# --- DATABASE MODEL ---
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name_kh = db.Column(db.String(200), nullable=False)
-    price = db.Column(db.Integer, nullable=False)
-    image = db.Column(db.String(500), nullable=False)
-    categories_str = db.Column(db.String(500), default="") 
-    subcategory_str = db.Column(db.String(500), default="") 
+    name = db.Column(db.String(200))
+    price = db.Column(db.Integer)
+    image = db.Column(db.String(500))
+    category = db.Column(db.String(100))
     stock = db.Column(db.Integer, default=0)
 
-# --- SYNC ENGINE ---
-def sync_catalog():
-    try:
-        # Check if table exists to avoid crash
-        inspector = db.inspect(db.engine)
-        if not inspector.has_table("product"):
-            db.create_all()
-            
-        print("🔄 Syncing Catalog...")
-        for item in PRODUCT_CATALOG:
-            existing = Product.query.get(item['id'])
-            cat_str = ", ".join(item.get('categories', []))
-            sub_str = item.get('subcategory', 'General')
-            
-            if existing:
-                existing.name_kh = item['name_kh']
-                existing.price = item['price']
-                existing.image = item['image']
-                existing.categories_str = cat_str
-                existing.subcategory_str = sub_str
-            else:
-                new_p = Product(
-                    id=item['id'],
-                    name_kh=item['name_kh'],
-                    price=item['price'],
-                    image=item['image'],
-                    categories_str=cat_str,
-                    subcategory_str=sub_str,
-                    stock=0
-                )
-                db.session.add(new_p)
-        db.session.commit()
-        print("✅ Sync Complete!")
-    except Exception as e:
-        print(f"⚠️ Database Error (Ignored to keep app alive): {e}")
+def notify_telegram(msg):
+    try: requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", data={"chat_id": CHAT_ID, "text": msg, "parse_mode": "Markdown"})
+    except: pass
 
-# --- ROUTES ---
+# --- 3. ROUTES ---
+
 @app.route('/')
 def home():
-    return redirect(url_for('custom_bracelet'))
-
-@app.route('/custom-bracelet')
-def custom_bracelet():
-    try:
-        all_products = Product.query.all()
-        products_json = [{
-            "id": p.id, "name_kh": p.name_kh, "price": p.price, 
-            "image": p.image, "stock": p.stock, 
-            "categories": p.categories_str.split(', ')
-        } for p in all_products]
-    except:
-        products_json = [] # Fallback if DB fails
-    
-    is_admin = session.get('admin', False)
-    return render_template('custom_bracelet.html', products=products_json, is_admin=is_admin)
+    # For now, we go straight to the bracelet studio
+    notify_telegram("💎 *Visitor* entered Bracelet Studio")
+    return render_template('custom_bracelet.html')
 
 @app.route('/admin/panel')
 def admin_panel():
     if not session.get('admin'): return redirect(url_for('admin_login'))
     
-    all_products = Product.query.all()
-    stats = {
-        "total": len(all_products),
-        "out": len([p for p in all_products if p.stock <= 0]),
-        "low": len([p for p in all_products if 0 < p.stock <= 5])
-    }
-    
+    # Group products by category for the Admin display
+    all_p = Product.query.all()
     grouped = {}
-    for p in all_products:
-        sub = p.subcategory_str if p.subcategory_str else "General"
-        if sub not in grouped: grouped[sub] = []
-        grouped[sub].append(p)
+    for p in all_p:
+        cat = p.category if p.category else "General"
+        if cat not in grouped: grouped[cat] = []
+        grouped[cat].append(p)
         
-    return render_template('admin_panel.html', grouped=grouped, stats=stats)
+    return render_template('admin_panel.html', grouped=grouped)
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        if request.form.get('password') == ADMIN_PASS:
+            session['admin'] = True
+            return redirect(url_for('admin_panel'))
+    return '''
+    <body style="background:#f1f5f9;height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;">
+        <form method="post" style="background:white;padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,0.1);text-align:center;">
+            <h2 style="margin:0 0 20px 0;font-weight:900;">ADMIN LOGIN</h2>
+            <input type="password" name="password" placeholder="Password" style="padding:10px;border:1px solid #ddd;border-radius:10px;width:100%;margin-bottom:15px;">
+            <button style="width:100%;padding:10px;background:#ea580c;color:white;border:none;border-radius:10px;font-weight:bold;">ENTER</button>
+        </form>
+    </body>
+    '''
+
+# --- 4. API (The Magic Sync) ---
+
+@app.route('/api/sync', methods=['POST'])
+def sync_catalog():
+    """Reads the list from HTML and saves it to Database"""
+    data = request.json
+    items = data.get('items', [])
+    
+    for item in items:
+        p = Product.query.get(item['id'])
+        # If product is new, add it. Stock starts at 0.
+        if not p:
+            new_p = Product(
+                id=item['id'], 
+                name=item['name_kh'], 
+                price=item['price'], 
+                image=item['image'], 
+                category=item['categories'][0], 
+                stock=0
+            )
+            db.session.add(new_p)
+        else:
+            # If product exists, just update details (NOT STOCK)
+            p.name = item['name_kh']
+            p.price = item['price']
+            p.image = item['image']
+            
+    db.session.commit()
+    return jsonify(success=True)
+
+@app.route('/api/get-stock')
+def get_stock():
+    return jsonify({p.id: p.stock for p in Product.query.all()})
 
 @app.route('/admin/api/update-stock', methods=['POST'])
 def update_stock():
-    if not session.get('admin'): return jsonify({"success": False}), 403
+    if not session.get('admin'): return jsonify(success=False), 403
     data = request.json
     p = Product.query.get(data['id'])
     if p:
         p.stock = int(data['amount'])
         db.session.commit()
-        return jsonify({"success": True})
-    return jsonify({"success": False})
+        return jsonify(success=True)
+    return jsonify(success=False)
 
-@app.route('/admin/api/sell-items', methods=['POST'])
-def sell_items():
-    if not session.get('admin'): return jsonify({"success": False, "msg": "Unauthorized"}), 403
+@app.route('/admin/api/process-receipt', methods=['POST'])
+def process_receipt():
+    if not session.get('admin'): return jsonify(success=False), 403
     data = request.json
-    ids = data.get('ids', [])
-    for pid in ids:
-        p = Product.query.get(pid)
-        if p and p.stock > 0:
-            p.stock -= 1
+    for item in data['items']:
+        p = Product.query.get(item['id'])
+        if p: p.stock = max(0, p.stock - int(item['qty']))
     db.session.commit()
-    return jsonify({"success": True})
+    return jsonify(success=True)
 
-@app.route('/admin/login', methods=['GET', 'POST'])
-def admin_login():
-    if request.method == 'POST':
-        if request.form['username'] == ADMIN_USER and request.form['password'] == ADMIN_PASS:
-            session['admin'] = True
-            return redirect(url_for('admin_panel'))
-    return render_template('admin_login.html')
-
-@app.route('/admin/logout')
-def logout():
-    session.pop('admin', None)
-    return redirect(url_for('admin_login'))
-
-# --- INIT & RUN ---
+# Create database tables if they don't exist
 with app.app_context():
-    try:
-        db.create_all()
-        sync_catalog()
-    except:
-        pass
-
-if __name__ == '__main__':
-    # CRITICAL FIX FOR RENDER: Bind to 0.0.0.0 and use PORT env var
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
-
+    db.create_all()
 
 
