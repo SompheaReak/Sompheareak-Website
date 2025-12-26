@@ -51,12 +51,12 @@ def send_telegram(message):
 
 @app.route('/')
 def home():
-    # FIXED: Bracelet Studio is now the homepage
+    # Shows the Bracelet Studio as the landing page
     return render_template('custom_bracelet.html')
 
 @app.route('/shop')
 def shop():
-    # E-commerce Storefront moved here
+    # E-commerce Storefront
     menu = get_menu()
     products = Product.query.all()
     return render_template('home.html', products=products, menu=menu, current_category="All Products")
@@ -65,7 +65,6 @@ def shop():
 def category(category_name):
     menu = get_menu()
     products = Product.query.filter_by(category=category_name).all()
-    # Get unique subcategories for this category
     subs = db.session.query(Product.subcategory).filter_by(category=category_name).distinct().all()
     subcategories = [s[0] for s in subs if s[0]]
     return render_template('home.html', products=products, menu=menu, current_category=category_name, subcategories=subcategories)
@@ -126,10 +125,12 @@ def sync_catalog():
     items = data.get('items', [])
     for item in items:
         p = Product.query.get(item['id'])
+        # Use name_kh or name as the primary label
+        name = item.get('name_kh') or item.get('name') or "Item"
         if not p:
             new_p = Product(
                 id=item['id'], 
-                name=item.get('name_kh', 'Item'), 
+                name=name, 
                 price=item['price'], 
                 image=item['image'], 
                 category=item['categories'][0] if item.get('categories') else "General",
@@ -137,6 +138,10 @@ def sync_catalog():
                 stock=0
             )
             db.session.add(new_p)
+        else:
+            # Update image in case URLs changed
+            p.image = item['image']
+            p.name = name
     db.session.commit()
     return jsonify(success=True)
 
