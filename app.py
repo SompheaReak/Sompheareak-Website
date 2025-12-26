@@ -6,9 +6,11 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 app.secret_key = 'somphea_reak_studio_pro_2025'
 
-# --- 1. DATABASE SETUP ---
+# --- 1. DATABASE SETUP (Safe Path for Production) ---
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'shop.db')
+# This ensures the database is created in the same folder as app.py
+db_path = os.path.join(basedir, 'shop.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -33,7 +35,6 @@ def notify_telegram(msg):
 
 @app.route('/')
 def home():
-    notify_telegram("💎 *Visitor* entered Bracelet Studio")
     return render_template('custom_bracelet.html')
 
 @app.route('/admin/panel')
@@ -98,7 +99,11 @@ def process_receipt():
     db.session.commit()
     return jsonify(success=True)
 
+# Important for Render/Heroku to create the DB on startup
 with app.app_context():
     db.create_all()
 
+if __name__ == "__main__":
+    # This part is only for local testing
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
