@@ -6,9 +6,10 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 app.secret_key = 'somphea_reak_studio_pro_2025'
 
-# --- 1. DATABASE SETUP ---
+# --- 1. DATABASE SETUP (Using v2 to fix deployment) ---
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'shop.db')
+# We renamed this to 'shop_v2.db' to force a fresh database creation
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'shop_v2.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -45,8 +46,12 @@ def admin_panel():
         if cat not in grouped: grouped[cat] = []
         grouped[cat].append(p)
     
-    override = Setting.query.get('stock_override')
-    override_val = override.value if override else "off"
+    # Safe check for override
+    try:
+        override = Setting.query.get('stock_override')
+        override_val = override.value if override else "off"
+    except:
+        override_val = "off"
     
     return render_template('admin_panel.html', grouped=grouped, override=override_val)
 
@@ -61,10 +66,15 @@ def admin_login():
 # --- 5. API ---
 @app.route('/api/get-data')
 def get_data():
-    override = Setting.query.get('stock_override')
+    try:
+        override = Setting.query.get('stock_override')
+        val = override.value if override else "off"
+    except:
+        val = "off"
+        
     return jsonify({
         "stock": {p.id: p.stock for p in Product.query.all()},
-        "override": override.value if override else "off"
+        "override": val
     })
 
 @app.route('/api/sync', methods=['POST'])
@@ -111,6 +121,12 @@ def process_receipt():
     db.session.commit()
     return jsonify(success=True)
 
+# Ensure tables exist
 with app.app_context():
     db.create_all()
+
+# Port configuration for Render/Heroku
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
