@@ -8,7 +8,7 @@ app.secret_key = 'somphea_reak_studio_pro_2025'
 
 # --- 1. DATABASE SETUP ---
 basedir = os.path.abspath(os.path.dirname(__file__))
-# shop_v2 forces a fresh start to clear old naming errors
+# shop_v2 ensures we start with a clean schema for the fixed sync
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'shop_v2.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -72,11 +72,14 @@ def search():
     products = Product.query.filter(Product.name.contains(query)).all()
     return render_template('home.html', products=products, menu=get_menu(), current_category=f"Search: {query}")
 
-# --- 6. API (Fixed Communication) ---
+@app.route('/lucky-draw')
+def lucky_draw():
+    return render_template('minifigure_game.html', menu=get_menu())
+
+# --- 6. API (Studio Connection) ---
 
 @app.route('/api/get-data')
 def get_data():
-    # Sends both Stock Numbers AND Switch Status to the Studio
     override = Setting.query.get('stock_override')
     return jsonify({
         "stock": {p.id: p.stock for p in Product.query.all()},
@@ -88,18 +91,18 @@ def sync_catalog():
     data = request.json
     for item in data.get('items', []):
         p = Product.query.get(item['id'])
-        # Map name_kh from JS to 'name' in DB
-        name = item.get('name_kh') or item.get('name') or "Item"
+        # CRITICAL FIX: Ensure image and name are captured correctly
+        name_val = item.get('name_kh') or item.get('name') or "Item"
         if not p:
-            new_p = Product(
-                id=item['id'], name=name, price=item['price'], 
+            p = Product(
+                id=item['id'], name=name_val, price=item['price'], 
                 image=item['image'], category=item['categories'][0], 
                 subcategory=item.get('subcategory', 'General'), stock=0
             )
-            db.session.add(new_p)
+            db.session.add(p)
         else:
-            p.image = item['image'] # Ensure images stay updated
-            p.name = name
+            p.image = item['image'] # Update image if changed in JS
+            p.name = name_val
     db.session.commit()
     return jsonify(success=True)
 
