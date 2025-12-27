@@ -3,80 +3,52 @@ import requests
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 
-# --- FLASK APP INITIALIZATION ---
+# --- INITIALIZATION ---
 app = Flask(__name__)
 app.secret_key = 'somphea_reak_studio_pro_2025'
 
-# --- 1. DATABASE CONFIGURATION ---
-# Absolute path ensures the database file is stable across different hosting environments
+# --- DATABASE SETUP ---
 basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'shop_v2.db')
-
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 db = SQLAlchemy(app)
 
-# --- 2. DATA MODELS ---
+# --- MODELS ---
 class Product(db.Model):
-    """Main Product Catalog for the Italy Bracelet Studio"""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200))
     price = db.Column(db.Integer)
     image = db.Column(db.String(500))
     category = db.Column(db.String(100))
-    # Default stock set to 999 to ensure availability by default
     stock = db.Column(db.Integer, default=999)
 
 class Setting(db.Model):
-    """Global Settings like the Master Stock Switch (Safety Lock)"""
     key = db.Column(db.String(50), primary_key=True)
     value = db.Column(db.String(50))
 
-# --- 3. SYSTEM CONFIGURATION ---
+# --- CONFIG ---
 ADMIN_PASS = 'Thesong_Admin@2022?!$'
 BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
 CHAT_ID = "-1002654437316"
 
-# --- 4. CUSTOMER-FACING ROUTES ---
+# --- CUSTOMER ROUTES ---
 
 @app.route('/')
 def home():
-    """Main Landing Page showing all products and categories"""
-    all_products = Product.query.all()
-    # Extract unique categories for the navigation bar
+    all_p = Product.query.all()
     categories_query = db.session.query(Product.category).distinct().all()
     subcategories = [cat[0] for cat in categories_query if cat[0]]
-    cart = session.get('cart', [])
-    return render_template('home.html', products=all_products, subcategories=subcategories, cart=cart, current_subcategory="All")
+    return render_template('home.html', products=all_p, subcategories=subcategories)
 
 @app.route('/custom-bracelet')
 def custom_bracelet():
-    """The Interactive Bracelet Designer Studio"""
     return render_template('custom_bracelet.html')
 
-@app.route('/category/<cat_name>')
-def category(cat_name):
-    """Filter products by specific category"""
-    products = Product.query.filter_by(category=cat_name).all()
-    categories_query = db.session.query(Product.category).distinct().all()
-    subcategories = [cat[0] for cat in categories_query if cat[0]]
-    cart = session.get('cart', [])
-    return render_template('home.html', products=products, subcategories=subcategories, cart=cart, current_subcategory=cat_name)
-
-@app.route('/search')
-def search():
-    """Live search for the product catalog"""
-    query = request.args.get('q', '')
-    products = Product.query.filter(Product.name.contains(query)).all()
-    cart = session.get('cart', [])
-    return render_template('home.html', products=products, subcategories=[], cart=cart, current_subcategory="Search Result")
-
-# --- 5. SECURE ADMIN ROUTES ---
+# --- ADMIN ROUTES (The parts that were 404) ---
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
-    """Secure login portal for the Admin Panel"""
     if request.method == 'POST':
         if request.form.get('password') == ADMIN_PASS:
             session['admin'] = True
@@ -85,154 +57,80 @@ def admin_login():
 
 @app.route('/admin/logout')
 def admin_logout():
-    """Securely clear the admin session"""
     session.pop('admin', None)
     return redirect(url_for('home'))
 
 @app.route('/admin/panel')
 def admin_panel():
-    """The Master Control Center for the Studio"""
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
-    
-    # Fetch all products and sort them by name for easy navigation
     all_p = Product.query.order_by(Product.name.asc()).all()
-    grouped_data = {}
+    grouped = {}
     for p in all_p:
-        cat = p.category if p.category else "General"
-        if cat not in grouped_data: grouped_data[cat] = []
-        grouped_data[cat].append(p)
-    
-    # Check the Master Safety Lock status
-    override_setting = db.session.get(Setting, 'stock_override')
-    override_val = override_setting.value if override_setting else "off"
-    
-    return render_template('admin_panel.html', grouped=grouped_data, override=override_val)
+        cat = p.category or "General"
+        if cat not in grouped: grouped[cat] = []
+        grouped[cat].append(p)
+    override = db.session.get(Setting, 'stock_override')
+    return render_template('admin_panel.html', grouped=grouped, override=override.value if override else "off")
 
-# --- 6. CORE API ENDPOINTS ---
+# --- API ENDPOINTS ---
 
 @app.route('/api/get-data')
 def get_data():
-    """Provides live stock data and switch status to the Frontend Studio"""
-    override_setting = db.session.get(Setting, 'stock_override')
-    val = override_setting.value if override_setting else "off"
-    
+    override = db.session.get(Setting, 'stock_override')
     return jsonify({
         "stock": {p.id: p.stock for p in Product.query.all()},
-        "override": val
+        "override": override.value if override else "off"
     })
-
-@app.route('/api/sync', methods=['POST'])
-def sync_catalog():
-    """Updates or adds new items from the frontend JS list into the Database"""
-    data = request.json
-    items = data.get('items', [])
-    
-    for item in items:
-        p_id = item['id']
-        display_name = item.get('name_kh') or item.get('name') or "Studio Item"
-        
-        # Check if product exists
-        existing_p = db.session.get(Product, p_id)
-        
-        if existing_p:
-            # Update existing product if price or image changed in code
-            existing_p.name = display_name
-            existing_p.price = item['price']
-            existing_p.image = item['image']
-            existing_p.category = item['categories'][0]
-        else:
-            # Create brand new entry
-            new_p = Product(
-                id=p_id, 
-                name=display_name, 
-                price=item['price'], 
-                image=item['image'], 
-                category=item['categories'][0], 
-                stock=999
-            )
-            db.session.add(new_p)
-    
-    db.session.commit()
-    return jsonify(success=True)
-
-@app.route('/admin/api/reset-all', methods=['POST'])
-def reset_all_stock():
-    """Emergency reset: Sets all 500+ items back to 999 stock instantly"""
-    if not session.get('admin'): return jsonify(success=False), 403
-    Product.query.update({Product.stock: 999})
-    db.session.commit()
-    return jsonify(success=True)
 
 @app.route('/admin/api/update-stock', methods=['POST'])
 def update_stock():
-    """Updates quantity for a specific item manually"""
     if not session.get('admin'): return jsonify(success=False), 403
     data = request.json
     p = db.session.get(Product, data['id'])
     if p:
         p.stock = int(data['amount'])
         db.session.commit()
-        return jsonify(success=True)
-    return jsonify(success=False)
+    return jsonify(success=True)
 
 @app.route('/admin/api/toggle-override', methods=['POST'])
 def toggle_override():
-    """Toggles the Master Safety Lock (Opposite Mode)"""
     if not session.get('admin'): return jsonify(success=False), 403
     val = request.json.get('value')
     sett = db.session.get(Setting, 'stock_override')
-    
     if not sett:
         sett = Setting(key='stock_override', value=val)
         db.session.add(sett)
-    else:
-        sett.value = val
-    
+    else: sett.value = val
     db.session.commit()
     return jsonify(success=True)
 
 @app.route('/admin/api/process-receipt', methods=['POST'])
 def process_receipt():
-    """Generates an Invoice and DEDUCTS quantities from the Database"""
     if not session.get('admin'): return jsonify(success=False), 403
     data = request.json
-    items_list = []
-    total_bill = 0
-    
     for item in data.get('items', []):
         p = db.session.get(Product, item['id'])
         if p:
-            # Deduce amount in stock
             p.stock = max(0, p.stock - int(item['qty']))
-            items_list.append(f"📦 <b>{p.name}</b> x{item['qty']} — {(p.price * item['qty']):,}៛")
-            total_bill += (p.price * item['qty'])
-    
     db.session.commit()
-    
-    # Send Professional Notification to Telegram
-    try:
-        header = f"<b>🧾 NEW INVOICE CONFIRMED</b>\n"
-        divider = f"----------------------------\n"
-        body = "\n".join(items_list)
-        footer = f"\n{divider}<b>TOTAL PAID: {total_bill:,}៛</b>"
-        
-        msg = header + divider + body + footer
-        
-        requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
-                     json={"chat_id": CHAT_ID, "text": msg, "parse_mode": "HTML"}, 
-                     timeout=5)
-    except Exception as e:
-        print(f"Telegram Log Error: {e}")
-    
     return jsonify(success=True)
 
-# --- INIT DATABASE ---
+@app.route('/api/sync', methods=['POST'])
+def sync_catalog():
+    data = request.json
+    items = data.get('items', [])
+    existing_ids = {p.id for p in Product.query.with_entities(Product.id).all()}
+    for item in items:
+        if item['id'] not in existing_ids:
+            db.session.add(Product(id=item['id'], name=item.get('name_kh') or item['name'], price=item['price'], image=item['image'], category=item['categories'][0]))
+    db.session.commit()
+    return jsonify(success=True)
+
+# --- BOOTSTRAP ---
 with app.app_context():
     db.create_all()
 
 if __name__ == "__main__":
-    # Pull port from environment for production deployment
-    server_port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=server_port)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
