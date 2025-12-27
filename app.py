@@ -4,11 +4,11 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-# Ensure the secret key is set for session handling
-app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_studio_pro_2025_safe_key')
+# Secure key for sessions
+app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_2025_studio_pro')
 
 # --- 1. DATABASE SETUP ---
-# Use an absolute path for the database to prevent deployment path errors
+# Use absolute paths to ensure the server finds the DB file
 basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'shop_v2.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
@@ -40,7 +40,7 @@ def get_menu():
     try:
         cats = db.session.query(Product.category).distinct().all()
         return [c[0] for c in cats if c[0]]
-    except Exception:
+    except:
         return []
 
 def send_telegram(message):
@@ -48,13 +48,14 @@ def send_telegram(message):
     payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "HTML"}
     try:
         requests.post(url, json=payload, timeout=5)
-    except Exception:
+    except:
         pass
 
 # --- 5. MAIN ROUTES ---
 
 @app.route('/')
 def home():
+    # Make sure your file is named 'custom-bracelet.html' in the templates folder
     return render_template('custom-bracelet.html')
 
 @app.route('/shop')
@@ -63,18 +64,19 @@ def shop():
     products = Product.query.all()
     return render_template('home.html', products=products, menu=menu, current_category="All Products")
 
-@app.route('/category/<category_name>')
-def category(category_name):
+@app.route('/category/<cat_name>')
+def category(cat_name):
     menu = get_menu()
-    products = Product.query.filter_by(category=category_name).all()
-    subs = db.session.query(Product.subcategory).filter_by(category=category_name).distinct().all()
+    products = Product.query.filter_by(category=cat_name).all()
+    subs = db.session.query(Product.subcategory).filter_by(category=cat_name).distinct().all()
     subcategories = [s[0] for s in subs if s[0]]
-    return render_template('home.html', products=products, menu=menu, current_category=category_name, subcategories=subcategories)
+    return render_template('home.html', products=products, menu=menu, current_category=cat_name, subcategories=subcategories)
 
-# --- 6. API ---
+# --- 6. API FOR STUDIO ---
 
 @app.route('/api/get-data')
 def get_data():
+    # Sends both stock numbers AND the Master Switch status
     override = Setting.query.get('stock_override')
     return jsonify({
         "stock": {p.id: p.stock for p in Product.query.all()},
@@ -87,17 +89,19 @@ def sync_catalog():
     items = data.get('items', [])
     for item in items:
         p = Product.query.get(item['id'])
-        name = item.get('name_kh') or item.get('name') or "Item"
+        # Map 'name_kh' from JS to 'name' in DB
+        name_val = item.get('name_kh') or item.get('name') or "Item"
         if not p:
             new_p = Product(
-                id=item['id'], name=name, price=item['price'], 
-                image=item['image'], category=item['categories'][0] if item.get('categories') else "General",
+                id=item['id'], name=name_val, price=item['price'], 
+                image=item['image'], category=item['categories'][0], 
                 subcategory=item.get('subcategory', 'General'), stock=0
             )
             db.session.add(new_p)
         else:
+            # Update image and name to keep Admin Panel current
             p.image = item['image']
-            p.name = name
+            p.name = name_val
     db.session.commit()
     return jsonify(success=True)
 
@@ -145,29 +149,12 @@ def toggle_override():
     db.session.commit()
     return jsonify(success=True)
 
-@app.route('/admin/api/process-receipt', methods=['POST'])
-def process_receipt():
-    if not session.get('admin'): return jsonify(success=False), 403
-    data = request.json
-    items_list = []
-    total_bill = 0
-    for item in data['items']:
-        p = Product.query.get(item['id'])
-        if p:
-            p.stock = max(0, p.stock - int(item['qty']))
-            items_list.append(f"• {p.name} x{item['qty']} ({p.price * item['qty']}៛)")
-            total_bill += (p.price * item['qty'])
-    db.session.commit()
-    msg = f"<b>🔔 NEW SALE</b>\n" + "\n".join(items_list) + f"\n<b>Total: {total_bill}៛</b>"
-    send_telegram(msg)
-    return jsonify(success=True)
-
 # --- 8. INITIALIZATION ---
 with app.app_context():
     db.create_all()
 
 if __name__ == "__main__":
-    # For deployment, Gunicorn usually handles the port
+    # Port 5000 is default, but Render uses 'PORT' environment variable
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
 
