@@ -30,24 +30,30 @@
 
     <main class="p-4">
         {% if not grouped %}
-        <div class="text-center py-20 opacity-30 uppercase font-black text-xs tracking-widest">No Data Found<br><span class="text-[8px]">Open Studio Page First</span></div>
+        <div class="flex flex-col items-center justify-center py-20 text-center opacity-50">
+            <i class="fa-solid fa-cloud-arrow-down text-4xl mb-4 text-slate-300"></i>
+            <h3 class="font-black uppercase text-xs tracking-widest text-slate-500">No Data in Cloud</h3>
+            <p class="text-[10px] mt-2">Open <a href="/studio" class="text-orange-600 underline font-bold">Studio</a> to Sync.</p>
+        </div>
         {% endif %}
 
         {% for cat, items in grouped.items() %}
         <div class="mb-10">
             <h2 class="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest">{{ cat }}</h2>
-            <div class="grid grid-cols-3 md:grid-cols-6 gap-2">
+            <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
                 {% for p in items %}
-                <div class="bg-white rounded-2xl p-2 border shadow-sm flex flex-col relative overflow-hidden">
-                    <div class="relative w-full aspect-[3/5] overflow-hidden rounded-xl mb-2 bg-slate-100">
+                <div class="bg-white rounded-xl p-2 border shadow-sm flex flex-col relative overflow-hidden h-full">
+                    <div class="relative w-full aspect-[2/3] overflow-hidden rounded-lg mb-2 bg-slate-100">
                         <img src="{{ p.image }}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/300x500?text=No+Image'">
-                        <div class="absolute bottom-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[8px] font-black">Qty: {{ p.stock }}</div>
+                        <div class="absolute bottom-1 right-1 bg-white/90 px-2 py-0.5 rounded text-[8px] font-black shadow-sm border">Qty: {{ p.stock }}</div>
                     </div>
-                    <h4 class="text-[8px] font-black uppercase truncate px-1 mb-2">{{ p.name }}</h4>
-                    <div class="mt-auto flex justify-between items-center bg-slate-900 rounded-lg p-1">
-                        <button onclick="updateQty('{{ p.id }}', -1)" class="w-7 h-7 flex items-center justify-center text-white"><i class="fa-solid fa-minus text-[8px]"></i></button>
-                        <span id="val-{{ p.id }}" class="text-[9px] font-black text-white">{{ p.stock }}</span>
-                        <button onclick="updateQty('{{ p.id }}', 1)" class="w-7 h-7 flex items-center justify-center text-white"><i class="fa-solid fa-plus text-[8px]"></i></button>
+                    <h4 class="text-[9px] font-black uppercase truncate px-1 mb-2">{{ p.name }}</h4>
+                    
+                    <!-- VISIBLE BUTTONS -->
+                    <div class="mt-auto flex justify-between items-center bg-slate-900 rounded-lg p-1.5 shadow-inner">
+                        <button onclick="updateQty('{{ p.id }}', -1)" class="w-8 h-8 flex items-center justify-center text-white active:bg-slate-700 rounded transition-colors"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                        <span id="val-{{ p.id }}" class="text-[11px] font-black text-white w-6 text-center">{{ p.stock }}</span>
+                        <button onclick="updateQty('{{ p.id }}', 1)" class="w-8 h-8 flex items-center justify-center text-white active:bg-slate-700 rounded transition-colors"><i class="fa-solid fa-plus text-[10px]"></i></button>
                     </div>
                 </div>
                 {% endfor %}
@@ -61,25 +67,19 @@
 
         async function updateQty(id, d) {
             const el = document.getElementById('val-' + id);
+            if (!el) return;
             let n = Math.max(0, parseInt(el.innerText) + d);
             el.innerText = n;
-            await fetch('/admin/api/update-stock', {
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({id: id, amount: n})
-            });
+            await fetch('/admin/api/update-stock', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: id, amount: n}) });
         }
 
         async function toggleMasterMode() {
             overrideStatus = (overrideStatus === "on") ? "off" : "on";
             document.getElementById('override-switch').classList.toggle('active-toggle');
-            await fetch('/admin/api/toggle-override', {
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({value: overrideStatus})
-            });
+            await fetch('/admin/api/toggle-override', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({value: overrideStatus}) });
         }
     </script>
 </body>
 </html>
+
 
