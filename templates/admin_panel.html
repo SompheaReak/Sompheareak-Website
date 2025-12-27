@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Somphea Reak - Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Library to convert HTML to Image -->
+    <!-- html2canvas converts your invoice into a shareable image -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -14,7 +14,7 @@
         .active-toggle .toggle-bg { background: #22c55e; }
         .active-toggle .toggle-dot { transform: translateX(20px); }
         
-        /* Receipt Styling for the generated image */
+        /* Receipt Styling for the high-res image generation */
         #visual-receipt-template {
             width: 400px;
             background: white;
@@ -31,8 +31,12 @@
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-sm font-black uppercase italic tracking-tighter">Control <span class="text-orange-600">Center</span></h1>
             <div class="flex gap-2">
+                <!-- Force Sync Button (Restores your 500+ items) -->
+                <button onclick="forceSync()" class="bg-slate-100 text-slate-500 px-3 py-2 rounded-xl text-[10px] font-black uppercase border border-slate-200 active:scale-95 transition-transform">
+                    <i class="fa-solid fa-rotate mr-1"></i> Sync Items
+                </button>
                 <button onclick="resetAllStock()" class="bg-blue-600 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-blue-100 active:scale-95 transition-transform">
-                    <i class="fa-solid fa-bolt mr-1"></i> Reset All 999
+                    <i class="fa-solid fa-bolt mr-1"></i> Reset 999
                 </button>
                 <button onclick="toggleInvoice()" class="relative bg-black text-white w-10 h-10 rounded-xl flex items-center justify-center">
                     <i class="fa-solid fa-file-invoice"></i>
@@ -59,6 +63,15 @@
 
     <!-- INVENTORY GRID -->
     <main class="p-4">
+        {% if not grouped %}
+        <!-- Empty State UI -->
+        <div class="text-center py-20 bg-white rounded-[2rem] border-2 border-dashed border-slate-100">
+            <div class="text-slate-200 text-6xl mb-4"><i class="fa-solid fa-box-open"></i></div>
+            <h3 class="font-black uppercase text-slate-400 text-xs">No Products in Database</h3>
+            <p class="text-[10px] text-slate-400 mt-2 px-10">Use the "Sync Items" button above to load your catalog.</p>
+        </div>
+        {% endif %}
+
         {% for cat, items in grouped.items() %}
         <div class="mb-10">
             <div class="flex items-center gap-2 mb-4">
@@ -114,7 +127,7 @@
         </div>
     </div>
 
-    <!-- HIDDEN RECEIPT TEMPLATE (This is what will be captured) -->
+    <!-- HIDDEN RECEIPT TEMPLATE (Used for image capture) -->
     <div id="receipt-capture-area" style="position: absolute; left: -9999px;">
         <div id="visual-receipt-template">
             <div style="text-align: center; border-bottom: 4px solid #000; padding-bottom: 20px; margin-bottom: 20px;">
@@ -124,7 +137,7 @@
             </div>
 
             <div id="receipt-items-list" style="display: flex; flex-direction: column; gap: 15px;">
-                <!-- Product list with images goes here -->
+                <!-- Product list with images injected here -->
             </div>
 
             <div style="margin-top: 30px; border-top: 2px dashed #eee; padding-top: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
@@ -142,6 +155,26 @@
         let invoiceList = [];
         let currentLock = "{{ override }}";
 
+        // MASTER CATALOG ARRAY (Required for the Sync button)
+        const masterList = [
+            {"id": 1, "name_kh": "Silver Charm", "price": 400, "image": "https://raw.githubusercontent.com/sompheareak/Sompheareak-Website/main/c01.jpg", "categories": ["Charm"]},
+            {"id": 1100, "name_kh": "Classic F1 Logo", "price": 3000, "image": "https://raw.githubusercontent.com/sompheareak/Sompheareak-Website/main/charm-f1–101.jpg", "categories": ["Class F1🏎️"]},
+            // ... Add your other 500+ items here manually or paste them in ...
+        ];
+
+        async function forceSync() {
+            if(!confirm("Push all catalog items to Database?")) return;
+            const res = await fetch('/api/sync', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({items: masterList})
+            });
+            if(res.ok) {
+                alert("Database Synced Successfully! Reloading...");
+                location.reload();
+            }
+        }
+
         async function updateQty(id, d) {
             const el = document.getElementById('val-'+id);
             let n = Math.max(0, parseInt(el.innerText) + d);
@@ -150,7 +183,7 @@
         }
 
         async function resetAllStock() {
-            if(!confirm("Set ALL 500+ items to 999 stock?")) return;
+            if(!confirm("Set ALL visible items to 999 stock?")) return;
             const res = await fetch('/admin/api/reset-all', {method:'POST'});
             if(res.ok) location.reload();
         }
@@ -192,11 +225,9 @@
         async function downloadVisualInvoice() {
             if (invoiceList.length === 0) return;
             
-            // Set date
             const now = new Date();
             document.getElementById('receipt-date').innerText = now.toLocaleString();
             
-            // Populate the capture area
             const listArea = document.getElementById('receipt-items-list');
             let total = 0;
             listArea.innerHTML = invoiceList.map(item => {
@@ -216,7 +247,6 @@
             
             document.getElementById('receipt-total-bill').innerText = total.toLocaleString() + "៛";
             
-            // Capture image
             const captureElement = document.getElementById('visual-receipt-template');
             const canvas = await html2canvas(captureElement, {
                 useCORS: true, 
@@ -225,20 +255,20 @@
             });
             
             const link = document.createElement('a');
-            link.download = `Invoice-${now.getTime()}.png`;
+            link.download = `SompheaReak-Invoice-${now.getTime()}.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
         }
 
         async function confirmSale() {
-            if(!invoiceList.length || !confirm("Complete this sale? Stock will be deduced automatically.")) return;
+            if(!invoiceList.length || !confirm("Process sale? This will deduce stock levels permanently.")) return;
             const res = await fetch('/admin/api/process-receipt', {
                 method:'POST', 
                 headers:{'Content-Type':'application/json'}, 
                 body:JSON.stringify({items: invoiceList})
             });
             if(res.ok) {
-                alert("Success! Stock deducted and Sale recorded.");
+                alert("Success! Stock deducted.");
                 location.reload();
             }
         }
