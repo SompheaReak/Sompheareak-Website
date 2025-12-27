@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Somphea Reak Shop</title>
+    <!-- Assuming you might add a static css file later, but inline styles are fine for now -->
     <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         body { font-family: 'Hanuman', sans-serif; margin: 0; padding-bottom: 90px; background: #f4f6f8; }
@@ -39,7 +39,7 @@
             cursor: pointer;
         }
 
-        /* --- CATEGORY GRID --- */
+        /* --- 4-COLUMN GRID --- */
         .category-bar {
             display: grid;
             grid-template-columns: repeat(4, 1fr); 
@@ -67,7 +67,6 @@
         }
         .category-bar span { font-size: 11px; font-weight: bold; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* CUSTOM BRACELET LINK */
         .custom-link {
             grid-column: 1 / -1; width: 100% !important;
             background: linear-gradient(45deg, #007bff, #0056b3);
@@ -77,15 +76,11 @@
         }
         .custom-link span { color: white; font-size: 14px; width: auto; }
         
-        /* BANNER */
         .banner-container { padding: 10px; background: white; margin-bottom: 10px; }
         .banner img { width: 100%; border-radius: 10px; display: block; }
         .slider { overflow: hidden; border-radius: 10px; margin-top: 10px; }
-        .slides { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; } 
-        .slide { min-width: 100%; scroll-snap-align: center; }
-        .slide img { width: 100%; border-radius: 10px; }
+        .slides { display: flex; } .slide { min-width: 100%; }
 
-        /* PRODUCT GRID */
         .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 10px; }
         @media(min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
 
@@ -102,7 +97,6 @@
         }
         .add-cart-button:active { transform: scale(0.98); }
 
-        /* FLOATING CART */
         .floating-cart {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: #222; color: white; padding: 15px 30px; border-radius: 50px;
@@ -110,7 +104,11 @@
             display: flex; align-items: center; gap: 10px;
         }
 
-        /* MODAL */
+        .sub-sticky { position: sticky; top: 58px; z-index: 1000; background: #f4f6f8; padding: 10px 0; }
+        .scroll-bar { display: flex; gap: 10px; overflow-x: auto; padding: 0 10px; scrollbar-width: none; }
+        .scroll-bar a { background: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; color: #333; border: 1px solid #ddd; white-space: nowrap; font-size: 13px; }
+        .scroll-bar a.active { background: #333; color: white; border-color: #333; }
+        
         .image-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; }
         .image-modal img { max-width: 90%; max-height: 80%; border-radius: 10px; }
         .close-button { position: absolute; top: 20px; right: 20px; color: white; font-size: 40px; cursor: pointer; }
@@ -118,7 +116,7 @@
 </head>
 
 <body>
-    <!-- SEARCH -->
+    <!-- 1. SEARCH BAR -->
     <div class="search-container">
         <form class="search-form" action="/search" method="GET">
             <input type="text" name="q" placeholder="🔍 Search products..." required>
@@ -126,47 +124,60 @@
         </form>
     </div>
 
-    <!-- BANNER -->
+    <!-- 2. BANNER & SLIDER -->
     <div class="banner-container">
-        <h1 style="text-align: center; margin: 5px 0 15px; color: #e44d26; font-weight: 900; text-transform: uppercase;">Somphea Reak Shop</h1>
+        <h1 style="text-align: center; margin: 5px 0 15px; color: #e44d26;">Somphea Reak Shop</h1>
         <div class="slider">
           <div class="slides" id="slides">
-            <div class="slide"><img src="https://placehold.co/800x400/orange/white?text=Somphea+Reak+Promo" alt="Promo 1"></div>
-            <div class="slide"><img src="https://placehold.co/800x400/333/white?text=New+Collection" alt="Promo 2"></div>
+            <div class="slide"><img src="/static/images/testslide1.jpg" onerror="this.src='https://placehold.co/800x400?text=Promo+1'"></div>
+            <div class="slide"><img src="/static/images/testslide2.jpg" onerror="this.src='https://placehold.co/800x400?text=Promo+2'"></div>
           </div>
         </div>
     </div>
 
-    <!-- CATEGORIES -->
+    <!-- 3. CATEGORY GRID -->
     <div class="category-bar">
-        <a href="/category/Hot Sale"><img src="https://placehold.co/100/red/white?text=Hot" alt="Hot"><span>🔥 Hot Sale</span></a>
-        <a href="/category/LEGO"><img src="https://placehold.co/100/yellow/black?text=LEGO" alt="LEGO"><span>LEGO</span></a>
-        <a href="/category/Toy"><img src="https://placehold.co/100/blue/white?text=Toy" alt="Toy"><span>Toy</span></a>
-        <a href="/category/Keychain"><img src="https://placehold.co/100/purple/white?text=Key" alt="Keychain"><span>Keychain</span></a>
+        <a href="/category/Hot Sale"><img src="/static/images/categoryhotsale.jpg" onerror="this.src='https://placehold.co/100'"><span>🔥 Hot Sale</span></a>
+        <a href="/category/LEGO"><img src="/static/images/categorylego.jpg" onerror="this.src='https://placehold.co/100'"><span>LEGO</span></a>
+        <a href="/category/Toy"><img src="/static/images/categorytoy.jpg" onerror="this.src='https://placehold.co/100'"><span>Toy</span></a>
+        <a href="/category/Keychain"><img src="/static/images/categorykey.jpg" onerror="this.src='https://placehold.co/100'"><span>Keychain</span></a>
         
-        <a href="/category/LEGO Anime"><img src="https://placehold.co/100/orange/white?text=Anime" alt="Anime"><span>Anime</span></a>
-        <a href="/category/LEGO Ninjago"><img src="https://placehold.co/100/green/white?text=Ninja" alt="Ninjago"><span>Ninjago</span></a>
-        <a href="/category/Accessories"><img src="https://placehold.co/100/pink/white?text=Acc" alt="Acc"><span>Bracelet</span></a>
-        <a href="/lucky-draw"><img src="https://placehold.co/100/gold/white?text=Game" alt="Game"><span>💎 Game</span></a>
+        <a href="/category/LEGO Anime"><img src="/static/images/categoryanime.jpg" onerror="this.src='https://placehold.co/100'"><span>Anime</span></a>
+        <a href="/category/LEGO Ninjago"><img src="/static/images/categoryninjago.jpg" onerror="this.src='https://placehold.co/100'"><span>Ninjago</span></a>
+        <a href="/category/Accessories"><img src="/static/images/categorybracelet.jpg" onerror="this.src='https://placehold.co/100'"><span>Bracelet</span></a>
+        <a href="{{ url_for('lucky_draw') }}"><img src="/static/images/categoryluckydraw.jpg" onerror="this.src='https://placehold.co/100'"><span>💎 Game</span></a>
         
         <a href="/category/Italy Bracelet" class="italy-link">
-          <img src="https://placehold.co/100/teal/white?text=Italy" alt="Italy">
+          <img src="/static/images/italybracelet.jpg" onerror="this.src='https://placehold.co/100'">
           <span>🇮🇹 Italy Bracelet</span>
         </a>
 
-        <!-- CUSTOMIZE LINK -->
         <a href="/custom-bracelet" class="custom-link">
-           <i class="fa-solid fa-wand-magic-sparkles"></i>
            <span>✨ Customize Your Own Bracelet</span>
         </a>
     </div>
 
-    <!-- PRODUCTS -->
+    <!-- 4. SUBCATEGORIES -->
+    {% if subcategories %}
+    <div class="sub-sticky">
+        <div class="scroll-bar">
+            <a href="/">🏠 All</a>
+            {% for sub in subcategories %}
+            <a href="/subcategory/{{ sub }}" class="{% if current_subcategory == sub %}active{% endif %}">{{ sub }}</a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 5. PRODUCTS -->
     <div class="product-grid">
       {% for product in products %}
       <div class="product-card">
-        <img src="{{ product.image }}" onclick="openImageModal(this.src)" onerror="this.src='https://placehold.co/150?text=No+Image'">
+        <img src="{{ product.image }}" onclick="openImageModal(this.src)" onerror="this.src='https://placehold.co/150'">
+        
+        <!-- FIX: Use product.name instead of product.name_kh -->
         <h3>{{ product.name }}</h3>
+        
         <div class="price-line">{{ "{:,}".format(product.price) }}៛</div>
         
         <form class="add-to-cart-form">
@@ -178,12 +189,12 @@
       {% endfor %}
     </div>
 
-    <!-- CART -->
+    <!-- 6. FLOATING CART -->
     <a href="/cart" class="floating-cart">
-        🛒 My Cart (<span id="cart-count">{{ cart_len }}</span>)
+        🛒 My Cart (<span id="cart-count">{{ cart|length }}</span>)
     </a>
 
-    <!-- NOTIFICATIONS -->
+    <!-- Success Message & Modal -->
     <div id="success" style="display:none; position:fixed; top:70px; right:20px; background:#28a745; color:white; padding:12px; border-radius:8px; z-index:9999; box-shadow:0 4px 10px rgba(0,0,0,0.2);">✅ Added to Cart!</div>
     
     <div id="image-modal" class="image-modal" onclick="closeImageModal()">
@@ -192,9 +203,16 @@
     </div>
 
     <script>
+        // Modal Logic
         function openImageModal(src) { document.getElementById('modal-image').src = src; document.getElementById('image-modal').style.display = 'flex'; }
         function closeImageModal() { document.getElementById('image-modal').style.display = 'none'; }
         
+        // Simple Auto Slider (Placeholder)
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        // ... simple slider logic could go here ...
+
+        // Add to Cart Logic
         document.querySelectorAll('.add-to-cart-form').forEach(form => {
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
@@ -214,5 +232,4 @@
     </script>
 </body>
 </html>
-
 
