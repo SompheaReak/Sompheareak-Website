@@ -1,114 +1,91 @@
 import os
+import json
 import requests
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
-from flask_sqlalchemy import SQLAlchemy
+import firebase_admin
+from firebase_admin import credentials, firestore
 
 app = Flask(__name__)
-# 1. SECURITY CONFIG
 app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_studio_safe_key_2025')
 
-# 2. DATABASE SETUP (Absolute Path to prevent errors)
-basedir = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.join(basedir, 'shop_v2.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# --- 1. CLOUD DATABASE CONNECTION ---
+# We use an environment variable for the key to keep it safe
+firebase_key = os.environ.get('FIREBASE_KEY')
 
-db = SQLAlchemy(app)
+if firebase_key:
+    # Use the key if provided in deployment settings
+    cred = credentials.Certificate(json.loads(firebase_key))
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(cred)
+else:
+    # Fallback: If no key is found, app won't crash but won't save permanently
+    # You MUST add the FIREBASE_KEY in your Render/Host settings
+    print("WARNING: No Firebase Key found. Data will not persist.")
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app()
 
-# 3. MODELS
-class Product(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200))
-    price = db.Column(db.Integer)
-    image = db.Column(db.String(500))
-    category = db.Column(db.String(100))
-    subcategory = db.Column(db.String(100))
-    stock = db.Column(db.Integer, default=0)
+db = firestore.client()
 
-class Setting(db.Model):
-    key = db.Column(db.String(50), primary_key=True)
-    value = db.Column(db.String(50))
-
-# 4. CONFIG
+# --- CONFIG ---
 ADMIN_PASS = 'Thesong_Admin@2022?!$'
 BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
 CHAT_ID = "-1002654437316"
 
-# 5. HELPERS
-def get_menu():
-    try:
-        cats = db.session.query(Product.category).distinct().all()
-        return [c[0] for c in cats if c[0]]
-    except: return []
-
-def send_telegram(message):
-    try:
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        payload = {"chat_id": CHAT_ID, "text": message, "parse_mode": "HTML"}
-        requests.post(url, json=payload, timeout=5)
-    except: pass
-
-# 6. ROUTES
+# --- 2. ROUTES ---
 
 @app.route('/')
 def home():
-    # Ensure your HTML file is named exactly "custom_bracelet.html" in templates folder
+    # Fix: Homepage is now the Shop Menu
+    docs = db.collection('products').stream()
+    products = [d.to_dict() for d in docs]
+    
+    # Extract unique categories
+    cats = list(set(p.get('category') for p in products if p.get('category')))
+    return render_template('home.html', menu=cats)
+
+@app.route('/studio')
+def studio():
+    # Fix: This is the design tool
     return render_template('custom_bracelet.html')
 
-@app.route('/shop')
-def shop():
-    menu = get_menu()
-    products = Product.query.all()
-    return render_template('home.html', products=products, menu=menu, current_category="All Products")
-
-@app.route('/category/<category_name>')
-def category(category_name):
-    menu = get_menu()
-    products = Product.query.filter_by(category=category_name).all()
-    subs = db.session.query(Product.subcategory).filter_by(category=category_name).distinct().all()
-    subcategories = [s[0] for s in subs if s[0]]
-    return render_template('home.html', products=products, menu=menu, current_category=category_name, subcategories=subcategories)
-
-@app.route('/search')
-def search():
-    query = request.args.get('q', '')
-    products = Product.query.filter(Product.name.contains(query)).all()
-    return render_template('home.html', products=products, menu=get_menu(), current_category=f"Search: {query}")
-
-# 7. API (The Sync Fix)
+# --- 3. CLOUD API ---
 
 @app.route('/api/get-data')
 def get_data():
-    override = Setting.query.get('stock_override')
-    return jsonify({
-        "stock": {p.id: p.stock for p in Product.query.all()},
-        "override": override.value if override else "off"
-    })
+    # Read stock from Cloud
+    docs = db.collection('products').stream()
+    stock_map = {d.id: d.to_dict().get('stock', 0) for d in docs}
+    
+    # Read Master Switch
+    sett_ref = db.collection('settings').document('override').get()
+    override = sett_ref.to_dict().get('value', 'off') if sett_ref.exists else 'off'
+    
+    return jsonify({"stock": stock_map, "override": override})
 
 @app.route('/api/sync', methods=['POST'])
 def sync_catalog():
+    # This saves your 500 items to the Cloud (Only runs once per item)
     data = request.json
-    for item in data.get('items', []):
-        p = Product.query.get(item['id'])
-        # IMPORTANT: Maps JS 'name_kh' to DB 'name'
-        name_val = item.get('name_kh') or item.get('name') or "Item"
-        
-        if not p:
-            new_p = Product(
-                id=item['id'], name=name_val, price=item['price'], 
-                image=item['image'], category=item['categories'][0], 
-                subcategory=item.get('subcategory', 'General'), stock=0
-            )
-            db.session.add(new_p)
-        else:
-            # Keeps Admin Panel up to date
-            p.image = item['image']
-            p.name = name_val
-            
-    db.session.commit()
+    items = data.get('items', [])
+    batch = db.batch()
+    
+    for item in items:
+        doc_ref = db.collection('products').document(str(item['id']))
+        # Only create if it doesn't exist (prevents overwriting stock)
+        if not doc_ref.get().exists:
+            name = item.get('name_kh') or item.get('name') or "Item"
+            batch.set(doc_ref, {
+                "name": name,
+                "price": item['price'],
+                "image": item['image'],
+                "category": item['categories'][0],
+                "stock": 0 # Default stock
+            })
+    
+    batch.commit()
     return jsonify(success=True)
 
-# 8. ADMIN
+# --- 4. ADMIN ROUTES ---
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -121,35 +98,39 @@ def admin_login():
 @app.route('/admin/panel')
 def admin_panel():
     if not session.get('admin'): return redirect(url_for('admin_login'))
-    all_p = Product.query.all()
+    
+    # Fetch all from Cloud
+    docs = db.collection('products').stream()
+    all_p = []
+    for d in docs:
+        p = d.to_dict()
+        p['id'] = d.id
+        all_p.append(p)
+        
     grouped = {}
     for p in all_p:
-        cat = p.category or "General"
+        cat = p.get('category', 'General')
         if cat not in grouped: grouped[cat] = []
         grouped[cat].append(p)
-    override = Setting.query.get('stock_override')
-    return render_template('admin_panel.html', grouped=grouped, override=override.value if override else "off")
+        
+    sett_ref = db.collection('settings').document('override').get()
+    override = sett_ref.to_dict().get('value', 'off') if sett_ref.exists else 'off'
+    
+    return render_template('admin_panel.html', grouped=grouped, override=override)
 
 @app.route('/admin/api/update-stock', methods=['POST'])
 def update_stock():
     if not session.get('admin'): return jsonify(success=False), 403
     data = request.json
-    p = Product.query.get(data['id'])
-    if p:
-        p.stock = int(data['amount'])
-        db.session.commit()
-        return jsonify(success=True)
-    return jsonify(success=False)
+    # Update Cloud
+    db.collection('products').document(str(data['id'])).update({"stock": int(data['amount'])})
+    return jsonify(success=True)
 
 @app.route('/admin/api/toggle-override', methods=['POST'])
 def toggle_override():
     if not session.get('admin'): return jsonify(success=False), 403
     val = request.json.get('value')
-    sett = Setting.query.get('stock_override')
-    if not sett: sett = Setting(key='stock_override', value=val)
-    else: sett.value = val
-    db.session.add(sett)
-    db.session.commit()
+    db.collection('settings').document('override').set({"value": val})
     return jsonify(success=True)
 
 @app.route('/admin/api/process-receipt', methods=['POST'])
@@ -158,23 +139,28 @@ def process_receipt():
     data = request.json
     items_list = []
     total_bill = 0
+    
     for item in data['items']:
-        p = Product.query.get(item['id'])
-        if p:
-            p.stock = max(0, p.stock - int(item['qty']))
-            items_list.append(f"• {p.name} x{item['qty']} ({p.price * item['qty']}៛)")
-            total_bill += (p.price * item['qty'])
-    db.session.commit()
-    msg = f"<b>🔔 NEW SALE</b>\n" + "\n".join(items_list) + f"\n<b>Total: {total_bill}៛</b>"
-    send_telegram(msg)
+        ref = db.collection('products').document(str(item['id']))
+        doc = ref.get()
+        if doc.exists:
+            current_stock = doc.to_dict().get('stock', 0)
+            new_stock = max(0, current_stock - int(item['qty']))
+            ref.update({"stock": new_stock})
+            
+            p_data = doc.to_dict()
+            items_list.append(f"• {p_data.get('name')} x{item['qty']}")
+            total_bill += (p_data.get('price', 0) * item['qty'])
+            
+    # Send Telegram
+    try:
+        msg = f"<b>🔔 NEW SALE</b>\n" + "\n".join(items_list) + f"\n<b>Total: {total_bill}៛</b>"
+        requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", json={"chat_id": CHAT_ID, "text": msg, "parse_mode": "HTML"}, timeout=5)
+    except: pass
+    
     return jsonify(success=True)
 
-# 9. STARTUP
-with app.app_context():
-    db.create_all()
-
 if __name__ == "__main__":
-    # REQUIRED FOR RENDER DEPLOYMENT
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
 
