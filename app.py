@@ -53,7 +53,6 @@ def send_telegram(message):
 @app.route('/')
 def home():
     # Ensure your HTML file is named exactly "custom_bracelet.html" in templates folder
-    # If your file is named "Custom_Bracelet.html", rename it to "custom_bracelet.html"
     return render_template('custom_bracelet.html')
 
 @app.route('/shop')
