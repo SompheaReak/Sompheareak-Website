@@ -32,7 +32,7 @@ ADMIN_PASS = 'Thesong_Admin@2022?!$'
 BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
 CHAT_ID = "-1002654437316"
 
-# --- CUSTOMER ROUTES ---
+# --- ROUTES ---
 
 @app.route('/')
 def home():
@@ -44,8 +44,6 @@ def home():
 @app.route('/custom-bracelet')
 def custom_bracelet():
     return render_template('custom_bracelet.html')
-
-# --- ADMIN ROUTES (The parts that were 404) ---
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -118,12 +116,26 @@ def process_receipt():
 
 @app.route('/api/sync', methods=['POST'])
 def sync_catalog():
+    """Syncs the product list from the frontend to the database"""
     data = request.json
     items = data.get('items', [])
     existing_ids = {p.id for p in Product.query.with_entities(Product.id).all()}
     for item in items:
         if item['id'] not in existing_ids:
-            db.session.add(Product(id=item['id'], name=item.get('name_kh') or item['name'], price=item['price'], image=item['image'], category=item['categories'][0]))
+            db.session.add(Product(
+                id=item['id'], 
+                name=item.get('name_kh') or item['name'], 
+                price=item['price'], 
+                image=item['image'], 
+                category=item['categories'][0]
+            ))
+    db.session.commit()
+    return jsonify(success=True)
+
+@app.route('/admin/api/reset-all', methods=['POST'])
+def reset_all():
+    if not session.get('admin'): return jsonify(success=False), 403
+    Product.query.update({Product.stock: 999})
     db.session.commit()
     return jsonify(success=True)
 
