@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Admin - Somphea Reak</title>
+    <title>Somphea Reak - Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Library to convert HTML to Image -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -12,28 +13,43 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         .active-toggle .toggle-bg { background: #22c55e; }
         .active-toggle .toggle-dot { transform: translateX(20px); }
+        
+        /* Receipt Styling for the generated image */
+        #visual-receipt-template {
+            width: 400px;
+            background: white;
+            padding: 40px;
+            color: black;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
     </style>
 </head>
 <body class="pb-32">
 
+    <!-- TOP CONTROL BAR -->
     <header class="sticky top-0 z-[100] bg-white border-b p-4 shadow-sm">
         <div class="flex justify-between items-center mb-4">
             <h1 class="text-sm font-black uppercase italic tracking-tighter">Control <span class="text-orange-600">Center</span></h1>
-            <button onclick="toggleReceipt()" class="relative bg-black text-white w-10 h-10 rounded-xl flex items-center justify-center">
-                <i class="fa-solid fa-receipt"></i>
-                <span id="badge" class="absolute -top-1 -right-1 bg-orange-600 text-white text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">0</span>
-            </button>
+            <div class="flex gap-2">
+                <button onclick="resetAllStock()" class="bg-blue-600 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase shadow-lg shadow-blue-100 active:scale-95 transition-transform">
+                    <i class="fa-solid fa-bolt mr-1"></i> Reset All 999
+                </button>
+                <button onclick="toggleInvoice()" class="relative bg-black text-white w-10 h-10 rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span id="badge" class="absolute -top-1 -right-1 bg-orange-600 text-white text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">0</span>
+                </button>
+            </div>
         </div>
 
-        <!-- THE OPPOSITE SAFETY LOCK -->
+        <!-- SAFETY LOCK SWITCH -->
         <div class="bg-slate-900 text-white rounded-2xl p-4 flex items-center justify-between shadow-xl">
             <div>
-                <p class="text-[10px] font-black uppercase text-slate-400">Safety Lock (Opposite Mode)</p>
-                <p id="mode-desc" class="text-[8px] font-bold text-slate-500 uppercase">
-                    {% if switch_val == 'off' %}Button OFF: Everything In Stock{% else %}Button ON: Check Stock Numbers{% endif %}
+                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Safety Lock (Opposite Mode)</p>
+                <p id="mode-desc" class="text-[8px] font-bold text-slate-500 uppercase mt-1">
+                    {% if override == 'on' %}Button ON: Strict Stock Check{% else %}Button OFF: Unlimited Mode{% endif %}
                 </p>
             </div>
-            <div id="override-switch" onclick="toggleMasterMode()" class="flex items-center cursor-pointer {% if switch_val == 'on' %}active-toggle{% endif %}">
+            <div id="lock-switch" onclick="toggleSafetyLock()" class="flex items-center cursor-pointer {% if override == 'on' %}active-toggle{% endif %}">
                 <div class="w-12 h-6 bg-slate-700 rounded-full relative p-1 transition-colors toggle-bg">
                     <div class="w-4 h-4 bg-white rounded-full shadow-sm transition-transform toggle-dot"></div>
                 </div>
@@ -41,27 +57,32 @@
         </div>
     </header>
 
+    <!-- INVENTORY GRID -->
     <main class="p-4">
         {% for cat, items in grouped.items() %}
         <div class="mb-10">
-            <h2 class="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest text-center">{{ cat }}</h2>
-            <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="h-px bg-slate-200 flex-grow"></div>
+                <h2 class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ cat }}</h2>
+                <div class="h-px bg-slate-200 flex-grow"></div>
+            </div>
+            
+            <div class="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-3">
                 {% for p in items %}
-                <div class="bg-white rounded-2xl p-2 border shadow-sm flex flex-col h-full">
-                    <div class="relative w-full aspect-[2/3.5] overflow-hidden rounded-xl mb-2 bg-slate-50">
-                        <img src="{{ p.image }}" class="w-full h-full object-cover">
-                        <div class="absolute bottom-1 right-1 bg-white/95 px-2 py-0.5 rounded-lg text-[8px] font-black border shadow-sm">Qty: {{ p.stock }}</div>
+                <div class="bg-white rounded-2xl p-2 border border-slate-100 shadow-sm flex flex-col h-full">
+                    <div class="relative w-full aspect-[2/3.2] overflow-hidden rounded-xl mb-2 bg-slate-50 border border-slate-100">
+                        <img src="{{ p.image }}" class="w-full h-full object-cover" crossorigin="anonymous">
+                        <div class="absolute bottom-1 right-1 bg-white/95 px-2 py-0.5 rounded-lg text-[8px] font-black border shadow-sm">QTY: {{ p.stock }}</div>
                     </div>
                     <h4 class="text-[9px] font-black uppercase truncate px-1 mb-2">{{ p.name }}</h4>
                     
-                    <!-- MANUAL STOCK ADJUSTMENT -->
                     <div class="mt-auto flex justify-between items-center bg-slate-900 rounded-xl p-1 shadow-inner">
-                        <button onclick="updateQty({{ p.id }}, -1)" class="w-8 h-8 flex items-center justify-center text-white"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                        <button onclick="updateQty({{ p.id }}, -1)" class="w-8 h-8 flex items-center justify-center text-white"><i class="fa-solid fa-minus text-[8px]"></i></button>
                         <span id="val-{{ p.id }}" class="text-[11px] font-black text-white w-6 text-center">{{ p.stock }}</span>
-                        <button onclick="updateQty({{ p.id }}, 1)" class="w-8 h-8 flex items-center justify-center text-white"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                        <button onclick="updateQty({{ p.id }}, 1)" class="w-8 h-8 flex items-center justify-center text-white"><i class="fa-solid fa-plus text-[8px]"></i></button>
                     </div>
                     
-                    <button onclick="addToSale({{ p.id }}, '{{ p.name }}', {{ p.price }})" class="w-full bg-slate-100 text-slate-900 py-2 rounded-xl text-[9px] font-black uppercase mt-2 border active:bg-slate-200 transition-colors">+ Invoice</button>
+                    <button onclick="addToInvoice({{ p.id }}, '{{ p.name }}', {{ p.price }}, '{{ p.image }}')" class="w-full bg-slate-100 text-slate-900 py-2 rounded-xl text-[9px] font-black uppercase mt-2 border active:bg-slate-200 transition-colors">+ Invoice</button>
                 </div>
                 {% endfor %}
             </div>
@@ -69,38 +90,57 @@
         {% endfor %}
     </main>
 
-    <!-- SLIDE OUT INVOICE DRAWER -->
-    <div id="drawer" class="fixed inset-y-0 right-0 w-80 bg-white z-[300] shadow-2xl translate-x-full transition-transform flex flex-col border-l">
+    <!-- INVOICE DRAWER -->
+    <div id="drawer" class="fixed inset-y-0 right-0 w-80 bg-white z-[300] shadow-2xl translate-x-full transition-transform flex flex-col border-l border-slate-200">
         <div class="p-6 border-b flex justify-between items-center bg-slate-50">
-            <h3 class="font-black uppercase text-xs tracking-tighter">Current Invoice</h3>
-            <button onclick="toggleReceipt()"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="font-black uppercase text-xs tracking-tighter">Sale Receipt</h3>
+            <button onclick="toggleInvoice()" class="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm border border-slate-200"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div id="sale-list" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
+        
+        <div id="invoice-items" class="flex-1 overflow-y-auto p-4 space-y-2">
+            <!-- Items injected here -->
+        </div>
+
         <div class="p-6 border-t bg-white space-y-4">
             <div class="flex justify-between font-black text-sm uppercase"><span>Total Bill</span><span id="total-val" class="text-orange-600">0៛</span></div>
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="downloadInvoiceImage()" class="bg-slate-100 py-4 rounded-2xl font-black uppercase text-[10px] border">Get Image</button>
-                <button onclick="confirmAndDeduct()" class="bg-orange-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg shadow-orange-100">Deduct Stock</button>
+            
+            <button onclick="downloadVisualInvoice()" class="w-full bg-slate-100 text-slate-900 py-4 rounded-2xl font-black uppercase text-[10px] border border-slate-200 active:scale-95 transition-transform">
+                <i class="fa-solid fa-image mr-2"></i> Generate Image Invoice
+            </button>
+            
+            <button onclick="confirmSale()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg shadow-orange-100 active:scale-95 transition-transform">
+                Complete Sale & Deduct Stock
+            </button>
+        </div>
+    </div>
+
+    <!-- HIDDEN RECEIPT TEMPLATE (This is what will be captured) -->
+    <div id="receipt-capture-area" style="position: absolute; left: -9999px;">
+        <div id="visual-receipt-template">
+            <div style="text-align: center; border-bottom: 4px solid #000; padding-bottom: 20px; margin-bottom: 20px;">
+                <h2 style="font-weight: 900; font-size: 28px; margin: 0; text-transform: uppercase; letter-spacing: -1px;">Somphea Reak</h2>
+                <p style="font-size: 10px; font-weight: 800; color: #666; text-transform: uppercase; letter-spacing: 2px;">Official Studio Receipt</p>
+                <p id="receipt-date" style="font-size: 8px; font-weight: 700; margin-top: 5px; color: #999;"></p>
+            </div>
+
+            <div id="receipt-items-list" style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Product list with images goes here -->
+            </div>
+
+            <div style="margin-top: 30px; border-top: 2px dashed #eee; padding-top: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <span style="font-weight: 800; font-size: 14px; text-transform: uppercase;">Total Amount</span>
+                <span id="receipt-total-bill" style="font-weight: 900; font-size: 32px; color: #ea580c;">0៛</span>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px; font-size: 10px; font-weight: 800; color: #ccc; text-transform: uppercase;">
+                Thank you for choosing our Studio
             </div>
         </div>
     </div>
 
-    <!-- HIDDEN CAPTURE AREA -->
-    <div id="receipt-capture" style="position:fixed; left:-9999px; top:0; width:350px; background:white; padding:40px; color:black;">
-        <div style="text-align:center; border-bottom:3px solid #000; padding-bottom:15px; margin-bottom:15px;">
-            <h2 style="font-weight:900; font-size:24px; margin:0;">SOMPHEA REAK</h2>
-            <p style="font-size:10px; font-weight:700; color:#666;">OFFICIAL RECEIPT</p>
-        </div>
-        <div id="receipt-items-content"></div>
-        <div style="border-top:3px solid #000; margin-top:20px; padding-top:10px; display:flex; justify-content:space-between;">
-            <span style="font-weight:900; font-size:14px;">TOTAL PAID</span>
-            <span id="receipt-total-content" style="font-weight:900; font-size:24px; color:#ea580c;">0៛</span>
-        </div>
-    </div>
-
     <script>
-        let currentSale = [];
-        let switchVal = "{{ switch_val }}";
+        let invoiceList = [];
+        let currentLock = "{{ override }}";
 
         async function updateQty(id, d) {
             const el = document.getElementById('val-'+id);
@@ -109,50 +149,96 @@
             await fetch('/admin/api/update-stock', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, amount:n})});
         }
 
-        async function toggleMasterMode() {
-            switchVal = (switchVal === "off") ? "on" : "off";
-            document.getElementById('override-switch').classList.toggle('active-toggle');
-            document.getElementById('mode-desc').innerText = (switchVal === "off") ? "Button OFF: Everything In Stock" : "Button ON: Check Stock Numbers";
-            await fetch('/admin/api/toggle-switch', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({value: switchVal})});
+        async function resetAllStock() {
+            if(!confirm("Set ALL 500+ items to 999 stock?")) return;
+            const res = await fetch('/admin/api/reset-all', {method:'POST'});
+            if(res.ok) location.reload();
         }
 
-        function toggleReceipt() { document.getElementById('drawer').classList.toggle('translate-x-full'); }
-        
-        function addToSale(id, name, price) {
-            const ex = currentSale.find(i => i.id === id);
-            if (ex) ex.qty++; else currentSale.push({id, name, price, qty: 1});
-            updateUI();
+        async function toggleSafetyLock() {
+            currentLock = (currentLock === "off") ? "on" : "off";
+            document.getElementById('lock-switch').classList.toggle('active-toggle');
+            document.getElementById('mode-desc').innerText = (currentLock === "on") ? "Button ON: Strict Stock Check" : "Button OFF: Unlimited Mode";
+            await fetch('/admin/api/toggle-override', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({value: currentLock})});
         }
 
-        function updateUI() {
-            let t = 0;
-            document.getElementById('sale-list').innerHTML = currentSale.map(i => { 
-                t += (i.price * i.qty); 
-                return `<div class="bg-white p-3 rounded-xl border flex justify-between text-[10px] font-black uppercase"><div>${i.name} <span class="text-orange-500">x${i.qty}</span></div><div>${(i.price*i.qty).toLocaleString()}៛</div></div>`;
-            }).join('');
-            document.getElementById('total-val').innerText = t.toLocaleString() + "៛";
-            document.getElementById('badge').innerText = currentSale.length;
+        function toggleInvoice() { document.getElementById('drawer').classList.toggle('translate-x-full'); }
+
+        function addToInvoice(id, name, price, img) {
+            const exists = invoiceList.find(i => i.id === id);
+            if(exists) exists.qty++; else invoiceList.push({id, name, price, image: img, qty: 1});
+            renderInvoice();
+            if(document.getElementById('drawer').classList.contains('translate-x-full')) toggleInvoice();
         }
 
-        function downloadInvoiceImage() {
-            if (!currentSale.length) return;
-            const content = document.getElementById('receipt-items-content');
+        function renderInvoice() {
             let total = 0;
-            content.innerHTML = currentSale.map(i => {
-                total += (i.price * i.qty);
-                return `<div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight:800; font-size:12px;"><span>${i.name} x${i.qty}</span><span>${(i.price*i.qty).toLocaleString()}៛</span></div>`;
+            const container = document.getElementById('invoice-items');
+            container.innerHTML = invoiceList.map(item => {
+                total += (item.price * item.qty);
+                return `
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100 text-[10px] font-black uppercase">
+                    <div class="flex items-center gap-3">
+                        <img src="${item.image}" class="w-8 h-10 object-cover rounded shadow-sm border border-white">
+                        <div class="flex flex-col"><span>${item.name}</span><span class="text-orange-500">Qty: ${item.qty}</span></div>
+                    </div>
+                    <span>${(item.price * item.qty).toLocaleString()}៛</span>
+                </div>`;
             }).join('');
-            document.getElementById('receipt-total-content').innerText = total.toLocaleString() + "៛";
-            html2canvas(document.getElementById('receipt-capture'), {scale: 2}).then(canvas => {
-                const link = document.createElement('a'); link.download = 'Invoice.png'; link.href = canvas.toDataURL(); link.click();
-            });
+            document.getElementById('total-val').innerText = total.toLocaleString() + "៛";
+            document.getElementById('badge').innerText = invoiceList.length;
         }
 
-        async function confirmAndDeduct() {
-            if(!currentSale.length || !confirm("Confirm Sale? This will deduce the amounts from your stock.")) return;
-            const res = await fetch('/admin/api/process-receipt', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({items: currentSale})});
+        async function downloadVisualInvoice() {
+            if (invoiceList.length === 0) return;
+            
+            // Set date
+            const now = new Date();
+            document.getElementById('receipt-date').innerText = now.toLocaleString();
+            
+            // Populate the capture area
+            const listArea = document.getElementById('receipt-items-list');
+            let total = 0;
+            listArea.innerHTML = invoiceList.map(item => {
+                total += (item.price * item.qty);
+                return `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <img src="${item.image}" style="width: 50px; height: 75px; object-fit: cover; border-radius: 8px; border: 1px solid #eee;">
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-weight: 800; font-size: 14px; text-transform: uppercase;">${item.name}</span>
+                            <span style="font-weight: 700; font-size: 11px; color: #ea580c;">x${item.qty} Items</span>
+                        </div>
+                    </div>
+                    <span style="font-weight: 800; font-size: 14px;">${(item.price * item.qty).toLocaleString()}៛</span>
+                </div>`;
+            }).join('');
+            
+            document.getElementById('receipt-total-bill').innerText = total.toLocaleString() + "៛";
+            
+            // Capture image
+            const captureElement = document.getElementById('visual-receipt-template');
+            const canvas = await html2canvas(captureElement, {
+                useCORS: true, 
+                scale: 3,
+                backgroundColor: "#ffffff"
+            });
+            
+            const link = document.createElement('a');
+            link.download = `Invoice-${now.getTime()}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }
+
+        async function confirmSale() {
+            if(!invoiceList.length || !confirm("Complete this sale? Stock will be deduced automatically.")) return;
+            const res = await fetch('/admin/api/process-receipt', {
+                method:'POST', 
+                headers:{'Content-Type':'application/json'}, 
+                body:JSON.stringify({items: invoiceList})
+            });
             if(res.ok) {
-                alert("Success! Stock updated.");
+                alert("Success! Stock deducted and Sale recorded.");
                 location.reload();
             }
         }
