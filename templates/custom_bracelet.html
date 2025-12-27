@@ -9,102 +9,264 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-    body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; background-color: #f8fafc; overscroll-behavior-y: contain; }
+    
+    body { 
+        font-family: 'Plus Jakarta Sans', sans-serif; 
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        background-color: #f8fafc;
+        overscroll-behavior-y: contain;
+    }
+
     .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .link-pop { animation: linkPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-    @keyframes linkPop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-    .dragging { opacity: 0.5; transform: scale(1.2) rotate(3deg) translateY(-10px); z-index: 100; transition: transform 0.2s ease; }
-    .drag-over { position: relative; }
-    .drag-over::after { content: ''; position: absolute; inset: -2px; border: 2px solid #ea580c; border-radius: 8px; background-color: rgba(234, 88, 12, 0.05); animation: pulse 1.5s infinite; z-index: 5; }
-    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 0.8; } 100% { opacity: 0.4; } }
-    .bracelet-link-container { display: flex; align-items: flex-end; justify-content: center; flex: 0 0 10%; aspect-ratio: 2 / 4.5; position: relative; cursor: grab; touch-action: none; transition: all 0.2s ease; }
-    .bracelet-link-container img { width: 100%; height: 75%; object-fit: cover; pointer-events: none; }
-    .sold-out-badge { position: absolute; top: 0; right: 0; background: #ef4444; color: white; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 0 8px 0 8px; z-index: 10; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3); }
-    .screenshot-frame { background: #fff; padding: 40px 20px; display: inline-flex; flex-direction: column; align-items: center; gap: 20px; }
+    
+    .link-pop {
+        animation: linkPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes linkPop {
+        0% { transform: scale(0.5); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* PREMIUM DRAG EFFECTS */
+    .dragging {
+        opacity: 0.5;
+        transform: scale(1.2) rotate(3deg) translateY(-10px);
+        filter: brightness(1.1) drop-shadow(0 20px 13px rgb(0 0 0 / 0.1));
+        z-index: 100;
+        transition: transform 0.2s ease;
+    }
+
+    .drag-over {
+        position: relative;
+    }
+    .drag-over::after {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border: 2px solid #ea580c;
+        border-radius: 8px;
+        background-color: rgba(234, 88, 12, 0.05);
+        animation: pulse 1.5s infinite;
+        z-index: 5;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 0.4; }
+        50% { opacity: 0.8; }
+        100% { opacity: 0.4; }
+    }
+
+    #drawer {
+        transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    /* 10 CHARMS PER VIEW */
+    .bracelet-link-container {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        flex: 0 0 10%; 
+        aspect-ratio: 2 / 4.5;
+        position: relative;
+        margin: 0;
+        padding: 0;
+        cursor: grab;
+        touch-action: none;
+        transition: all 0.2s ease;
+    }
+
+    .bracelet-link-container img {
+        width: 100%;
+        height: 75%;
+        object-fit: cover;
+        display: block;
+        pointer-events: none;
+    }
+
+    .nav-indicator-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 10px;
+    }
+
+    .nav-arrow {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        color: #64748b;
+        font-size: 10px;
+        transition: all 0.2s;
+    }
+
+    #scroll-track {
+        height: 4px;
+        background: #f1f5f9;
+        border-radius: 10px;
+        width: 80px;
+        position: relative;
+        overflow: hidden;
+    }
+    #scroll-thumb {
+        position: absolute;
+        height: 100%;
+        width: 30%;
+        background: #ea580c;
+        border-radius: 10px;
+        left: 0;
+        transition: left 0.1s linear;
+    }
+
+    /* Screenshot Area Branding */
+    .screenshot-frame {
+        background: #fff;
+        padding: 40px 20px;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
   </style>
 </head>
 <body class="text-gray-900 overflow-x-hidden">
 
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay" class="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center text-white">
+      <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p class="text-xs font-black uppercase tracking-[0.3em]">Processing Studio Design</p>
+  </div>
+
+  <!-- RESULT MODAL (GALLERY PREVIEW) -->
+  <div id="resultModal" class="fixed inset-0 z-[1100] bg-black hidden flex-col items-center justify-center p-6">
+      <div class="absolute top-6 right-6">
+          <button onclick="closeResult()" class="w-10 h-10 bg-white/10 rounded-full text-white flex items-center justify-center text-xl">
+              <i class="fa-solid fa-xmark"></i>
+          </button>
+      </div>
+      <div class="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-4">
+          <img id="screenshotPreview" class="w-full h-auto rounded-xl shadow-inner border border-gray-100" src="" alt="Your Design">
+          <div class="mt-4 text-center">
+              <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Design Saved</p>
+              <p class="text-xs text-gray-600 font-bold mt-1 mb-4">Long press the image to save to your photos</p>
+              <button id="downloadBtn" class="w-full bg-orange-600 text-white font-black py-4 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-transform">
+                  Download Image
+              </button>
+          </div>
+      </div>
+  </div>
+
   <!-- HEADER -->
   <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex items-center justify-between">
-    <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 active:scale-90 transition-transform"><i class="fa-solid fa-arrow-left"></i></a>
+    <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 active:scale-90 transition-transform">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
     <div class="text-center">
-        <h3 class="font-extrabold text-[9px] uppercase text-gray-400">Custom Studio</h3>
-        <p class="font-black text-sm uppercase">Italy Bracelet</p>
+        <h3 class="font-extrabold text-[9px] tracking-[0.2em] uppercase text-gray-400 leading-none">Custom Studio</h3>
+        <p class="font-black text-sm text-gray-900 tracking-tighter uppercase leading-tight">Italy Bracelet</p>
     </div>
     <div class="w-10"></div>
   </header>
 
-  <!-- BANNER -->
+  <!-- TOP HERO BANNER (16:9) -->
   <section class="w-full aspect-video bg-gray-200 overflow-hidden relative shadow-inner">
-      <img src="https://images.unsplash.com/photo-1611085583191-a3b1a308964b?auto=format&fit=crop&q=80&w=1200" class="w-full h-full object-cover">
+      <img src="https://images.unsplash.com/photo-1611085583191-a3b1a308964b?auto=format&fit=crop&q=80&w=1200" alt="Banner" class="w-full h-full object-cover">
       <div class="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent flex items-end p-6">
           <div class="transform translate-y-2">
               <h2 class="text-white text-2xl font-black uppercase italic tracking-tighter leading-none">Craft Your<br><span class="text-orange-500">Identity</span></h2>
+              <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-1">Professional Grade Customization</p>
           </div>
       </div>
   </section>
 
-  <!-- PREVIEW BOX -->
+  <!-- PREVIEW BOX (Sticky) -->
   <section class="sticky top-[58px] z-[90] bg-white border-b shadow-lg pb-4">
     <div class="max-w-4xl mx-auto">
+        <!-- Control Bar -->
         <div class="flex items-center justify-between px-4 py-3">
-            <span id="link-count" class="bg-gray-900 text-[9px] font-black text-white px-2.5 py-1 rounded-full uppercase">0 LINKS</span>
-            <button onclick="clearBracelet()" class="text-[10px] font-black text-red-500 uppercase">Reset</button>
+            <div class="flex items-center gap-2">
+                <span id="link-count" class="bg-gray-900 text-[9px] font-black text-white px-2.5 py-1 rounded-full tracking-widest uppercase">0 LINKS</span>
+            </div>
+            <button onclick="clearBracelet()" class="text-[10px] font-black text-red-500 uppercase tracking-widest px-2 py-1">Reset</button>
         </div>
 
+        <!-- SEAMLESS BRACELET PREVIEW (SCROLLABLE) -->
         <div id="bracelet-preview" onscroll="handlePreviewScroll(this)" class="flex overflow-x-auto py-4 scrollbar-hide min-h-[120px] items-end bg-gray-50 border-y border-gray-100 gap-0">
-            <div class="w-full text-center py-8 opacity-20 uppercase tracking-[0.4em] text-[10px] font-black">Workspace</div>
+            <div class="w-full text-center py-8 opacity-20">
+                <p class="text-[10px] font-black uppercase tracking-[0.4em]">Designer Workspace</p>
+            </div>
         </div>
 
-        <div class="nav-indicator-container flex justify-center gap-3 mt-2">
-             <button onclick="scrollManual(-60)" class="w-6 h-6 flex items-center justify-center bg-gray-100 rounded text-xs"><i class="fa-solid fa-chevron-left"></i></button>
-             <button onclick="scrollManual(60)" class="w-6 h-6 flex items-center justify-center bg-gray-100 rounded text-xs"><i class="fa-solid fa-chevron-right"></i></button>
+        <!-- Navigation & Scroll Indicator -->
+        <div class="nav-indicator-container">
+            <button onclick="scrollManual(-60)" class="nav-arrow"><i class="fa-solid fa-chevron-left"></i></button>
+            <div id="scroll-track">
+                <div id="scroll-thumb"></div>
+            </div>
+            <button onclick="scrollManual(60)" class="nav-arrow"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
 
+        <!-- Price Summary -->
         <div class="mt-3 flex justify-between items-center px-4">
-            <div class="flex flex-col"><span class="text-[8px] font-black text-gray-400 uppercase">Est. Total</span><span id="total-price" class="text-xl font-black">0៛</span></div>
-            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-right">Pick up & Slide<br>to reorder</p>
+            <div class="flex flex-col">
+                <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest">Est. Total</span>
+                <span id="total-price" class="text-xl font-black text-gray-900 leading-none">0៛</span>
+            </div>
+            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-right leading-tight">Pick up & Slide<br>to reorder charms</p>
         </div>
     </div>
   </section>
 
+  <!-- CATEGORY GRID -->
   <section class="p-4 pb-48">
-    <div id="categoryGallery" class="grid grid-cols-6 gap-3"></div>
+    <div class="mb-4">
+        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Collections</h4>
+    </div>
+    <div id="categoryGallery" class="grid grid-cols-6 gap-3">
+      <!-- Injected by JS -->
+    </div>
   </section>
 
-  <!-- DRAWER -->
-  <div id="drawer" class="fixed inset-0 z-[200] translate-y-full pointer-events-none transition-transform duration-300">
+  <!-- SELECTION DRAWER -->
+  <div id="drawer" class="fixed inset-0 z-[200] translate-y-full pointer-events-none">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" onclick="closeDrawer()"></div>
-    <div class="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-[3rem] shadow-2xl pointer-events-auto flex flex-col border-t p-4">
-        <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4"></div>
-        <div class="flex justify-between items-center mb-4"><h4 id="drawer-title" class="text-lg font-black uppercase">Category</h4><button onclick="closeDrawer()"><i class="fa-solid fa-xmark"></i></button></div>
-        <div id="charmGrid" class="grid grid-cols-8 gap-1.5 overflow-y-auto pb-24"></div>
+    <div class="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-[3rem] shadow-2xl pointer-events-auto flex flex-col border-t border-gray-100">
+        <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto my-4"></div>
+        <div class="px-6 pb-4 flex items-center justify-between">
+            <h4 id="drawer-title" class="text-lg font-black uppercase tracking-tighter text-gray-900">Category</h4>
+            <button onclick="closeDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-400">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        <div class="flex-grow overflow-y-auto px-2 pb-24">
+            <div id="charmGrid" class="grid grid-cols-8 gap-1.5">
+                <!-- Injected by JS -->
+            </div>
+        </div>
     </div>
   </div>
 
   <!-- FIXED FOOTER -->
   <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-4 z-[110]">
-    <div class="flex gap-2">
-        <button onclick="addRandom()" class="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center"><i class="fa-solid fa-shuffle"></i></button>
-        <button onclick="takeScreenshot()" id="screenshot-btn" disabled class="flex-grow bg-gray-900 text-white font-black py-4 rounded-xl uppercase text-[10px] flex items-center justify-center gap-2">
-            <i class="fa-solid fa-camera"></i> Save Design
+    <div class="max-w-md mx-auto flex gap-3">
+        <button onclick="addRandom()" class="w-14 h-14 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-xl text-gray-400 active:scale-90 transition-transform">
+            <i class="fa-solid fa-shuffle text-lg"></i>
+        </button>
+        <button onclick="takeScreenshot()" id="screenshot-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-xl shadow-xl active:scale-95 transition-all disabled:opacity-20 text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+            <i class="fa-solid fa-camera text-sm"></i>
+            Save To Gallery
         </button>
     </div>
   </div>
 
-  <!-- MODALS -->
-  <div id="loadingOverlay" class="fixed inset-0 z-[1000] bg-black/80 hidden flex-col items-center justify-center text-white"><div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>
-  <div id="resultModal" class="fixed inset-0 z-[1100] bg-black hidden flex-col items-center justify-center p-6">
-      <div class="absolute top-6 right-6"><button onclick="document.getElementById('resultModal').classList.add('hidden')" class="text-white"><i class="fa-solid fa-xmark text-2xl"></i></button></div>
-      <div class="w-full max-w-sm bg-white rounded-3xl p-4 shadow-2xl">
-          <img id="screenshotPreview" class="w-full rounded-xl border">
-          <div class="mt-4 text-center"><p class="text-[10px] text-gray-500 uppercase font-bold mb-2">Long press to save</p><a id="downloadBtn" class="block w-full bg-orange-600 text-white font-black py-4 rounded-xl uppercase text-[10px]">Download</a></div>
-      </div>
-  </div>
-
   <script>
-    // --- FULL DATA LIST (PASTE ALL 500+ ITEMS HERE) ---
+    // --- DATABASE ---
     const allCharms = [
       // --- Charm
     {"id": 1, "name_kh": "Silver Charm", "price": 400, "image": "/static/images/c01.jpg", "categories": ["Charm"]},
@@ -305,6 +467,33 @@
     {"id": 9024, "name_kh": "Pink Letter Charm X", "price": 1200, "image": "/static/images/xp.jpg", "categories": ["Pink Letter"], "subcategory": ["Flag","Football"], "discount": 20},
     {"id": 9025, "name_kh": "Pink Letter Charm Y", "price": 1200, "image": "/static/images/yp.jpg", "categories": ["Pink Letter"], "subcategory": ["All","Football"], "discount": 20},
     {"id": 9026, "name_kh": "Pink Letter Charm Z", "price": 1200, "image": "/static/images/zp.jpg", "categories": ["Pink Letter"], "subcategory": ["All","Football"], "discount": 20},
+ // --- SILVER/GOLD LETTERS (1101 - 1126) ---
+    {"id": 1101, "name_kh": "Letter Charm A", "price": 1200, "image": "/static/images/a.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1102, "name_kh": "Letter Charm B", "price": 1200, "image": "/static/images/b.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1103, "name_kh": "Letter Charm C", "price": 1200, "image": "/static/images/c.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1104, "name_kh": "Letter Charm D", "price": 1200, "image": "/static/images/d.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1105, "name_kh": "Letter Charm E", "price": 1200, "image": "/static/images/e.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1106, "name_kh": "Letter Charm F", "price": 1200, "image": "/static/images/f.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1107, "name_kh": "Letter Charm G", "price": 1200, "image": "/static/images/g.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1108, "name_kh": "Letter Charm H", "price": 1200, "image": "/static/images/h.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1109, "name_kh": "Letter Charm I", "price": 1200, "image": "/static/images/i.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1110, "name_kh": "Letter Charm J", "price": 1200, "image": "/static/images/j.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1111, "name_kh": "Letter Charm K", "price": 1200, "image": "/static/images/k.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1112, "name_kh": "Letter Charm L", "price": 1200, "image": "/static/images/l.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1113, "name_kh": "Letter Charm M", "price": 1200, "image": "/static/images/m.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1114, "name_kh": "Letter Charm N", "price": 1200, "image": "/static/images/n.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1115, "name_kh": "Letter Charm O", "price": 1200, "image": "/static/images/o.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1116, "name_kh": "Letter Charm P", "price": 1200, "image": "/static/images/p.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1117, "name_kh": "Letter Charm Q", "price": 1200, "image": "/static/images/q.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1118, "name_kh": "Letter Charm R", "price": 1200, "image": "/static/images/r.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1119, "name_kh": "Letter Charm S", "price": 1200, "image": "/static/images/s.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1120, "name_kh": "Letter Charm T", "price": 1200, "image": "/static/images/t.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1121, "name_kh": "Letter Charm U", "price": 1200, "image": "/static/images/u.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1122, "name_kh": "Letter Charm V", "price": 1200, "image": "/static/images/v.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1123, "name_kh": "Letter Charm W", "price": 1200, "image": "/static/images/w.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1124, "name_kh": "Letter Charm X", "price": 1200, "image": "/static/images/x.jpg", "categories": ["Letter"], "subcategory": ["Flag","Football"], "discount": 20},
+    {"id": 1125, "name_kh": "Letter Charm Y", "price": 1200, "image": "/static/images/y.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
+    {"id": 1126, "name_kh": "Letter Charm Z", "price": 1200, "image": "/static/images/z.jpg", "categories": ["Letter"], "subcategory": ["All","Football"], "discount": 20},
 
    
     // --- STEAV (1201 - 1213) ---
@@ -430,118 +619,242 @@
     {"id": 2107, "name_kh": "Flower 🌹 07", "price": 3000, "image": "/static/images/charm-flower-07.jpg", "categories": ["Flower 🌹"]}, 
     {"id": 2108, "name_kh": "Flower 🌹 08", "price": 3000, "image": "/static/images/charm-flower-08.jpg", "categories": ["Flower 🌹"]},
     {"id": 2109, "name_kh": "Flower 🌹 09", "price": 3000, "image": "/static/images/charm-flower-09.jpg", "categories": ["Flower 🌹"]},
-        // ... (ADD ALL OTHER ITEMS YOU HAVE) ...
     ];
 
+    const categories = Array.from(new Set(allCharms.flatMap(c => c.categories)));
     let selectedCharms = JSON.parse(localStorage.getItem('customCharms')) || [];
-    let stockData = {};
-    let override = "off";
 
-    async function init() {
-        try {
-            await fetch('/api/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: allCharms }) });
-            const res = await fetch('/api/get-data');
-            const data = await res.json();
-            stockData = data.stock;
-            override = data.override;
-        } catch(e) {}
+    function init() {
         renderCategories();
         updateUI();
     }
 
     function renderCategories() {
-        const cats = [...new Set(allCharms.flatMap(c => c.categories))];
-        document.getElementById('categoryGallery').innerHTML = cats.map(cat => {
+        const container = document.getElementById('categoryGallery');
+        container.innerHTML = categories.map(cat => {
             const charm = allCharms.find(c => c.categories.includes(cat));
-            return `<div onclick="openDrawer('${cat}')" class="flex flex-col items-center gap-1 active:scale-95 transition-transform cursor-pointer"><div class="w-full aspect-[2/3] bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden p-1"><img src="${charm.image}" class="w-full h-full object-cover rounded-md"></div><span class="text-[6px] font-black text-gray-500 uppercase truncate w-full text-center">${cat}</span></div>`;
+            return `
+                <div onclick="openDrawer('${cat}')" class="flex flex-col items-center gap-1 active:scale-95 transition-transform cursor-pointer">
+                    <div class="w-full aspect-[2/3] bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden p-1">
+                        <img src="${charm.image}" class="w-full h-full object-cover rounded-md">
+                    </div>
+                    <span class="text-[6px] font-black text-gray-500 uppercase truncate w-full text-center">${cat}</span>
+                </div>
+            `;
         }).join('');
     }
 
     function openDrawer(cat) {
-        document.getElementById('drawer-title').innerText = cat;
+        const drawer = document.getElementById('drawer');
+        const title = document.getElementById('drawer-title');
         const grid = document.getElementById('charmGrid');
-        grid.innerHTML = allCharms.filter(c => c.categories.includes(cat)).map(c => {
-            const qty = stockData[c.id] !== undefined ? stockData[c.id] : 0;
-            const isOut = (override === "off" && qty <= 0);
-            return `<div onclick="${isOut ? '' : `addCharmById(${c.id})`}" class="relative flex flex-col items-center bg-gray-50 rounded-lg p-1 transition-all cursor-pointer ${isOut ? 'opacity-40 grayscale' : 'active:bg-orange-50'}">${isOut ? '<div class="sold-out-badge">SOLD</div>' : ''}<img src="${c.image}" class="w-full aspect-[2/3.5] object-cover rounded shadow-sm"><p class="text-[5px] font-black mt-1 text-gray-400">${c.price}៛</p></div>`;
-        }).join('');
-        document.getElementById('drawer').classList.remove('translate-y-full');
-        document.getElementById('drawer').classList.add('pointer-events-auto');
+        
+        title.innerText = cat;
+        grid.innerHTML = allCharms.filter(c => c.categories.includes(cat)).map(c => `
+            <div onclick="addCharmById(${c.id})" class="flex flex-col items-center bg-gray-50 rounded-lg p-1 active:bg-orange-50 transition-all cursor-pointer">
+                <img src="${c.image}" class="w-full aspect-[2/3.5] object-cover rounded shadow-sm">
+                <p class="text-[6px] font-black mt-1 text-gray-400">${c.price}៛</p>
+            </div>
+        `).join('');
+
+        drawer.classList.remove('translate-y-full');
+        drawer.classList.add('pointer-events-auto');
     }
 
-    function closeDrawer() { document.getElementById('drawer').classList.add('translate-y-full'); document.getElementById('drawer').classList.remove('pointer-events-auto'); }
-    function addCharmById(id) { const c = allCharms.find(x => x.id === id); selectedCharms.push({...c, uid: Math.random().toString(36).substr(2, 9)}); updateUI(); }
-    function removeCharm(uid) { selectedCharms = selectedCharms.filter(c => c.uid !== uid); updateUI(); }
-    function clearBracelet() { if(confirm("Reset?")) { selectedCharms = []; updateUI(); } }
-    function addRandom() { const r = allCharms[Math.floor(Math.random()*allCharms.length)]; addCharmById(r.id); }
+    function closeDrawer() { 
+        const drawer = document.getElementById('drawer');
+        drawer.classList.add('translate-y-full'); 
+        drawer.classList.remove('pointer-events-auto');
+    }
+
+    function addCharmById(id) {
+        const charm = allCharms.find(c => c.id === id);
+        selectedCharms.push({ ...charm, uid: Math.random().toString(36).substr(2, 9) });
+        updateUI();
+    }
+
+    function removeCharm(uid) {
+        selectedCharms = selectedCharms.filter(c => c.uid !== uid);
+        updateUI();
+    }
 
     function updateUI() {
         const preview = document.getElementById('bracelet-preview');
+        const totalDisplay = document.getElementById('total-price');
+        const countDisplay = document.getElementById('link-count');
+        const screenshotBtn = document.getElementById('screenshot-btn');
+
         localStorage.setItem('customCharms', JSON.stringify(selectedCharms));
-        
-        if (!selectedCharms.length) { 
-            preview.innerHTML = '<div class="w-full text-center py-8 opacity-20 uppercase tracking-[0.4em] text-[10px] font-black">Designer Workspace</div>'; 
-            document.getElementById('total-price').innerText = "0៛"; 
-            document.getElementById('link-count').innerText = "0 LINKS"; 
-            document.getElementById('screenshot-btn').disabled = true; 
-            return; 
+
+        if (selectedCharms.length === 0) {
+            preview.innerHTML = `<div class="w-full text-center py-8 opacity-20 uppercase tracking-[0.4em] text-[10px] font-black">Designer Workspace</div>`;
+            totalDisplay.innerText = "0៛";
+            countDisplay.innerText = "0 LINKS";
+            screenshotBtn.disabled = true;
+            document.querySelector('.nav-indicator-container').style.opacity = '0';
+            return;
         }
-        
+
+        document.querySelector('.nav-indicator-container').style.opacity = '1';
         let total = 0;
-        preview.innerHTML = selectedCharms.map((c, i) => { 
-            total+=c.price; 
-            return `<div class="bracelet-link-container link-pop" draggable="true" data-index="${i}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event)"><button onclick="removeCharm('${c.uid}')" class="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[7px] shadow-lg z-10"><i class="fa-solid fa-xmark"></i></button><img src="${c.image}"></div>`; 
+        preview.innerHTML = selectedCharms.map((c, index) => {
+            total += c.price;
+            return `
+                <div class="bracelet-link-container link-pop" 
+                     draggable="true" 
+                     data-index="${index}"
+                     ontouchstart="handleTouchStart(event)"
+                     ontouchmove="handleTouchMove(event)"
+                     ontouchend="handleTouchEnd(event)"
+                     ondragstart="handleDragStart(event)"
+                     ondragover="handleDragOver(event)"
+                     ondragleave="handleDragLeave(event)"
+                     ondrop="handleDrop(event)">
+                    <button onclick="removeCharm('${c.uid}')" class="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[7px] shadow-lg z-10 active:scale-90">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <img src="${c.image}">
+                </div>
+            `;
         }).join('');
+
+        totalDisplay.innerText = total.toLocaleString() + "៛";
+        countDisplay.innerText = `${selectedCharms.length} LINKS`;
+        screenshotBtn.disabled = false;
         
-        document.getElementById('total-price').innerText = total.toLocaleString() + "៛";
-        document.getElementById('link-count').innerText = selectedCharms.length + " LINKS";
-        document.getElementById('screenshot-btn').disabled = false;
-        handlePreviewScroll(preview);
+        setTimeout(() => handlePreviewScroll(preview), 50);
+
+        if (selectedCharms.length > 5) {
+             preview.scrollTo({ left: preview.scrollWidth, behavior: 'smooth' });
+        }
     }
 
     // --- SCREENSHOT LOGIC ---
+
     async function takeScreenshot() {
-        document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
-        
-        // Create clean temp div for high-res capture
-        const temp = document.createElement('div');
-        temp.className = 'screenshot-frame';
-        temp.style.position = 'absolute'; temp.style.left = '-9999px';
-        
-        const h = document.createElement('h2'); h.innerText="ITALY BRACELET STUDIO"; h.style.fontWeight="900"; h.style.fontSize="24px";
-        const d = document.createElement('div'); d.style.display="flex"; d.style.background="#f8fafc"; d.style.padding="20px"; d.style.border="1px solid #ccc"; d.style.borderRadius="12px";
-        
-        selectedCharms.forEach(c => { const img = document.createElement('img'); img.src=c.image; img.style.width="50px"; d.appendChild(img); });
-        
-        const f = document.createElement('p'); f.innerText=`Total: ${document.getElementById('total-price').innerText}`; f.style.fontWeight="bold";
-        
-        temp.appendChild(h); temp.appendChild(d); temp.appendChild(f);
-        document.body.appendChild(temp);
-        
-        const canvas = await html2canvas(temp, {scale: 3, backgroundColor:"#ffffff"});
-        document.getElementById('screenshotPreview').src = canvas.toDataURL("image/png");
-        document.getElementById('downloadBtn').href = canvas.toDataURL("image/png");
-        document.getElementById('downloadBtn').download = `design-${Date.now()}.png`;
-        
-        document.body.removeChild(temp);
-        document.getElementById('loadingOverlay').classList.add('hidden');
-        document.getElementById('loadingOverlay').classList.remove('flex');
-        document.getElementById('resultModal').classList.remove('hidden');
-        document.getElementById('resultModal').classList.add('flex');
+        const overlay = document.getElementById('loadingOverlay');
+        const previewModal = document.getElementById('resultModal');
+        const previewImg = document.getElementById('screenshotPreview');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+
+        try {
+            // Create a hidden workspace for a perfect 1080px capture
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            tempDiv.className = 'screenshot-frame';
+            
+            const title = document.createElement('h2');
+            title.innerText = "ITALY BRACELET STUDIO";
+            title.style.fontSize = "24px";
+            title.style.fontWeight = "900";
+            title.style.letterSpacing = "0.2em";
+            title.style.textAlign = "center";
+            
+            const braceletContainer = document.createElement('div');
+            braceletContainer.style.display = 'flex';
+            braceletContainer.style.background = '#f8fafc';
+            braceletContainer.style.padding = '40px';
+            braceletContainer.style.borderRadius = '20px';
+            braceletContainer.style.border = '1px solid #e2e8f0';
+
+            selectedCharms.forEach(c => {
+                const img = document.createElement('img');
+                img.src = c.image;
+                img.style.width = '60px';
+                img.style.height = '100px';
+                img.style.objectFit = 'cover';
+                braceletContainer.appendChild(img);
+            });
+
+            const footer = document.createElement('p');
+            footer.innerText = `Total: ${document.getElementById('total-price').innerText} • ${selectedCharms.length} Pieces`;
+            footer.style.fontSize = "12px";
+            footer.style.fontWeight = "bold";
+            footer.style.color = "#94a3b8";
+
+            tempDiv.appendChild(title);
+            tempDiv.appendChild(braceletContainer);
+            tempDiv.appendChild(footer);
+            document.body.appendChild(tempDiv);
+
+            const canvas = await html2canvas(tempDiv, {
+                useCORS: true,
+                scale: 3, // Higher quality
+                backgroundColor: "#ffffff"
+            });
+
+            const dataUrl = canvas.toDataURL("image/png");
+            previewImg.src = dataUrl;
+            
+            downloadBtn.onclick = () => {
+                const link = document.createElement('a');
+                link.download = `bracelet-design-${Date.now()}.png`;
+                link.href = dataUrl;
+                link.click();
+            };
+
+            document.body.removeChild(tempDiv);
+            previewModal.classList.remove('hidden');
+            previewModal.classList.add('flex');
+        } catch (err) {
+            console.error(err);
+        } finally {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+        }
     }
 
-    function handlePreviewScroll(el) {} // Simplified
-    function scrollManual(val) { document.getElementById('bracelet-preview').scrollBy({ left: val, behavior: 'smooth' }); }
-    
-    // --- DRAG LOGIC ---
-    let ts=null, ch=null;
-    function handleTouchStart(e) { const c = e.target.closest('.bracelet-link-container'); if(c) { ts = parseInt(c.dataset.index); c.classList.add('dragging'); } }
-    function handleTouchMove(e) { e.preventDefault(); const t=e.touches[0]; const el = document.elementFromPoint(t.clientX, t.clientY); const c=el?.closest('.bracelet-link-container'); document.querySelectorAll('.bracelet-link-container').forEach(x=>x.classList.remove('drag-over')); if(c) { ch=parseInt(c.dataset.index); c.classList.add('drag-over'); } }
-    function handleTouchEnd(e) { document.querySelectorAll('.bracelet-link-container').forEach(x=>{x.classList.remove('dragging'); x.classList.remove('drag-over');}); if(ts!==null && ch!==null && ts!==ch) { const item = selectedCharms.splice(ts, 1)[0]; selectedCharms.splice(ch, 0, item); updateUI(); } ts=null; ch=null; }
+    function closeResult() {
+        document.getElementById('resultModal').classList.add('hidden');
+        document.getElementById('resultModal').classList.remove('flex');
+    }
 
-    window.onload = init;
+    // --- SCROLLING LOGIC ---
+
+    function handlePreviewScroll(el) {
+        const thumb = document.getElementById('scroll-thumb');
+        const scrollWidth = el.scrollWidth - el.clientWidth;
+        if (scrollWidth <= 0) {
+            thumb.style.width = '100%';
+            thumb.style.left = '0%';
+            return;
+        }
+        const percentage = (el.scrollLeft / scrollWidth) * 100;
+        thumb.style.width = '30%';
+        thumb.style.left = `${percentage * 0.7}%`;
+    }
+
+    function scrollManual(val) {
+        document.getElementById('bracelet-preview').scrollBy({ left: val, behavior: 'smooth' });
+    }
+
+    // --- REORDERING LOGIC ---
+
+    let touchStartIndex = null;
+    let currentHoverIndex = null;
+
+    function handleDragStart(e) {
+        e.target.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', e.target.dataset.index);
+    }
+
+    function handleDragOver(e) { e.preventDefault(); const target = e.target.closest('.bracelet-link-container'); if (target) target.classList.add('drag-over'); }
+    function handleDragLeave(e) { const target = e.target.closest('.bracelet-link-container'); if (target) target.classList.remove('drag-over'); }
+    function handleDrop(e) { e.preventDefault(); const target = e.target.closest('.bracelet-link-container'); if (!target) return; target.classList.remove('drag-over'); const from = parseInt(e.dataTransfer.getData('text/plain')); const to = parseInt(target.dataset.index); reorderArray(from, to); }
+
+    function handleTouchStart(e) { const container = e.target.closest('.bracelet-link-container'); if (!container) return; touchStartIndex = parseInt(container.dataset.index); container.classList.add('dragging'); }
+    function handleTouchMove(e) { e.preventDefault(); const touch = e.touches[0]; const target = document.elementFromPoint(touch.clientX, touch.clientY); const container = target?.closest('.bracelet-link-container'); document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('drag-over')); if (container) { currentHoverIndex = parseInt(container.dataset.index); container.classList.add('drag-over'); } }
+    function handleTouchEnd(e) { document.querySelectorAll('.bracelet-link-container').forEach(el => { el.classList.remove('dragging'); el.classList.remove('drag-over'); }); if (touchStartIndex !== null && currentHoverIndex !== null && touchStartIndex !== currentHoverIndex) reorderArray(touchStartIndex, currentHoverIndex); touchStartIndex = null; currentHoverIndex = null; }
+
+    function reorderArray(from, to) { const item = selectedCharms.splice(from, 1)[0]; selectedCharms.splice(to, 0, item); updateUI(); }
+    function clearBracelet() { if (confirm("Reset current design?")) { selectedCharms = []; updateUI(); } }
+    function addRandom() { const rand = allCharms[Math.floor(Math.random() * allCharms.length)]; if(rand) addCharmById(rand.id); }
+
+    init();
   </script>
 </body>
 </html>
-
-
