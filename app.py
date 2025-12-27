@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.secret_key = 'somphea_reak_studio_pro_2025'
 
 # --- 1. DATABASE CONFIGURATION ---
-# We use an absolute path to ensure the SQLite file is accessible on any server
+# Absolute path ensures the database file is stable across different hosting environments
 basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'shop_v2.db')
 
@@ -72,22 +72,6 @@ def search():
     cart = session.get('cart', [])
     return render_template('home.html', products=products, subcategories=[], cart=cart, current_subcategory="Search Result")
 
-@app.route('/add-to-cart', methods=['POST'])
-def add_to_cart():
-    """Saves items to the session-based cart"""
-    pid = request.form.get('product_id')
-    qty = int(request.form.get('quantity', 1))
-    cart = session.get('cart', [])
-    cart.append({'id': pid, 'qty': qty})
-    session['cart'] = cart
-    return jsonify(success=True, cart_count=len(cart))
-
-@app.route('/cart')
-def view_cart():
-    """Displays items currently in the cart"""
-    cart = session.get('cart', [])
-    return f"<h1>Your Cart</h1><p>Items in cart: {len(cart)}</p><a href='/'>Return to Studio</a>"
-
 # --- 5. SECURE ADMIN ROUTES ---
 
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -99,13 +83,20 @@ def admin_login():
             return redirect(url_for('admin_panel'))
     return render_template('admin_login.html')
 
+@app.route('/admin/logout')
+def admin_logout():
+    """Securely clear the admin session"""
+    session.pop('admin', None)
+    return redirect(url_for('home'))
+
 @app.route('/admin/panel')
 def admin_panel():
     """The Master Control Center for the Studio"""
     if not session.get('admin'):
         return redirect(url_for('admin_login'))
     
-    all_p = Product.query.all()
+    # Fetch all products and sort them by name for easy navigation
+    all_p = Product.query.order_by(Product.name.asc()).all()
     grouped_data = {}
     for p in all_p:
         cat = p.category if p.category else "General"
@@ -133,23 +124,32 @@ def get_data():
 
 @app.route('/api/sync', methods=['POST'])
 def sync_catalog():
-    """Imports new items from the frontend JS list into the Database"""
+    """Updates or adds new items from the frontend JS list into the Database"""
     data = request.json
     items = data.get('items', [])
-    existing_ids = {p.id for p in Product.query.with_entities(Product.id).all()}
     
     for item in items:
-        # Prioritize Khmer name if available
+        p_id = item['id']
         display_name = item.get('name_kh') or item.get('name') or "Studio Item"
         
-        if item['id'] not in existing_ids:
+        # Check if product exists
+        existing_p = db.session.get(Product, p_id)
+        
+        if existing_p:
+            # Update existing product if price or image changed in code
+            existing_p.name = display_name
+            existing_p.price = item['price']
+            existing_p.image = item['image']
+            existing_p.category = item['categories'][0]
+        else:
+            # Create brand new entry
             new_p = Product(
-                id=item['id'], 
+                id=p_id, 
                 name=display_name, 
                 price=item['price'], 
                 image=item['image'], 
                 category=item['categories'][0], 
-                stock=999 # New items start with full stock
+                stock=999
             )
             db.session.add(new_p)
     
@@ -205,19 +205,25 @@ def process_receipt():
         if p:
             # Deduce amount in stock
             p.stock = max(0, p.stock - int(item['qty']))
-            items_list.append(f"• {p.name} x{item['qty']}")
+            items_list.append(f"📦 <b>{p.name}</b> x{item['qty']} — {(p.price * item['qty']):,}៛")
             total_bill += (p.price * item['qty'])
     
     db.session.commit()
     
-    # Send Notification to Telegram with Error Handling
+    # Send Professional Notification to Telegram
     try:
-        msg = f"<b>🔔 INVOICE CONFIRMED</b>\n" + "\n".join(items_list) + f"\n<b>Total: {total_bill}៛</b>"
+        header = f"<b>🧾 NEW INVOICE CONFIRMED</b>\n"
+        divider = f"----------------------------\n"
+        body = "\n".join(items_list)
+        footer = f"\n{divider}<b>TOTAL PAID: {total_bill:,}៛</b>"
+        
+        msg = header + divider + body + footer
+        
         requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", 
                      json={"chat_id": CHAT_ID, "text": msg, "parse_mode": "HTML"}, 
                      timeout=5)
     except Exception as e:
-        print(f"Telegram Error: {e}")
+        print(f"Telegram Log Error: {e}")
     
     return jsonify(success=True)
 
@@ -226,7 +232,7 @@ with app.app_context():
     db.create_all()
 
 if __name__ == "__main__":
-    # Ensure port is pulled from environment for Render/PythonAnywhere deployment
+    # Pull port from environment for production deployment
     server_port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=server_port)
 
