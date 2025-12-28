@@ -7,45 +7,43 @@ from firebase_admin import credentials, firestore
 
 # --- INITIALIZATION ---
 app = Flask(__name__)
-# Keep your secret key safe in an environment variable too
 app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_studio_pro_2025_secure')
 
-# --- FIREBASE SETUP (This is the SAFE way) ---
-# This line tells the code: "Look at Render's settings to find the key"
+# --- FIREBASE SETUP ---
 service_account_info = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
 
 if service_account_info:
-    # We turn the text from Render back into a proper key
-    cred_dict = json.loads(service_account_info)
-    cred = credentials.Certificate(cred_dict)
-    firebase_admin.initialize_app(cred)
-else:
-    # If the key isn't found (like when testing locally)
     try:
-        cred = credentials.Certificate("serviceAccountKey.json")
+        cred_dict = json.loads(service_account_info)
+        cred = credentials.Certificate(cred_dict)
         firebase_admin.initialize_app(cred)
-    except:
-        print("Warning: Firebase key not found in Environment Variables.")
+    except Exception as e:
+        print(f"Error initializing Firebase: {e}")
+else:
+    print("Warning: FIREBASE_SERVICE_ACCOUNT environment variable not found.")
 
-db = firestore.client()
+# Connect to Firestore
+try:
+    db = firestore.client()
+except Exception as e:
+    print(f"Firestore Client Error: {e}")
+    db = None
+
 APP_ID = "somphea-reak-studio"
 
-# Helper functions to get database locations
 def get_products_ref():
     return db.collection('artifacts').document(APP_ID).collection('public').document('data').collection('products')
 
 def get_settings_ref():
     return db.collection('artifacts').document(APP_ID).collection('public').document('data').collection('settings')
 
-# --- CONFIG ---
+# --- ADMIN PIN ---
 ADMIN_PASS = os.environ.get('ADMIN_PASS', 'Thesong_Admin@2022?!$')
-BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
-CHAT_ID = "-1002654437316"
 
 # --- ROUTES ---
-
 @app.route('/')
 def home():
+    if not db: return "Database Error"
     docs = get_products_ref().stream()
     all_p = [doc.to_dict() for doc in docs]
     categories = sorted(list(set(p.get('category', 'General') for p in all_p if p.get('category'))))
@@ -88,16 +86,12 @@ def admin_panel():
     
     return render_template('admin_panel.html', grouped=grouped, override=override_val)
 
-# --- API ENDPOINTS ---
-
 @app.route('/api/get-data')
 def get_data():
     docs = get_products_ref().stream()
     stock_map = {str(doc.id): doc.to_dict().get('stock', 999) for doc in docs}
-    
     override_doc = get_settings_ref().document('stock_override').get()
     override_val = override_doc.to_dict().get('value', 'off') if override_doc.exists else 'off'
-    
     return jsonify({"stock": stock_map, "override": override_val})
 
 @app.route('/admin/api/update-stock', methods=['POST'])
