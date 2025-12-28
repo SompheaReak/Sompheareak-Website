@@ -7,27 +7,30 @@ from firebase_admin import credentials, firestore
 
 # --- INITIALIZATION ---
 app = Flask(__name__)
+# Keep your secret key safe in an environment variable too
 app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_studio_pro_2025_secure')
 
-# --- FIREBASE SETUP ---
+# --- FIREBASE SETUP (This is the SAFE way) ---
+# This line tells the code: "Look at Render's settings to find the key"
 service_account_info = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
 
 if service_account_info:
-    # Use the JSON text from Render Environment Variables
+    # We turn the text from Render back into a proper key
     cred_dict = json.loads(service_account_info)
     cred = credentials.Certificate(cred_dict)
     firebase_admin.initialize_app(cred)
 else:
-    # Fallback for local testing if you have the file saved locally
+    # If the key isn't found (like when testing locally)
     try:
         cred = credentials.Certificate("serviceAccountKey.json")
         firebase_admin.initialize_app(cred)
     except:
-        print("Warning: Firebase key not found.")
+        print("Warning: Firebase key not found in Environment Variables.")
 
 db = firestore.client()
-# Mandatory path structure for persistent cloud storage
 APP_ID = "somphea-reak-studio"
+
+# Helper functions to get database locations
 def get_products_ref():
     return db.collection('artifacts').document(APP_ID).collection('public').document('data').collection('products')
 
