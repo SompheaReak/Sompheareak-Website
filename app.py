@@ -103,6 +103,40 @@ def toggle_override():
     db.session.commit()
     return jsonify(success=True)
 
+@app.route('/api/sync', methods=['POST'])
+def sync_catalog():
+    """Syncs product list: Adds new items and updates details of existing ones"""
+    data = request.json
+    items = data.get('items', [])
+    
+    for item in items:
+        # Check if product exists in DB
+        p = db.session.get(Product, item['id'])
+        
+        name = item.get('name_kh') or item['name']
+        cat = item['categories'][0] if (item.get('categories') and len(item['categories']) > 0) else "General"
+        
+        if p:
+            # Update existing product (Prices/Names might have changed in code)
+            p.name = name
+            p.price = item['price']
+            p.image = item['image']
+            p.category = cat
+        else:
+            # Add new product to DB
+            new_p = Product(
+                id=item['id'], 
+                name=name, 
+                price=item['price'], 
+                image=item['image'], 
+                category=cat,
+                stock=999
+            )
+            db.session.add(new_p)
+            
+    db.session.commit()
+    return jsonify(success=True)
+
 @app.route('/admin/api/process-receipt', methods=['POST'])
 def process_receipt():
     if not session.get('admin'): return jsonify(success=False), 403
@@ -111,24 +145,6 @@ def process_receipt():
         p = db.session.get(Product, item['id'])
         if p:
             p.stock = max(0, p.stock - int(item['qty']))
-    db.session.commit()
-    return jsonify(success=True)
-
-@app.route('/api/sync', methods=['POST'])
-def sync_catalog():
-    """Syncs the product list from the frontend to the database"""
-    data = request.json
-    items = data.get('items', [])
-    existing_ids = {p.id for p in Product.query.with_entities(Product.id).all()}
-    for item in items:
-        if item['id'] not in existing_ids:
-            db.session.add(Product(
-                id=item['id'], 
-                name=item.get('name_kh') or item['name'], 
-                price=item['price'], 
-                image=item['image'], 
-                category=item['categories'][0]
-            ))
     db.session.commit()
     return jsonify(success=True)
 
@@ -144,5 +160,7 @@ with app.app_context():
     db.create_all()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    # Render uses the PORT environment variable
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
 
