@@ -5,68 +5,65 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# --- INITIALIZATION ---
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_studio_pro_2025_secure')
+app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_studio_2025_secure_key')
 
-# --- SMART FIREBASE SETUP ---
+# --- DEBUGGING HELPERS ---
+def get_debug_info():
+    return {
+        "firebase_key_exists": "FIREBASE_SERVICE_ACCOUNT" in os.environ,
+        "admin_pass_exists": "ADMIN_PASS" in os.environ,
+        "templates_folder_exists": os.path.exists('templates'),
+        "home_html_exists": os.path.exists('templates/home.html')
+    }
+
+# --- FIREBASE SETUP ---
 service_account_info = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
-
 db = None
-PROJECT_ID = "Unknown"
+PROJECT_ID = "somphea-reak"
 
 if service_account_info:
     try:
-        # Step 1: Parse the JSON key and get Project ID automatically
         cred_dict = json.loads(service_account_info.strip())
-        PROJECT_ID = cred_dict.get("project_id", "Unknown")
-        
-        # Step 2: Initialize Firebase
+        PROJECT_ID = cred_dict.get("project_id", PROJECT_ID)
         if not firebase_admin._apps:
             cred = credentials.Certificate(cred_dict)
             firebase_admin.initialize_app(cred)
-        
-        # Step 3: Connect to Firestore
         db = firestore.client()
-        print(f"✅ Connected to Firestore Project: {PROJECT_ID}")
     except Exception as e:
-        print(f"❌ Firebase Init Error: {e}")
+        db_error = f"Firebase Connection Error: {str(e)}"
 else:
-    print("❌ Critical: FIREBASE_SERVICE_ACCOUNT not found in Render settings.")
+    db_error = "Missing FIREBASE_SERVICE_ACCOUNT in Render Environment settings."
 
-# Helper functions to get database locations using the detected Project ID
-def get_products_ref():
+def get_ref(collection_name):
     if not db: return None
-    return db.collection('artifacts').document(PROJECT_ID).collection('public').document('data').collection('products')
+    return db.collection('artifacts').document(PROJECT_ID).collection('public').document('data').collection(collection_name)
 
-def get_settings_ref():
-    if not db: return None
-    return db.collection('artifacts').document(PROJECT_ID).collection('public').document('data').collection('settings')
-
-# --- ADMIN PIN ---
+# --- ADMIN CONFIG ---
 ADMIN_PASS = os.environ.get('ADMIN_PASS', 'Thesong_Admin@2022?!$')
 
 # --- ROUTES ---
 
 @app.route('/')
 def home():
+    debug = get_debug_info()
+    if not debug["templates_folder_exists"]:
+        return "<h1>Error: Folder 'templates' not found!</h1><p>Create a folder named 'templates' on GitHub and move your .html files inside it.</p>"
+
     if not db:
-        return f"<h1>Database Connection Failed</h1><p>Check Render Environment Variables. Project ID detected: {PROJECT_ID}</p>"
-    
+        return f"<h1>Database Not Connected</h1><p>{db_error}</p>"
+
     try:
-        ref = get_products_ref()
-        docs = ref.stream()
+        docs = get_ref('products').stream()
         all_p = [doc.to_dict() for doc in docs]
         
-        # If database is connected but empty, it will show 0 products
+        if not all_p:
+            return "<h1>Shop is Empty</h1><p>Database connected! Please go to <b>/admin/login</b> and click <b>'Sync Catalog'</b> to load your products.</p>"
+            
         categories = sorted(list(set(p.get('category', 'General') for p in all_p if p.get('category'))))
         return render_template('home.html', products=all_p, subcategories=categories)
     except Exception as e:
-        return f"<h1>Database Ready, but Empty</h1><p>Error: {str(e)}</p><p>Please go to <b>/admin/login</b> and click <b>Sync Catalog</b> to fill your database.</p>"
-
-@app.route('/custom-bracelet')
-def custom_bracelet():
-    return render_template('custom_bracelet.html')
+        return f"<h1>Application Error</h1><p>{str(e)}</p>"
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -76,19 +73,11 @@ def admin_login():
             return redirect(url_for('admin_panel'))
     return render_template('admin_login.html')
 
-@app.route('/admin/logout')
-def admin_logout():
-    session.pop('admin', None)
-    return redirect(url_for('home'))
-
 @app.route('/admin/panel')
 def admin_panel():
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
-    
+    if not session.get('admin'): return redirect(url_for('admin_login'))
     try:
-        ref = get_products_ref()
-        docs = ref.stream()
+        docs = get_ref('products').stream()
         all_p = [doc.to_dict() for doc in docs]
         all_p.sort(key=lambda x: x.get('name', ''))
         
@@ -98,86 +87,32 @@ def admin_panel():
             if cat not in grouped: grouped[cat] = []
             grouped[cat].append(p)
             
-        settings_ref = get_settings_ref()
-        override_val = 'off'
-        if settings_ref:
-            doc = settings_ref.document('stock_override').get()
-            if doc.exists:
-                override_val = doc.to_dict().get('value', 'off')
-        
-        return render_template('admin_panel.html', grouped=grouped, override=override_val)
+        return render_template('admin_panel.html', grouped=grouped)
     except Exception as e:
-        return f"Admin Panel Error: {str(e)}. Try clicking 'Sync Catalog' if no products appear."
-
-# --- API ENDPOINTS ---
-
-@app.route('/api/get-data')
-def get_data():
-    try:
-        docs = get_products_ref().stream()
-        stock_map = {str(doc.id): doc.to_dict().get('stock', 999) for doc in docs}
-        doc = get_settings_ref().document('stock_override').get()
-        override_val = doc.to_dict().get('value', 'off') if doc.exists else 'off'
-        return jsonify({"stock": stock_map, "override": override_val})
-    except:
-        return jsonify({"stock": {}, "override": "off"})
-
-@app.route('/admin/api/update-stock', methods=['POST'])
-def update_stock():
-    if not session.get('admin'): return jsonify(success=False), 403
-    data = request.json
-    p_id = str(data['id'])
-    get_products_ref().document(p_id).update({'stock': int(data['amount'])})
-    return jsonify(success=True)
+        return f"Admin Error: {str(e)}"
 
 @app.route('/api/sync', methods=['POST'])
 def sync_catalog():
-    data = request.json
-    items = data.get('items', [])
-    products_ref = get_products_ref()
+    if not db: return jsonify(success=False, error="No DB")
     
-    batch = db.batch()
-    for item in items:
-        p_id = str(item['id'])
-        doc_ref = products_ref.document(p_id)
-        existing = doc_ref.get()
-        current_stock = existing.to_dict().get('stock', 999) if existing.exists else 999
-        p_data = {
-            'id': int(p_id),
-            'name': item.get('name_kh') or item['name'],
-            'price': item['price'],
-            'image': item['image'],
-            'category': item['categories'][0] if item.get('categories') else "General",
-            'stock': current_stock
-        }
-        batch.set(doc_ref, p_data)
-    batch.commit()
-    return jsonify(success=True)
-
-@app.route('/admin/api/process-receipt', methods=['POST'])
-def process_receipt():
-    if not session.get('admin'): return jsonify(success=False), 403
-    data = request.json
-    products_ref = get_products_ref()
-    for item in data.get('items', []):
-        p_id = str(item['id'])
-        doc_ref = products_ref.document(p_id)
-        doc = doc_ref.get()
-        if doc.exists:
-            current_stock = doc.to_dict().get('stock', 0)
-            new_stock = max(0, current_stock - int(item['qty']))
-            doc_ref.update({'stock': new_stock})
-    return jsonify(success=True)
-
-@app.route('/admin/api/reset-all', methods=['POST'])
-def reset_all():
-    if not session.get('admin'): return jsonify(success=False), 403
-    docs = get_products_ref().stream()
-    batch = db.batch()
-    for doc in docs:
-        batch.update(doc.reference, {'stock': 999})
-    batch.commit()
-    return jsonify(success=True)
+    # Put your product list here exactly as you have it in your catalog
+    CATALOG_DATA = [
+        {"id": 1, "name": "Sample Product", "price": 10.0, "image": "sample.jpg", "category": "General"},
+        # Add your actual products here
+    ]
+    
+    try:
+        batch = db.batch()
+        for item in CATALOG_DATA:
+            doc_ref = get_ref('products').document(str(item['id']))
+            # Keep existing stock if product already exists
+            snap = doc_ref.get()
+            item['stock'] = snap.to_dict().get('stock', 999) if snap.exists else 999
+            batch.set(doc_ref, item)
+        batch.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        return jsonify(success=False, error=str(e))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
