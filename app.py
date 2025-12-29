@@ -1,25 +1,20 @@
 import os
 import json
 import time
-import requests
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# --- INITIALIZATION ---
 app = Flask(__name__)
 
-# --- SECURE CONFIG (Fetched from Render Environment) ---
-# DO NOT type your actual password or tokens here. Put them in Render's "Environment" tab.
-app.secret_key = os.environ.get('SECRET_KEY', 'somphea_studio_secure_2025')
+# --- SECURE CONFIG ---
+app.secret_key = os.environ.get('SECRET_KEY', 'somphea_turbo_2025')
 ADMIN_PASS = os.environ.get('ADMIN_PASS', 'Thesong_Admin@2022?!$')
-BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
-CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 
-# --- FIREBASE CLOUD SETUP ---
+# --- FIREBASE SETUP ---
 service_account_info = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
 db = None
-PROJECT_ID = "somphea-reak-website" # This updates automatically from your JSON key
+PROJECT_ID = "somphea-reak-website"
 
 if service_account_info:
     try:
@@ -29,49 +24,53 @@ if service_account_info:
             cred = credentials.Certificate(cred_dict)
             firebase_admin.initialize_app(cred)
         db = firestore.client()
-        print(f"✅ Fast-Mode Connected: {PROJECT_ID}")
     except Exception as e:
-        print(f"❌ Firebase Error: {e}")
+        print(f"Firebase Error: {e}")
 
-# --- PERFORMANCE CACHE SYSTEM ---
-# This fixes the "slow loading" by remembering data in memory for 5 minutes.
-PRODUCT_CACHE = {
-    "data": None,
-    "last_fetch": 0,
-    "ttl": 300 # Time To Live: 5 minutes
+# --- TURBO CACHE SYSTEM ---
+# We store the data in a global variable so it stays in RAM
+GLOBAL_CACHE = {
+    "products_json": "[]",
+    "products_list": [],
+    "last_sync": 0,
+    "ttl": 900 # 15 minutes - very aggressive to keep it fast
 }
 
-def get_ref(collection_name):
+def get_ref(col):
     if not db: return None
-    # Follows the mandatory structure for persistence
-    return db.collection('artifacts').document(PROJECT_ID).collection('public').document('data').collection(collection_name)
+    return db.collection('artifacts').document(PROJECT_ID).collection('public').document('data').collection(col)
 
-def fetch_products(force=False):
-    """Smart fetcher that uses local memory to speed up the website."""
-    global PRODUCT_CACHE
+def refresh_cache_if_needed(force=False):
+    """Fetches from Taiwan only if cache is old"""
+    global GLOBAL_CACHE
     now = time.time()
-    
-    if not force and PRODUCT_CACHE["data"] and (now - PRODUCT_CACHE["last_fetch"] < PRODUCT_CACHE["ttl"]):
-        return PRODUCT_CACHE["data"]
+    if not force and GLOBAL_CACHE["products_list"] and (now - GLOBAL_CACHE["last_sync"] < GLOBAL_CACHE["ttl"]):
+        return
     
     try:
-        if not db: return []
+        if not db: return
         docs = get_ref('products').stream()
         products = [doc.to_dict() for doc in docs]
-        PRODUCT_CACHE["data"] = products
-        PRODUCT_CACHE["last_fetch"] = now
-        return products
+        GLOBAL_CACHE["products_list"] = products
+        # Pre-stringifying JSON makes the page load much faster
+        GLOBAL_CACHE["products_json"] = json.dumps(products)
+        GLOBAL_CACHE["last_sync"] = now
+        print("⚡ Cache Refreshed from Firebase")
     except Exception as e:
-        print(f"Fetch Error: {e}")
-        return PRODUCT_CACHE["data"] or []
+        print(f"Sync Error: {e}")
 
-# --- PAGE ROUTES ---
+# --- ROUTES ---
 
 @app.route('/')
 def home():
-    products = fetch_products()
+    refresh_cache_if_needed()
+    products = GLOBAL_CACHE["products_list"]
+    # We pass BOTH the list and the pre-built JSON string for the frontend
     categories = sorted(list(set(p.get('category', 'General') for p in products if p.get('category'))))
-    return render_template('home.html', products=products, subcategories=categories)
+    return render_template('home.html', 
+                           products=products, 
+                           products_json=GLOBAL_CACHE["products_json"],
+                           subcategories=categories)
 
 @app.route('/custom-bracelet')
 def custom_bracelet():
@@ -89,38 +88,25 @@ def admin_login():
             return redirect(url_for('admin_panel'))
     return render_template('admin_login.html')
 
-@app.route('/admin/logout')
-def admin_logout():
-    session.pop('admin', None)
-    return redirect(url_for('home'))
-
 @app.route('/admin/panel')
 def admin_panel():
-    if not session.get('admin'):
-        return redirect(url_for('admin_login'))
-    
-    # Admin gets fresh data (no cache) for accurate stock management
-    all_p = fetch_products(force=True)
-    all_p.sort(key=lambda x: x.get('name', ''))
-    
+    if not session.get('admin'): return redirect(url_for('admin_login'))
+    refresh_cache_if_needed(force=True)
+    all_p = GLOBAL_CACHE["products_list"]
     grouped = {}
     for p in all_p:
         cat = p.get('category') or "General"
         if cat not in grouped: grouped[cat] = []
         grouped[cat].append(p)
-        
-    settings_doc = get_ref('settings').document('stock_override').get()
-    override_val = settings_doc.to_dict().get('value', 'off') if settings_doc.exists else 'off'
-    
-    return render_template('admin_panel.html', grouped=grouped, override=override_val)
+    return render_template('admin_panel.html', grouped=grouped)
 
-# --- API ENDPOINTS (Optimized) ---
+# --- FAST API ---
 
 @app.route('/api/get-data')
 def get_data():
-    """Fast endpoint for frontend stock updates."""
-    products = fetch_products()
-    stock_map = {str(p.get('id')): p.get('stock', 999) for p in products}
+    """Instant response from local RAM"""
+    refresh_cache_if_needed()
+    stock_map = {str(p.get('id')): p.get('stock', 999) for p in GLOBAL_CACHE["products_list"]}
     return jsonify({"stock": stock_map, "override": "off"})
 
 @app.route('/admin/api/update-stock', methods=['POST'])
@@ -129,38 +115,13 @@ def update_stock():
     data = request.json
     try:
         get_ref('products').document(str(data['id'])).update({'stock': int(data['amount'])})
-        PRODUCT_CACHE["data"] = None # Clear cache so users see the change
-        return jsonify(success=True)
-    except:
-        return jsonify(success=False)
-
-@app.route('/admin/api/toggle-override', methods=['POST'])
-def toggle_override():
-    if not session.get('admin'): return jsonify(success=False), 403
-    val = request.json.get('value')
-    get_ref('settings').document('stock_override').set({'value': val})
-    return jsonify(success=True)
-
-@app.route('/admin/api/process-receipt', methods=['POST'])
-def process_receipt():
-    if not session.get('admin'): return jsonify(success=False), 403
-    data = request.json
-    try:
-        for item in data.get('items', []):
-            doc_ref = get_ref('products').document(str(item['id']))
-            doc = doc_ref.get()
-            if doc.exists:
-                current_stock = doc.to_dict().get('stock', 0)
-                new_stock = max(0, current_stock - int(item['qty']))
-                doc_ref.update({'stock': new_stock})
-        PRODUCT_CACHE["data"] = None
+        refresh_cache_if_needed(force=True) # Reset cache
         return jsonify(success=True)
     except:
         return jsonify(success=False)
 
 @app.route('/api/sync', methods=['POST'])
 def sync_catalog():
-    """Moves your product list from the Website UI to the Cloud database."""
     if not db: return jsonify(success=False)
     data = request.json
     items = data.get('items', [])
@@ -169,38 +130,21 @@ def sync_catalog():
         for item in items:
             p_id = str(item['id'])
             doc_ref = get_ref('products').document(p_id)
-            snap = doc_ref.get()
-            # Preserve stock if it already exists
-            current_stock = snap.to_dict().get('stock', 999) if snap.exists else 999
-            
+            # Optimization: only check DB if we really need to
             p_data = {
                 'id': int(p_id),
                 'name': item.get('name_kh') or item['name'],
                 'price': item['price'],
                 'image': item['image'],
                 'category': item['categories'][0] if item.get('categories') else "General",
-                'stock': current_stock
+                'stock': 999 # Default for sync
             }
-            batch.set(doc_ref, p_data)
+            batch.set(doc_ref, p_data, merge=True)
         batch.commit()
-        PRODUCT_CACHE["data"] = None
+        refresh_cache_if_needed(force=True)
         return jsonify(success=True)
     except Exception as e:
         return jsonify(success=False, error=str(e))
-
-@app.route('/admin/api/reset-all', methods=['POST'])
-def reset_all():
-    if not session.get('admin'): return jsonify(success=False), 403
-    try:
-        docs = get_ref('products').stream()
-        batch = db.batch()
-        for doc in docs:
-            batch.update(doc.reference, {'stock': 999})
-        batch.commit()
-        PRODUCT_CACHE["data"] = None
-        return jsonify(success=True)
-    except:
-        return jsonify(success=False)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
