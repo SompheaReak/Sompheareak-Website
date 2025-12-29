@@ -9,40 +9,41 @@ from firebase_admin import credentials, firestore
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_studio_pro_2025_secure')
 
-# --- FIREBASE SETUP ---
+# --- SMART FIREBASE SETUP ---
 service_account_info = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
 
 db = None
+PROJECT_ID = "Unknown"
+
 if service_account_info:
     try:
-        # Step 1: Parse the JSON key
+        # Step 1: Parse the JSON key and get Project ID automatically
         cred_dict = json.loads(service_account_info.strip())
+        PROJECT_ID = cred_dict.get("project_id", "Unknown")
         
-        # Step 2: Initialize Firebase (prevent double init)
+        # Step 2: Initialize Firebase
         if not firebase_admin._apps:
             cred = credentials.Certificate(cred_dict)
             firebase_admin.initialize_app(cred)
         
         # Step 3: Connect to Firestore
         db = firestore.client()
-        print("✅ Firestore Connected Successfully")
+        print(f"✅ Connected to Firestore Project: {PROJECT_ID}")
     except Exception as e:
         print(f"❌ Firebase Init Error: {e}")
 else:
     print("❌ Critical: FIREBASE_SERVICE_ACCOUNT not found in Render settings.")
 
-# Use the exact Project ID from your key
-APP_ID = "somphea-reak"
-
+# Helper functions to get database locations using the detected Project ID
 def get_products_ref():
     if not db: return None
-    return db.collection('artifacts').document(APP_ID).collection('public').document('data').collection('products')
+    return db.collection('artifacts').document(PROJECT_ID).collection('public').document('data').collection('products')
 
 def get_settings_ref():
     if not db: return None
-    return db.collection('artifacts').document(APP_ID).collection('public').document('data').collection('settings')
+    return db.collection('artifacts').document(PROJECT_ID).collection('public').document('data').collection('settings')
 
-# --- CONFIG ---
+# --- ADMIN PIN ---
 ADMIN_PASS = os.environ.get('ADMIN_PASS', 'Thesong_Admin@2022?!$')
 
 # --- ROUTES ---
@@ -50,17 +51,18 @@ ADMIN_PASS = os.environ.get('ADMIN_PASS', 'Thesong_Admin@2022?!$')
 @app.route('/')
 def home():
     if not db:
-        return "Database Connection Error. Please check Render Environment Variables and Firestore Native Mode."
+        return f"<h1>Database Connection Failed</h1><p>Check Render Environment Variables. Project ID detected: {PROJECT_ID}</p>"
     
     try:
-        docs = get_products_ref().stream()
+        ref = get_products_ref()
+        docs = ref.stream()
         all_p = [doc.to_dict() for doc in docs]
+        
+        # If database is connected but empty, it will show 0 products
         categories = sorted(list(set(p.get('category', 'General') for p in all_p if p.get('category'))))
         return render_template('home.html', products=all_p, subcategories=categories)
     except Exception as e:
-        if "database (default) does not exist" in str(e).lower():
-            return "❌ ERROR: Firestore is not in 'Native Mode'. Go to the Google Cloud link provided in the previous message."
-        return f"Error: {str(e)}"
+        return f"<h1>Database Ready, but Empty</h1><p>Error: {str(e)}</p><p>Please go to <b>/admin/login</b> and click <b>Sync Catalog</b> to fill your database.</p>"
 
 @app.route('/custom-bracelet')
 def custom_bracelet():
@@ -96,12 +98,16 @@ def admin_panel():
             if cat not in grouped: grouped[cat] = []
             grouped[cat].append(p)
             
-        override_doc = get_settings_ref().document('stock_override').get()
-        override_val = override_doc.to_dict().get('value', 'off') if override_doc.exists else 'off'
+        settings_ref = get_settings_ref()
+        override_val = 'off'
+        if settings_ref:
+            doc = settings_ref.document('stock_override').get()
+            if doc.exists:
+                override_val = doc.to_dict().get('value', 'off')
         
         return render_template('admin_panel.html', grouped=grouped, override=override_val)
     except Exception as e:
-        return f"Admin Panel Error: {str(e)}"
+        return f"Admin Panel Error: {str(e)}. Try clicking 'Sync Catalog' if no products appear."
 
 # --- API ENDPOINTS ---
 
@@ -110,8 +116,8 @@ def get_data():
     try:
         docs = get_products_ref().stream()
         stock_map = {str(doc.id): doc.to_dict().get('stock', 999) for doc in docs}
-        override_doc = get_settings_ref().document('stock_override').get()
-        override_val = override_doc.to_dict().get('value', 'off') if override_doc.exists else 'off'
+        doc = get_settings_ref().document('stock_override').get()
+        override_val = doc.to_dict().get('value', 'off') if doc.exists else 'off'
         return jsonify({"stock": stock_map, "override": override_val})
     except:
         return jsonify({"stock": {}, "override": "off"})
