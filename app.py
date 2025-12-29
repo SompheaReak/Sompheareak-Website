@@ -1,156 +1,130 @@
 import os
-import json
-import time
-import threading
+import requests
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
-import firebase_admin
-from firebase_admin import credentials, firestore
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+app.secret_key = 'somphea_reak_studio_pro_2025'
 
-# --- SECURE CONFIG (No Secrets Typed Here) ---
-app.secret_key = os.environ.get('SECRET_KEY')
-ADMIN_PASS = os.environ.get('ADMIN_PASS')
+# --- 1. DATABASE SETUP (Using v2 to fix deployment) ---
+basedir = os.path.abspath(os.path.dirname(__file__))
+# We renamed this to 'shop_v2.db' to force a fresh database creation
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'shop_v2.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
-# --- FIREBASE SETUP ---
-service_account_info = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
-db = None
-PROJECT_ID = "somphea-reak-website"
+# --- 2. MODELS ---
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200))
+    price = db.Column(db.Integer)
+    image = db.Column(db.String(500))
+    category = db.Column(db.String(100))
+    stock = db.Column(db.Integer, default=0)
 
-if service_account_info:
-    try:
-        cred_dict = json.loads(service_account_info.strip())
-        PROJECT_ID = cred_dict.get("project_id", PROJECT_ID)
-        if not firebase_admin._apps:
-            cred = credentials.Certificate(cred_dict)
-            firebase_admin.initialize_app(cred)
-        db = firestore.client()
-    except Exception as e:
-        print(f"Firebase Init Error: {e}")
+class Setting(db.Model):
+    key = db.Column(db.String(50), primary_key=True)
+    value = db.Column(db.String(50))
 
-# --- ULTRA-SPEED MEMORY CACHE ---
-# We store EVERYTHING in RAM so the website is instant.
-CACHE = {
-    "products": [],
-    "json_str": "[]",
-    "categories": [],
-    "last_update": 0,
-    "ttl": 1800 # 30 minutes (Website stays fast even if DB is slow)
-}
+# --- 3. CONFIG ---
+ADMIN_PASS = 'Thesong_Admin@2022?!$'
+BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
+CHAT_ID = "-1002654437316"
 
-def get_ref(col):
-    if not db: return None
-    return db.collection('artifacts').document(PROJECT_ID).collection('public').document('data').collection(col)
-
-def refresh_memory(force=False):
-    """Fetches data from Taiwan to update the server's memory."""
-    global CACHE
-    now = time.time()
-    if not force and (now - CACHE["last_update"] < CACHE["ttl"]) and CACHE["products"]:
-        return
-
-    try:
-        if not db: return
-        docs = get_ref('products').stream()
-        p_list = [doc.to_dict() for doc in docs]
-        
-        # Update memory
-        CACHE["products"] = p_list
-        CACHE["json_str"] = json.dumps(p_list)
-        CACHE["categories"] = sorted(list(set(p.get('category', 'General') for p in p_list if p.get('category'))))
-        CACHE["last_update"] = now
-        print("⚡ Memory Cache Updated from Cloud")
-    except Exception as e:
-        print(f"Cache Refresh Error: {e}")
-
-# --- ROUTES ---
-
+# --- 4. ROUTES ---
 @app.route('/')
 def home():
-    # Start refresh in a background thread so the user doesn't wait
-    threading.Thread(target=refresh_memory).start()
-    
-    # Send what we already have in memory (Instant)
-    return render_template('home.html', 
-                           products=CACHE["products"], 
-                           products_json=CACHE["json_str"],
-                           subcategories=CACHE["categories"])
-
-@app.route('/custom-bracelet')
-def custom_bracelet():
     return render_template('custom_bracelet.html')
-
-@app.route('/lego')
-def lego_page():
-    return render_template('LEGO.html')
-
-@app.route('/admin/login', methods=['GET', 'POST'])
-def admin_login():
-    if request.method == 'POST':
-        if ADMIN_PASS and request.form.get('password') == ADMIN_PASS:
-            session['admin'] = True
-            return redirect(url_for('admin_panel'))
-    return render_template('admin_login.html')
 
 @app.route('/admin/panel')
 def admin_panel():
     if not session.get('admin'): return redirect(url_for('admin_login'))
-    refresh_memory(force=True) # Admin always sees fresh data
-    
+    all_p = Product.query.all()
     grouped = {}
-    for p in CACHE["products"]:
-        cat = p.get('category') or "General"
+    for p in all_p:
+        cat = p.category if p.category else "General"
         if cat not in grouped: grouped[cat] = []
         grouped[cat].append(p)
-    return render_template('admin_panel.html', grouped=grouped)
+    
+    # Safe check for override
+    try:
+        override = Setting.query.get('stock_override')
+        override_val = override.value if override else "off"
+    except:
+        override_val = "off"
+    
+    return render_template('admin_panel.html', grouped=grouped, override=override_val)
 
-# --- FAST API ---
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        if request.form.get('password') == ADMIN_PASS:
+            session['admin'] = True
+            return redirect(url_for('admin_panel'))
+    return render_template('admin_login.html')
 
+# --- 5. API ---
 @app.route('/api/get-data')
 def get_data():
-    """Returns data from memory instantly."""
-    stock_map = {str(p.get('id')): p.get('stock', 999) for p in CACHE["products"]}
-    return jsonify({"stock": stock_map, "override": "off"})
+    try:
+        override = Setting.query.get('stock_override')
+        val = override.value if override else "off"
+    except:
+        val = "off"
+        
+    return jsonify({
+        "stock": {p.id: p.stock for p in Product.query.all()},
+        "override": val
+    })
+
+@app.route('/api/sync', methods=['POST'])
+def sync_catalog():
+    data = request.json
+    items = data.get('items', [])
+    for item in items:
+        p = Product.query.get(item['id'])
+        if not p:
+            new_p = Product(id=item['id'], name=item['name_kh'], price=item['price'], image=item['image'], category=item['categories'][0], stock=0)
+            db.session.add(new_p)
+    db.session.commit()
+    return jsonify(success=True)
 
 @app.route('/admin/api/update-stock', methods=['POST'])
 def update_stock():
     if not session.get('admin'): return jsonify(success=False), 403
     data = request.json
-    try:
-        get_ref('products').document(str(data['id'])).update({'stock': int(data['amount'])})
-        # Force memory to update so customers see the change
-        refresh_memory(force=True)
+    p = Product.query.get(data['id'])
+    if p:
+        p.stock = int(data['amount'])
+        db.session.commit()
         return jsonify(success=True)
-    except:
-        return jsonify(success=False)
+    return jsonify(success=False)
 
-@app.route('/api/sync', methods=['POST'])
-def sync_catalog():
-    if not db: return jsonify(success=False)
+@app.route('/admin/api/toggle-override', methods=['POST'])
+def toggle_override():
+    if not session.get('admin'): return jsonify(success=False), 403
+    val = request.json.get('value')
+    sett = Setting.query.get('stock_override')
+    if not sett: sett = Setting(key='stock_override', value=val)
+    else: sett.value = val
+    db.session.add(sett)
+    db.session.commit()
+    return jsonify(success=True)
+
+@app.route('/admin/api/process-receipt', methods=['POST'])
+def process_receipt():
+    if not session.get('admin'): return jsonify(success=False), 403
     data = request.json
-    items = data.get('items', [])
-    try:
-        batch = db.batch()
-        for item in items:
-            p_id = str(item['id'])
-            doc_ref = get_ref('products').document(p_id)
-            p_data = {
-                'id': int(p_id),
-                'name': item.get('name_kh') or item['name'],
-                'price': item['price'],
-                'image': item['image'],
-                'category': item['categories'][0] if item.get('categories') else "General",
-                'stock': 999 
-            }
-            batch.set(doc_ref, p_data, merge=True)
-        batch.commit()
-        refresh_memory(force=True)
-        return jsonify(success=True)
-    except Exception as e:
-        return jsonify(success=False, error=str(e))
+    for item in data['items']:
+        p = Product.query.get(item['id'])
+        if p: p.stock = max(0, p.stock - int(item['qty']))
+    db.session.commit()
+    return jsonify(success=True)
 
+# Ensure tables exist
+with app.app_context():
+    db.create_all()
+
+# Port configuration for Render/Heroku
 if __name__ == "__main__":
-    # Pre-load memory before starting the app
-    refresh_memory(force=True)
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
