@@ -7,14 +7,18 @@ from firebase_admin import credentials, firestore
 
 app = Flask(__name__)
 
-# --- SECURE CONFIG ---
-app.secret_key = os.environ.get('SECRET_KEY', 'somphea_turbo_2025')
-ADMIN_PASS = os.environ.get('ADMIN_PASS', 'Thesong_Admin@2022?!$')
+# --- SECURE CONFIG (FALLBACKS REMOVED TO PREVENT LEAKS) ---
+# All secrets must now be set in Render Environment Variables
+app.secret_key = os.environ.get('SECRET_KEY')
+ADMIN_PASS = os.environ.get('ADMIN_PASS')
+# These are used for potential Telegram integration
+BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 
 # --- FIREBASE SETUP ---
 service_account_info = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
 db = None
-PROJECT_ID = "somphea-reak-website"
+PROJECT_ID = "somphea-reak-website" # This will be updated automatically by your JSON key
 
 if service_account_info:
     try:
@@ -24,16 +28,16 @@ if service_account_info:
             cred = credentials.Certificate(cred_dict)
             firebase_admin.initialize_app(cred)
         db = firestore.client()
+        print(f"✅ Firebase Connected to: {PROJECT_ID}")
     except Exception as e:
-        print(f"Firebase Error: {e}")
+        print(f"❌ Firebase Error: {e}")
 
 # --- TURBO CACHE SYSTEM ---
-# We store the data in a global variable so it stays in RAM
 GLOBAL_CACHE = {
     "products_json": "[]",
     "products_list": [],
     "last_sync": 0,
-    "ttl": 900 # 15 minutes - very aggressive to keep it fast
+    "ttl": 900 # 15 minutes
 }
 
 def get_ref(col):
@@ -52,10 +56,8 @@ def refresh_cache_if_needed(force=False):
         docs = get_ref('products').stream()
         products = [doc.to_dict() for doc in docs]
         GLOBAL_CACHE["products_list"] = products
-        # Pre-stringifying JSON makes the page load much faster
         GLOBAL_CACHE["products_json"] = json.dumps(products)
         GLOBAL_CACHE["last_sync"] = now
-        print("⚡ Cache Refreshed from Firebase")
     except Exception as e:
         print(f"Sync Error: {e}")
 
@@ -65,7 +67,6 @@ def refresh_cache_if_needed(force=False):
 def home():
     refresh_cache_if_needed()
     products = GLOBAL_CACHE["products_list"]
-    # We pass BOTH the list and the pre-built JSON string for the frontend
     categories = sorted(list(set(p.get('category', 'General') for p in products if p.get('category'))))
     return render_template('home.html', 
                            products=products, 
@@ -83,10 +84,17 @@ def lego_page():
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
-        if request.form.get('password') == ADMIN_PASS:
+        # Now checks strictly against the Render variable
+        user_pass = request.form.get('password')
+        if ADMIN_PASS and user_pass == ADMIN_PASS:
             session['admin'] = True
             return redirect(url_for('admin_panel'))
     return render_template('admin_login.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin', None)
+    return redirect(url_for('home'))
 
 @app.route('/admin/panel')
 def admin_panel():
@@ -104,7 +112,6 @@ def admin_panel():
 
 @app.route('/api/get-data')
 def get_data():
-    """Instant response from local RAM"""
     refresh_cache_if_needed()
     stock_map = {str(p.get('id')): p.get('stock', 999) for p in GLOBAL_CACHE["products_list"]}
     return jsonify({"stock": stock_map, "override": "off"})
@@ -115,7 +122,7 @@ def update_stock():
     data = request.json
     try:
         get_ref('products').document(str(data['id'])).update({'stock': int(data['amount'])})
-        refresh_cache_if_needed(force=True) # Reset cache
+        refresh_cache_if_needed(force=True)
         return jsonify(success=True)
     except:
         return jsonify(success=False)
@@ -130,14 +137,13 @@ def sync_catalog():
         for item in items:
             p_id = str(item['id'])
             doc_ref = get_ref('products').document(p_id)
-            # Optimization: only check DB if we really need to
             p_data = {
                 'id': int(p_id),
                 'name': item.get('name_kh') or item['name'],
                 'price': item['price'],
                 'image': item['image'],
                 'category': item['categories'][0] if item.get('categories') else "General",
-                'stock': 999 # Default for sync
+                'stock': 999 
             }
             batch.set(doc_ref, p_data, merge=True)
         batch.commit()
