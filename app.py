@@ -1,24 +1,21 @@
 import os
 import json
 import time
+import threading
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 import firebase_admin
 from firebase_admin import credentials, firestore
 
 app = Flask(__name__)
 
-# --- SECURE CONFIG (FALLBACKS REMOVED TO PREVENT LEAKS) ---
-# All secrets must now be set in Render Environment Variables
+# --- SECURE CONFIG (No Secrets Typed Here) ---
 app.secret_key = os.environ.get('SECRET_KEY')
 ADMIN_PASS = os.environ.get('ADMIN_PASS')
-# These are used for potential Telegram integration
-BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
-CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 
 # --- FIREBASE SETUP ---
 service_account_info = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
 db = None
-PROJECT_ID = "somphea-reak-website" # This will be updated automatically by your JSON key
+PROJECT_ID = "somphea-reak-website"
 
 if service_account_info:
     try:
@@ -28,50 +25,56 @@ if service_account_info:
             cred = credentials.Certificate(cred_dict)
             firebase_admin.initialize_app(cred)
         db = firestore.client()
-        print(f"✅ Firebase Connected to: {PROJECT_ID}")
     except Exception as e:
-        print(f"❌ Firebase Error: {e}")
+        print(f"Firebase Init Error: {e}")
 
-# --- TURBO CACHE SYSTEM ---
-GLOBAL_CACHE = {
-    "products_json": "[]",
-    "products_list": [],
-    "last_sync": 0,
-    "ttl": 900 # 15 minutes
+# --- ULTRA-SPEED MEMORY CACHE ---
+# We store EVERYTHING in RAM so the website is instant.
+CACHE = {
+    "products": [],
+    "json_str": "[]",
+    "categories": [],
+    "last_update": 0,
+    "ttl": 1800 # 30 minutes (Website stays fast even if DB is slow)
 }
 
 def get_ref(col):
     if not db: return None
     return db.collection('artifacts').document(PROJECT_ID).collection('public').document('data').collection(col)
 
-def refresh_cache_if_needed(force=False):
-    """Fetches from Taiwan only if cache is old"""
-    global GLOBAL_CACHE
+def refresh_memory(force=False):
+    """Fetches data from Taiwan to update the server's memory."""
+    global CACHE
     now = time.time()
-    if not force and GLOBAL_CACHE["products_list"] and (now - GLOBAL_CACHE["last_sync"] < GLOBAL_CACHE["ttl"]):
+    if not force and (now - CACHE["last_update"] < CACHE["ttl"]) and CACHE["products"]:
         return
-    
+
     try:
         if not db: return
         docs = get_ref('products').stream()
-        products = [doc.to_dict() for doc in docs]
-        GLOBAL_CACHE["products_list"] = products
-        GLOBAL_CACHE["products_json"] = json.dumps(products)
-        GLOBAL_CACHE["last_sync"] = now
+        p_list = [doc.to_dict() for doc in docs]
+        
+        # Update memory
+        CACHE["products"] = p_list
+        CACHE["json_str"] = json.dumps(p_list)
+        CACHE["categories"] = sorted(list(set(p.get('category', 'General') for p in p_list if p.get('category'))))
+        CACHE["last_update"] = now
+        print("⚡ Memory Cache Updated from Cloud")
     except Exception as e:
-        print(f"Sync Error: {e}")
+        print(f"Cache Refresh Error: {e}")
 
 # --- ROUTES ---
 
 @app.route('/')
 def home():
-    refresh_cache_if_needed()
-    products = GLOBAL_CACHE["products_list"]
-    categories = sorted(list(set(p.get('category', 'General') for p in products if p.get('category'))))
+    # Start refresh in a background thread so the user doesn't wait
+    threading.Thread(target=refresh_memory).start()
+    
+    # Send what we already have in memory (Instant)
     return render_template('home.html', 
-                           products=products, 
-                           products_json=GLOBAL_CACHE["products_json"],
-                           subcategories=categories)
+                           products=CACHE["products"], 
+                           products_json=CACHE["json_str"],
+                           subcategories=CACHE["categories"])
 
 @app.route('/custom-bracelet')
 def custom_bracelet():
@@ -84,25 +87,18 @@ def lego_page():
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
-        # Now checks strictly against the Render variable
-        user_pass = request.form.get('password')
-        if ADMIN_PASS and user_pass == ADMIN_PASS:
+        if ADMIN_PASS and request.form.get('password') == ADMIN_PASS:
             session['admin'] = True
             return redirect(url_for('admin_panel'))
     return render_template('admin_login.html')
 
-@app.route('/admin/logout')
-def admin_logout():
-    session.pop('admin', None)
-    return redirect(url_for('home'))
-
 @app.route('/admin/panel')
 def admin_panel():
     if not session.get('admin'): return redirect(url_for('admin_login'))
-    refresh_cache_if_needed(force=True)
-    all_p = GLOBAL_CACHE["products_list"]
+    refresh_memory(force=True) # Admin always sees fresh data
+    
     grouped = {}
-    for p in all_p:
+    for p in CACHE["products"]:
         cat = p.get('category') or "General"
         if cat not in grouped: grouped[cat] = []
         grouped[cat].append(p)
@@ -112,8 +108,8 @@ def admin_panel():
 
 @app.route('/api/get-data')
 def get_data():
-    refresh_cache_if_needed()
-    stock_map = {str(p.get('id')): p.get('stock', 999) for p in GLOBAL_CACHE["products_list"]}
+    """Returns data from memory instantly."""
+    stock_map = {str(p.get('id')): p.get('stock', 999) for p in CACHE["products"]}
     return jsonify({"stock": stock_map, "override": "off"})
 
 @app.route('/admin/api/update-stock', methods=['POST'])
@@ -122,7 +118,8 @@ def update_stock():
     data = request.json
     try:
         get_ref('products').document(str(data['id'])).update({'stock': int(data['amount'])})
-        refresh_cache_if_needed(force=True)
+        # Force memory to update so customers see the change
+        refresh_memory(force=True)
         return jsonify(success=True)
     except:
         return jsonify(success=False)
@@ -147,11 +144,13 @@ def sync_catalog():
             }
             batch.set(doc_ref, p_data, merge=True)
         batch.commit()
-        refresh_cache_if_needed(force=True)
+        refresh_memory(force=True)
         return jsonify(success=True)
     except Exception as e:
         return jsonify(success=False, error=str(e))
 
 if __name__ == "__main__":
+    # Pre-load memory before starting the app
+    refresh_memory(force=True)
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
