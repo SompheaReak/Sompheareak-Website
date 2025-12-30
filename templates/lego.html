@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Somphea Reak - LEGO World</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: white; -webkit-tap-highlight-color: transparent; }
+        
+        /* Horizontal Scroll Snap */
+        .scroller {
+            overflow-x: auto;
+            display: flex;
+            gap: 12px;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 10px;
+        }
+        .scroller::-webkit-scrollbar { display: none; }
+        .scroller > div {
+            flex: 0 0 40%; /* Each item takes 40% of screen width */
+            scroll-snap-align: start;
+        }
+
+        /* Tabs Animation */
+        .tab-btn { transition: all 0.3s ease; border-bottom: 2px solid transparent; opacity: 0.6; }
+        .tab-btn.active { border-color: #ea580c; opacity: 1; transform: scale(1.05); }
+
+        .lego-card { background: #1e293b; border-radius: 12px; overflow: hidden; position: relative; }
+    </style>
+</head>
+<body x-data="{ currentTab: 'ninjago' }">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-800">
+        <div class="px-4 py-3 flex items-center justify-between">
+            <a href="/" class="w-8 h-8 flex items-center justify-center bg-slate-800 rounded-full text-slate-400">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <h1 class="font-black uppercase tracking-widest text-sm text-white">LEGO <span class="text-orange-500">World</span></h1>
+            <div class="w-8"></div>
+        </div>
+
+        <!-- TABS -->
+        <div class="flex items-center justify-between px-2 pb-0 overflow-x-auto no-scrollbar">
+            <button @click="currentTab = 'ninjago'" :class="currentTab === 'ninjago' ? 'active' : ''" class="tab-btn py-3 px-4 font-black uppercase text-[10px] tracking-wider whitespace-nowrap">
+                Ninjago
+            </button>
+            <button @click="currentTab = 'one_piece'" :class="currentTab === 'one_piece' ? 'active' : ''" class="tab-btn py-3 px-4 font-black uppercase text-[10px] tracking-wider whitespace-nowrap">
+                One Piece
+            </button>
+            <button @click="currentTab = 'sets'" :class="currentTab === 'sets' ? 'active' : ''" class="tab-btn py-3 px-4 font-black uppercase text-[10px] tracking-wider whitespace-nowrap">
+                Sets
+            </button>
+            <button @click="currentTab = 'f1'" :class="currentTab === 'f1' ? 'active' : ''" class="tab-btn py-3 px-4 font-black uppercase text-[10px] tracking-wider whitespace-nowrap">
+                F1 Racing
+            </button>
+            <button @click="currentTab = 'military'" :class="currentTab === 'military' ? 'active' : ''" class="tab-btn py-3 px-4 font-black uppercase text-[10px] tracking-wider whitespace-nowrap">
+                Military
+            </button>
+        </div>
+    </header>
+
+    <main class="p-4 pb-24 min-h-screen">
+        
+        <!-- NINJAGO TAB (Horizontal Scrollers) -->
+        <div x-show="currentTab === 'ninjago'" x-transition.opacity.duration.300ms>
+            {% for season, items in data.ninjago_sorted %}
+            <div class="mb-8">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-1 h-4 bg-orange-500 rounded-full"></div>
+                    <h2 class="font-black uppercase text-sm tracking-wide text-slate-200">{{ season }}</h2>
+                    <div class="h-px bg-slate-800 flex-grow"></div>
+                    <span class="text-[9px] font-bold text-slate-500">{{ items|length }} Items</span>
+                </div>
+                
+                <div class="scroller">
+                    {% for p in items %}
+                    <div class="lego-card">
+                        <div class="aspect-square bg-slate-800 relative">
+                            <img src="{{ p.image }}" loading="lazy" class="w-full h-full object-cover">
+                            {% if p.stock <= 0 %}
+                            <div class="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
+                                <span class="text-[8px] font-black uppercase border border-white px-2 py-1">Sold Out</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="p-2">
+                            <h3 class="text-[9px] font-bold text-slate-300 truncate leading-tight">{{ p.name }}</h3>
+                            <p class="text-[10px] font-black text-orange-400 mt-1">{{ "{:,}".format(p.price) }}៛</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- ONE PIECE TAB (Grid) -->
+        <div x-show="currentTab === 'one_piece'" x-transition.opacity.duration.300ms style="display: none;">
+            <div class="grid grid-cols-3 gap-3">
+                {% for p in data.one_piece %}
+                <div class="lego-card">
+                    <div class="aspect-[3/4] bg-slate-800 relative">
+                        <img src="{{ p.image }}" loading="lazy" class="w-full h-full object-cover">
+                        {% if p.stock <= 0 %}
+                            <div class="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm"><span class="text-[8px] font-black uppercase border border-white px-2 py-1">Sold Out</span></div>
+                        {% endif %}
+                    </div>
+                    <div class="p-2">
+                        <h3 class="text-[9px] font-bold text-slate-300 truncate">{{ p.name }}</h3>
+                        <p class="text-[10px] font-black text-orange-400 mt-1">{{ "{:,}".format(p.price) }}៛</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- BUILDING SETS TAB (Large Cards) -->
+        <div x-show="currentTab === 'sets'" x-transition.opacity.duration.300ms style="display: none;">
+            <div class="grid grid-cols-2 gap-4">
+                {% for p in data.sets %}
+                <div class="lego-card">
+                    <div class="aspect-square bg-slate-800 relative">
+                        <img src="{{ p.image }}" loading="lazy" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-3">
+                        <h3 class="text-[10px] font-bold text-slate-300 leading-tight line-clamp-2">{{ p.name }}</h3>
+                        <p class="text-xs font-black text-orange-400 mt-2">{{ "{:,}".format(p.price) }}៛</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- F1 & MILITARY (Grid) -->
+        <div x-show="currentTab === 'f1'" x-transition.opacity.duration.300ms style="display: none;">
+            <div class="grid grid-cols-3 gap-3">
+                {% for p in data.f1 %}
+                <div class="lego-card">
+                    <div class="aspect-square bg-slate-800 relative">
+                        <img src="{{ p.image }}" loading="lazy" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-2">
+                        <h3 class="text-[9px] font-bold text-slate-300 truncate">{{ p.name }}</h3>
+                        <p class="text-[10px] font-black text-orange-400 mt-1">{{ "{:,}".format(p.price) }}៛</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div x-show="currentTab === 'military'" x-transition.opacity.duration.300ms style="display: none;">
+             <div class="grid grid-cols-3 gap-3">
+                {% for p in data.military %}
+                <div class="lego-card">
+                    <div class="aspect-square bg-slate-800 relative">
+                        <img src="{{ p.image }}" loading="lazy" class="w-full h-full object-cover">
+                    </div>
+                    <div class="p-2">
+                        <h3 class="text-[9px] font-bold text-slate-300 truncate">{{ p.name }}</h3>
+                        <p class="text-[10px] font-black text-orange-400 mt-1">{{ "{:,}".format(p.price) }}៛</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>
+
