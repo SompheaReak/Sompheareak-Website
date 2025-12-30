@@ -36,7 +36,8 @@ class Setting(db.Model):
     key = db.Column(db.String(50), primary_key=True)
     value = db.Column(db.String(50))
 
-# --- TEMPLATES (INLINE TO PREVENT TemplateNotFound ERROR) ---
+# --- TEMPLATES ---
+# We use string replacement instead of Jinja blocks to avoid inheritance complexity in a single file
 HTML_LAYOUT = """
 <!DOCTYPE html>
 <html>
@@ -57,14 +58,13 @@ HTML_LAYOUT = """
         </div>
     </nav>
     <div class="max-w-7xl mx-auto p-4">
-        {% block content %}{% endblock %}
+        <!-- CONTENT_PLACEHOLDER -->
     </div>
 </body>
 </html>
 """
 
-HOME_TEMPLATE = HTML_LAYOUT + """
-{% block content %}
+HOME_TEMPLATE = HTML_LAYOUT.replace("<!-- CONTENT_PLACEHOLDER -->", """
     <h2 class="text-2xl font-bold mb-6">All Products</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         {% for p in products %}
@@ -76,11 +76,9 @@ HOME_TEMPLATE = HTML_LAYOUT + """
         </div>
         {% endfor %}
     </div>
-{% endblock %}
-"""
+""")
 
-LEGO_TEMPLATE = HTML_LAYOUT + """
-{% block content %}
+LEGO_TEMPLATE = HTML_LAYOUT.replace("<!-- CONTENT_PLACEHOLDER -->", """
     <h2 class="text-3xl font-bold mb-8 text-center uppercase tracking-widest">Collections</h2>
 
     {# Ninjago Section #}
@@ -125,9 +123,7 @@ LEGO_TEMPLATE = HTML_LAYOUT + """
         </div>
         {% endif %}
     {% endfor %}
-
-{% endblock %}
-"""
+""")
 
 # --- HELPERS ---
 MEM_CACHE = {"products": [], "last_sync": 0}
@@ -281,4 +277,5 @@ if __name__ == "__main__":
             db.session.commit()
             
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
