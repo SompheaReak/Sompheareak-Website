@@ -1,1061 +1,488 @@
+import os
+import logging
+from flask import Flask, render_template_string
+
+# --- CONFIGURATION ---
+logging.basicConfig(level=logging.INFO)
+app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_secure_123')
+
+# ==========================================
+# 1. LANDING PAGE (The Gateway)
+# ==========================================
+LANDING_PAGE_HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Somphea Reak | Welcome</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .category-card { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .category-card:active { transform: scale(0.95); }
+        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
+
+    <!-- Background Decor -->
+    <div class="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-orange-100 to-transparent -z-10"></div>
+    <div class="absolute -top-20 -right-20 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl -z-10"></div>
+    <div class="absolute bottom-0 left-0 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl -z-10"></div>
+
+    <!-- Header -->
+    <div class="text-center mb-10 animate-fade-in" style="animation-delay: 0.1s;">
+        <div class="inline-flex items-center gap-2 mb-3 bg-white px-4 py-1.5 rounded-full shadow-sm border border-slate-100">
+            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Store Open</span>
+        </div>
+        <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-2">SOMPHEA REAK</h1>
+        <p class="text-slate-500 font-medium">Choose your experience</p>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl animate-fade-in" style="animation-delay: 0.2s;">
+        
+        <!-- 1. CUSTOM BRACELET -->
+        <a href="/bracelet" class="category-card group relative overflow-hidden bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-emerald-200">
+            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                <i data-lucide="gem" class="w-24 h-24 text-emerald-600 transform rotate-12"></i>
+            </div>
+            <div class="relative z-10 flex flex-col h-full justify-between min-h-[140px]">
+                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 leading-tight mb-1">Custom<br>Bracelet</h2>
+                    <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
+                        Design Now <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                    </p>
+                </div>
+            </div>
+        </a>
+
+        <!-- 2. LEGO WORLD -->
+        <a href="/lego" class="category-card group relative overflow-hidden bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-yellow-200">
+            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                <i data-lucide="blocks" class="w-24 h-24 text-yellow-600 transform -rotate-12"></i>
+            </div>
+            <div class="relative z-10 flex flex-col h-full justify-between min-h-[140px]">
+                <div class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-lucide="cuboid" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 leading-tight mb-1">LEGO<br>Universe</h2>
+                    <p class="text-xs font-bold text-yellow-600 uppercase tracking-wider flex items-center gap-1">
+                        Start Building <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                    </p>
+                </div>
+            </div>
+        </a>
+
+        <!-- 3. LUCKY DRAW -->
+        <a href="/lucky-draw" class="category-card group relative overflow-hidden bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-purple-200">
+            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                <i data-lucide="gift" class="w-24 h-24 text-purple-600 transform rotate-6"></i>
+            </div>
+            <div class="relative z-10 flex flex-col h-full justify-between min-h-[140px]">
+                <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-lucide="party-popper" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 leading-tight mb-1">Lucky<br>Draw</h2>
+                    <p class="text-xs font-bold text-purple-600 uppercase tracking-wider flex items-center gap-1">
+                        Try Your Luck <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                    </p>
+                </div>
+            </div>
+        </a>
+
+        <!-- 4. TOYS -->
+        <a href="/toys" class="category-card group relative overflow-hidden bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-blue-200">
+            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                <i data-lucide="gamepad-2" class="w-24 h-24 text-blue-600 transform -rotate-6"></i>
+            </div>
+            <div class="relative z-10 flex flex-col h-full justify-between min-h-[140px]">
+                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-4">
+                    <i data-lucide="rocket" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 leading-tight mb-1">General<br>Toys</h2>
+                    <p class="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center gap-1">
+                        Browse All <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                    </p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-12 text-center animate-fade-in" style="animation-delay: 0.3s;">
+        <p class="text-xs font-bold text-slate-300 uppercase tracking-widest">© 2024 Somphea Reak</p>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+"""
+
+# ==========================================
+# 2. CUSTOM BRACELET PAGE
+# ==========================================
+BRACELET_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minifigure Mystery Draw</title>
-    <script src="https://cdn.tailwindcss.com"></script> 
+    <title>Custom Bracelet Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Bungee+Inline&family=Inter:wght@100..900&display=swap');
-        
-        :root {
-            --lego-yellow: #FFC300;
-            --lego-red: #C80815;
-            --gacha-bg: #1f2937; /* Gray-800 */
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        /* Keyframes for the shaking/loading animation */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-2px, -3px) rotate(-1deg); }
-            20% { transform: translate(3px, 0px) rotate(1deg); }
-            30% { transform: translate(-3px, 2px) rotate(0deg); }
-            40% { transform: translate(2px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 3px) rotate(-1deg); }
-            60% { transform: translate(3px, 1px) rotate(0deg); }
-            70% { transform: translate(-2px, -2px) rotate(-1deg); }
-            80% { transform: translate(1px, 0px) rotate(1deg); }
-            90% { transform: translate(-3px, 3px) rotate(0deg); }
-            100% { transform: translate(1px, -1px) rotate(-1deg); }
-        }
-
-        .loading-animation {
-            animation: shake 0.15s infinite;
-            background-color: var(--lego-yellow);
-            box-shadow: 0 0 20px rgba(255, 195, 0, 0.9), inset 0 0 10px rgba(0, 0, 0, 0.5);
-            border-color: #fefefe !important;
-        }
-
-        /* Styles for individual result cards within the multi-draw */
-        .result-card {
-            /* Animation for pop-in effect */
-            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
-            transform: scale(0.7);
-            opacity: 0;
-            animation: fadeIn 0.4s ease-out forwards;
-        }
-        @keyframes fadeIn {
-            from { transform: scale(0.7); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        /* Custom style for the rarity badge background */
-        .rarity-common { background-color: #3b82f6; color: white; } 
-        .rarity-rare { background-color: #fbbf24; color: #333; } 
-        .rarity-super-rare { background-color: #ef4444; color: white; } 
-        .rarity-ultra-rare { background-color: #a855f7; color: white; } 
-        .new-badge {
-            background-color: #10b981; /* Emerald-500 */
-            color: white;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
-
-        .draw-button-style {
-            background-color: var(--lego-red);
-            box-shadow: 0 5px 0 0 #A80008;
-            transform: translateY(0);
-            transition: all 0.1s ease-out;
-        }
-        .draw-button-style:active:not(:disabled) {
-            transform: translateY(5px);
-            box-shadow: 0 0 0 0 #A80008;
-        }
-        .draw-button-style:disabled {
-            background-color: #4B5563;
-            box-shadow: 0 5px 0 0 #374151;
-            cursor: not-allowed;
-        }
-        
-        /* Styles for the Collection grid items */
-        .collection-item {
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .collection-item:hover {
-            transform: scale(1.05);
-        }
-        .collected {
-            filter: none;
-            opacity: 1;
-            border: 2px solid var(--lego-yellow);
-        }
-        .missing {
-            filter: grayscale(100%) brightness(50%);
-            opacity: 0.6;
-            border: 2px dashed #4B5563;
-            position: relative;
-            cursor: default; /* Not clickable */
-        }
-        .missing:after {
-            content: '??';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--lego-yellow);
-            text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
-        }
-
-        /* Custom styles for theme cards */
-        .theme-card {
-            border: 3px solid transparent;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .theme-card.active-ninjago {
-            border-color: #3b82f6; /* Blue-500 */
-            background-color: #1e3a8a; /* Blue-900 */
-            color: white;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
-        }
-        .theme-card.active-marvel {
-            border-color: #ef4444; /* Red-500 */
-            background-color: #7f1d1d; /* Red-900 */
-            color: white;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
-        }
-
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="p-4 md:p-8 min-h-screen bg-gray-900 flex flex-col items-center">
+<body class="bg-slate-50 text-slate-900">
+    <!-- Navigation Back -->
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-100 px-4 py-3 flex items-center gap-3">
+        <a href="/" class="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5 text-slate-600"></i>
+        </a>
+        <h1 class="font-bold text-sm uppercase tracking-wider">Bracelet Studio</h1>
+    </nav>
 
-    <a href="#" class="self-start text-yellow-500 hover:text-yellow-400 mb-4 flex items-center transition duration-150">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 mr-1">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-        </svg>
-        Back to Home
-    </a>
-    
-    <div id="minifigure-app" class="w-full max-w-sm bg-gray-800 border-4 border-yellow-500 shadow-2xl p-6 rounded-xl relative overflow-hidden">
-        
-        <div class="flex justify-center items-center mb-4">
-            <h1 class="text-3xl font-black text-yellow-500 text-center uppercase tracking-wider font-['Bungee_Inline'] drop-shadow-lg shadow-black/50">
-                MYSTERY DRAW!
-            </h1>
-        </div>
-        
-        <div id="theme-selection" class="mb-6">
-            <label class="block text-lg font-semibold text-gray-300 mb-2 text-center">Select Theme to Draw:</label>
-            <div class="flex space-x-3">
-                <!-- Ninjago Theme Card -->
-                <div id="ninjago-card"
-                     class="theme-card flex-1 p-3 rounded-lg cursor-pointer transition duration-200 text-center bg-gray-700 hover:bg-gray-600 active-ninjago"
-                     data-theme="Ninjago"
-                     onclick="selectTheme('Ninjago')">
-                    <h3 class="text-base font-bold text-blue-400">NINJAGO</h3>
-                    <p class="text-[10px] text-gray-400">Elemental Masters</p>
-                </div>
-                <!-- Marvel Theme Card -->
-                <div id="marvel-card"
-                     class="theme-card flex-1 p-3 rounded-lg cursor-pointer transition duration-200 text-center bg-gray-700 hover:bg-gray-600"
-                     data-theme="Marvel"
-                     onclick="selectTheme('Marvel')">
-                    <h3 class="text-base font-bold text-red-400">MARVEL</h3>
-                    <p class="text-[10px] text-gray-400">Superheroes</p>
-                </div>
+    <div class="p-4 max-w-lg mx-auto">
+        <!-- Visualizer -->
+        <div class="bg-white rounded-3xl shadow-xl shadow-slate-200 border border-slate-100 p-8 mb-6 flex items-center justify-center min-h-[300px] relative overflow-hidden">
+            <div class="absolute inset-0 opacity-5" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"></div>
+            <div class="relative z-10 flex items-center gap-1" id="bracelet-chain">
+                <div class="w-8 h-8 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center text-[10px] text-slate-400 font-bold">L</div>
+                <div class="text-xs font-bold text-slate-400 px-4 uppercase tracking-widest" id="empty-state">Add Charms</div>
+                <div class="w-8 h-8 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center text-[10px] text-slate-400 font-bold">R</div>
             </div>
         </div>
 
-        <audio id="bgm" autoplay loop>
-            <!-- No actual sound file, keeping for structure -->
-            <source src="static/sounds/RPReplay_Final1763010968.mov" type="audio/mpeg">
-        </audio>
-
-        <div class="mb-4 p-2 rounded-lg bg-gray-700 shadow-inner border border-gray-600 text-center">
-            <span class="text-sm font-semibold text-gray-300">Your Player ID:</span>
-            <!-- User ID is a 4-digit simple ID stored in localStorage -->
-            <code id="user-id-display" class="text-3xl font-mono font-extrabold text-red-400 block tracking-widest">...</code>
-        </div>
-
-        <div class="flex justify-between items-center mb-4 p-3 rounded-lg bg-gray-700 shadow-inner border border-gray-600">
-            <span class="text-lg font-semibold text-gray-300">Draws Available (<span id="current-theme-label">Ninjago</span>):</span>
-            <span id="draw-count" class="text-3xl font-extrabold text-yellow-500 drop-shadow-lg">...</span>
-        </div>
-        
-        <div id="datetime-display" class="mb-6 p-2 text-center rounded-lg bg-gray-700 border border-gray-600">
-            <!-- Cambodia Time will be displayed here -->
-        </div>
-
-        <div id="result-area" class="mt-4 min-h-[150px] flex items-center justify-center border-2 border-dashed border-gray-700 rounded-lg p-2">
-            <div id="initial-message" class="text-center p-4 text-gray-400">
-                <p class="mb-2 text-lg font-semibold text-yellow-500">Welcome, Player!</p>
-                <p class="text-sm">Redeem a code (e.g., **NJO1234** or **PRO5678**) to get theme-specific draws and start collecting.</p>
+        <!-- Controls -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+            <h3 class="font-bold text-xs uppercase text-slate-400 mb-3 tracking-wider">Select Charms</h3>
+            <div class="grid grid-cols-4 gap-3">
+                <!-- Using placeholder images to represent your catalog -->
+                <div onclick="addCharm('Flag')" class="aspect-square rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 transition-all active:scale-95">
+                    <span class="text-xl">🏳️</span>
+                    <span class="text-[10px] font-bold mt-1 text-slate-500">Flag</span>
+                </div>
+                <div onclick="addCharm('Gem')" class="aspect-square rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 transition-all active:scale-95">
+                    <span class="text-xl">💎</span>
+                    <span class="text-[10px] font-bold mt-1 text-slate-500">Gem</span>
+                </div>
+                <div onclick="addCharm('Letter')" class="aspect-square rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 transition-all active:scale-95">
+                    <span class="text-xl">A</span>
+                    <span class="text-[10px] font-bold mt-1 text-slate-500">Letter</span>
+                </div>
+                <div onclick="addCharm('Heart')" class="aspect-square rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 transition-all active:scale-95">
+                    <span class="text-xl">❤️</span>
+                    <span class="text-[10px] font-bold mt-1 text-slate-500">Heart</span>
+                </div>
             </div>
-        </div>
-
-        <div class="flex space-x-3 mt-6">
-            <button id="draw-1x-button" class="w-1/2 py-4 text-xl font-bold text-white rounded-xl transition duration-150 uppercase draw-button-style" disabled>
-                Open 1x (1 Draw)
-            </button>
-            <button id="draw-5x-button" class="w-1/2 py-4 text-xl font-bold text-white rounded-xl transition duration-150 uppercase draw-button-style" disabled>
-                Open 5x (5 Draws)
-            </button>
-        </div>
-
-        <div class="mt-4 flex space-x-2">
-            <input type="text" id="redeem-input" placeholder="Enter redeem code (e.g., NJO1234)" 
-                   class="flex-grow p-2 text-sm rounded-xl bg-gray-700 text-white border border-gray-600 placeholder-gray-400 focus:ring-yellow-500 focus:border-yellow-500">
-            <button id="redeem-button" class="py-2 px-4 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-xl shadow transition duration-200">
-                Redeem
-            </button>
-        </div>
-        <p id="redeem-message" class="text-xs text-center mt-1 h-4"></p>
-        <button id="reset-collection-button" class="w-full py-2 text-xs font-semibold bg-red-800 hover:bg-red-700 text-white rounded-xl shadow transition duration-200 mt-2 border border-red-700">
-            [DEMO MODE] Reset Collection & Draws
-        </button>
-    </div>
-    
-    <!-- Collection List Section (Dynamically switches content based on theme) -->
-    <div class="w-full max-w-sm mt-8 p-4 bg-gray-800 rounded-xl border border-gray-700 shadow-lg">
-        <h2 class="text-xl font-bold text-yellow-500 mb-3 border-b border-yellow-500 pb-2 flex justify-between items-center">
-            <span><span id="collection-theme-name">Ninjago</span> Collection</span>
-            <span class="text-lg font-mono text-white">
-                (<span id="collected-count">0</span> / <span id="total-count">0</span>)
-            </span>
-        </h2>
-        
-        <div id="collection-list" class="grid grid-cols-6 gap-1">
-            <!-- Figures are rendered here based on the selected theme -->
+            
+            <button onclick="reset()" class="w-full mt-4 py-3 rounded-xl bg-slate-100 text-slate-500 font-bold text-xs uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-colors">Reset Design</button>
         </div>
     </div>
-</div>
 
-<div id="figure-modal" class="hidden fixed inset-0 z-50 bg-gray-900 bg-opacity-95 flex items-center justify-center p-4" onclick="document.getElementById('figure-modal').classList.add('hidden')">
-    <div class="bg-gray-800 p-6 rounded-xl border-4 border-yellow-500 shadow-2xl max-w-xs sm:max-w-sm w-full relative" onclick="event.stopPropagation()">
-        <button onclick="document.getElementById('figure-modal').classList.add('hidden')" class="absolute top-2 right-2 text-white bg-red-600 rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold hover:bg-red-700 transition">
-            &times;
-        </button>
-        <h3 id="modal-title" class="2xl font-bold text-yellow-500 mb-4 text-center"></h3>
-        <div class="aspect-square w-full bg-gray-700 rounded-lg overflow-hidden border-4 border-gray-600">
-            <img id="modal-image" src="" alt="" class="w-full h-full object-contain">
-        </div>
-        <div class="mt-4 text-center">
-             <span id="modal-rarity" class="px-4 py-1 text-sm font-bold rounded-full text-gray-900 shadow-md"></span>
-        </div>
-    </div>
-</div>
-
-
-<script>
-    // --- 💥 CUSTOM MINIFIGURE WEIGHTS 💥 ---
-    // All figures must have a 'theme' property defined.
-    // NOTE: A weight of 0 will now prevent a figure from being drawn.
-    const FIGURE_STRINGS = [ 
-        // --- NINJAGO FIGURES (theme:"Ninjago") ---
-     'name:"Kai (DX)", rarity:"Common", weight:0, color:"red-600", image_url:"static/images/lucky-01.jpg", theme:"Ninjago"',
-     'name:"Zane (DX)", rarity:"Common", weight:0, color:"red-600", image_url:"static/images/lucky-02.jpg", theme:"Ninjago"',
-     'name:"Jay (DX)", rarity:"Common", weight:0, color:"red-600", image_url:"static/images/lucky-03.jpg", theme:"Ninjago"',
-     'name:"Cole (DX)", rarity:"Common", weight:0, color:"red-600", image_url:"static/images/lucky-04.jpg", theme:"Ninjago"',
-     'name:"Lloyd (DX)", rarity:"Common", weight:0, color:"red-600", image_url:"static/images/lucky-05.jpg", theme:"Ninjago"',
-     'name:"Nya (DX)", rarity:"Common", weight:0, color:"red-600", image_url:"static/images/lucky-06.jpg", theme:"Ninjago"',
-  
-     'name:"Kai (PILOT)", rarity:"Common", weight:0, color:"red-600", image_url:"static/images/lucky-11.jpg", theme:"Ninjago"',
-     'name:"Zane (PILOT)", rarity:"Common", weight:0, color:"red-600", image_url:"static/images/lucky-12.jpg", theme:"Ninjago"',
-     'name:"Jay (PILOT)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-13.jpg", theme:"Ninjago"',
-     'name:"Cole (PILOT)", rarity:"Common", weight:0, color:"red-600", image_url:"static/images/lucky-14.jpg", theme:"Ninjago"',
-     'name:"Lloyd (PILOT)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-15.jpg", theme:"Ninjago"',
-     'name:"Pink Zane (PILOT)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-16.jpg", theme:"Ninjago"',
-
-     'name:"Kai (NRG)", rarity:"Super Rare", weight:40, color:"red-600", image_url:"static/images/lucky-21.jpg", theme:"Ninjago"',
-     'name:"Zane (NRG)", rarity:"Rare", weight:0, color:"red-600", image_url:"static/images/lucky-22.jpg", theme:"Ninjago"',
-     'name:"Jay (NRG)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-23.jpg", theme:"Ninjago"',
-     'name:"Cole (NRG)", rarity:"Rare", weight:0, color:"red-600", image_url:"static/images/lucky-24.jpg", theme:"Ninjago"',
-     'name:"Lloyd (NRG)", rarity:"Rare", weight:20, color:"red-600", image_url:"static/images/lucky-25.jpg", theme:"Ninjago"',
-     'name:"Nya (NRG)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-26.jpg", theme:"Ninjago"',
-  
-     'name:"Kai (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-41.jpg", theme:"Ninjago"',
-     'name:"Zane (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-42.jpg", theme:"Ninjago"',
-     'name:"Jay (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-43.jpg", theme:"Ninjago"',
-     'name:"Cole (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-44.jpg", theme:"Ninjago"',
-     'name:"Lloyd (ZX)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-45.jpg", theme:"Ninjago"',
-     'name:"Nya (ZX)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-46.jpg", theme:"Ninjago"',
-
-        // Special Series (51-76 prefixes)
-     'name:"Kai (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-51.jpg", theme:"Ninjago"',
-     'name:"Zane (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-52.jpg", theme:"Ninjago"',
-     'name:"Jay (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-53.jpg", theme:"Ninjago"',
-     'name:"Cole (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-54.jpg", theme:"Ninjago"',
-     'name:"Lloyd (KIMONO)", rarity:"Rare", weight:60, color:"red-600", image_url:"static/images/lucky-55.jpg", theme:"Ninjago"',
-     'name:"Golden Lloyd (KIMONO)", rarity:"Ultra Rare", weight:10, color:"red-600", image_url:"static/images/lucky-56.jpg", theme:"Ninjago"',
-
-     'name:"Kai (PAJAMAS)", rarity:"Ultra Rare", weight:0, color:"red-600", image_url:"static/images/lucky-61.jpg", theme:"Ninjago"',
-     'name:"Zane (PAJAMAS)", rarity:"Ultra Rare", weight:0, color:"red-600", image_url:"static/images/lucky-62.jpg", theme:"Ninjago"',
-     'name:"Jay (PAJAMAS)", rarity:"Ultra Rare", weight:0, color:"red-600", image_url:"static/images/lucky-63.jpg", theme:"Ninjago"',
-     'name:"Cole (PAJAMAS)", rarity:"Ultra Rare", weight:0, color:"red-600", image_url:"static/images/lucky-64.jpg", theme:"Ninjago"',
-     'name:"Golden Zane (DX)", rarity:"Rare", weight:0, color:"red-600", image_url:"static/images/lucky-65.jpg", theme:"Ninjago"',
-     'name:"Ultra Nya (DX)", rarity:"Rare", weight:0, color:"red-600", image_url:"static/images/lucky-66.jpg", theme:"Ninjago"',
-  
-     'name:"Kai (REBOOTED)", rarity:"Super Rare", weight:0, color:"red-600", image_url:"static/images/lucky-71.jpg", theme:"Ninjago"',
-     'name:"Zane (REBOOTED)", rarity:"Super Rare", weight:0, color:"red-600", image_url:"static/images/lucky-72.jpg", theme:"Ninjago"',
-     'name:"Jay (REBOOTED)", rarity:"Super Rare", weight:0, color:"red-600", image_url:"static/images/lucky-73.jpg", theme:"Ninjago"',
-     'name:"Cole (REBOOTED)", rarity:"Super Rare", weight:0, color:"red-600", image_url:"static/images/lucky-74.jpg", theme:"Ninjago"',
-     'name:"Lloyd (REBOOTED)", rarity:"Super Rare", weight:0, color:"red-600", image_url:"static/images/lucky-75.jpg", theme:"Ninjago"',
-     'name:"Pixal (REBOOTED)", rarity:"Super Rare", weight:0, color:"red-600", image_url:"static/images/lucky-76.jpg", theme:"Ninjago"',
-
-        // --- MARVEL FIGURES (theme:"Marvel") ---
-     'name:"Spider-Man (Iron)", rarity:"Common", weight:80, theme:"Marvel", color:"blue-500", image_url:"static/images/marvel-81.jpg"',
-     'name:"Iron Man (Mark 50)", rarity:"Rare", weight:60, theme:"Marvel", color:"yellow-500", image_url:"static/images/marvel-82.jpg"',
-     'name:"Captain America (Classic)", rarity:"Common", weight:80, theme:"Marvel", color:"blue-500", image_url:"static/images/marvel-83.jpg"',
-     'name:"Thor (Ragnarok)", rarity:"Rare", weight:60, theme:"Marvel", color:"gray-500", image_url:"static/images/marvel-84.jpg"',
-     'name:"Black Widow (White Suit)", rarity:"Rare", weight:60, theme:"Marvel", color:"white", image_url:"static/images/marvel-85.jpg"',
-     'name:"Hulk (Big Fig)", rarity:"Ultra Rare", weight:10, theme:"Marvel", color:"green-500", image_url:"static/images/marvel-86.jpg"',
-     
-     'name:"Wolverine (Yellow)", rarity:"Super Rare", weight:40, theme:"Marvel", color:"yellow-500", image_url:"static/images/marvel-91.jpg"',
-     'name:"Deadpool (Taco)", rarity:"Ultra Rare", weight:10, theme:"Marvel", color:"red-500", image_url:"static/images/marvel-92.jpg"',
-     'name:"Dr. Strange (Cape)", rarity:"Rare", weight:60, theme:"Marvel", color:"blue-500", image_url:"static/images/marvel-93.jpg"',
-     'name:"Scarlet Witch (WandaVision)", rarity:"Super Rare", weight:40, theme:"Marvel", color:"red-500", image_url:"static/images/marvel-94.jpg"',
-     'name:"Loki (TVA)", rarity:"Common", weight:80, theme:"Marvel", color:"gray-500", image_url:"static/images/marvel-95.jpg"',
-     'name:"Thanos (Gauntlet)", rarity:"Ultra Rare", weight:10, theme:"Marvel", color:"purple-500", image_url:"static/images/marvel-96.jpg"',
-
-     'name:"Groot (Dancing)", rarity:"Rare", weight:60, theme:"Marvel", color:"brown-500", image_url:"static/images/marvel-97.jpg"',
-     'name:"Star-Lord (Trench Coat)", rarity:"Common", weight:80, theme:"Marvel", color:"red-500", image_url:"static/images/marvel-98.jpg"',
-     'name:"Gamora (Guardians)", rarity:"Rare", weight:60, theme:"Marvel", color:"green-500", image_url:"static/images/marvel-99.jpg"',
-     'name:"Rocket Raccoon", rarity:"Common", weight:80, theme:"Marvel", color:"gray-500", image_url:"static/images/marvel-100.jpg"',
-     'name:"Nebula (Cybernetic)", rarity:"Rare", weight:60, theme:"Marvel", color:"blue-500", image_url:"static/images/marvel-101.jpg"',
-     'name:"Drax the Destroyer", rarity:"Common", weight:80, theme:"Marvel", color:"gray-500", image_url:"static/images/marvel-102.jpg"',
-
-     'name:"Miles Morales (Suit)", rarity:"Rare", weight:60, theme:"Marvel", color:"red-500", image_url:"static/images/marvel-103.jpg"',
-     'name:"Venom (Tongue Out)", rarity:"Super Rare", weight:40, theme:"Marvel", color:"black-500", image_url:"static/images/marvel-104.jpg"',
-     'name:"Gwen Stacy (Ghost-Spider)", rarity:"Rare", weight:60, theme:"Marvel", color:"pink-500", image_url:"static/images/marvel-105.jpg"',
-     'name:"Vulture (Wings)", rarity:"Common", weight:80, theme:"Marvel", color:"green-500", image_url:"static/images/marvel-106.jpg"',
-     'name:"Green Goblin (Glider)", rarity:"Super Rare", weight:40, theme:"Marvel", color:"green-500", image_url:"static/images/marvel-107.jpg"',
-     'name:"Carnage (Tendrils)", rarity:"Ultra Rare", weight:10, theme:"Marvel", color:"red-500", image_url:"static/images/marvel-108.jpg"',
-       ];
-    // ----------------------------------------
-    
-    // Global state
-    let MINIFIGURES = [];
-    let themeDraws = {
-        Ninjago: 0,
-        Marvel: 0
-    };
-    let isLoading = false;
-    let collectedFigures = []; 
-    let USER_ID = null; 
-    let currentTheme = 'Ninjago'; // State for current selected theme
-
-    // UI Elements
-    const drawCountElement = document.getElementById('draw-count');
-    const currentThemeLabel = document.getElementById('current-theme-label');
-    const draw1xButton = document.getElementById('draw-1x-button'); 
-    const draw5xButton = document.getElementById('draw-5x-button');
-    const resultArea = document.getElementById('result-area');
-    const resetCollectionButton = document.getElementById('reset-collection-button');
-    const collectionListElement = document.getElementById('collection-list');
-    const collectedCountElement = document.getElementById('collected-count');
-    const totalCountElement = document.getElementById('total-count');
-    const initialMessage = document.getElementById('initial-message');
-    const userIdDisplay = document.getElementById('user-id-display');
-    const collectionThemeName = document.getElementById('collection-theme-name');
-    
-    // Redeem Code UI Elements and Constants
-    const redeemInput = document.getElementById('redeem-input');
-    // FIX: Corrected ID lookup for redeem button
-    const redeemButton = document.getElementById('redeem-button'); 
-    const redeemMessage = document.getElementById('redeem-message');
-
-    // --- CODE CONSTANTS ---
-    // Fixed list of unique, theme-specific codes for the demo
-    const SINGLE_USE_CODES = {
-        Ninjago: ["NJO0001", "NJO0002", "NJO0003", "NJO0004", "NJO0005", "NJO0006", "NJO0007", "NJO0008", "NJO0009", "NJO0010", "NJO0011"],// NJO + 4 digits
-        Marvel: ["PRO5005", "PRO6006", "PRO7007", "PRO8008"]  // PRO + 4 digits
-    };
-    const CODE_REFILL_AMOUNT = 5;
-    
-    // localStorage Keys - NOW SEPARATE
-    const USER_ID_KEY = 'minifigure_user_id'; 
-    const NINJAGO_DRAW_COUNT_KEY = 'minifigure_draw_count_ninjago';
-    const MARVEL_DRAW_COUNT_KEY = 'minifigure_draw_count_marvel';
-    const BASE_COLLECTION_KEY = 'minifigure_collection_list_v2'; 
-    const GLOBAL_USED_CODES_KEY = 'minifigure_global_used_codes_v2'; // Updated key
-    const INITIAL_DRAWS = 0; 
-
-    // --- Utility Function to generate a unique placeholder URL for the onerror fallback ---
-    function getPlaceholderUrl(figure) {
-        let bgColor;
-        let fgColor = 'ffffff'; 
-        // Use theme color for placeholder background
-        switch (figure.theme) {
-            case 'Ninjago': bgColor = '3b82f6'; break; // Blue-500
-            case 'Marvel': bgColor = 'ef4444'; break; // Red-500
-            default: bgColor = '6B7280'; break; 
+    <script>
+        lucide.createIcons();
+        function addCharm(type) {
+            document.getElementById('empty-state').style.display = 'none';
+            const chain = document.getElementById('bracelet-chain');
+            const bead = document.createElement('div');
+            bead.className = 'w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 border-2 border-white shadow-md flex items-center justify-center text-white text-lg cursor-pointer hover:scale-110 transition-transform';
+            
+            let content = '';
+            if(type === 'Flag') content = '🏳️';
+            if(type === 'Gem') content = '💎';
+            if(type === 'Letter') content = 'A';
+            if(type === 'Heart') content = '❤️';
+            
+            bead.innerHTML = content;
+            bead.onclick = function() { this.remove(); if(chain.children.length <= 2) document.getElementById('empty-state').style.display = 'block'; };
+            
+            // Insert before the last element (Right Clasp)
+            chain.insertBefore(bead, chain.lastElementChild);
         }
-        
-        const baseName = figure.name.split(' ')[0].toUpperCase();
-        const rarityInitial = figure.rarity.charAt(0).toUpperCase();
-
-        return `https://placehold.co/96x96/${bgColor}/${fgColor}?text=${baseName}|${rarityInitial}`;
-    }
-
-    // --- User ID Management (Simple 4-Digit ID) ---
-    function generateSimpleID() {
-        const num = Math.floor(Math.random() * 9999) + 1;
-        return String(num).padStart(4, '0');
-    }
-
-    function getUserID() {
-        let id = localStorage.getItem(USER_ID_KEY);
-        if (!id) {
-            id = generateSimpleID();
-            localStorage.setItem(USER_ID_KEY, id);
-        }
-        USER_ID = id;
-        if (userIdDisplay) {
-            userIdDisplay.textContent = USER_ID;
-        }
-    }
-
-    function getCollectionKey() {
-        return `${USER_ID}_${BASE_COLLECTION_KEY}`;
-    }
-
-    // --- Draw Count Management (Theme-Specific) ---
-    function getDrawCountKey(theme) {
-        return theme === 'Ninjago' ? NINJAGO_DRAW_COUNT_KEY : MARVEL_DRAW_COUNT_KEY;
-    }
-    
-    function getCurrentDrawCount() {
-        return themeDraws[currentTheme];
-    }
-    
-    function updateDrawCount(theme, newCount) {
-        themeDraws[theme] = Math.max(0, newCount);
-        localStorage.setItem(getDrawCountKey(theme), themeDraws[theme]);
-        updateDrawCountUI();
-    }
-    
-    function loadDrawCount() {
-        themeDraws.Ninjago = parseInt(localStorage.getItem(NINJAGO_DRAW_COUNT_KEY) || INITIAL_DRAWS, 10);
-        themeDraws.Marvel = parseInt(localStorage.getItem(MARVEL_DRAW_COUNT_KEY) || INITIAL_DRAWS, 10);
-        updateDrawCountUI();
-    }
-
-
-    // --- Core Game Logic Utilities ---
-    function parseFigureString(str) {
-        const figure = {};
-        // Regex to match key:"value" pairs, including single quotes for weight as a string initially
-        const regex = /(\w+):"([^"]+)"/g; 
-        let match;
-        while ((match = regex.exec(str)) !== null) {
-            if (match[1] === 'weight') {
-                figure[match[1]] = parseInt(match[2], 10);
-            } else if (match[1] === 'image_url') {
-                // The image_url is crucial for display
-                figure[match[1]] = match[2];
+        function reset() {
+            const chain = document.getElementById('bracelet-chain');
+            while(chain.children.length > 2) {
+                chain.removeChild(chain.children[1]);
             }
-             else {
-                figure[match[1]] = match[2];
-            }
+            document.getElementById('empty-state').style.display = 'block';
         }
-        // Ensure theme is set even if missing in original string (though we updated the list)
-        if (!figure.theme) figure.theme = 'Ninjago'; 
-        return figure;
-    }
-    
-    function initializeMinifigures() {
-        MINIFIGURES = FIGURE_STRINGS.map(parseFigureString);
-    }
-    
-    /**
-     * Performs a weighted draw ONLY from the figures belonging to the currentTheme.
-     * FIX: Ensures figures with weight: 0 are explicitly excluded from the pool.
-     */
-    function weightedDraw() {
-        const themeFigures = MINIFIGURES.filter(fig => fig.theme === currentTheme);
-
-        const weightedList = [];
-        themeFigures.forEach(fig => {
-            const weight = fig.weight; 
-            // Only add the figure to the list if the weight is a positive number
-            if (weight > 0) {
-                for (let i = 0; i < weight; i++) {
-                    weightedList.push(fig);
-                }
-            }
-        });
-
-        if (weightedList.length === 0) {
-            console.error(`No figures available for draw in the ${currentTheme} theme.`);
-            return null;
-        }
-
-        const randomIndex = Math.floor(Math.random() * weightedList.length);
-        return weightedList[randomIndex];
-    }
-
-    // --- Cambodia Time Logic ---
-    function getOrdinal(d) {
-        if (d > 3 && d < 21) return 'th'; 
-        switch (d % 10) {
-            case 1: return "st";
-            case 2: return "nd";
-            case 3: return "rd";
-            default: return "th";
-        }
-    }
-    
-    function updateCambodiaTime() {
-        const now = new Date();
-        const options = {
-            timeZone: 'Asia/Phnom_Penh',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit', 
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        };
-
-        const formatter = new Intl.DateTimeFormat('en-US', options);
-        const parts = formatter.formatToParts(now);
-
-        let day, month, year, hour, minute, second;
-
-        parts.forEach(part => {
-            if (part.type === 'day') day = part.value;
-            if (part.type === 'month') month = part.value;
-            if (part.type === 'year') year = part.value;
-            if (part.type === 'hour') hour = part.value; 
-            if (part.type === 'minute') minute = part.value;
-            if (part.type === 'second') second = part.value;
-        });
-
-        const dayInt = parseInt(day, 10);
-        const formattedDate = `${dayInt}${getOrdinal(dayInt)}/${month}/${year}`;
-        const formattedTime = `${hour}h ${minute}m ${second}s`;
-        
-        const datetimeDisplay = document.getElementById('datetime-display');
-        if (datetimeDisplay) {
-            datetimeDisplay.innerHTML = `
-                <p class="text-sm font-semibold text-gray-400">Time in Phnom Penh (UTC+7)</p>
-                <p class="text-base font-bold text-gray-300">${formattedDate} | ${formattedTime}</p>
-            `;
-        }
-    }
-    
-    // --- Local Storage Collection Management ---
-    
-    function loadCollection() {
-        const storedCollection = localStorage.getItem(getCollectionKey());
-        try {
-            collectedFigures = storedCollection ? JSON.parse(storedCollection) : [];
-        } catch (e) {
-            console.error("Error parsing collection data, resetting:", e);
-            collectedFigures = [];
-        }
-        updateCollectionUI();
-    }
-    
-    function saveCollection(figureUrl) {
-        if (!collectedFigures.includes(figureUrl)) {
-            collectedFigures.push(figureUrl);
-            localStorage.setItem(getCollectionKey(), JSON.stringify(collectedFigures));
-            return true; 
-        }
-        return false; 
-    }
-    
-    function resetAllData() {
-        // Reset collection
-        collectedFigures = [];
-        localStorage.removeItem(getCollectionKey());
-        
-        // Reset draws
-        themeDraws.Ninjago = INITIAL_DRAWS;
-        themeDraws.Marvel = INITIAL_DRAWS;
-        localStorage.removeItem(NINJAGO_DRAW_COUNT_KEY);
-        localStorage.removeItem(MARVEL_DRAW_COUNT_KEY);
-        
-        // Reset used codes (OPTIONAL: Clear used codes so demo codes can be reused)
-        localStorage.removeItem(GLOBAL_USED_CODES_KEY);
-
-        loadDrawCount();
-        updateCollectionUI();
-
-        resultArea.innerHTML = `
-            <div class="text-center p-4 text-gray-400">
-                <p class="mb-2 text-lg font-semibold text-red-500">All Data Reset!</p>
-                <p class="text-sm">Collection, draws, and used codes cleared.</p>
-            </div>
-        `;
-    }
-
-    // --- Modal Function ---
-    window.showFigureDetails = function(figureUrl) {
-        // Find the figure object using its image_url
-        const figure = MINIFIGURES.find(f => f.image_url === figureUrl);
-        if (!figure) return;
-        
-        const modal = document.getElementById('figure-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalImage = document.getElementById('modal-image');
-        const modalRarity = document.getElementById('modal-rarity');
-        
-        const rarityClass = `rarity-${figure.rarity.toLowerCase().replace(' ', '-')}`;
-        // Use the same fallback mechanism in the modal
-        const fallbackUrl = getPlaceholderUrl(figure);
-
-        modalTitle.textContent = figure.name;
-        modalImage.src = figure.image_url; 
-        modalImage.alt = figure.name;
-        // Set the onerror handler for the modal image as well
-        modalImage.setAttribute('onerror', `this.onerror=null; this.src='${fallbackUrl}'`);
-        
-        modalRarity.textContent = figure.rarity.toUpperCase();
-        modalRarity.className = `px-4 py-1 text-sm font-bold rounded-full text-gray-900 shadow-md ${rarityClass}`;
-        
-        modal.classList.remove('hidden');
-    }
-
-    // --- Theme Selection Logic ---
-    window.selectTheme = function(theme) {
-        currentTheme = theme;
-        
-        // Update active class on cards
-        document.querySelectorAll('.theme-card').forEach(card => {
-            const cardTheme = card.dataset.theme;
-            card.classList.remove('active-ninjago', 'active-marvel');
-            card.classList.remove('bg-gray-800'); // Ensure background is grey when inactive
-            card.classList.add('bg-gray-700'); 
-            card.querySelector('h3').classList.remove('text-white');
-            
-            if (cardTheme === theme) {
-                card.classList.remove('bg-gray-700');
-                if (theme === 'Ninjago') {
-                    card.classList.add('active-ninjago');
-                    card.querySelector('h3').classList.remove('text-blue-400');
-                    card.querySelector('h3').classList.add('text-white');
-                } else if (theme === 'Marvel') {
-                    card.classList.add('active-marvel');
-                    card.querySelector('h3').classList.remove('text-red-400');
-                    card.querySelector('h3').classList.add('text-white');
-                }
-            } else {
-                 if (cardTheme === 'Ninjago') {
-                    card.querySelector('h3').classList.add('text-blue-400');
-                } else if (cardTheme === 'Marvel') {
-                    card.querySelector('h3').classList.add('text-red-400');
-                }
-            }
-        });
-
-        // Crucial: Update UI elements that depend on the theme
-        updateDrawCountUI();
-        updateCollectionUI();
-    }
-
-    /**
-     * Filters the master list to show only figures belonging to the currentTheme.
-     */
-    function getFilteredFigures() {
-        return MINIFIGURES.filter(fig => fig.theme === currentTheme);
-    }
-
-    // --- UI Update ---
-
-    function updateDrawCountUI() {
-        const draws = getCurrentDrawCount();
-
-        if (drawCountElement) {
-            drawCountElement.textContent = draws;
-        }
-        
-        if (currentThemeLabel) {
-            currentThemeLabel.textContent = currentTheme;
-        }
-        
-        if (draw1xButton && draw5xButton) {
-            const noDraws = draws <= 0;
-            const notEnoughFor5x = draws < 5;
-            const disableButtons = isLoading;
-            
-            draw1xButton.disabled = noDraws || disableButtons;
-            draw1xButton.textContent = disableButtons ? 'Drawing...' : (noDraws ? 'No Draws Left!' : 'Open 1x (1 Draw)');
-            
-            draw5xButton.disabled = notEnoughFor5x || disableButtons;
-            draw5xButton.textContent = disableButtons ? 'Drawing...' : (notEnoughFor5x ? `Need ${5 - draws} More` : 'Open 5x (5 Draws)');
-        }
-    }
-    
-    function updateCollectionUI() {
-        if (!collectionListElement) return;
-        
-        const collectedUrls = new Set(collectedFigures);
-        const figuresToShow = getFilteredFigures(); 
-        
-        // Count of collected figures in the CURRENT theme
-        const collectedInThemeCount = figuresToShow.filter(fig => collectedUrls.has(fig.image_url)).length;
-        
-        // Update Theme Name Display
-        collectionThemeName.textContent = currentTheme;
-
-        // Update counts (showing current theme progress)
-        if (collectedCountElement) {
-            collectedCountElement.textContent = collectedInThemeCount;
-        }
-
-        if (totalCountElement) {
-             // Show total count of the currently selected theme
-             totalCountElement.textContent = figuresToShow.length;
-        }
-
-        collectionListElement.innerHTML = figuresToShow.map(fig => {
-            const isCollected = collectedUrls.has(fig.image_url);
-            // Collection items are always clickable if collected, or default if missing
-            const statusClass = isCollected ? 'collected collection-item' : 'missing'; 
-            const clickHandler = isCollected ? `onclick="showFigureDetails('${fig.image_url}')"` : '';
-            const fallbackUrl = getPlaceholderUrl(fig);
-            const rarityClass = `rarity-${fig.rarity.toLowerCase().replace(' ', '-')} `;
-
-
-            return `
-                <div class="relative w-full aspect-square rounded-lg overflow-hidden transition duration-150 p-0.5 ${statusClass}"
-                     title="${fig.name} (${isCollected ? 'Found - Click to View' : 'Missing'})" ${clickHandler}>
-                    <img src="${fig.image_url}" 
-                         alt="${fig.name}" 
-                         class="w-full h-full object-contain rounded-md" 
-                         onerror="this.onerror=null; this.src='${fallbackUrl}'"/>
-                    
-                    <span class="absolute top-1 right-1 w-2 h-2 rounded-full shadow-lg ${rarityClass}"></span>
-                </div>
-            `;
-        }).join('');
-
-        // If the filtered list is empty (should not happen with our setup)
-        if (figuresToShow.length === 0) {
-            collectionListElement.innerHTML = `
-                <p class="col-span-6 text-center text-gray-500 py-6 text-sm">No figures found in the '${currentTheme}' series.</p>
-            `;
-        }
-
-        updateDrawCountUI(); 
-    }
-
-    // --- Updated Function: Handle Code Redemption ---
-    function handleRedeem() {
-        const code = redeemInput.value.trim().toUpperCase();
-        
-        // 1. Load the list of codes that have been used globally
-        const usedCodes = new Set(JSON.parse(localStorage.getItem(GLOBAL_USED_CODES_KEY) || '[]'));
-        
-        // 2. Determine Theme and Check Code Format
-        let redeemTheme = null;
-        let validCodes = [];
-        
-        if (code.startsWith('NJO') && code.length === 7 && /^\d{4}$/.test(code.substring(3))) {
-            redeemTheme = 'Ninjago';
-            validCodes = SINGLE_USE_CODES.Ninjago;
-        } else if (code.startsWith('PRO') && code.length === 7 && /^\d{4}$/.test(code.substring(3))) {
-            redeemTheme = 'Marvel';
-            validCodes = SINGLE_USE_CODES.Marvel;
-        }
-
-        // Clear previous message
-        redeemMessage.textContent = '';
-        redeemMessage.className = "text-xs text-center mt-1 h-4 font-semibold";
-
-        if (!redeemTheme) {
-            redeemMessage.textContent = "❌ Invalid Code format! Must be NJOXXXX or PROXXXX.";
-            redeemMessage.classList.add("text-red-500");
-        } else if (!validCodes.includes(code)) {
-            redeemMessage.textContent = `❌ Invalid Code! Check your ${redeemTheme} code list.`;
-            redeemMessage.classList.add("text-red-500");
-        } else if (usedCodes.has(code)) {
-            redeemMessage.textContent = "❌ Code already used globally!";
-            redeemMessage.classList.add("text-red-500");
-        } else {
-            // Successful redemption!
-            updateDrawCount(redeemTheme, themeDraws[redeemTheme] + CODE_REFILL_AMOUNT);
-            redeemMessage.textContent = `✅ Success! Added ${CODE_REFILL_AMOUNT} ${redeemTheme} draws.`;
-            redeemMessage.classList.add("text-green-500");
-            
-            // 4. Mark the code as used globally
-            usedCodes.add(code);
-            localStorage.setItem(GLOBAL_USED_CODES_KEY, JSON.stringify(Array.from(usedCodes)));
-            
-            // Clear input after success
-            redeemInput.value = ''; 
-        }
-        
-        // Clear message after a few seconds
-        setTimeout(() => {
-            redeemMessage.textContent = '';
-        }, 3000);
-    }
-
-    // --- Main Draw Logic ---
-    function handleDraw(count) {
-        const currentDraws = getCurrentDrawCount(); // Get theme-specific draws
-
-        if (isLoading || currentDraws < count) return;
-        
-        isLoading = true;
-        updateDrawCountUI(); 
-        
-        if(initialMessage) initialMessage.remove(); 
-
-        resultArea.innerHTML = `
-            <div id="mystery-box" class="loading-animation w-32 h-32 rounded-xl flex items-center justify-center shadow-inner border-4 border-white">
-                <span class="text-6xl text-gray-900" role="img" aria-label="Mystery Box">📦</span>
-            </div>
-        `;
-
-        // Decrement the correct theme's draw count BEFORE the delay
-        updateDrawCount(currentTheme, currentDraws - count);
-
-        // Wait for suspense (1.5 seconds)
-        setTimeout(() => {
-            const drawResults = [];
-            const figuresInCurrentTheme = MINIFIGURES.filter(f => f.theme === currentTheme);
-            const figuresInCurrentThemeWithWeight = figuresInCurrentTheme.filter(f => f.weight > 0);
-            
-            // Check if there are any figures to draw
-            if (figuresInCurrentThemeWithWeight.length === 0) {
-                 resultArea.innerHTML = `
-                    <div class="text-center p-4 text-gray-400">
-                        <p class="mb-2 text-lg font-semibold text-red-500">Draw Pool Empty!</p>
-                        <p class="text-sm">No figures in the ${currentTheme} theme have a weight greater than 0.</p>
-                    </div>
-                `;
-                isLoading = false;
-                updateDrawCountUI();
-                return;
-            }
-
-
-            for (let i = 0; i < count; i++) {
-                let finalDrawnFigure = null;
-                let isNew = false;
-                let wasFreeRedraw = false;
-                
-                // 1. Initial Draw (Paid Slot) - uses the weightedDraw which only draws from the currentTheme pool
-                let drawnFigure = weightedDraw();
-                
-                if (!drawnFigure) {
-                    // This should only happen if the draw pool unexpectedly becomes empty
-                    console.error("Weighted draw failed to return a figure.");
-                    break; 
-                }
-
-                // Save and check if it's new
-                let initialIsNew = saveCollection(drawnFigure.image_url);
-                finalDrawnFigure = drawnFigure;
-                isNew = initialIsNew;
-
-                // 2. Continuous Re-draw logic if duplicate AND the current theme collection is not full
-                if (!initialIsNew) {
-                    // Recalculate collected count in current theme *before* re-rolls
-                    const collectedInThemeCount = new Set(collectedFigures.filter(url => 
-                        figuresInCurrentTheme.some(f => f.image_url === url)
-                    )).size;
-                    
-                    if (collectedInThemeCount < figuresInCurrentTheme.length) {
-                         wasFreeRedraw = true; 
-                        let attempts = 0;
-
-                        do {
-                            attempts++;
-                            let reDrawnFigure = weightedDraw(); // Draws ONLY from current theme pool
-                            
-                            if (saveCollection(reDrawnFigure.image_url)) {
-                                finalDrawnFigure = reDrawnFigure; 
-                                isNew = true; 
-                                break;
-                            }
-                            
-                            // Recalculate collection size to prevent infinite loop if collection becomes full
-                            const currentThemeCollectedAfterDraw = new Set(collectedFigures.filter(url => 
-                                figuresInCurrentTheme.some(f => f.image_url === url)
-                            )).size;
-                            
-                            // Break condition: if collection is now full or too many attempts (safeguard)
-                            if (currentThemeCollectedAfterDraw >= figuresInCurrentTheme.length || attempts > 100) { 
-                                break;
-                            }
-                        } while (true);
-                    }
-                }
-
-                // 3. Log the final result for display
-                drawResults.push({
-                    figure: finalDrawnFigure,
-                    isNew: isNew,
-                    wasFreeRedraw: wasFreeRedraw 
-                });
-            }
-            
-            displayDrawResults(drawResults);
-
-        }, 1500); 
-    }
-    
-    // --- Display Draw Results (Copied from original, relies on global state) ---
-    function displayDrawResults(results) {
-        if(initialMessage) initialMessage.remove(); 
-
-        const isMultiDraw = results.length > 1;
-        
-        const figuresInCurrentTheme = MINIFIGURES.filter(f => f.theme === currentTheme);
-        const totalFiguresAvailableInTheme = figuresInCurrentTheme.length;
-
-        const collectedInTheme = new Set(collectedFigures.filter(url => 
-            figuresInCurrentTheme.some(f => f.image_url === url)
-        )).size;
-        
-        const resultTitle = results.length > 0 ? (isMultiDraw ? `RESULTS (${results.length} DRAWS)` : 'YOUR MYSTERY RESULT') : 'DRAW ERROR';
-        
-        let containerClass = "flex flex-col items-center justify-center p-4 w-full";
-        let cardClass = "result-card p-4 bg-gray-700 rounded-xl shadow-2xl w-full max-w-xs border-b-8";
-        
-        if (isMultiDraw) {
-            containerClass = "grid grid-cols-2 gap-2 p-1 w-full"; 
-            cardClass = "result-card flex flex-col items-center p-1 bg-gray-700 rounded-lg shadow-md border-b-4 text-xs";
-        }
-
-        resultArea.innerHTML = `
-            <div class="w-full">
-                <h3 class="text-lg font-extrabold text-white text-center mb-3 border-b-2 border-yellow-500 pb-2">${resultTitle}</h3>
-                <div id="results-grid" class="${containerClass}"></div>
-            </div>
-        `;
-        const resultsGrid = document.getElementById('results-grid');
-
-        results.forEach((result, index) => {
-            const figure = result.figure;
-            const isNewFigure = result.isNew;
-            const wasFreeRedraw = result.wasFreeRedraw;
-            
-            const borderColorClass = figure.theme === 'Ninjago' ? 'border-blue-500' : 'border-red-500';
-            const rarityClass = `rarity-${figure.rarity.toLowerCase().replace(' ', '-')} `;
-            
-            const figureImageUrl = figure.image_url;
-            const fallbackUrl = getPlaceholderUrl(figure); 
-
-            let titleText;
-            let titleClass;
-            let titleBadge; 
-
-            if (isNewFigure) {
-                titleText = wasFreeRedraw ? 'RE-ROLL SUCCESS!' : 'NEW FIGURE!';
-                titleClass = 'text-green-400';
-                titleBadge = `<span class="new-badge absolute top-0 left-0 text-[8px] font-bold px-1.5 py-0.5 rounded-br-lg rounded-tl-lg uppercase">NEW</span>`;
-            } else {
-                // Check if the current theme collection is full
-                const isCollectionFull = collectedInTheme >= totalFiguresAvailableInTheme; 
-                titleText = isCollectionFull ? 'THEME COMPLETE!' : 'DUPLICATE!';
-                titleClass = isCollectionFull ? 'text-yellow-400' : 'text-red-400';
-                titleBadge = ''; 
-            }
-            
-            const imageContainerClass = isMultiDraw ? 
-                'w-full aspect-square p-1 mb-1 bg-gray-800 rounded-md shadow-inner border border-gray-600 flex items-center justify-center' :
-                'w-full aspect-square p-4 mb-4 bg-gray-700 rounded-xl shadow-inner border-4 border-yellow-500 flex items-center justify-center';
-
-
-            const cardHtml = `
-                <div style="animation-delay: ${index * 50}ms;" class="${cardClass} ${borderColorClass} relative">
-                    <div class="w-full text-center">
-                        <p class="font-bold mb-1 uppercase tracking-wider ${titleClass} text-[10px]">${titleText}</p>
-                    </div>
-
-                    <div class="${imageContainerClass}">
-                        <img src="${figureImageUrl}" alt="${figure.name}" class="w-full h-full object-contain rounded-md" 
-                             onerror="this.onerror=null; this.src='${fallbackUrl}'"/>
-                        ${titleBadge}
-                    </div>
-                    
-                    <h4 class="font-bold text-gray-200 text-center truncate w-full mb-1">${figure.name}</h4>
-                    <span class="mt-1 px-2 py-0.5 text-[10px] font-bold rounded-full text-gray-900 shadow-md ${rarityClass}">
-                        ${figure.rarity.toUpperCase()}
-                    </span>
-                    
-                </div>
-            `;
-            resultsGrid.insertAdjacentHTML('beforeend', cardHtml);
-        });
-
-        updateCollectionUI();
-
-        // Reset loading state
-        isLoading = false;
-        updateDrawCountUI();
-    }
-    
-    // --- Initialization ---
-
-    function initGame() {
-        getUserID(); 
-        initializeMinifigures();
-        loadDrawCount();
-        loadCollection(); 
-        
-        // Select Ninjago by default and update the UI
-        selectTheme('Ninjago'); 
-        
-        // Start the real-time clock update
-        updateCambodiaTime();
-        setInterval(updateCambodiaTime, 1000); 
-        
-        // Attach event listeners for Draw Buttons
-        if (draw1xButton) {
-            draw1xButton.addEventListener('click', () => handleDraw(1));
-        }
-        if (draw5xButton) {
-            draw5xButton.addEventListener('click', () => handleDraw(5));
-        }
-        
-        // --- Redeem Code Listeners ---
-        // redeemButton is now correctly defined at the top of the script
-        if (redeemButton) {
-            redeemButton.addEventListener('click', handleRedeem);
-        }
-        if (redeemInput) {
-             redeemInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    handleRedeem();
-                }
-            });
-        }
-        // --- End Redeem Code Listeners ---
-        
-        if (resetCollectionButton) {
-            // Note: Updated the reset function to clear draws as well
-            resetCollectionButton.addEventListener('click', resetAllData);
-        }
-        
-        updateDrawCountUI();
-        
-        // Console reminder for new codes
-        console.log("--- DEMO REDEEM CODES ---");
-        console.log("Ninjago Codes (NJO):", SINGLE_USE_CODES.Ninjago);
-        console.log("Marvel Codes (PRO):", SINGLE_USE_CODES.Marvel);
-        console.log("-------------------------");
-    }
-
-    document.addEventListener('DOMContentLoaded', initGame);
-</script>
+    </script>
 </body>
 </html>
+"""
+
+# ==========================================
+# 3. LEGO PAGE
+# ==========================================
+LEGO_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEGO World</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }</style>
+</head>
+<body class="bg-yellow-50/50">
+    
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-yellow-100 px-4 py-3 flex items-center gap-3">
+        <a href="/" class="p-2 bg-yellow-100 rounded-full text-yellow-700 hover:bg-yellow-200 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+        </a>
+        <h1 class="font-black text-slate-900 text-lg uppercase tracking-tight">LEGO <span class="text-yellow-500">World</span></h1>
+    </nav>
+
+    <div class="p-4 max-w-2xl mx-auto space-y-8">
+        
+        <!-- Ninjago Season Swimlane -->
+        <div>
+            <div class="flex items-center gap-2 mb-3">
+                <div class="w-1 h-6 bg-red-600 rounded-full"></div>
+                <h2 class="font-bold text-slate-800 text-lg">Ninjago Seasons</h2>
+            </div>
+            <div class="flex gap-4 overflow-x-auto pb-4 hide-scrollbar">
+                <!-- Card 1 -->
+                <div class="min-w-[160px] bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
+                    <div class="aspect-square bg-slate-100 rounded-xl mb-3 relative overflow-hidden">
+                        <img src="https://placehold.co/200?text=Season+1" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="font-bold text-sm text-slate-900">Season 1: Rise</h3>
+                    <p class="text-xs text-slate-500 font-medium">8 Sets</p>
+                </div>
+                 <!-- Card 2 -->
+                <div class="min-w-[160px] bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
+                    <div class="aspect-square bg-slate-100 rounded-xl mb-3 relative overflow-hidden">
+                        <img src="https://placehold.co/200?text=Season+2" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="font-bold text-sm text-slate-900">Season 2: Legacy</h3>
+                    <p class="text-xs text-slate-500 font-medium">12 Sets</p>
+                </div>
+                 <!-- Card 3 -->
+                <div class="min-w-[160px] bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
+                    <div class="aspect-square bg-slate-100 rounded-xl mb-3 relative overflow-hidden">
+                        <img src="https://placehold.co/200?text=Dragons" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="font-bold text-sm text-slate-900">Dragon Rising</h3>
+                    <p class="text-xs text-slate-500 font-medium">New Arrival</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formula 1 Swimlane -->
+        <div>
+            <div class="flex items-center gap-2 mb-3">
+                <div class="w-1 h-6 bg-blue-600 rounded-full"></div>
+                <h2 class="font-bold text-slate-800 text-lg">Speed Champions</h2>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                 <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
+                    <img src="https://placehold.co/200?text=F1+Red" class="w-full aspect-video object-cover rounded-lg mb-2">
+                    <h3 class="font-bold text-sm">F1 Ferrari</h3>
+                    <span class="text-orange-600 font-bold text-xs">24,000៛</span>
+                 </div>
+                 <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
+                    <img src="https://placehold.co/200?text=F1+Merc" class="w-full aspect-video object-cover rounded-lg mb-2">
+                    <h3 class="font-bold text-sm">F1 Mercedes</h3>
+                    <span class="text-orange-600 font-bold text-xs">24,000៛</span>
+                 </div>
+            </div>
+        </div>
+
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>
+"""
+
+# ==========================================
+# 4. LUCKY DRAW PAGE
+# ==========================================
+LUCKY_DRAW_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Draw</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @keyframes shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+        .animate-shake { animation: shake 0.5s ease-in-out; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center">
+    
+    <nav class="w-full p-4 flex items-center justify-between">
+        <a href="/" class="text-yellow-500 hover:text-white transition-colors flex items-center gap-1 font-bold text-sm">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i> Home
+        </a>
+        <div class="bg-slate-800 px-3 py-1 rounded-full text-xs font-bold border border-slate-700">
+            Credits: <span class="text-yellow-400">99</span>
+        </div>
+    </nav>
+
+    <div class="flex-1 flex flex-col items-center justify-center w-full max-w-md p-6">
+        <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-orange-600 mb-2 uppercase italic tracking-tighter">Mystery Box</h1>
+        <p class="text-slate-400 text-sm mb-10">Win exclusive Minifigures!</p>
+
+        <div id="mystery-box" class="w-64 h-64 bg-slate-800 rounded-3xl border-4 border-slate-700 shadow-2xl flex items-center justify-center cursor-pointer active:scale-95 transition-transform relative group overflow-hidden" onclick="play()">
+            <div class="absolute inset-0 bg-gradient-to-t from-yellow-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <span class="text-8xl filter drop-shadow-lg group-hover:scale-110 transition-transform duration-300">📦</span>
+        </div>
+
+        <button onclick="play()" class="mt-10 w-full bg-orange-600 hover:bg-orange-500 text-white font-black py-4 rounded-xl shadow-lg shadow-orange-900/50 uppercase tracking-widest transition-all active:translate-y-1">
+            Draw 1x (Free)
+        </button>
+
+        <div id="result" class="mt-6 hidden animate-fade-in text-center">
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">You Won</p>
+            <div class="bg-white text-slate-900 font-bold px-6 py-3 rounded-lg shadow-lg inline-block">
+                Ninjago Kai (Common)
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        function play() {
+            const box = document.getElementById('mystery-box');
+            const res = document.getElementById('result');
+            
+            res.classList.add('hidden');
+            box.classList.add('animate-shake');
+            
+            setTimeout(() => {
+                box.classList.remove('animate-shake');
+                res.classList.remove('hidden');
+            }, 500);
+        }
+    </script>
+</body>
+</html>
+"""
+
+# ==========================================
+# 5. TOY PAGE
+# ==========================================
+TOY_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>General Toys</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-blue-50 text-slate-900">
+    
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-blue-100 px-4 py-3 flex items-center gap-3">
+        <a href="/" class="p-2 bg-blue-100 rounded-full text-blue-700 hover:bg-blue-200 transition-colors">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+        </a>
+        <h1 class="font-bold text-lg uppercase tracking-tight">Toy <span class="text-blue-500">Shop</span></h1>
+    </nav>
+
+    <div class="p-4 max-w-2xl mx-auto">
+        <!-- Search -->
+        <div class="relative mb-6">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+            <input type="text" placeholder="Search toys..." class="w-full pl-10 pr-4 py-3 rounded-xl border-none shadow-sm text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+
+        <!-- Grid -->
+        <div class="grid grid-cols-2 gap-4">
+            <!-- Toy Item 1 -->
+            <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
+                <div class="aspect-square bg-slate-100 rounded-xl mb-3 relative">
+                    <img src="https://placehold.co/200?text=Bear" class="w-full h-full object-cover rounded-xl">
+                    <div class="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">New</div>
+                </div>
+                <h3 class="font-bold text-sm text-slate-800 leading-tight mb-1">Cuddly Bear</h3>
+                <div class="mt-auto flex justify-between items-center">
+                    <span class="text-blue-600 font-bold">12,000៛</span>
+                    <button class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 hover:bg-blue-600 hover:text-white transition-colors">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+             <!-- Toy Item 2 -->
+            <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
+                <div class="aspect-square bg-slate-100 rounded-xl mb-3 relative">
+                    <img src="https://placehold.co/200?text=Robot" class="w-full h-full object-cover rounded-xl">
+                </div>
+                <h3 class="font-bold text-sm text-slate-800 leading-tight mb-1">Mecha Robot</h3>
+                <div class="mt-auto flex justify-between items-center">
+                    <span class="text-blue-600 font-bold">25,000៛</span>
+                    <button class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 hover:bg-blue-600 hover:text-white transition-colors">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>lucide.createIcons();</script>
+</body>
+</html>
+"""
+
+# ==========================================
+# FLASK ROUTES
+# ==========================================
+
+@app.route('/')
+def home():
+    """Main Landing Page - The First Page User Sees"""
+    return render_template_string(LANDING_PAGE_HTML)
+
+@app.route('/bracelet')
+def bracelet():
+    """Renders your Custom Bracelet HTML"""
+    return render_template_string(BRACELET_TEMPLATE)
+
+@app.route('/lego')
+def lego():
+    """Renders your LEGO HTML"""
+    return render_template_string(LEGO_TEMPLATE)
+
+@app.route('/lucky-draw')
+def lucky_draw():
+    """Renders your Lucky Draw HTML"""
+    return render_template_string(LUCKY_DRAW_TEMPLATE)
+
+@app.route('/toys')
+def toys():
+    """Renders your Toy Page"""
+    return render_template_string(TOY_TEMPLATE)
+
+# API Endpoints (If your individual pages need them)
+@app.route('/api/products')
+def api_products():
+    # Mock data return since user said they have catalogs in files
+    return {"status": "ok", "message": "Catalog loaded locally in HTML"}
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
+
 
