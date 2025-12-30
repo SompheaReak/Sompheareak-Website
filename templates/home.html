@@ -3,120 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Somphea Reak Shop</title>
-    <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&display=swap" rel="stylesheet">
+    <title>Somphea Reak Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
-        body { font-family: 'Hanuman', sans-serif; margin: 0; padding-bottom: 90px; background: #f4f6f8; }
-        .search-container { padding: 10px 15px; background: white; position: sticky; top: 0; z-index: 1001; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .search-form { display: flex; gap: 5px; }
-        .search-form input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; font-size: 14px; }
-        .search-form button { padding: 0 15px; background: #e44d26; color: white; border: none; border-radius: 8px; font-weight: bold; }
-
-        .category-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px 10px; padding: 15px; background: white; margin-bottom: 10px; justify-items: center; }
-        .category-bar a { display: flex; flex-direction: column; align-items: center; text-align: center; text-decoration: none; color: #333; }
-        .italy-link { grid-column: span 2; width: 100% !important; background: #fdfdfd; border-radius: 10px; padding: 5px 0; border: 1px solid #eee; }
-        .category-bar img { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #f0f0f0; margin-bottom: 6px; }
-        .category-bar span { font-size: 11px; font-weight: bold; line-height: 1.2; overflow: hidden; }
-
-        .custom-link { grid-column: 1 / -1; width: 100% !important; background: linear-gradient(45deg, #007bff, #0056b3); color: white !important; padding: 12px; border-radius: 10px; margin-top: 5px; display: flex !important; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0,123,255,0.3); }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         
-        .banner-container { padding: 10px; background: white; margin-bottom: 10px; }
-        .banner-container img { width: 100%; border-radius: 10px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .sub-sticky { position: sticky; top: 58px; z-index: 1000; background: #f4f6f8; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .scroll-bar { display: flex; gap: 10px; overflow-x: auto; padding: 0 15px; scrollbar-width: none; }
-        .scroll-bar::-webkit-scrollbar { display: none; }
-        .scroll-bar a { background: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; color: #333; border: 1px solid #ddd; white-space: nowrap; font-size: 12px; font-weight: bold; }
-        .scroll-bar a.active { background: #333; color: white; border-color: #333; }
+        .fade-in-up { animation: fadeInUp 0.5s ease-out forwards; opacity: 0; transform: translateY(10px); }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 
-        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 10px; }
-        @media(min-width: 768px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
-        .product-card { background: white; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .product-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 10px; margin-bottom: 8px; }
-        .product-card h3 { font-size: 13px; margin: 0 0 5px 0; height: 2.4em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .price-line { color: #e44d26; font-weight: bold; font-size: 16px; margin-bottom: 8px; }
-        .add-cart-button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold; }
+        .action-card { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .action-card:active { transform: scale(0.96); }
 
-        .floating-cart { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #222; color: white; padding: 15px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 2000; display: flex; align-items: center; gap: 10px; }
+        /* Smooth reveal for products */
+        #productResultsArea {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        /* Custom Grid for 6 items */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
     </style>
 </head>
-<body>
-    <div class="search-container">
-        <form class="search-form" action="/search" method="GET">
-            <input type="text" name="q" placeholder="🔍 Search products..." required>
-            <button type="submit">GO</button>
-        </form>
-    </div>
+<body class="pb-24">
 
-    <div class="banner-container">
-        <h1 style="text-align: center; margin: 5px 0 15px; color: #e44d26; font-weight: 900; text-transform: uppercase;">Somphea Reak Shop</h1>
-        <img src="https://placehold.co/800x400/orange/white?text=Somphea+Reak+Promo">
-    </div>
-
-    <div class="category-bar">
-        <a href="/category/Hot Sale"><img src="https://placehold.co/100/red/white?text=Hot"><span>🔥 Hot Sale</span></a>
-        <a href="/category/LEGO"><img src="https://placehold.co/100/yellow/black?text=LEGO"><span>LEGO</span></a>
-        <a href="/category/Toy"><img src="https://placehold.co/100/blue/white?text=Toy"><span>Toy</span></a>
-        <a href="/category/Keychain"><img src="https://placehold.co/100/purple/white?text=Key"><span>Keychain</span></a>
-        
-        <a href="/category/Italy Bracelet" class="italy-link">
-          <img src="https://placehold.co/100/teal/white?text=Italy"><span>🇮🇹 Italy Bracelet Collection</span>
-        </a>
-
-        <a href="/custom-bracelet" class="custom-link">
-           <i class="fa-solid fa-wand-magic-sparkles"></i><span>✨ Design Your Own Bracelet</span>
-        </a>
-    </div>
-
-    {% if subcategories %}
-    <div class="sub-sticky">
-        <div class="scroll-bar">
-            <a href="/" class="{% if current_subcategory == 'All' %}active{% endif %}">🏠 All</a>
-            {% for sub in subcategories %}
-            <a href="/category/{{ sub }}" class="{% if current_subcategory == sub %}active{% endif %}">{{ sub }}</a>
-            {% endfor %}
+    <!-- TOP NAV (No Search) -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 py-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center text-white font-black text-xs">SR</div>
+                <h1 class="text-sm font-black uppercase tracking-tight text-slate-900">Somphea Reak</h1>
+            </div>
+            <a href="/admin/login" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center border border-slate-100">
+                <i class="fa-solid fa-user text-xs"></i>
+            </a>
         </div>
-    </div>
-    {% endif %}
+    </header>
 
-    <div class="product-grid">
-      {% for product in products %}
-      <div class="product-card">
-        <img src="{{ product.image }}" onerror="this.src='https://placehold.co/150?text=No+Image'">
-        <h3>{{ product.name }}</h3>
-        <div class="price-line">{{ "{:,}".format(product.price) }}៛</div>
-        <form class="add-to-cart-form">
-          <input type="hidden" name="product_id" value="{{ product.id }}">
-          <button type="submit" class="add-cart-button">🛒 Add to Cart</button>
-        </form>
-      </div> 
-      {% endfor %}
-    </div>
+    <main class="p-4 space-y-6">
+        
+        <!-- 1. HERO BANNER (Kept for visual appeal) -->
+        <section class="fade-in-up">
+            <div class="w-full h-40 rounded-[1.5rem] overflow-hidden relative shadow-lg shadow-orange-100">
+                <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent p-6 flex flex-col justify-center">
+                    <span class="bg-orange-600 text-white text-[8px] font-black uppercase px-2 py-1 rounded w-fit mb-2">New Season</span>
+                    <h2 class="text-white text-2xl font-black italic tracking-tighter leading-none">Craft Your<br>Identity</h2>
+                </div>
+            </div>
+        </section>
 
-    <a href="/cart" class="floating-cart">🛒 My Cart (<span id="cart-count">{{ cart|length }}</span>)</a>
+        <!-- 2. MAIN MENU (The 6 Categories) -->
+        <section class="fade-in-up delay-100">
+            <h2 class="text-sm font-black text-slate-900 tracking-tight mb-4">Explore</h2>
+            
+            <div class="category-grid">
+                
+                <!-- 1. Italy Bracelet Customize -->
+                <a href="/custom-bracelet" class="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform group">
+                    <div class="w-full aspect-square rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-2xl text-orange-500 shadow-sm group-hover:bg-orange-100 transition-colors">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-700 uppercase text-center leading-tight">Customize<br>Bracelet</span>
+                </a>
 
-    <div id="success" style="display:none; position:fixed; top:70px; right:20px; background:#28a745; color:white; padding:12px; border-radius:8px; z-index:9999;">✅ Added!</div>
+                <!-- 2. Men Bracelet -->
+                <div onclick="filterCategory('Men Bracelet')" class="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform group">
+                    <div class="w-full aspect-square rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-2xl text-slate-400 shadow-sm group-hover:border-slate-300 transition-colors">
+                        <i class="fa-solid fa-anchor"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-700 uppercase text-center leading-tight">Men<br>Bracelet</span>
+                </div>
+
+                <!-- 3. LEGO -->
+                <a href="/lego" class="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform group">
+                    <div class="w-full aspect-square rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-2xl text-blue-500 shadow-sm group-hover:bg-blue-100 transition-colors">
+                        <i class="fa-solid fa-cubes"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-700 uppercase text-center leading-tight">LEGO<br>World</span>
+                </a>
+
+                <!-- 4. Lucky Draw -->
+                <div onclick="alert('Lucky Draw Coming Soon!')" class="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform group">
+                    <div class="w-full aspect-square rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-2xl text-purple-500 shadow-sm group-hover:bg-purple-100 transition-colors">
+                        <i class="fa-solid fa-ticket"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-700 uppercase text-center leading-tight">Lucky<br>Draw</span>
+                </div>
+
+                <!-- 5. Hot Sale -->
+                <div onclick="filterCategory('Hot Sale')" class="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform group">
+                    <div class="w-full aspect-square rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-2xl text-red-500 shadow-sm group-hover:bg-red-100 transition-colors">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-700 uppercase text-center leading-tight">Hot<br>Sale</span>
+                </div>
+
+                <!-- 6. Toy -->
+                <div onclick="filterCategory('Toy')" class="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform group">
+                    <div class="w-full aspect-square rounded-2xl bg-green-50 border border-green-100 flex items-center justify-center text-2xl text-green-500 shadow-sm group-hover:bg-green-100 transition-colors">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-700 uppercase text-center leading-tight">Toy<br>Collection</span>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 3. HIDDEN PRODUCT RESULTS AREA -->
+        <section id="productResultsArea" class="hidden opacity-0 translate-y-4 pt-4 border-t border-slate-100 mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Viewing Collection</span>
+                    <h2 id="resultTitle" class="text-xl font-black text-slate-900 tracking-tight leading-none">Selected Items</h2>
+                </div>
+                <button onclick="hideResults()" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="productGrid" class="grid grid-cols-2 gap-3 pb-8">
+                {% for p in products %}
+                <div class="product-card bg-white p-2 rounded-2xl border border-slate-100 shadow-sm flex flex-col animate__animated animate__fadeIn" data-name="{{ p.name.lower() }}" data-cat="{{ p.category }}">
+                    <div class="relative w-full aspect-square bg-slate-50 rounded-xl overflow-hidden mb-2">
+                        <img src="{{ p.image }}" class="w-full h-full object-cover" loading="lazy">
+                        {% if p.stock <= 0 %}
+                        <div class="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[2px]">
+                            <span class="text-white text-[8px] font-black uppercase border border-white px-2 py-1 rounded">Sold Out</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="mt-auto">
+                        <p class="text-[8px] font-bold text-slate-400 uppercase tracking-wide mb-0.5">{{ p.category }}</p>
+                        <h4 class="text-[10px] font-black text-slate-900 leading-tight line-clamp-2 min-h-[2.5em]">{{ p.name }}</h4>
+                        <div class="flex items-end justify-between mt-2">
+                            <span class="text-xs font-black text-orange-600">{{ "{:,}".format(p.price) }}៛</span>
+                            {% if p.stock > 0 %}
+                            <button class="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-[8px]">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FLOATING BOTTOM NAV -->
+    <nav class="fixed bottom-4 left-4 right-4 bg-slate-900/90 backdrop-blur-md text-white rounded-2xl p-4 shadow-2xl flex justify-around items-center z-50">
+        <a href="/" class="flex flex-col items-center gap-1 text-orange-500">
+            <i class="fa-solid fa-house text-sm"></i>
+        </a>
+        <a href="/custom-bracelet" class="flex flex-col items-center gap-1 text-slate-400 active:text-white transition-colors">
+            <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+        </a>
+        <div class="w-px h-6 bg-white/10"></div>
+        <a href="/lego" class="flex flex-col items-center gap-1 text-slate-400 active:text-white transition-colors">
+            <i class="fa-solid fa-cube text-sm"></i>
+        </a>
+        <a href="https://t.me/SompheareakStudio" target="_blank" class="flex flex-col items-center gap-1 text-slate-400 active:text-white transition-colors">
+            <i class="fa-brands fa-telegram text-sm"></i>
+        </a>
+    </nav>
 
     <script>
-        document.querySelectorAll('.add-to-cart-form').forEach(form => {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-                const formData = new FormData(form);
-                fetch('/add-to-cart', { method: 'POST', body: formData })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('cart-count').innerText = data.cart_count;
-                        const s = document.getElementById('success');
-                        s.style.display = 'block';
-                        setTimeout(() => s.style.display = 'none', 1500);
-                    }
-                });
+        const resultsArea = document.getElementById('productResultsArea');
+        const titleEl = document.getElementById('resultTitle');
+
+        function showResults() {
+            resultsArea.classList.remove('hidden');
+            setTimeout(() => {
+                resultsArea.classList.remove('opacity-0', 'translate-y-4');
+            }, 10);
+            resultsArea.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+
+        function hideResults() {
+            resultsArea.classList.add('opacity-0', 'translate-y-4');
+            setTimeout(() => {
+                resultsArea.classList.add('hidden');
+            }, 300);
+        }
+
+        function filterCategory(catName) {
+            titleEl.innerText = catName;
+            showResults();
+
+            const cards = document.querySelectorAll('.product-card');
+            let found = 0;
+            
+            cards.forEach(card => {
+                const cat = card.getAttribute('data-cat');
+                // Simple partial match for filters like 'Toy' or 'Men'
+                if (cat.includes(catName) || catName === 'all') {
+                    card.style.display = 'flex';
+                    found++;
+                } else {
+                    card.style.display = 'none';
+                }
             });
-        });
+            
+            if(found === 0) titleEl.innerText = "No items in " + catName;
+        }
     </script>
 </body>
 </html>
+
 
