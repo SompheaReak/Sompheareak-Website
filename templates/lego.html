@@ -4,330 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Somphea Reak | LEGO Market</title>
-    
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap');
-        
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: #ffffff; 
-            -webkit-font-smoothing: antialiased;
-        }
-        
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #ffffff; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
         .snap-x { scroll-snap-type: x mandatory; }
         .snap-start { scroll-snap-align: start; }
-        
-        .image-fade-in { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useMemo, useRef, useEffect } = React;
+        const { useState, useMemo, useRef } = React;
 
         // --- ICONS ---
         const ShoppingBag = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>;
-        const Search = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
-        const X = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>;
         const ChevronRight = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
         const ChevronLeft = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
-        const Plus = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>;
-        const Minus = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/></svg>;
 
-        // --- PRODUCT CATALOG (LOCAL) ---
+        // --- PRODUCT CATALOG ---
         const PRODUCTS_DATA = [
             {"id": 20001, "name_kh": "71049 - 1 RED BULL","price": 24000, "image": "/static/images/lego71049-01.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
             {"id": 20002, "name_kh": "71049 - 2 MERCEDES","price": 24000, "image": "/static/images/lego71049-02.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
             {"id": 2002, "name_kh": "WWII - Cannon 6x","price": 6000, "image": "/static/images/wwii-gun6x.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":0},
-            {"id": 2003, "name_kh": "WWII - RPG","price": 500, "image": "/static/images/wwii-rpg.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-            {"id": 2004, "name_kh": "WWII - Unit 04","price": 1250, "image": "/static/images/wwii-04.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-            {"id": 2005, "name_kh": "WWII - Unit 05","price": 1250, "image": "/static/images/wwii-05.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-            {"id": 2006, "name_kh": "WWII Weapon 01", "price": 3000, "image": "/static/images/wwii-a.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
             {"id": 1, "name_kh": "#OP01 One Piece - Sakazuki","price": 7500, "image": "/static/images/op01.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
-            {"id": 2, "name_kh": "#OP02 One Piece - Portgas D Ace","price": 6500, "image": "/static/images/op02.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
-            {"id": 3, "name_kh": "#OP03 One Piece - Marco","price": 7500, "image": "/static/images/op03.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
             {"id": 101, "name_kh": "NINJAGO S1 - DX Suit","price": 30000, "image": "/static/images/njoss1dx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-            {"id": 102, "name_kh": "NINJAGO S1 - KAI (DX)","price": 5000, "image": "/static/images/njoss1dxkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-            {"id": 103, "name_kh": "NINJAGO S1 - ZANE (DX)","price": 5000, "image": "/static/images/njoss1dxzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-            {"id": 201, "name_kh": "NINJAGO S2 - Kimono Suit","price": 36000, "image": "/static/images/njoss2kimono.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-            {"id": 202, "name_kh": "NINJAGO S2 - KAI (Kimono)","price": 6000, "image": "/static/images/njoss2kimonokai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-            {"id": 207, "name_kh": "NINJAGO S2 - GOLDEN LLOYD","price": 6000, "image": "/static/images/njoss2kimonogoldlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
             {"id": 1901, "name_kh": "Dragon Rising S1 - KAI","price": 5000, "image": "/static/images/njodrgss1mergekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-            {"id": 1902, "name_kh": "Dragon Rising S1 - ZANE","price": 5000, "image": "/static/images/njodrgss1mergezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-            {"id": 1909, "name_kh": "Dragon Rising S2 - KAI (Source)","price": 6000, "image": "/static/images/njodrgss2sourcekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-            {"id": 1924, "name_kh": "Dragon Rising S3 - NOKT","price": 9000, "image": "/static/images/ss3nokt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
             {"id": 91101, "name_kh": "Zane's Titan Mech","price": 68000, "image": "/static/images/nj01.jpg", "categories": ["LEGO Ninjago","Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-            {"id": 91102, "name_kh": "Kai's Fire Mech","price": 64000, "image": "/static/images/nj02.jpg", "categories": ["LEGO Ninjago","Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
         ];
 
-        const ProductCard = ({ product, onAddToCart }) => {
-            const handleImageError = (e) => { e.target.src = "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=400"; };
-            
-            let badgeText = "";
-            let badgeColor = "";
-            if (product.discount > 0) { badgeText = "Sale"; badgeColor = "bg-red-600 text-white"; }
-            else if (product.name_kh.includes("Dragon Rising S3")) { badgeText = "New"; badgeColor = "bg-yellow-400 text-black"; }
-
-            return (
-                <div className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full min-w-[240px] w-[240px] snap-start relative">
-                    {badgeText && <div className={`absolute top-0 left-0 ${badgeColor} px-3 py-1 rounded-br-lg text-xs font-bold z-10 shadow-sm uppercase tracking-wide`}>{badgeText}</div>}
-                    <div className="relative aspect-square overflow-hidden bg-white p-6">
-                        <img src={product.image} alt={product.name_kh} onError={handleImageError} loading="lazy" className="object-contain w-full h-full group-hover:scale-110 transition-transform duration-500 image-fade-in" />
-                    </div>
-                    <div className="p-4 flex flex-col flex-grow border-t border-gray-50">
-                        <h3 className="text-sm font-bold text-gray-900 mb-2 leading-tight line-clamp-2 h-10 group-hover:text-blue-600 transition-colors">{product.name_kh}</h3>
-                        <div className="mt-auto">
-                            {product.discount > 0 ? (
-                                <div className="flex flex-col mb-3">
-                                    <span className="text-xs text-gray-400 line-through">៛{product.price.toLocaleString()}</span>
-                                    <span className="text-lg font-black text-red-600">៛{(product.price * (1 - product.discount/100)).toLocaleString()}</span>
-                                </div>
-                            ) : (
-                                <div className="mb-3"><span className="text-lg font-black text-gray-900">៛{product.price.toLocaleString()}</span></div>
-                            )}
-                            <button onClick={() => onAddToCart(product)} className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 rounded-full text-sm transition-all active:scale-95 flex items-center justify-center gap-2">Add to Bag</button>
-                        </div>
+        const ProductCard = ({ product }) => (
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col h-full min-w-[220px] w-[220px] snap-start">
+                <div className="aspect-square p-4"><img src={product.image} className="w-full h-full object-contain" onError={(e) => e.target.src="https://placehold.co/400?text=LEGO"} /></div>
+                <div className="p-4 flex flex-col flex-grow">
+                    <h3 className="text-sm font-bold text-gray-900 mb-2 h-10 line-clamp-2">{product.name_kh}</h3>
+                    <div className="mt-auto">
+                        <span className="text-lg font-black block">៛{product.price.toLocaleString()}</span>
+                        <button className="w-full mt-3 bg-orange-500 text-white font-bold py-2 rounded-full text-xs uppercase">Add to Bag</button>
                     </div>
                 </div>
-            );
-        };
-
-        const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem }) => {
-          const subtotal = cartItems.reduce((sum, item) => {
-              const price = item.product.discount > 0 ? item.product.price * (1 - item.product.discount/100) : item.product.price;
-              return sum + (price * item.quantity);
-          }, 0);
-          if (!isOpen) return null;
-
-          return (
-            <div className="fixed inset-0 z-[100] overflow-hidden">
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
-              <div className="absolute inset-y-0 right-0 max-w-md w-full flex bg-white shadow-2xl transform transition-transform duration-300">
-                <div className="w-full flex flex-col h-full">
-                  <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50">
-                    <h2 className="text-xl font-bold text-gray-900">Your Bag ({cartItems.reduce((a,c)=>a+c.quantity,0)})</h2>
-                    <button onClick={onClose} className="p-2 text-gray-500 hover:text-black rounded-full hover:bg-gray-200"><X className="h-6 w-6" /></button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-6">
-                    {cartItems.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
-                        <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center text-gray-300"><ShoppingBag className="w-10 h-10" /></div>
-                        <h3 className="text-lg font-bold text-gray-900">Your bag is empty</h3>
-                        <button onClick={onClose} className="mt-4 px-6 py-2 bg-blue-600 text-white font-bold rounded-full hover:bg-blue-700">Start Shopping</button>
-                      </div>
-                    ) : (
-                      <ul className="space-y-6">
-                        {cartItems.map(({ product, quantity }) => {
-                           const finalPrice = product.discount > 0 ? product.price * (1 - product.discount/100) : product.price;
-                           return (
-                              <li key={product.id} className="flex py-2 gap-4">
-                                <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 bg-white p-2">
-                                  <img src={product.image} onError={(e)=>e.target.src="https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=200"} className="h-full w-full object-contain" />
-                                </div>
-                                <div className="flex flex-1 flex-col justify-between">
-                                  <div><h3 className="font-bold text-gray-900 line-clamp-1">{product.name_kh}</h3></div>
-                                  <div className="flex items-end justify-between">
-                                    <div className="flex items-center border border-gray-300 rounded-lg h-8">
-                                      <button onClick={() => onUpdateQuantity(product.id, quantity - 1)} className="px-3 hover:bg-gray-100 h-full rounded-l-lg" disabled={quantity <= 1}><Minus className="h-3 w-3" /></button>
-                                      <span className="px-2 font-bold text-sm min-w-[1.5rem] text-center">{quantity}</span>
-                                      <button onClick={() => onUpdateQuantity(product.id, quantity + 1)} className="px-3 hover:bg-gray-100 h-full rounded-r-lg"><Plus className="h-3 w-3" /></button>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="font-bold text-gray-900">៛{(finalPrice * quantity).toLocaleString()}</p>
-                                        <button onClick={() => onRemoveItem(product.id)} className="text-xs text-red-500 font-bold hover:underline mt-1">Remove</button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </li>
-                           )
-                        })}
-                      </ul>
-                    )}
-                  </div>
-                  {cartItems.length > 0 && (
-                    <div className="border-t border-gray-100 p-6 bg-gray-50">
-                      <div className="flex justify-between text-base font-bold text-gray-900 mb-4"><p>Order Total</p><p>៛{subtotal.toLocaleString()}</p></div>
-                      <button className="w-full rounded-full bg-orange-500 px-6 py-4 text-base font-bold text-white shadow-lg hover:bg-orange-600 transition-transform active:scale-95" onClick={() => alert("Checkout Feature Coming Soon!")}>Checkout Securely</button>
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
-          );
-        };
+        );
 
-        const SectionRow = ({ title, products, onAddToCart }) => {
+        const SectionRow = ({ title, products }) => {
             const scrollRef = useRef(null);
-            const scroll = (direction) => {
-                if (scrollRef.current) {
-                    const { current } = scrollRef;
-                    const scrollAmount = current.offsetWidth * 0.75;
-                    current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
-                }
-            };
             if (products.length === 0) return null;
             return (
-                <div className="py-8 border-b border-gray-100 last:border-0 animate-fade-in">
-                    <div className="flex items-center justify-between mb-6 px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{title}</h2>
-                            <span className="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded-full">{products.length}</span>
-                        </div>
-                        <div className="flex gap-2">
-                            <button onClick={() => scroll('left')} className="p-2 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-600 transition-colors hidden md:block"><ChevronLeft className="h-5 w-5" /></button>
-                            <button onClick={() => scroll('right')} className="p-2 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-600 transition-colors hidden md:block"><ChevronRight className="h-5 w-5" /></button>
-                        </div>
-                    </div>
-                    <div ref={scrollRef} className="flex overflow-x-auto gap-4 pb-8 px-4 sm:px-6 lg:px-8 snap-x snap-mandatory hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                        {products.map(product => <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />)}
-                        <div className="flex flex-col justify-center items-center min-w-[150px] snap-start group cursor-pointer">
-                            <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center mb-2 group-hover:scale-110 transition-transform"><ChevronRight className="w-6 h-6" /></div>
-                            <span className="text-sm font-bold text-blue-600 group-hover:underline">View All</span>
-                        </div>
+                <div className="py-8 border-b border-gray-100 last:border-0">
+                    <h2 className="px-6 mb-4 text-xl font-black uppercase tracking-tight italic">{title}</h2>
+                    <div ref={scrollRef} className="flex overflow-x-auto gap-4 px-6 pb-4 hide-scrollbar snap-x">
+                        {products.map(p => <ProductCard key={p.id} product={p} />)}
                     </div>
                 </div>
             );
         };
 
         function App() {
-          const [cartItems, setCartItems] = useState([]);
-          const [isCartOpen, setIsCartOpen] = useState(false);
-          const [activeFilter, setActiveFilter] = useState("All");
+            const [filter, setFilter] = useState("All");
 
-          const groupedProducts = useMemo(() => {
-            const groups = {};
-            PRODUCTS_DATA.forEach(product => {
-                
-                // --- 1. FILTERING LOGIC (Corrected) ---
-                let show = true;
-                const cats = product.categories || [];
-                const subs = product.subcategory || "";
+            const groupedProducts = useMemo(() => {
+                const groups = {};
+                PRODUCTS_DATA.forEach(p => {
+                    // Filter Logic
+                    let show = false;
+                    if (filter === "All") show = true;
+                    if (filter === "Ninjago" && p.categories.includes("LEGO Ninjago")) show = true;
+                    if (filter === "Anime" && p.categories.includes("LEGO Anime")) show = true;
+                    if (filter === "Vehicles" && p.subcategory.includes("Formula 1")) show = true;
 
-                const isNinjago = cats.includes("LEGO Ninjago");
-                const isAnime = cats.includes("LEGO Anime");
-                const isVehicle = (Array.isArray(subs) && subs.includes("Formula 1"));
+                    if (!show) return;
 
-                if (activeFilter === "Ninjago" && !isNinjago) show = false;
-                if (activeFilter === "Anime" && !isAnime) show = false;
-                if (activeFilter === "Vehicles" && !isVehicle) show = false;
+                    // Grouping Logic
+                    let groupName = Array.isArray(p.subcategory) ? p.subcategory[p.subcategory.length-1] : p.subcategory;
+                    if (!groups[groupName]) groups[groupName] = [];
+                    groups[groupName].push(p);
+                });
+                return Object.entries(groups);
+            }, [filter]);
 
-                if (!show) return;
-
-                // --- 2. GROUPING LOGIC ---
-                let groupName = "Other Sets";
-                if (Array.isArray(subs)) {
-                    const season = subs.find(s => s.includes("Season") || s.includes("Dragon Rising"));
-                    if (season) groupName = `Ninjago: ${season}`;
-                    else if (subs.includes("Formula 1")) groupName = "Speed Champions (F1)";
-                    else if (subs.includes("One Piece")) groupName = "Anime: One Piece";
-                    else if (subs.includes("Building Set")) groupName = "Building Sets & Mechs";
-                } else if (typeof subs === 'string') {
-                    if (subs.includes("WWII")) groupName = "Military History (WWII)";
-                    else groupName = subs;
-                }
-
-                if (!groups[groupName]) groups[groupName] = [];
-                groups[groupName].push(product);
-            });
-
-            // --- 3. SORTING ---
-            const sortOrder = [
-                "Ninjago: Dragon Rising S3", "Ninjago: Dragon Rising S2", "Ninjago: Dragon Rising S1",
-                "Speed Champions (F1)", "Anime: One Piece", "Military History (WWII)"
-            ];
-
-            return Object.entries(groups).sort((a, b) => {
-                const idxA = sortOrder.indexOf(a[0]);
-                const idxB = sortOrder.indexOf(b[0]);
-                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-                if (idxA !== -1) return -1;
-                if (idxB !== -1) return 1;
-                return a[0].localeCompare(b[0]);
-            }).map(([title, products]) => ({ title, products }));
-          }, [activeFilter]);
-
-          const addToCart = (product) => {
-            setCartItems(prev => {
-              const existing = prev.find(item => item.product.id === product.id);
-              if (existing) return prev.map(item => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
-              return [...prev, { product, quantity: 1 }];
-            });
-            setIsCartOpen(true);
-          };
-
-          const updateQuantity = (id, newQty) => newQty >= 1 && setCartItems(prev => prev.map(item => item.product.id === id ? { ...item, quantity: newQty } : item));
-          const removeFromCart = (id) => setCartItems(prev => prev.filter(item => item.product.id !== id));
-          const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-
-          return (
-            <div className="min-h-screen bg-white text-gray-900 pb-20">
-              <div className="bg-[#FFCF00] h-10 flex items-center justify-center text-xs font-bold tracking-widest uppercase text-black">
-                  Free Shipping on Orders Over 100,000៛
-              </div>
-              <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-                <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                        <a href="/" className="flex items-center gap-2 group">
-                            <div className="bg-[#E3000B] text-white p-1.5 transform group-hover:-rotate-3 transition-transform duration-300">
-                                <span className="font-black text-2xl tracking-tighter italic block leading-none">LEGO</span>
-                            </div>
-                            <span className="font-bold text-xl tracking-tight hidden sm:block">Market</span>
+            return (
+                <div className="min-h-screen">
+                    <header className="sticky top-0 z-50 bg-white border-b px-6 py-4 flex items-center justify-between">
+                        <a href="/" className="flex items-center gap-2">
+                            <div className="bg-red-600 text-white font-black p-1 text-xl italic">LEGO</div>
+                            <span className="font-bold">Market</span>
                         </a>
-                        <nav className="hidden md:flex gap-6 text-sm font-bold text-gray-600">
-                            {["All", "Ninjago", "Anime", "Vehicles"].map(tab => (
-                                <button key={tab} onClick={() => setActiveFilter(tab)} className={`uppercase tracking-wide transition-colors hover:text-black py-7 border-b-4 ${activeFilter === tab ? 'border-[#FFCF00] text-black' : 'border-transparent'}`}>{tab}</button>
-                            ))}
-                        </nav>
+                        <ShoppingBag className="w-6 h-6" />
+                    </header>
+
+                    <div className="flex gap-4 p-6 overflow-x-auto hide-scrollbar bg-gray-50 border-b">
+                        {["All", "Ninjago", "Anime", "Vehicles"].map(t => (
+                            <button key={t} onClick={() => setFilter(t)} 
+                                className={`px-6 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-colors ${filter === t ? 'bg-yellow-400 text-black' : 'bg-white border border-gray-200 text-gray-500'}`}>
+                                {t}
+                            </button>
+                        ))}
                     </div>
-                    <div className="flex items-center gap-4">
-                        <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg transition-colors">
-                            <div className="relative"><ShoppingBag className="w-6 h-6" />{cartCount > 0 && <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{cartCount}</span>}</div>
-                            <span className="hidden sm:block font-bold">Bag</span>
-                        </button>
-                    </div>
+
+                    <main className="max-w-7xl mx-auto">
+                        {groupedProducts.length > 0 ? groupedProducts.map(([title, items]) => (
+                            <SectionRow key={title} title={title} products={items} />
+                        )) : <div className="p-20 text-center font-bold text-gray-400">No products found in this category.</div>}
+                    </main>
                 </div>
-              </header>
-              <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-                <div className="relative w-full aspect-[21/9] md:aspect-[3/1] bg-gray-900 rounded-2xl overflow-hidden flex items-center">
-                    <img src="https://images.unsplash.com/photo-1566140967404-b8b3938150bf?q=80&w=2000&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-60" />
-                    <div className="relative z-10 px-8 md:px-16">
-                        <span className="bg-[#FFCF00] text-black text-xs font-black uppercase px-2 py-1 mb-4 inline-block tracking-widest">New Arrivals</span>
-                        <h1 className="text-white text-3xl md:text-5xl font-black uppercase italic tracking-tighter mb-4">Dragon Rising<br/>Season 3</h1>
-                        <button className="bg-white text-black font-bold px-6 py-3 rounded-full hover:bg-gray-100 transition-colors">Shop Collection</button>
-                    </div>
-                </div>
-              </div>
-              <main className="max-w-screen-2xl mx-auto pt-8">
-                {groupedProducts.length > 0 ? (
-                    <div className="space-y-4">{groupedProducts.map(group => <SectionRow key={group.title} title={group.title} products={group.products} onAddToCart={addToCart} />)}</div>
-                ) : (
-                    <div className="text-center py-20"><h3 className="text-xl font-bold">No sets found for this category.</h3><button onClick={()=>setActiveFilter("All")} className="text-blue-600 font-bold mt-2 hover:underline">View All Sets</button></div>
-                )}
-              </main>
-              <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} onUpdateQuantity={updateQuantity} onRemoveItem={removeFromCart} />
-            </div>
-          );
+            );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
 </html>
-
 
