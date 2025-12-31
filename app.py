@@ -7,7 +7,6 @@ app.secret_key = 'somphea_reak_studio_pro_2025'
 
 # --- 1. CONFIGURATION ---
 basedir = os.path.abspath(os.path.dirname(__file__))
-# Keeping your v2 db to ensure data persistence if you have it
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'shop_v2.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -15,8 +14,6 @@ db = SQLAlchemy(app)
 
 # --- 2. CONSTANTS ---
 ADMIN_PASS = 'Thesong_Admin@2022?!$'
-BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
-CHAT_ID = "-1002654437316"
 
 # --- 3. MODELS ---
 class Product(db.Model):
@@ -40,20 +37,23 @@ def index():
 
 @app.route('/custom-bracelet')
 def custom_bracelet():
-    """Custom Bracelet Studio Page"""
+    """Custom Bracelet Studio"""
     return render_template('custom_bracelet.html')
 
 @app.route('/lego')
 def lego_shop():
-    return "LEGO Shop Coming Soon"
-
-@app.route('/hot-sale')
-def hot_sale():
-    return "Hot Sales Coming Soon"
+    """The New React LEGO Shop"""
+    return render_template('lego.html')
 
 @app.route('/lucky-draw')
 def lucky_draw():
-    return "Lucky Draw Coming Soon"
+    """The Lucky Draw Game"""
+    return render_template('lucky_draw.html')
+
+@app.route('/hot-sale')
+def hot_sale():
+    # Placeholder or create a template for this later
+    return "<h1>Hot Sale Coming Soon</h1>"
 
 # --- 5. ADMIN ROUTES ---
 
@@ -79,7 +79,6 @@ def admin_panel():
         if cat not in grouped: grouped[cat] = []
         grouped[cat].append(p)
     
-    # Safe check for override
     try:
         override = Setting.query.get('stock_override')
         override_val = override.value if override else "off"
@@ -88,64 +87,29 @@ def admin_panel():
     
     return render_template('admin_panel.html', grouped=grouped, override=override_val)
 
-# --- 6. APIs (Public & Admin) ---
+# --- 6. APIs ---
 
 @app.route('/api/products')
 def get_products():
-    """
-    New Endpoint for the Bracelet Studio to get all product data.
-    """
+    """For Bracelet Studio"""
     products = Product.query.all()
     override = Setting.query.get('stock_override')
     val = override.value if override else "off"
-    
     return jsonify([{
-        "id": p.id, 
-        "name_kh": p.name, 
-        "price": p.price, 
-        "image": p.image, 
-        "categories": [p.category], 
-        "stock": p.stock, 
-        "master_switch": val
+        "id": p.id, "name_kh": p.name, "price": p.price, 
+        "image": p.image, "categories": [p.category], 
+        "stock": p.stock, "master_switch": val
     } for p in products])
-
-@app.route('/api/get-data')
-def get_data():
-    """
-    Old Endpoint possibly used by Admin Panel JS
-    """
-    try:
-        override = Setting.query.get('stock_override')
-        val = override.value if override else "off"
-    except:
-        val = "off"
-        
-    return jsonify({
-        "stock": {p.id: p.stock for p in Product.query.all()},
-        "override": val
-    })
 
 @app.route('/api/sync', methods=['POST'])
 def sync_catalog():
-    """
-    CRITICAL: This endpoint populates the database.
-    If you have a frontend script pushing data here, this saves it.
-    """
     data = request.json
     items = data.get('items', [])
     for item in items:
         p = Product.query.get(item['id'])
         if not p:
-            # Handle category as list or string
             cat = item['categories'][0] if isinstance(item.get('categories'), list) else item.get('category', 'General')
-            new_p = Product(
-                id=item['id'], 
-                name=item['name_kh'], 
-                price=item['price'], 
-                image=item['image'], 
-                category=cat, 
-                stock=0
-            )
+            new_p = Product(id=item['id'], name=item['name_kh'], price=item['price'], image=item['image'], category=cat, stock=0)
             db.session.add(new_p)
     db.session.commit()
     return jsonify(success=True)
@@ -171,17 +135,6 @@ def toggle_override():
         db.session.add(sett)
     else: 
         sett.value = val
-    db.session.commit()
-    return jsonify(success=True)
-
-@app.route('/admin/api/process-receipt', methods=['POST'])
-def process_receipt():
-    if not session.get('admin'): return jsonify(success=False), 403
-    data = request.json
-    for item in data['items']:
-        p = Product.query.get(item['id'])
-        if p: 
-            p.stock = max(0, p.stock - int(item['qty']))
     db.session.commit()
     return jsonify(success=True)
 
