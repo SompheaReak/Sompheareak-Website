@@ -1,779 +1,661 @@
-import React, { useState, useMemo } from 'react';
-import { ShoppingCart, Search, Menu, X, Filter, Star, Plus, Minus, Trash2, ChevronRight, ChevronLeft, Package } from 'lucide-react';
-
-// --- Large Dataset (Collapsed for readability in logic, but full data included) ---
-const PRODUCTS_DATA = [
-    {"id": 20001, "name_kh": "71049 - 1 RED BULL","price": 24000, "image": "/static/images/lego71049-01.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
-    {"id": 20002, "name_kh": "71049 - 2 MERCEDES","price": 24000, "image": "/static/images/lego71049-02.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
-    {"id": 20003, "name_kh": "71049 - 3 FERRARI","price": 24000, "image": "/static/images/lego71049-03.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
-    {"id": 20004, "name_kh": "71049 - 4 MCLAREN","price": 24000, "image": "/static/images/lego71049-04.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
-    {"id": 20005, "name_kh": "71049 - 5 ASTON MARTIN","price": 24000, "image": "/static/images/lego71049-05.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
-    {"id": 20006, "name_kh": "71049 - 6 ALPINE","price": 24000, "image": "/static/images/lego71049-06.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
-    {"id": 20007, "name_kh": "71049 - 7 WILLIAMS","price": 24000, "image": "/static/images/lego71049-07.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
-    {"id": 20008, "name_kh": "71049 - 8 VISA CASH APP","price": 24000, "image": "/static/images/lego71049-08.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
-    {"id": 20009, "name_kh": "71049 - 9 SAUBER","price": 24000, "image": "/static/images/lego71049-09.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
-    {"id": 20010, "name_kh": "71049 - 10 HAAS","price": 24000, "image": "/static/images/lego71049-10.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
-    {"id": 20011, "name_kh": "71049 - 11 F1 ACADEMY ","price": 24000, "image": "/static/images/lego71049-11.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
-    {"id": 20012, "name_kh": "71049 - 12 GENERIC","price": 24000, "image": "/static/images/lego71049-12.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
-    {"id": 2001, "name_kh": "WWII - កាំភ្លើងធំ","price": 3500, "image": "/static/images/wwii-biggun.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":0},
-    {"id": 2002, "name_kh": "WWII - កាំភ្លើងធំ6គ្រឿង 02","price": 6000, "image": "/static/images/wwii-gun6x.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":0},
-    {"id": 2003, "name_kh": "WWII -  RPG","price": 500, "image": "/static/images/wwii-rpg.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2004, "name_kh": "WWII -  04","price": 1250, "image": "/static/images/wwii-04.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2005, "name_kh": "WWII ","price": 1250, "image": "/static/images/wwii-05.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2006, "name_kh": "WWII សព្វាវុធ 01", "price": 3000, "image": "/static/images/wwii-a.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
-    {"id": 2007, "name_kh": "WWII សព្វាវុធ 02", "price": 3000, "image": "/static/images/wwii-b.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
-    {"id": 2008, "name_kh": "WWII សព្វាវុធ 03", "price": 3000, "image": "/static/images/wwii-c.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
-    {"id": 2009, "name_kh": "WWII សព្វាវុធ 04", "price": 3000, "image": "/static/images/wwii-d.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
-    {"id": 2010, "name_kh": "WWII សព្វាវុធ 05", "price": 3000, "image": "/static/images/wwii-e.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
-    {"id": 2011, "name_kh": "WWII Germany 01","price": 1250, "image": "/static/images/wwii-01.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2012, "name_kh": "WWII Germany 02","price": 1250, "image": "/static/images/wwii-02.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2013, "name_kh": "WWII Germany 03","price": 1250, "image": "/static/images/wwii-03.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2014, "name_kh": "WWII Germany 04","price": 1250, "image": "/static/images/wwii-04.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2015, "name_kh": "WWII Germany 05","price": 1250, "image": "/static/images/wwii-05.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2016, "name_kh": "WWII Germany 06", "name_en": "WWII Germany 06", "price": 1250, "image": "/static/images/wwii-06.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2017, "name_kh": "WWII USA 01", "name_en": "WWII USA 01", "price": 1250, "image": "/static/images/wwii-07.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2018, "name_kh": "WWII USA 02", "name_en": "WWII USA 02", "price": 1250, "image": "/static/images/wwii-08.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2019, "name_kh": "WWII USA 03", "name_en": "WWII USA 03", "price": 1250, "image": "/static/images/wwii-09.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2020, "name_kh": "WWII USA 04", "name_en": "WWII USA 04", "price": 1250, "image": "/static/images/wwii-10.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2021, "name_kh": "WWII USA 05", "name_en": "WWII USA 05", "price": 1250, "image": "/static/images/wwii-11.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2022, "name_kh": "WWII SOVIET 01", "name_en": "WWII SOVIET 01", "price": 1250, "image": "/static/images/wwii-12.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2023, "name_kh": "WWII SOVIET 02", "name_en": "WWII SOVIET 02", "price": 1250, "image": "/static/images/wwii-13.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2024, "name_kh": "WWII SOVIET 03", "name_en": "WWII SOVIET 03", "price": 1250, "image": "/static/images/wwii-14.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2025, "name_kh": "WWII SOVIET 04", "name_en": "WWII SOVIET 04", "price": 1250, "image": "/static/images/wwii-15.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2026, "name_kh": "WWII SOVIET 05", "name_en": "WWII SOVIET 05", "price": 1250, "image": "/static/images/wwii-16.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2027, "name_kh": "WWII SOVIET 06", "name_en": "WWII SOVIET 06", "price": 1250, "image": "/static/images/wwii-17.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2028, "name_kh": "WWII SOVIET 07", "name_en": "WWII SOVIET 07", "price": 1250, "image": "/static/images/wwii-18.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 2029, "name_kh": "WWII SOVIET 08", "name_en": "WWII SOVIET 08", "price": 1250, "image": "/static/images/wwii-19.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
-    {"id": 1, "name_kh": "#OP01 One Piece - Sakazuki","price": 7500, "image": "/static/images/op01.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
-    {"id": 2, "name_kh": "#OP02 One Piece - Portgas D Ace","price": 6500, "image": "/static/images/op02.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
-    {"id": 3, "name_kh": "#OP03 One Piece - Marco","price": 7500, "image": "/static/images/op03.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 4, "name_kh": "#OP04 One Piece - Edward Newgate","price": 7500, "image": "/static/images/op04.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
-    {"id": 5, "name_kh": "#OP05 One Piece - Marshall D Teach","price": 7500, "image": "/static/images/op05.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 6, "name_kh": "#OP06 One Piece - Shanks","price": 7000, "image": "/static/images/op06.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 7, "name_kh": "#OP07 One Piece - Monkey D Luffy","price": 6000, "image": "/static/images/op07.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 8, "name_kh": "#OP08 One Piece - Monkey D Garp","price": 7500, "image": "/static/images/op08.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
-    {"id": 11, "name_kh": "#OP09 One Piece - Monkey D Luffy","price": 7000, "image": "/static/images/op11.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 12, "name_kh": "#OP10 One Piece - Sabo","price": 7500, "image": "/static/images/op12.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 13, "name_kh": "#OP11 One Piece - Portgas D Ace","price": 6500, "image": "/static/images/op13.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 14, "name_kh": "#OP12 One Piece - Edward Newgate","price": 7500, "image": "/static/images/op14.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 15, "name_kh": "#OP13 One Piece - Trafalgar D Water Law","price": 7500, "image": "/static/images/op15.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 16, "name_kh": "#OP14 One Piece - Portgas D Ace","price": 6000, "image": "/static/images/op16.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 17, "name_kh": "#OP15 One Piece - Roronoa Zoro","price": 7000, "image": "/static/images/op17.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 18, "name_kh": "#OP16 One Piece - Sengoku","price": 7500, "image": "/static/images/op18.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 21, "name_kh": "#OP21 One Piece - Monkey D Luffy","price": 8000, "image": "/static/images/op21.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 22, "name_kh": "#OP22 One Piece - Monkey D Luffy","price": 8000, "image": "/static/images/op22.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 23, "name_kh": "#OP23 One Piece - Monkey D Luffy","price": 8000, "image": "/static/images/op23.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 24, "name_kh": "#OP24 One Piece - Monkey D Luffy","price": 8000, "image": "/static/images/op24.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 25, "name_kh": "#OP25 One Piece - Roronoa Zoro","price": 8000, "image": "/static/images/op25.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 26, "name_kh": "#OP26 One Piece - Roronoa Zoro","price": 8000, "image": "/static/images/op26.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 27, "name_kh": "#OP27 One Piece - Roronoa Zoro","price": 8000, "image": "/static/images/op27.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-    {"id": 28, "name_kh": "#OP28 One Piece - Roronoa Zoro","price": 8000, "image": "/static/images/op28.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
-
-    {"id": 101, "name_kh": "NINJAGO Season 1 - DX Suit","price": 30000, "image": "/static/images/njoss1dx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 102, "name_kh": "NINJAGO Season 1 - KAI (DX)","price": 5000, "image": "/static/images/njoss1dxkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 103, "name_kh": "NINJAGO Season 1 - ZANE (DX)","price": 5000, "image": "/static/images/njoss1dxzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 104, "name_kh": "NINJAGO Season 1 - JAY (DX)","price": 5000, "image": "/static/images/njoss1dxjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 105, "name_kh": "NINJAGO Season 1 - COLE (DX)","price": 5000, "image": "/static/images/njoss1dxcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 106, "name_kh": "NINJAGO Season 1 - NYA (DX)","price": 5000, "image": "/static/images/njoss1dxnya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 107, "name_kh": "NINJAGO Season 1 - LLOYD (DX)","price": 5000, "image": "/static/images/njoss1dxlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 111, "name_kh": "NINJAGO Season 1 - Pilot Suit","price": 25000, "image": "/static/images/njoss1pilot.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 112, "name_kh": "NINJAGO Season 1 - KAI (Pilot)","price": 5000, "image": "/static/images/njoss1pilotkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 113, "name_kh": "NINJAGO Season 1 - ZANE (Pilot)","price": 25000, "image": "/static/images/njoss1pilotzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 114, "name_kh": "NINJAGO Season 1 - JAY (Pilot)","price": 5000, "image": "/static/images/njoss1pilotjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 115, "name_kh": "NINJAGO Season 1 - COLE (Pilot)","price": 5000, "image": "/static/images/njoss1pilotcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 116,"name_kh": "NINJAGO Season 1 - LLOYD (Pilot)","price": 5000, "image": "/static/images/njoss1pilotlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 121, "name_kh": "NINJAGO Season 1 - NRG","price": 35000, "image": "/static/images/njoss1nrg.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 122, "name_kh": "NINJAGO Season 1 - NRG KAI","price": 7000, "image": "/static/images/njoss1nrgkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 123, "name_kh": "NINJAGO Season 1 - NRG ZANE","price": 7000, "image": "/static/images/njoss1nrgzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 124, "name_kh": "NINJAGO Season 1 - NRG JAY","price": 7000, "image": "/static/images/njoss1nrgjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 125, "name_kh": "NINJAGO Season 1 - NRG COLE","price": 7000, "image": "/static/images/njoss1nrgcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 126, "name_kh": "NINJAGO Season 1 - NRG LLOYD","price": 7000, "image": "/static/images/njoss1nrglloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 131, "name_kh": "NINJAGO Season 1 - ZX Suits","price": 25000, "image": "/static/images/njoss1zx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 132, "name_kh": "NINJAGO Season 1 - KAI (ZX)","price": 5000, "image": "/static/images/njoss1zxkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 133, "name_kh": "NINJAGO Season 1 - ZANE (ZX)","price": 5000, "image": "/static/images/njoss1zxzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 134, "name_kh": "NINJAGO Season 1 - JAY (ZX)","price": 5000, "image": "/static/images/njoss1zxjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 135, "name_kh": "NINJAGO Season 1 - COLE (ZX)","price": 5000, "image": "/static/images/njoss1zxcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-    {"id": 136, "name_kh": "NINJAGO Season 1 - LLOYD (ZX)","price": 5000, "image": "/static/images/njoss1zxlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
-
-    {"id": 201, "name_kh": "NINJAGO Season 2 - Kimono Suit","price": 36000, "image": "/static/images/njoss2kimono.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-    {"id": 202, "name_kh": "NINJAGO Season 2 - KAI (Kimono)","price": 6000, "image": "/static/images/njoss2kimonokai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-    {"id": 203, "name_kh": "NINJAGO Season 2 - ZANE (Kimono)","price": 6000, "image": "/static/images/njoss2kimonozane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-    {"id": 204, "name_kh": "NINJAGO Season 2 - JAY (Kimono)","price": 6000, "image": "/static/images/njoss2kimonojay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-    {"id": 205, "name_kh": "NINJAGO Season 2 - COLE (Kimono)","price": 6000, "image": "/static/images/njoss2kimonocole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-    {"id": 206, "name_kh": "NINJAGO Season 2 - LLOYD  (Kimono)","price": 6000, "image": "/static/images/njoss2kimonolloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-    {"id": 207, "name_kh": "NINJAGO Season 2 - GOLDEN LLOYD (Kimono)","price": 6000, "image": "/static/images/njoss2kimonogoldlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-
-    {"id": 211, "name_kh": "NINJAGO Season 2 - Pajamas ","price": 28000, "image": "/static/images/njoss2pajamas.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-    {"id": 212, "name_kh": "NINJAGO Season 2 - KAI (Pajamas)","price": 7000, "image": "/static/images/njoss2pajamaskai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-    {"id": 213, "name_kh": "NINJAGO Season 2 - ZANE (Pajamas)","price": 7000, "image": "/static/images/njoss2pajamaszane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-    {"id": 214, "name_kh": "NINJAGO Season 2 - JAY (Pajamas)","price": 7000, "image": "/static/images/njoss2pajamasjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-    {"id": 215, "name_kh": "NINJAGO Season 2 - Cole (Pajamas)","price": 7000, "image": "/static/images/njoss2pajamascole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
-
-    {"id": 301, "name_kh": "NINJAGO Season 3 - Techno Robes","price": 36000, "image": "/static/images/njoss3techno.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-    {"id": 302, "name_kh": "NINJAGO Season 3 - KAI (Techno)","price": 6000, "image": "/static/images/njoss3technokai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-    {"id": 303, "name_kh": "NINJAGO Season 3 - ZANE (Techno)","price": 6000, "image": "/static/images/njoss3technozane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-    {"id": 304, "name_kh": "NINJAGO Season 3 - ZANE (Techno)","price": 6000, "image": "/static/images/njoss3technozane2.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-    {"id": 305, "name_kh": "NINJAGO Season 3 - JAY (Techno)","price": 6000, "image": "/static/images/njoss3technojay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-    {"id": 306, "name_kh": "NINJAGO Season 3 - COLE (Techno)","price": 6000, "image": "/static/images/njoss3technocole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-    {"id": 307, "name_kh": "NINJAGO Season 3 - LLOYD (Techno)","price": 6000, "image": "/static/images/njoss3technolloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-    {"id": 311, "name_kh": "NINJAGO Season 3 - Stone Armor","price": 36000, "image": "/static/images/njoss3stone.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-    {"id": 312, "name_kh": "NINJAGO Season 3 - KAI (Stone)","price": 6000, "image": "/static/images/njoss3stonekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-    {"id": 313, "name_kh": "NINJAGO Season 3 - ZANE (Stone)","price": 6000, "image": "/static/images/njoss3stonezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-    {"id": 314, "name_kh": "NINJAGO Season 3 - JAY (Stone)","price": 6000, "image": "/static/images/njoss3stonejay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-    {"id": 315, "name_kh": "NINJAGO Season 3 - COLE (Stone)","price": 6000, "image": "/static/images/njoss3stonecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-    {"id": 316, "name_kh": "NINJAGO Season 3 - NYA(Stone)","price": 6000, "image": "/static/images/njoss3stonenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-    {"id": 317, "name_kh": "NINJAGO Season 3 - LLOYD (Stone)","price": 6000, "image": "/static/images/njoss3stonelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
-
-    {"id": 401, "name_kh": "NINJAGO Season 4 - Tournament Robes","price": 26000, "image": "/static/images/njoss4tournament.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
-    {"id": 402, "name_kh": "NINJAGO Season 4 - KAI (Tournament)","price": 6500, "image": "/static/images/njoss4tournamentkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
-    {"id": 403, "name_kh": "NINJAGO Season 4 - JAY (Tournament)","price": 6500, "image": "/static/images/njoss4tournamentjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
-    {"id": 404, "name_kh": "NINJAGO Season 4 - COLE (Tournament)","price": 6500, "image": "/static/images/njoss4tournamentcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
-    {"id": 405, "name_kh": "NINJAGO Season 4 - LLOYD (Tournament)","price": 6500, "image": "/static/images/njoss4tournamentlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
-    {"id": 411, "name_kh": "NINJAGO Season 4 - Jungle Robes","price": 30000, "image": "/static/images/njoss4jungle.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
-    {"id": 412, "name_kh": "NINJAGO Season 4 - KAI (Jungle)","price": 5000, "image": "/static/images/njoss4junglekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
-    {"id": 413, "name_kh": "NINJAGO Season 4 - ZANE (Jungle)","price": 5000, "image": "/static/images/njoss4junglezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
-    {"id": 414, "name_kh": "NINJAGO Season 4 - JAY (Jungle)","price": 5000, "image": "/static/images/njoss4junglejay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
-    {"id": 415, "name_kh": "NINJAGO Season 4 - COLE (Jungle)","price": 5000, "image": "/static/images/njoss4junglecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
-    {"id": 416, "name_kh": "NINJAGO Season 4 - SKYLAR (Jungle)","price": 5000, "image": "/static/images/njoss4jungleskylar.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
-    {"id": 417, "name_kh": "NINJAGO Season 4 - LLOYD (Jungle)","price": 5000, "image": "/static/images/njoss4junglelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
-
-    {"id": 501, "name_kh": "NINJAGO Season 5 - Deepstone Armour","price": 27000, "image": "/static/images/njoss5deep.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 502, "name_kh": "NINJAGO Season 5 - KAI (Deepstone)","price": 4500, "image": "/static/images/njoss5deepkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 503, "name_kh": "NINJAGO Season 5 - ZANE (Deepstone)","price": 4500, "image": "/static/images/njoss5deepzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 504, "name_kh": "NINJAGO Season 5 - JAY (Deepstone)","price": 4500, "image": "/static/images/njoss5deepjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 505, "name_kh": "NINJAGO Season 5 - COLE (Deepstone)","price": 4500, "image": "/static/images/njoss5deepcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 506, "name_kh": "NINJAGO Season 5 - NYA (Deepstone) ","price": 4500, "image": "/static/images/njoss5deepnya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 507, "name_kh": "NINJAGO Season 5 - LLOYD (Deepstone)","price": 4500, "image": "/static/images/njoss5deeplloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 511, "name_kh": "NINJAGO Season 5 - Air Jitzu","price": 36000, "image": "/static/images/njoss5air.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 512, "name_kh": "NINJAGO Season 5 - KAI (Air)","price": 6000, "image": "/static/images/njoss5airkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 513, "name_kh": "NINJAGO Season 5 - ZANE (Air)","price": 6000, "image": "/static/images/njoss5airzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 514, "name_kh": "NINJAGO Season 5 - JAY (Air)","price": 6000, "image": "/static/images/njoss5airjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 515, "name_kh": "NINJAGO Season 5 - COLE (Air)","price": 6000, "image": "/static/images/njoss5aircole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 516, "name_kh": "NINJAGO Season 5 - NYA (Air) ","price": 6000, "image": "/static/images/njoss5airnya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 517, "name_kh": "NINJAGO Season 5 - LLOYD (Air)","price": 6000, "image": "/static/images/njoss5airlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 521, "name_kh": "NINJAGO Season 5 - Future Robes","price": 39000, "image": "/static/images/njoss5future.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 522, "name_kh": "NINJAGO Season 5 - KAI (Future)","price": 6500, "image": "/static/images/njoss5futurekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 523, "name_kh": "NINJAGO Season 5 - ZANE (Future)","price": 6500, "image": "/static/images/njoss5futurezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 524, "name_kh": "NINJAGO Season 5 - JAY (Future)","price": 6500, "image": "/static/images/njoss5futurejay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 525, "name_kh": "NINJAGO Season 5 - COLE (Future)","price": 6500, "image": "/static/images/njoss5futurecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 526, "name_kh": "NINJAGO Season 5 - NYA (Future) ","price": 6500, "image": "/static/images/njoss5futurenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-    {"id": 527, "name_kh": "NINJAGO Season 5 - LLOYD (Future)","price": 6500, "image": "/static/images/njoss5futurelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
-
-    {"id": 601, "name_kh": "NINJAGO Season 6 - Destiny Robes","price": 27000, "image": "/static/images/njoss6destiny.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-    {"id": 602, "name_kh": "NINJAGO Season 6 - KAI (Destiny)","price": 4500, "image": "/static/images/njoss6destinykai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-    {"id": 603, "name_kh": "NINJAGO Season 6 - ZANE (Destiny)","price": 4500, "image": "/static/images/njoss6destinyzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-    {"id": 604, "name_kh": "NINJAGO Season 6 - JAY (Destiny)","price": 4500, "image": "/static/images/njoss6destinyjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-    {"id": 605, "name_kh": "NINJAGO Season 6 - COLE (Destiny)","price": 4500, "image": "/static/images/njoss6destinycole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-    {"id": 606, "name_kh": "NINJAGO Season 6 - NYA (Destiny) ","price": 4500, "image": "/static/images/njoss6destinynya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-    {"id": 607, "name_kh": "NINJAGO Season 6 - LLOYD (Destiny)","price": 4500, "image": "/static/images/njoss6destinylloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-
-    {"id": 611, "name_kh": "NINJAGO Season 6 - Honor Robes","price": 24000, "image": "/static/images/njoss6honor.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-    {"id": 612, "name_kh": "NINJAGO Season 6 - KAI (Honor)","price": 4000, "image": "/static/images/njoss6honorkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-    {"id": 613, "name_kh": "NINJAGO Season 6 - ZANE (Honor)","price": 4000, "image": "/static/images/njoss6honorzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-    {"id": 614, "name_kh": "NINJAGO Season 6 - JAY (Honor)","price": 4000, "image": "/static/images/njoss6honorjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-    {"id": 615, "name_kh": "NINJAGO Season 6 - COLE (Honor)","price": 4000, "image": "/static/images/njoss6honorcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-    {"id": 616, "name_kh": "NINJAGO Season 6 - NYA (Honor) ","price": 4000, "image": "/static/images/njoss6honornya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-    {"id": 617, "name_kh": "NINJAGO Season 6 - LLOYD (Honor)","price": 4000, "image": "/static/images/njoss6honorlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
-
-    {"id": 701, "name_kh": "NINJAGO Season 7 - Fusion Armour","price": 24500, "image": "/static/images/njoss7fusion.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
-    {"id": 702, "name_kh": "NINJAGO Season 7 - KAI (Fusion)","price": 3500, "image": "/static/images/njoss7fusionkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
-    {"id": 703, "name_kh": "NINJAGO Season 7 - ZANE (Fusion)","price": 3500, "image": "/static/images/njoss7fusionzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
-    {"id": 704, "name_kh": "NINJAGO Season 7 - JAY (Fusion)","price": 3500, "image": "/static/images/njoss7fusionjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
-    {"id": 705, "name_kh": "NINJAGO Season 7 - COLE (Fusion)","price": 3500, "image": "/static/images/njoss7fusioncole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
-    {"id": 706, "name_kh": "NINJAGO Season 7 - NYA (Fusion) ","price": 3500, "image": "/static/images/njoss7fusionnya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
-    {"id": 707, "name_kh": "NINJAGO Season 7 - LLOYD (Fusion)","price": 3500, "image": "/static/images/njoss7fusionlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
-    {"id": 708, "name_kh": "NINJAGO Season 7 - Sensei Wu (Fusion)","price": 3500, "image": "/static/images/njoss7fusionsenseiwu.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
-
-    {"id": 801, "name_kh": "NINJAGO Season 8 - KAI (Resistance)","price": 3500, "image": "/static/images/njoss8resistancekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 8"],"stock": 1},
-    {"id": 802, "name_kh": "NINJAGO Season 8 - ZANE (Resistance)","price": 3500, "image": "/static/images/njoss8resistancezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 8"],"stock": 1},
-    {"id": 803, "name_kh": "NINJAGO Season 8 - JAY (Resistance)","price": 3500, "image": "/static/images/njoss8resistancejay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 8"],"stock": 1},
-    {"id": 804, "name_kh": "NINJAGO Season 8 - COLE (Resistance)","price": 3500, "image": "/static/images/njoss8resistancecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 8"],"stock": 1},
-    {"id": 805, "name_kh": "NINJAGO Season 8 - NYA (Resistance)","price": 3500, "image": "/static/images/njoss8resistancenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 8"],"stock": 1},
-    {"id": 806, "name_kh": "NINJAGO Season 8 - LLOYD (Resistance) ","price": 3500, "image": "/static/images/njoss8resistancelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 8"],"stock": 1},
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Somphea Reak | LEGO Market</title>
     
-    {"id": 901, "name_kh": "NINJAGO Season 9 - Hunted Robes","price": 24000, "image": "/static/images/njoss9hunted.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
-    {"id": 902, "name_kh": "NINJAGO Season 9 - KAI (Hunted)","price": 4000, "image": "/static/images/njoss9huntedkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
-    {"id": 903, "name_kh": "NINJAGO Season 9 - ZANE (Hunted)","price": 4000, "image": "/static/images/njoss9huntedzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
-    {"id": 904, "name_kh": "NINJAGO Season 9 - JAY (Hunted)","price": 4000, "image": "/static/images/njoss9huntedjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
-    {"id": 905, "name_kh": "NINJAGO Season 9 - COLE (Hunted)","price": 4000, "image": "/static/images/njoss9huntedcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
-    {"id": 906, "name_kh": "NINJAGO Season 9 - NYA (Hunted) ","price": 4000, "image": "/static/images/njoss9huntednya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
-    {"id": 907, "name_kh": "NINJAGO Season 9 - LLOYD (Hunted)","price": 4000, "image": "/static/images/njoss9huntedlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #ffffff; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Snap scrolling behavior */
+        .snap-x { scroll-snap-type: x mandatory; }
+        .snap-start { scroll-snap-align: start; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-    {"id": 1001, "name_kh": "NINJAGO Season 10 - Legacy Robes","price": 24000, "image": "/static/images/njoss10legacy.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
-    {"id": 1002, "name_kh": "NINJAGO Season 10 - KAI (Legacy)","price": 4000, "image": "/static/images/njoss10legacykai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
-    {"id": 1003, "name_kh": "NINJAGO Season 10 - ZANE (Legacy)","price": 4000, "image": "/static/images/njoss10legacyzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
-    {"id": 1004, "name_kh": "NINJAGO Season 10 - JAY (Legacy)","price": 4000, "image": "/static/images/njoss10legacyjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
-    {"id": 1005, "name_kh": "NINJAGO Season 10 - COLE (Legacy)","price": 4000, "image": "/static/images/njoss10legacycole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
-    {"id": 1006, "name_kh": "NINJAGO Season 10 - NYA (Legacy) ","price": 4000, "image": "/static/images/njoss10legacynya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
-    {"id": 1007, "name_kh": "NINJAGO Season 10 - LLOYD (Legacy)","price": 4000, "image": "/static/images/njoss10legacylloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
+    <script type="text/babel">
+        const { useState, useMemo, useRef } = React;
 
-    {"id": 1101, "name_kh": "NINJAGO Season 11 - Armor Robes","price": 24000, "image": "/static/images/njoss11armor.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
-    {"id": 1102, "name_kh": "NINJAGO Season 11 - KAI (Armor)","price": 4000, "image": "/static/images/njoss11armorkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
-    {"id": 1103, "name_kh": "NINJAGO Season 11 - ZANE (Armor)","price": 4000, "image": "/static/images/njoss11armorzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
-    {"id": 1104, "name_kh": "NINJAGO Season 11 - JAY (Armor)","price": 4000, "image": "/static/images/njoss11armorjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
-    {"id": 1105, "name_kh": "NINJAGO Season 11 - COLE (Armor)","price": 4000, "image": "/static/images/njoss11armorcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
-    {"id": 1106, "name_kh": "NINJAGO Season 11 - NYA (Armor) ","price": 4000, "image": "/static/images/njoss11armornya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
-    {"id": 1107, "name_kh": "NINJAGO Season 11 - LLOYD (Armor)","price": 4000, "image": "/static/images/njoss11armorlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+        // --- ICONS (Converted from Lucide for Browser) ---
+        const ShoppingCart = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>;
+        const Search = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
+        const Menu = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>;
+        const X = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>;
+        const Filter = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>;
+        const Plus = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>;
+        const Minus = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/></svg>;
+        const Trash2 = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>;
+        const ChevronRight = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>;
+        const ChevronLeft = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>;
+        const Package = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16.5 9.4-9-5.19"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></svg>;
+        const ArrowLeft = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>;
 
-    {"id": 1111, "name_kh": "NINJAGO Season 11 - Forbidden Spinjitzu","price": 21000, "image": "/static/images/njoss11forbidden.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
-    {"id": 1112, "name_kh": "NINJAGO Season 11 - KAI (Forbidden)","price": 3500, "image": "/static/images/njoss11forbiddenkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
-    {"id": 1113, "name_kh": "NINJAGO Season 11 - ZANE (Forbidden)","price": 3500, "image": "/static/images/njoss11forbiddenzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
-    {"id": 1114, "name_kh": "NINJAGO Season 11 - JAY (Forbidden)","price": 3500, "image": "/static/images/njoss11forbiddenjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
-    {"id": 1115, "name_kh": "NINJAGO Season 11 - COLE (Forbidden)","price": 3500, "image": "/static/images/njoss11forbiddencole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
-    {"id": 1116, "name_kh": "NINJAGO Season 11 - NYA (Forbidden) ","price": 3500, "image": "/static/images/njoss11forbiddennya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
-    {"id": 1117, "name_kh": "NINJAGO Season 11 - LLOYD (Forbidden)","price": 3500, "image": "/static/images/njoss11forbiddenlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+        // --- FULL DATASET ---
+        const PRODUCTS_DATA = [
+            {"id": 20001, "name_kh": "71049 - 1 RED BULL","price": 24000, "image": "/static/images/lego71049-01.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
+            {"id": 20002, "name_kh": "71049 - 2 MERCEDES","price": 24000, "image": "/static/images/lego71049-02.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
+            {"id": 20003, "name_kh": "71049 - 3 FERRARI","price": 24000, "image": "/static/images/lego71049-03.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+            {"id": 20004, "name_kh": "71049 - 4 MCLAREN","price": 24000, "image": "/static/images/lego71049-04.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
+            {"id": 20005, "name_kh": "71049 - 5 ASTON MARTIN","price": 24000, "image": "/static/images/lego71049-05.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+            {"id": 20006, "name_kh": "71049 - 6 ALPINE","price": 24000, "image": "/static/images/lego71049-06.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+            {"id": 20007, "name_kh": "71049 - 7 WILLIAMS","price": 24000, "image": "/static/images/lego71049-07.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+            {"id": 20008, "name_kh": "71049 - 8 VISA CASH APP","price": 24000, "image": "/static/images/lego71049-08.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
+            {"id": 20009, "name_kh": "71049 - 9 SAUBER","price": 24000, "image": "/static/images/lego71049-09.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+            {"id": 20010, "name_kh": "71049 - 10 HAAS","price": 24000, "image": "/static/images/lego71049-10.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+            {"id": 20011, "name_kh": "71049 - 11 F1 ACADEMY ","price": 24000, "image": "/static/images/lego71049-11.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1},
+            {"id": 20012, "name_kh": "71049 - 12 GENERIC","price": 24000, "image": "/static/images/lego71049-12.jpg", "categories": ["LEGO", "Toy"], "subcategory": ["Formula 1"],"stock": 1,"discount":0 },
+            {"id": 2001, "name_kh": "WWII - កាំភ្លើងធំ","price": 3500, "image": "/static/images/wwii-biggun.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":0},
+            {"id": 2002, "name_kh": "WWII - កាំភ្លើងធំ6គ្រឿង 02","price": 6000, "image": "/static/images/wwii-gun6x.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":0},
+            {"id": 2003, "name_kh": "WWII -  RPG","price": 500, "image": "/static/images/wwii-rpg.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2004, "name_kh": "WWII -  04","price": 1250, "image": "/static/images/wwii-04.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2005, "name_kh": "WWII ","price": 1250, "image": "/static/images/wwii-05.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2006, "name_kh": "WWII សព្វាវុធ 01", "price": 3000, "image": "/static/images/wwii-a.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
+            {"id": 2007, "name_kh": "WWII សព្វាវុធ 02", "price": 3000, "image": "/static/images/wwii-b.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
+            {"id": 2008, "name_kh": "WWII សព្វាវុធ 03", "price": 3000, "image": "/static/images/wwii-c.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
+            {"id": 2009, "name_kh": "WWII សព្វាវុធ 04", "price": 3000, "image": "/static/images/wwii-d.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
+            {"id": 2010, "name_kh": "WWII សព្វាវុធ 05", "price": 3000, "image": "/static/images/wwii-e.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":50 },
+            {"id": 2011, "name_kh": "WWII Germany 01","price": 1250, "image": "/static/images/wwii-01.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2012, "name_kh": "WWII Germany 02","price": 1250, "image": "/static/images/wwii-02.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2013, "name_kh": "WWII Germany 03","price": 1250, "image": "/static/images/wwii-03.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2014, "name_kh": "WWII Germany 04","price": 1250, "image": "/static/images/wwii-04.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2015, "name_kh": "WWII Germany 05","price": 1250, "image": "/static/images/wwii-05.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2016, "name_kh": "WWII Germany 06", "name_en": "WWII Germany 06", "price": 1250, "image": "/static/images/wwii-06.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2017, "name_kh": "WWII USA 01", "name_en": "WWII USA 01", "price": 1250, "image": "/static/images/wwii-07.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2018, "name_kh": "WWII USA 02", "name_en": "WWII USA 02", "price": 1250, "image": "/static/images/wwii-08.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2019, "name_kh": "WWII USA 03", "name_en": "WWII USA 03", "price": 1250, "image": "/static/images/wwii-09.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2020, "name_kh": "WWII USA 04", "name_en": "WWII USA 04", "price": 1250, "image": "/static/images/wwii-10.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2021, "name_kh": "WWII USA 05", "name_en": "WWII USA 05", "price": 1250, "image": "/static/images/wwii-11.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2022, "name_kh": "WWII SOVIET 01", "name_en": "WWII SOVIET 01", "price": 1250, "image": "/static/images/wwii-12.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2023, "name_kh": "WWII SOVIET 02", "name_en": "WWII SOVIET 02", "price": 1250, "image": "/static/images/wwii-13.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2024, "name_kh": "WWII SOVIET 03", "name_en": "WWII SOVIET 03", "price": 1250, "image": "/static/images/wwii-14.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2025, "name_kh": "WWII SOVIET 04", "name_en": "WWII SOVIET 04", "price": 1250, "image": "/static/images/wwii-15.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2026, "name_kh": "WWII SOVIET 05", "name_en": "WWII SOVIET 05", "price": 1250, "image": "/static/images/wwii-16.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2027, "name_kh": "WWII SOVIET 06", "name_en": "WWII SOVIET 06", "price": 1250, "image": "/static/images/wwii-17.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2028, "name_kh": "WWII SOVIET 07", "name_en": "WWII SOVIET 07", "price": 1250, "image": "/static/images/wwii-18.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 2029, "name_kh": "WWII SOVIET 08", "name_en": "WWII SOVIET 08", "price": 1250, "image": "/static/images/wwii-19.jpg", "categories": ["toy"], "subcategory": "Lego WWII","discount":20 },
+            {"id": 1, "name_kh": "#OP01 One Piece - Sakazuki","price": 7500, "image": "/static/images/op01.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
+            {"id": 2, "name_kh": "#OP02 One Piece - Portgas D Ace","price": 6500, "image": "/static/images/op02.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
+            {"id": 3, "name_kh": "#OP03 One Piece - Marco","price": 7500, "image": "/static/images/op03.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 4, "name_kh": "#OP04 One Piece - Edward Newgate","price": 7500, "image": "/static/images/op04.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
+            {"id": 5, "name_kh": "#OP05 One Piece - Marshall D Teach","price": 7500, "image": "/static/images/op05.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 6, "name_kh": "#OP06 One Piece - Shanks","price": 7000, "image": "/static/images/op06.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 7, "name_kh": "#OP07 One Piece - Monkey D Luffy","price": 6000, "image": "/static/images/op07.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 8, "name_kh": "#OP08 One Piece - Monkey D Garp","price": 7500, "image": "/static/images/op08.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1,"discount":0 },
+            {"id": 11, "name_kh": "#OP09 One Piece - Monkey D Luffy","price": 7000, "image": "/static/images/op11.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 12, "name_kh": "#OP10 One Piece - Sabo","price": 7500, "image": "/static/images/op12.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 13, "name_kh": "#OP11 One Piece - Portgas D Ace","price": 6500, "image": "/static/images/op13.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 14, "name_kh": "#OP12 One Piece - Edward Newgate","price": 7500, "image": "/static/images/op14.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 15, "name_kh": "#OP13 One Piece - Trafalgar D Water Law","price": 7500, "image": "/static/images/op15.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 16, "name_kh": "#OP14 One Piece - Portgas D Ace","price": 6000, "image": "/static/images/op16.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 17, "name_kh": "#OP15 One Piece - Roronoa Zoro","price": 7000, "image": "/static/images/op17.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 18, "name_kh": "#OP16 One Piece - Sengoku","price": 7500, "image": "/static/images/op18.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 21, "name_kh": "#OP21 One Piece - Monkey D Luffy","price": 8000, "image": "/static/images/op21.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 22, "name_kh": "#OP22 One Piece - Monkey D Luffy","price": 8000, "image": "/static/images/op22.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 23, "name_kh": "#OP23 One Piece - Monkey D Luffy","price": 8000, "image": "/static/images/op23.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 24, "name_kh": "#OP24 One Piece - Monkey D Luffy","price": 8000, "image": "/static/images/op24.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 25, "name_kh": "#OP25 One Piece - Roronoa Zoro","price": 8000, "image": "/static/images/op25.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 26, "name_kh": "#OP26 One Piece - Roronoa Zoro","price": 8000, "image": "/static/images/op26.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 27, "name_kh": "#OP27 One Piece - Roronoa Zoro","price": 8000, "image": "/static/images/op27.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
+            {"id": 28, "name_kh": "#OP28 One Piece - Roronoa Zoro","price": 8000, "image": "/static/images/op28.jpg", "categories": ["LEGO Anime", "Toy"], "subcategory": ["One Piece"],"stock": 1},
 
-    {"id": 1201, "name_kh": "NINJAGO Season 12 - Digi Robes","price": 17500, "image": "/static/images/njoss12digi.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
-    {"id": 1202, "name_kh": "NINJAGO Season 12 - KAI (Digi)","price": 3500, "image": "/static/images/njoss12digikai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
-    {"id": 1203, "name_kh": "NINJAGO Season 12 - ZANE (Digi)","price": 3500, "image": "/static/images/njoss12digizane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
-    {"id": 1204, "name_kh": "NINJAGO Season 12 - JAY (Digi)","price": 3500, "image": "/static/images/njoss12digijay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
-    {"id": 1205, "name_kh": "NINJAGO Season 12 - COLE (Digi)","price": 3500, "image": "/static/images/njoss12digicole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
-    {"id": 1206, "name_kh": "NINJAGO Season 12 - NYA (Digi) ","price": 3500, "image": "/static/images/njoss12diginya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
-    {"id": 1207, "name_kh": "NINJAGO Season 12 - LLOYD (Digi)","price": 3500, "image": "/static/images/njoss12digilloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 101, "name_kh": "NINJAGO Season 1 - DX Suit","price": 30000, "image": "/static/images/njoss1dx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 102, "name_kh": "NINJAGO Season 1 - KAI (DX)","price": 5000, "image": "/static/images/njoss1dxkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 103, "name_kh": "NINJAGO Season 1 - ZANE (DX)","price": 5000, "image": "/static/images/njoss1dxzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 104, "name_kh": "NINJAGO Season 1 - JAY (DX)","price": 5000, "image": "/static/images/njoss1dxjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 105, "name_kh": "NINJAGO Season 1 - COLE (DX)","price": 5000, "image": "/static/images/njoss1dxcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 106, "name_kh": "NINJAGO Season 1 - NYA (DX)","price": 5000, "image": "/static/images/njoss1dxnya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 107, "name_kh": "NINJAGO Season 1 - LLOYD (DX)","price": 5000, "image": "/static/images/njoss1dxlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 111, "name_kh": "NINJAGO Season 1 - Pilot Suit","price": 25000, "image": "/static/images/njoss1pilot.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 112, "name_kh": "NINJAGO Season 1 - KAI (Pilot)","price": 5000, "image": "/static/images/njoss1pilotkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 113, "name_kh": "NINJAGO Season 1 - ZANE (Pilot)","price": 25000, "image": "/static/images/njoss1pilotzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 114, "name_kh": "NINJAGO Season 1 - JAY (Pilot)","price": 5000, "image": "/static/images/njoss1pilotjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 115, "name_kh": "NINJAGO Season 1 - COLE (Pilot)","price": 5000, "image": "/static/images/njoss1pilotcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 116,"name_kh": "NINJAGO Season 1 - LLOYD (Pilot)","price": 5000, "image": "/static/images/njoss1pilotlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 121, "name_kh": "NINJAGO Season 1 - NRG","price": 35000, "image": "/static/images/njoss1nrg.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 122, "name_kh": "NINJAGO Season 1 - NRG KAI","price": 7000, "image": "/static/images/njoss1nrgkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 123, "name_kh": "NINJAGO Season 1 - NRG ZANE","price": 7000, "image": "/static/images/njoss1nrgzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 124, "name_kh": "NINJAGO Season 1 - NRG JAY","price": 7000, "image": "/static/images/njoss1nrgjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 125, "name_kh": "NINJAGO Season 1 - NRG COLE","price": 7000, "image": "/static/images/njoss1nrgcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 126, "name_kh": "NINJAGO Season 1 - NRG LLOYD","price": 7000, "image": "/static/images/njoss1nrglloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 131, "name_kh": "NINJAGO Season 1 - ZX Suits","price": 25000, "image": "/static/images/njoss1zx.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 132, "name_kh": "NINJAGO Season 1 - KAI (ZX)","price": 5000, "image": "/static/images/njoss1zxkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 133, "name_kh": "NINJAGO Season 1 - ZANE (ZX)","price": 5000, "image": "/static/images/njoss1zxzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 134, "name_kh": "NINJAGO Season 1 - JAY (ZX)","price": 5000, "image": "/static/images/njoss1zxjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 135, "name_kh": "NINJAGO Season 1 - COLE (ZX)","price": 5000, "image": "/static/images/njoss1zxcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
+            {"id": 136, "name_kh": "NINJAGO Season 1 - LLOYD (ZX)","price": 5000, "image": "/static/images/njoss1zxlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 1"],"stock": 1},
 
-    {"id": 1211, "name_kh": "NINJAGO Season 12 - Avatar Outfits","price": 30000, "image": "/static/images/njoss12avatar.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
-    {"id": 1212, "name_kh": "NINJAGO Season 12 - KAI (Avatar)","price": 5000, "image": "/static/images/njoss12avatarkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
-    {"id": 1213, "name_kh": "NINJAGO Season 12 - ZANE (Avatar)","price": 5000, "image": "/static/images/njoss12avatarzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
-    {"id": 1214, "name_kh": "NINJAGO Season 12 - JAY (Avatar)","price": 5000, "image": "/static/images/njoss12avatarjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
-    {"id": 1215, "name_kh": "NINJAGO Season 12 - COLE (Avatar)","price": 5000, "image": "/static/images/njoss12avatarcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
-    {"id": 1216, "name_kh": "NINJAGO Season 12 - NYA (Avatar) ","price": 5000, "image": "/static/images/njoss12avatarnya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
-    {"id": 1217, "name_kh": "NINJAGO Season 12 - LLOYD (Avatar)","price": 5000, "image": "/static/images/njoss12avatarlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 201, "name_kh": "NINJAGO Season 2 - Kimono Suit","price": 36000, "image": "/static/images/njoss2kimono.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+            {"id": 202, "name_kh": "NINJAGO Season 2 - KAI (Kimono)","price": 6000, "image": "/static/images/njoss2kimonokai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+            {"id": 203, "name_kh": "NINJAGO Season 2 - ZANE (Kimono)","price": 6000, "image": "/static/images/njoss2kimonozane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+            {"id": 204, "name_kh": "NINJAGO Season 2 - JAY (Kimono)","price": 6000, "image": "/static/images/njoss2kimonojay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+            {"id": 205, "name_kh": "NINJAGO Season 2 - COLE (Kimono)","price": 6000, "image": "/static/images/njoss2kimonocole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+            {"id": 206, "name_kh": "NINJAGO Season 2 - LLOYD  (Kimono)","price": 6000, "image": "/static/images/njoss2kimonolloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+            {"id": 207, "name_kh": "NINJAGO Season 2 - GOLDEN LLOYD (Kimono)","price": 6000, "image": "/static/images/njoss2kimonogoldlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
 
-    {"id": 1301, "name_kh": "NINJAGO Season 13 - Hero Armor","price": 27000, "image": "/static/images/njoss13hero.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
-    {"id": 1302, "name_kh": "NINJAGO Season 13 - KAI (Hero)","price": 4500, "image": "/static/images/njoss13herokai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
-    {"id": 1303, "name_kh": "NINJAGO Season 13 - ZANE (Hero)","price": 4500, "image": "/static/images/njoss13herozane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
-    {"id": 1304, "name_kh": "NINJAGO Season 13 - JAY (Hero)","price": 4500, "image": "/static/images/njoss13herojay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
-    {"id": 1305, "name_kh": "NINJAGO Season 13 - COLE (Hero)","price": 4500, "image": "/static/images/njoss13herocole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
-    {"id": 1306, "name_kh": "NINJAGO Season 13 - NYA (Hero) ","price": 4500, "image": "/static/images/njoss13heronya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
-    {"id": 1307, "name_kh": "NINJAGO Season 13 - LLOYD (Hero)","price": 4500, "image": "/static/images/njoss13herolloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
+            {"id": 211, "name_kh": "NINJAGO Season 2 - Pajamas ","price": 28000, "image": "/static/images/njoss2pajamas.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+            {"id": 212, "name_kh": "NINJAGO Season 2 - KAI (Pajamas)","price": 7000, "image": "/static/images/njoss2pajamaskai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+            {"id": 213, "name_kh": "NINJAGO Season 2 - ZANE (Pajamas)","price": 7000, "image": "/static/images/njoss2pajamaszane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+            {"id": 214, "name_kh": "NINJAGO Season 2 - JAY (Pajamas)","price": 7000, "image": "/static/images/njoss2pajamasjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
+            {"id": 215, "name_kh": "NINJAGO Season 2 - Cole (Pajamas)","price": 7000, "image": "/static/images/njoss2pajamascole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 2"],"stock": 1},
 
-    {"id": 1901, "name_kh": " Dragon Rising S1 - KAI (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1902, "name_kh": " Dragon Rising S1 - ZANE (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1903, "name_kh": " Dragon Rising S1 - JAY (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergejay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1904, "name_kh": " Dragon Rising S1 - COLE (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1905, "name_kh": " Dragon Rising S1 - NYA (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1906, "name_kh": " Dragon Rising S1 - LLOYD (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1907, "name_kh": " Dragon Rising S1 - ARIN (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergearin.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1908, "name_kh": " Dragon Rising S1 - SORA (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergesora.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 301, "name_kh": "NINJAGO Season 3 - Techno Robes","price": 36000, "image": "/static/images/njoss3techno.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+            {"id": 302, "name_kh": "NINJAGO Season 3 - KAI (Techno)","price": 6000, "image": "/static/images/njoss3technokai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+            {"id": 303, "name_kh": "NINJAGO Season 3 - ZANE (Techno)","price": 6000, "image": "/static/images/njoss3technozane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+            {"id": 304, "name_kh": "NINJAGO Season 3 - ZANE (Techno)","price": 6000, "image": "/static/images/njoss3technozane2.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+            {"id": 305, "name_kh": "NINJAGO Season 3 - JAY (Techno)","price": 6000, "image": "/static/images/njoss3technojay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+            {"id": 306, "name_kh": "NINJAGO Season 3 - COLE (Techno)","price": 6000, "image": "/static/images/njoss3technocole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+            {"id": 307, "name_kh": "NINJAGO Season 3 - LLOYD (Techno)","price": 6000, "image": "/static/images/njoss3technolloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+            {"id": 311, "name_kh": "NINJAGO Season 3 - Stone Armor","price": 36000, "image": "/static/images/njoss3stone.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+            {"id": 312, "name_kh": "NINJAGO Season 3 - KAI (Stone)","price": 6000, "image": "/static/images/njoss3stonekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+            {"id": 313, "name_kh": "NINJAGO Season 3 - ZANE (Stone)","price": 6000, "image": "/static/images/njoss3stonezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+            {"id": 314, "name_kh": "NINJAGO Season 3 - JAY (Stone)","price": 6000, "image": "/static/images/njoss3stonejay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+            {"id": 315, "name_kh": "NINJAGO Season 3 - COLE (Stone)","price": 6000, "image": "/static/images/njoss3stonecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+            {"id": 316, "name_kh": "NINJAGO Season 3 - NYA(Stone)","price": 6000, "image": "/static/images/njoss3stonenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
+            {"id": 317, "name_kh": "NINJAGO Season 3 - LLOYD (Stone)","price": 6000, "image": "/static/images/njoss3stonelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 3"],"stock": 1},
 
-    {"id": 1909, "name_kh": " Dragon Rising S2 - KAI (Source Tournament Suits)","price": 6000, "image": "/static/images/njodrgss2sourcekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1910, "name_kh": " Dragon Rising S2 - ZANE (Source Tournament Suits)","price": 6000, "image": "/static/images/njodrgss2sourcezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1911, "name_kh": " Dragon Rising S2 - COLE (Source Tournament Suits)","price": 6000, "image": "/static/images/njodrgss2sourcecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1912, "name_kh": " Dragon Rising S2 - NYA (Source Tournament Suits)","price": 6000, "image": "/static/images/njodrgss2sourcenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1913, "name_kh": " Dragon Rising S2 - LLOYD (Source Tournament Suits)","price": 6000, "image": "/static/images/njodrgss2sourcelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 401, "name_kh": "NINJAGO Season 4 - Tournament Robes","price": 26000, "image": "/static/images/njoss4tournament.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
+            {"id": 402, "name_kh": "NINJAGO Season 4 - KAI (Tournament)","price": 6500, "image": "/static/images/njoss4tournamentkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
+            {"id": 403, "name_kh": "NINJAGO Season 4 - JAY (Tournament)","price": 6500, "image": "/static/images/njoss4tournamentjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
+            {"id": 404, "name_kh": "NINJAGO Season 4 - COLE (Tournament)","price": 6500, "image": "/static/images/njoss4tournamentcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
+            {"id": 405, "name_kh": "NINJAGO Season 4 - LLOYD (Tournament)","price": 6500, "image": "/static/images/njoss4tournamentlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
+            {"id": 411, "name_kh": "NINJAGO Season 4 - Jungle Robes","price": 30000, "image": "/static/images/njoss4jungle.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
+            {"id": 412, "name_kh": "NINJAGO Season 4 - KAI (Jungle)","price": 5000, "image": "/static/images/njoss4junglekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
+            {"id": 413, "name_kh": "NINJAGO Season 4 - ZANE (Jungle)","price": 5000, "image": "/static/images/njoss4junglezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
+            {"id": 414, "name_kh": "NINJAGO Season 4 - JAY (Jungle)","price": 5000, "image": "/static/images/njoss4junglejay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
+            {"id": 415, "name_kh": "NINJAGO Season 4 - COLE (Jungle)","price": 5000, "image": "/static/images/njoss4junglecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
+            {"id": 416, "name_kh": "NINJAGO Season 4 - SKYLAR (Jungle)","price": 5000, "image": "/static/images/njoss4jungleskylar.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
+            {"id": 417, "name_kh": "NINJAGO Season 4 - LLOYD (Jungle)","price": 5000, "image": "/static/images/njoss4junglelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 4"],"stock": 1},
 
-    {"id": 1914, "name_kh": " Dragon Rising S2 - KAI (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1915, "name_kh": " Dragon Rising S2 - ZANE (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1916, "name_kh": " Dragon Rising S2 - JAY (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1917, "name_kh": " Dragon Rising S2 - COLE (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1918, "name_kh": " Dragon Rising S2 - NYA (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechnya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1919, "name_kh": " Dragon Rising S2 - LLOYD (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1920, "name_kh": " Dragon Rising S2 - ARIN (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mecharin.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1921, "name_kh": " Dragon Rising S2 - SENSEI WU (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechsenseiwu.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1921, "name_kh": " Dragon Rising S2 - EVIL JAY","price": 7000, "image": "/static/images/njodrgss2eviljay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1922, "name_kh": " Dragon Rising S3 - JAY ROGUE","price": 8000, "image": "/static/images/njodrgss3jayrogue.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
-    {"id": 1923, "name_kh": " Dragon Rising S3 - MORRO","price": 9500, "image": "/static/images/njodrgss3morro.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 501, "name_kh": "NINJAGO Season 5 - Deepstone Armour","price": 27000, "image": "/static/images/njoss5deep.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 502, "name_kh": "NINJAGO Season 5 - KAI (Deepstone)","price": 4500, "image": "/static/images/njoss5deepkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 503, "name_kh": "NINJAGO Season 5 - ZANE (Deepstone)","price": 4500, "image": "/static/images/njoss5deepzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 504, "name_kh": "NINJAGO Season 5 - JAY (Deepstone)","price": 4500, "image": "/static/images/njoss5deepjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 505, "name_kh": "NINJAGO Season 5 - COLE (Deepstone)","price": 4500, "image": "/static/images/njoss5deepcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 506, "name_kh": "NINJAGO Season 5 - NYA (Deepstone) ","price": 4500, "image": "/static/images/njoss5deepnya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 507, "name_kh": "NINJAGO Season 5 - LLOYD (Deepstone)","price": 4500, "image": "/static/images/njoss5deeplloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 511, "name_kh": "NINJAGO Season 5 - Air Jitzu","price": 36000, "image": "/static/images/njoss5air.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 512, "name_kh": "NINJAGO Season 5 - KAI (Air)","price": 6000, "image": "/static/images/njoss5airkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 513, "name_kh": "NINJAGO Season 5 - ZANE (Air)","price": 6000, "image": "/static/images/njoss5airzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 514, "name_kh": "NINJAGO Season 5 - JAY (Air)","price": 6000, "image": "/static/images/njoss5airjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 515, "name_kh": "NINJAGO Season 5 - COLE (Air)","price": 6000, "image": "/static/images/njoss5aircole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 516, "name_kh": "NINJAGO Season 5 - NYA (Air) ","price": 6000, "image": "/static/images/njoss5airnya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 517, "name_kh": "NINJAGO Season 5 - LLOYD (Air)","price": 6000, "image": "/static/images/njoss5airlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 521, "name_kh": "NINJAGO Season 5 - Future Robes","price": 39000, "image": "/static/images/njoss5future.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 522, "name_kh": "NINJAGO Season 5 - KAI (Future)","price": 6500, "image": "/static/images/njoss5futurekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 523, "name_kh": "NINJAGO Season 5 - ZANE (Future)","price": 6500, "image": "/static/images/njoss5futurezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 524, "name_kh": "NINJAGO Season 5 - JAY (Future)","price": 6500, "image": "/static/images/njoss5futurejay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 525, "name_kh": "NINJAGO Season 5 - COLE (Future)","price": 6500, "image": "/static/images/njoss5futurecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 526, "name_kh": "NINJAGO Season 5 - NYA (Future) ","price": 6500, "image": "/static/images/njoss5futurenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
+            {"id": 527, "name_kh": "NINJAGO Season 5 - LLOYD (Future)","price": 6500, "image": "/static/images/njoss5futurelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 5"],"stock": 1},
 
-    {"id": 1924, "name_kh": " Dragon Rising S3 - NOKT","price": 9000, "image": "/static/images/ss3nokt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
-    {"id": 1925, "name_kh": " Dragon Rising S3 - ROX","price": 9000, "image": "/static/images/ss3rox.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
-    {"id": 1926, "name_kh": " Dragon Rising S3 - DRIX","price": 9000, "image": "/static/images/ss3drix.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
-    {"id": 1927, "name_kh": " Dragon Rising S3 - ZARKT","price": 9000, "image": "/static/images/ss3zarkt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
-    {"id": 1928, "name_kh": " Dragon Rising S3 - KUR","price": 9000, "image": "/static/images/ss3kur.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
+            {"id": 601, "name_kh": "NINJAGO Season 6 - Destiny Robes","price": 27000, "image": "/static/images/njoss6destiny.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+            {"id": 602, "name_kh": "NINJAGO Season 6 - KAI (Destiny)","price": 4500, "image": "/static/images/njoss6destinykai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+            {"id": 603, "name_kh": "NINJAGO Season 6 - ZANE (Destiny)","price": 4500, "image": "/static/images/njoss6destinyzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+            {"id": 604, "name_kh": "NINJAGO Season 6 - JAY (Destiny)","price": 4500, "image": "/static/images/njoss6destinyjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+            {"id": 605, "name_kh": "NINJAGO Season 6 - COLE (Destiny)","price": 4500, "image": "/static/images/njoss6destinycole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+            {"id": 606, "name_kh": "NINJAGO Season 6 - NYA (Destiny) ","price": 4500, "image": "/static/images/njoss6destinynya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+            {"id": 607, "name_kh": "NINJAGO Season 6 - LLOYD (Destiny)","price": 4500, "image": "/static/images/njoss6destinylloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
 
-    {"id": 91101, "name_kh": "Zane's Set", "price": 68000, "image": "/static/images/nj01.jpg", "categories": ["LEGO Ninjago","Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91102, "name_kh": "Kai Merch", "price": 64000, "image": "/static/images/nj02.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91003, "name_kh": "cole Merch", "price": 140000, "image": "/static/images/nj03.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91004, "name_kh": "idk name ", "price": 88000, "image": "/static/images/nj04.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91005, "name_kh": "Zane's Set", "price": 132000, "image": "/static/images/nj05.jpg", "categories": ["LEGO Ninjago","Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91006, "name_kh": "Kai Merch", "price": 132000, "image": "/static/images/nj06.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91007, "name_kh": "cole Merch", "price": 43000, "image": "/static/images/nj07.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91008, "name_kh": "idk name ", "price": 43000, "image": "/static/images/nj08.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91009, "name_kh": "Zane's Set", "price": 44000, "image": "/static/images/nj09.jpg", "categories": ["LEGO Ninjago","Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91010, "name_kh": "Kai Merch", "price": 46000, "image": "/static/images/nj10.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91011, "name_kh": "cole Merch", "price": 28000, "image": "/static/images/nj11.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91012, "name_kh": "idk name ", "price": 46000, "image": "/static/images/nj12.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91013, "name_kh": "Kai Merch", "price": 49000, "image": "/static/images/nj13.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91014, "name_kh": "cole Merch", "price": 45000, "image": "/static/images/nj14.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91015, "name_kh": "idk name ", "price": 66000, "image": "/static/images/nj15.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91016, "name_kh": "Kai Merch", "price": 46000, "image": "/static/images/nj16.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91017, "name_kh": "cole Merch", "price": 38000, "image": "/static/images/nj17.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91018, "name_kh": "idk name ", "price": 59000, "image": "/static/images/nj18.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91019, "name_kh": "Kai Merch", "price": 52000, "image": "/static/images/nj19.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91020, "name_kh": "cole Merch", "price": 5000, "image": "/static/images/nj20.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-    {"id": 91021, "name_kh": "idk name ", "price": 5000, "image": "/static/images/nj21.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
-];
+            {"id": 611, "name_kh": "NINJAGO Season 6 - Honor Robes","price": 24000, "image": "/static/images/njoss6honor.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+            {"id": 612, "name_kh": "NINJAGO Season 6 - KAI (Honor)","price": 4000, "image": "/static/images/njoss6honorkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+            {"id": 613, "name_kh": "NINJAGO Season 6 - ZANE (Honor)","price": 4000, "image": "/static/images/njoss6honorzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+            {"id": 614, "name_kh": "NINJAGO Season 6 - JAY (Honor)","price": 4000, "image": "/static/images/njoss6honorjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+            {"id": 615, "name_kh": "NINJAGO Season 6 - COLE (Honor)","price": 4000, "image": "/static/images/njoss6honorcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+            {"id": 616, "name_kh": "NINJAGO Season 6 - NYA (Honor) ","price": 4000, "image": "/static/images/njoss6honornya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
+            {"id": 617, "name_kh": "NINJAGO Season 6 - LLOYD (Honor)","price": 4000, "image": "/static/images/njoss6honorlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 6"],"stock": 1},
 
-const CATEGORIES = ["All", ...Array.from(new Set(PRODUCTS_DATA.map(p => {
-    // Determine a "Main Category" for the filter bar
-    if (p.categories.includes("LEGO Ninjago")) return "Ninjago";
-    if (p.categories.includes("LEGO Anime")) return "Anime";
-    if (p.subcategory.includes("Formula 1")) return "Formula 1";
-    if (typeof p.subcategory === 'string' && p.subcategory.includes("WWII")) return "WWII";
-    return "Others";
-})))];
+            {"id": 701, "name_kh": "NINJAGO Season 7 - Fusion Armour","price": 24500, "image": "/static/images/njoss7fusion.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
+            {"id": 702, "name_kh": "NINJAGO Season 7 - KAI (Fusion)","price": 3500, "image": "/static/images/njoss7fusionkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
+            {"id": 703, "name_kh": "NINJAGO Season 7 - ZANE (Fusion)","price": 3500, "image": "/static/images/njoss7fusionzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
+            {"id": 704, "name_kh": "NINJAGO Season 7 - JAY (Fusion)","price": 3500, "image": "/static/images/njoss7fusionjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
+            {"id": 705, "name_kh": "NINJAGO Season 7 - COLE (Fusion)","price": 3500, "image": "/static/images/njoss7fusioncole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
+            {"id": 706, "name_kh": "NINJAGO Season 7 - NYA (Fusion) ","price": 3500, "image": "/static/images/njoss7fusionnya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
+            {"id": 707, "name_kh": "NINJAGO Season 7 - LLOYD (Fusion)","price": 3500, "image": "/static/images/njoss7fusionlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
+            {"id": 708, "name_kh": "NINJAGO Season 7 - Sensei Wu (Fusion)","price": 3500, "image": "/static/images/njoss7fusionsenseiwu.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 7"],"stock": 1},
 
-// --- Components ---
-
-const Header = ({ cartCount, onCartClick, isMobileMenuOpen, setIsMobileMenuOpen }) => (
-  <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="flex justify-between items-center h-16">
-        {/* Logo */}
-        <div className="flex-shrink-0 flex items-center gap-2">
-            <div className="bg-red-600 text-white font-bold p-1 text-xl tracking-tighter">LEGO</div>
-            <span className="text-xl font-bold text-gray-900 tracking-tight">Market</span>
-        </div>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex space-x-8">
-          <a href="#" className="text-gray-900 font-medium hover:text-red-600">Home</a>
-          <a href="#" className="text-gray-500 font-medium hover:text-red-600">Themes</a>
-          <a href="#" className="text-gray-500 font-medium hover:text-red-600">Building Instructions</a>
-          <a href="#" className="text-gray-500 font-medium hover:text-red-600">Sale</a>
-        </nav>
-
-        {/* Actions */}
-        <div className="flex items-center space-x-4">
-          <button 
-            onClick={onCartClick}
-            className="relative p-2 text-gray-600 hover:text-red-600 transition-colors"
-          >
-            <ShoppingCart className="h-6 w-6" />
-            {cartCount > 0 && (
-              <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full">
-                {cartCount}
-              </span>
-            )}
-          </button>
-          
-          <button 
-            className="md:hidden p-2 text-gray-600"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
-        </div>
-      </div>
-    </div>
-
-    {/* Mobile Menu */}
-    {isMobileMenuOpen && (
-      <div className="md:hidden bg-white border-b border-gray-100">
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          <a href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50">Home</a>
-          <a href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-gray-50">Themes</a>
-          <a href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-gray-50">Sale</a>
-        </div>
-      </div>
-    )}
-  </header>
-);
-
-const ProductCard = ({ product, onAddToCart }) => {
-    // Fallback image if local path fails (for demo purposes since we don't have the server)
-    const handleImageError = (e) => {
-        e.target.src = "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=500&q=80"; // Generic Lego placeholder
-    };
-
-    return (
-        <div className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full min-w-[280px] w-[280px] snap-start">
-            <div className="relative aspect-square overflow-hidden bg-gray-50">
-                <img 
-                    src={product.image} 
-                    alt={product.name_kh} 
-                    onError={handleImageError}
-                    className="object-contain w-full h-full p-4 group-hover:scale-105 transition-transform duration-500"
-                />
-                {product.discount > 0 && (
-                     <div className="absolute top-3 left-3 bg-red-600 px-2 py-1 rounded text-xs font-bold text-white shadow-sm">
-                        -{product.discount}%
-                    </div>
-                )}
-            </div>
+            {"id": 801, "name_kh": "NINJAGO Season 8 - KAI (Resistance)","price": 3500, "image": "/static/images/njoss8resistancekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 8"],"stock": 1},
+            {"id": 802, "name_kh": "NINJAGO Season 8 - ZANE (Resistance)","price": 3500, "image": "/static/images/njoss8resistancezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 8"],"stock": 1},
+            {"id": 803, "name_kh": "NINJAGO Season 8 - JAY (Resistance)","price": 3500, "image": "/static/images/njoss8resistancejay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 8"],"stock": 1},
+            {"id": 804, "name_kh": "NINJAGO Season 8 - COLE (Resistance)","price": 3500, "image": "/static/images/njoss8resistancecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 8"],"stock": 1},
+            {"id": 805, "name_kh": "NINJAGO Season 8 - NYA (Resistance)","price": 3500, "image": "/static/images/njoss8resistancenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 8"],"stock": 1},
+            {"id": 806, "name_kh": "NINJAGO Season 8 - LLOYD (Resistance) ","price": 3500, "image": "/static/images/njoss8resistancelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 8"],"stock": 1},
             
-            <div className="p-4 flex flex-col flex-grow">
-                {/* Categories */}
-                <div className="flex flex-wrap gap-1 mb-2">
-                    {Array.isArray(product.subcategory) ? (
-                         <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wide bg-blue-50 px-2 py-0.5 rounded-full">
-                            {product.subcategory[product.subcategory.length - 1]}
-                         </span>
-                    ) : (
-                        <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wide bg-blue-50 px-2 py-0.5 rounded-full">
-                            {product.subcategory}
-                        </span>
-                    )}
-                </div>
+            {"id": 901, "name_kh": "NINJAGO Season 9 - Hunted Robes","price": 24000, "image": "/static/images/njoss9hunted.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
+            {"id": 902, "name_kh": "NINJAGO Season 9 - KAI (Hunted)","price": 4000, "image": "/static/images/njoss9huntedkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
+            {"id": 903, "name_kh": "NINJAGO Season 9 - ZANE (Hunted)","price": 4000, "image": "/static/images/njoss9huntedzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
+            {"id": 904, "name_kh": "NINJAGO Season 9 - JAY (Hunted)","price": 4000, "image": "/static/images/njoss9huntedjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
+            {"id": 905, "name_kh": "NINJAGO Season 9 - COLE (Hunted)","price": 4000, "image": "/static/images/njoss9huntedcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
+            {"id": 906, "name_kh": "NINJAGO Season 9 - NYA (Hunted) ","price": 4000, "image": "/static/images/njoss9huntednya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
+            {"id": 907, "name_kh": "NINJAGO Season 9 - LLOYD (Hunted)","price": 4000, "image": "/static/images/njoss9huntedlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 9"],"stock": 1},
 
-                <h3 className="text-base font-bold text-gray-900 mb-1 leading-tight line-clamp-2 min-h-[2.5rem]">
-                    {product.name_kh}
-                </h3>
-                
-                <div className="flex items-center justify-between mt-auto pt-4">
-                    <div className="flex flex-col">
-                        <span className="text-lg font-bold text-gray-900">៛{product.price.toLocaleString()}</span>
-                        {product.stock <= 5 && (
-                             <span className="text-xs text-orange-600 font-medium">Only {product.stock} left!</span>
+            {"id": 1001, "name_kh": "NINJAGO Season 10 - Legacy Robes","price": 24000, "image": "/static/images/njoss10legacy.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
+            {"id": 1002, "name_kh": "NINJAGO Season 10 - KAI (Legacy)","price": 4000, "image": "/static/images/njoss10legacykai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
+            {"id": 1003, "name_kh": "NINJAGO Season 10 - ZANE (Legacy)","price": 4000, "image": "/static/images/njoss10legacyzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
+            {"id": 1004, "name_kh": "NINJAGO Season 10 - JAY (Legacy)","price": 4000, "image": "/static/images/njoss10legacyjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
+            {"id": 1005, "name_kh": "NINJAGO Season 10 - COLE (Legacy)","price": 4000, "image": "/static/images/njoss10legacycole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
+            {"id": 1006, "name_kh": "NINJAGO Season 10 - NYA (Legacy) ","price": 4000, "image": "/static/images/njoss10legacynya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
+            {"id": 1007, "name_kh": "NINJAGO Season 10 - LLOYD (Legacy)","price": 4000, "image": "/static/images/njoss10legacylloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 10"],"stock": 1},
+
+            {"id": 1101, "name_kh": "NINJAGO Season 11 - Armor Robes","price": 24000, "image": "/static/images/njoss11armor.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+            {"id": 1102, "name_kh": "NINJAGO Season 11 - KAI (Armor)","price": 4000, "image": "/static/images/njoss11armorkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+            {"id": 1103, "name_kh": "NINJAGO Season 11 - ZANE (Armor)","price": 4000, "image": "/static/images/njoss11armorzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+            {"id": 1104, "name_kh": "NINJAGO Season 11 - JAY (Armor)","price": 4000, "image": "/static/images/njoss11armorjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+            {"id": 1105, "name_kh": "NINJAGO Season 11 - COLE (Armor)","price": 4000, "image": "/static/images/njoss11armorcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+            {"id": 1106, "name_kh": "NINJAGO Season 11 - NYA (Armor) ","price": 4000, "image": "/static/images/njoss11armornya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+            {"id": 1107, "name_kh": "NINJAGO Season 11 - LLOYD (Armor)","price": 4000, "image": "/static/images/njoss11armorlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+
+            {"id": 1111, "name_kh": "NINJAGO Season 11 - Forbidden Spinjitzu","price": 21000, "image": "/static/images/njoss11forbidden.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+            {"id": 1112, "name_kh": "NINJAGO Season 11 - KAI (Forbidden)","price": 3500, "image": "/static/images/njoss11forbiddenkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+            {"id": 1113, "name_kh": "NINJAGO Season 11 - ZANE (Forbidden)","price": 3500, "image": "/static/images/njoss11forbiddenzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+            {"id": 1114, "name_kh": "NINJAGO Season 11 - JAY (Forbidden)","price": 3500, "image": "/static/images/njoss11forbiddenjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+            {"id": 1115, "name_kh": "NINJAGO Season 11 - COLE (Forbidden)","price": 3500, "image": "/static/images/njoss11forbiddencole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+            {"id": 1116, "name_kh": "NINJAGO Season 11 - NYA (Forbidden) ","price": 3500, "image": "/static/images/njoss11forbiddennya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+            {"id": 1117, "name_kh": "NINJAGO Season 11 - LLOYD (Forbidden)","price": 3500, "image": "/static/images/njoss11forbiddenlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 11"],"stock": 1},
+
+            {"id": 1201, "name_kh": "NINJAGO Season 12 - Digi Robes","price": 17500, "image": "/static/images/njoss12digi.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 1202, "name_kh": "NINJAGO Season 12 - KAI (Digi)","price": 3500, "image": "/static/images/njoss12digkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 1203, "name_kh": "NINJAGO Season 12 - ZANE (Digi)","price": 3500, "image": "/static/images/njoss12digizane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 1204, "name_kh": "NINJAGO Season 12 - JAY (Digi)","price": 3500, "image": "/static/images/njoss12digijay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 1205, "name_kh": "NINJAGO Season 12 - COLE (Digi)","price": 3500, "image": "/static/images/njoss12digicole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 1206, "name_kh": "NINJAGO Season 12 - NYA (Digi) ","price": 3500, "image": "/static/images/njoss12diginya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 1207, "name_kh": "NINJAGO Season 12 - LLOYD (Digi)","price": 3500, "image": "/static/images/njoss12digilloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+
+            {"id": 1211, "name_kh": "NINJAGO Season 12 - Avatar Outfits","price": 30000, "image": "/static/images/njoss12avatar.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 1212, "name_kh": "NINJAGO Season 12 - KAI (Avatar)","price": 5000, "image": "/static/images/njoss12avatarkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 1213, "name_kh": "NINJAGO Season 12 - ZANE (Avatar)","price": 5000, "image": "/static/images/njoss12avatarzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 1214, "name_kh": "NINJAGO Season 12 - JAY (Avatar)","price": 5000, "image": "/static/images/njoss12avatarjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 1215, "name_kh": "NINJAGO Season 12 - COLE (Avatar)","price": 5000, "image": "/static/images/njoss12avatarcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 1216, "name_kh": "NINJAGO Season 12 - NYA (Avatar) ","price": 5000, "image": "/static/images/njoss12avatarnya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+            {"id": 1217, "name_kh": "NINJAGO Season 12 - LLOYD (Avatar)","price": 5000, "image": "/static/images/njoss12avatarlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 12"],"stock": 1},
+
+            {"id": 1301, "name_kh": "NINJAGO Season 13 - Hero Armor","price": 27000, "image": "/static/images/njoss13hero.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
+            {"id": 1302, "name_kh": "NINJAGO Season 13 - KAI (Hero)","price": 4500, "image": "/static/images/njoss13herokai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
+            {"id": 1303, "name_kh": "NINJAGO Season 13 - ZANE (Hero)","price": 4500, "image": "/static/images/njoss13herozane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
+            {"id": 1304, "name_kh": "NINJAGO Season 13 - JAY (Hero)","price": 4500, "image": "/static/images/njoss13herojay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
+            {"id": 1305, "name_kh": "NINJAGO Season 13 - COLE (Hero)","price": 4500, "image": "/static/images/njoss13herocole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
+            {"id": 1306, "name_kh": "NINJAGO Season 13 - NYA (Hero) ","price": 4500, "image": "/static/images/njoss13heronya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
+            {"id": 1307, "name_kh": "NINJAGO Season 13 - LLOYD (Hero)","price": 4500, "image": "/static/images/njoss13herolloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Season 13"],"stock": 1},
+
+            {"id": 1901, "name_kh": " Dragon Rising S1 - KAI (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1902, "name_kh": " Dragon Rising S1 - ZANE (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1903, "name_kh": " Dragon Rising S1 - JAY (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergejay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1904, "name_kh": " Dragon Rising S1 - COLE (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1905, "name_kh": " Dragon Rising S1 - NYA (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1906, "name_kh": " Dragon Rising S1 - LLOYD (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1907, "name_kh": " Dragon Rising S1 - ARIN (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergearin.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1908, "name_kh": " Dragon Rising S1 - SORA (Merge Suits)","price": 5000, "image": "/static/images/njodrgss1mergesora.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+
+            {"id": 1909, "name_kh": " Dragon Rising S2 - KAI (Source Tournament Suits)","price": 6000, "image": "/static/images/njodrgss2sourcekai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1910, "name_kh": " Dragon Rising S2 - ZANE (Source Tournament Suits)","price": 6000, "image": "/static/images/njodrgss2sourcezane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1911, "name_kh": " Dragon Rising S2 - COLE (Source Tournament Suits)","price": 6000, "image": "/static/images/njodrgss2sourcecole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1912, "name_kh": " Dragon Rising S2 - NYA (Source Tournament Suits)","price": 6000, "image": "/static/images/njodrgss2sourcenya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1913, "name_kh": " Dragon Rising S2 - LLOYD (Source Tournament Suits)","price": 6000, "image": "/static/images/njodrgss2sourcelloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+
+            {"id": 1914, "name_kh": " Dragon Rising S2 - KAI (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechkai.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1915, "name_kh": " Dragon Rising S2 - ZANE (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechzane.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1916, "name_kh": " Dragon Rising S2 - JAY (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechjay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1917, "name_kh": " Dragon Rising S2 - COLE (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechcole.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1918, "name_kh": " Dragon Rising S2 - NYA (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechnya.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1919, "name_kh": " Dragon Rising S2 - LLOYD (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechlloyd.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1920, "name_kh": " Dragon Rising S2 - ARIN (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mecharin.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1921, "name_kh": " Dragon Rising S2 - SENSEI WU (Mech Pilot Suits)","price": 4000, "image": "/static/images/njodrgss2mechsenseiwu.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1921, "name_kh": " Dragon Rising S2 - EVIL JAY","price": 7000, "image": "/static/images/njodrgss2eviljay.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1922, "name_kh": " Dragon Rising S3 - JAY ROGUE","price": 8000, "image": "/static/images/njodrgss3jayrogue.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+            {"id": 1923, "name_kh": " Dragon Rising S3 - MORRO","price": 9500, "image": "/static/images/njodrgss3morro.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1},
+
+            {"id": 1924, "name_kh": " Dragon Rising S3 - NOKT","price": 9000, "image": "/static/images/ss3nokt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
+            {"id": 1925, "name_kh": " Dragon Rising S3 - ROX","price": 9000, "image": "/static/images/ss3rox.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
+            {"id": 1926, "name_kh": " Dragon Rising S3 - DRIX","price": 9000, "image": "/static/images/ss3drix.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
+            {"id": 1927, "name_kh": " Dragon Rising S3 - ZARKT","price": 9000, "image": "/static/images/ss3zarkt.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
+            {"id": 1928, "name_kh": " Dragon Rising S3 - KUR","price": 9000, "image": "/static/images/ss3kur.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Dragon Rising"],"stock": 1,"discount":30 },
+
+            {"id": 91101, "name_kh": "Zane's Set", "price": 68000, "image": "/static/images/nj01.jpg", "categories": ["LEGO Ninjago","Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91102, "name_kh": "Kai Merch", "price": 64000, "image": "/static/images/nj02.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91003, "name_kh": "cole Merch", "price": 140000, "image": "/static/images/nj03.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91004, "name_kh": "idk name ", "price": 88000, "image": "/static/images/nj04.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91005, "name_kh": "Zane's Set", "price": 132000, "image": "/static/images/nj05.jpg", "categories": ["LEGO Ninjago","Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91006, "name_kh": "Kai Merch", "price": 132000, "image": "/static/images/nj06.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91007, "name_kh": "cole Merch", "price": 43000, "image": "/static/images/nj07.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91008, "name_kh": "idk name ", "price": 43000, "image": "/static/images/nj08.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91009, "name_kh": "Zane's Set", "price": 44000, "image": "/static/images/nj09.jpg", "categories": ["LEGO Ninjago","Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91010, "name_kh": "Kai Merch", "price": 46000, "image": "/static/images/nj10.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91011, "name_kh": "cole Merch", "price": 28000, "image": "/static/images/nj11.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91012, "name_kh": "idk name ", "price": 46000, "image": "/static/images/nj12.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91013, "name_kh": "Kai Merch", "price": 49000, "image": "/static/images/nj13.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91014, "name_kh": "cole Merch", "price": 45000, "image": "/static/images/nj14.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91015, "name_kh": "idk name ", "price": 66000, "image": "/static/images/nj15.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91016, "name_kh": "Kai Merch", "price": 46000, "image": "/static/images/nj16.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91017, "name_kh": "cole Merch", "price": 38000, "image": "/static/images/nj17.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91018, "name_kh": "idk name ", "price": 59000, "image": "/static/images/nj18.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91019, "name_kh": "Kai Merch", "price": 52000, "image": "/static/images/nj19.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91020, "name_kh": "cole Merch", "price": 5000, "image": "/static/images/nj20.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+            {"id": 91021, "name_kh": "idk name ", "price": 5000, "image": "/static/images/nj21.jpg", "categories": ["LEGO Ninjago", "Toy"], "subcategory": ["Lego Ninjago","Building Set"]},
+        ];
+
+        const CATEGORIES = ["All", ...Array.from(new Set(PRODUCTS_DATA.map(p => {
+            // Determine a "Main Category" for the filter bar
+            if (p.categories.includes("LEGO Ninjago")) return "Ninjago";
+            if (p.categories.includes("LEGO Anime")) return "Anime";
+            if (p.subcategory.includes("Formula 1")) return "Formula 1";
+            if (typeof p.subcategory === 'string' && p.subcategory.includes("WWII")) return "WWII";
+            return "Others";
+        })))];
+
+        const Header = ({ cartCount, onCartClick, isMobileMenuOpen, setIsMobileMenuOpen }) => (
+          <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-16">
+                <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer" onClick={() => window.location.href='/'}>
+                    <div className="bg-red-600 text-white font-bold p-1 text-xl tracking-tighter">LEGO</div>
+                    <span className="text-xl font-bold text-gray-900 tracking-tight">Market</span>
+                </div>
+                <div className="hidden md:flex space-x-8">
+                  <a href="/" className="text-gray-900 font-medium hover:text-red-600">Home</a>
+                  <a href="#" className="text-gray-500 font-medium hover:text-red-600">Themes</a>
+                  <a href="#" className="text-gray-500 font-medium hover:text-red-600">Building Instructions</a>
+                  <a href="#" className="text-gray-500 font-medium hover:text-red-600">Sale</a>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <a href="/" className="text-gray-500 hover:text-black hidden md:block"><ArrowLeft className="w-5 h-5 inline" /> Back</a>
+                  <button onClick={onCartClick} className="relative p-2 text-gray-600 hover:text-red-600 transition-colors">
+                    <ShoppingCart className="h-6 w-6" />
+                    {cartCount > 0 && (
+                      <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full">
+                        {cartCount}
+                      </span>
+                    )}
+                  </button>
+                  <button className="md:hidden p-2 text-gray-600" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                    {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+            {isMobileMenuOpen && (
+              <div className="md:hidden bg-white border-b border-gray-100">
+                <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                  <a href="/" className="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-50">Home</a>
+                  <a href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-gray-50">Themes</a>
+                  <a href="#" className="block px-3 py-2 rounded-md text-base font-medium text-gray-500 hover:bg-gray-50">Sale</a>
+                </div>
+              </div>
+            )}
+          </header>
+        );
+
+        const ProductCard = ({ product, onAddToCart }) => {
+            const handleImageError = (e) => {
+                e.target.src = "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=500&q=80"; 
+            };
+            return (
+                <div className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full min-w-[280px] w-[280px] snap-start">
+                    <div className="relative aspect-square overflow-hidden bg-gray-50">
+                        <img src={product.image} alt={product.name_kh} onError={handleImageError} className="object-contain w-full h-full p-4 group-hover:scale-105 transition-transform duration-500" />
+                        {product.discount > 0 && (
+                             <div className="absolute top-3 left-3 bg-red-600 px-2 py-1 rounded text-xs font-bold text-white shadow-sm">-{product.discount}%</div>
                         )}
                     </div>
-                    <button 
-                        onClick={() => onAddToCart(product)}
-                        className="bg-yellow-400 text-black p-2.5 rounded-lg font-medium hover:bg-yellow-500 transition-colors flex items-center justify-center active:scale-95 transform shadow-sm"
-                        aria-label="Add to cart"
-                    >
-                        <Plus className="h-5 w-5" />
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem }) => {
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-[60] overflow-hidden">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={onClose} />
-      
-      <div className="absolute inset-y-0 right-0 max-w-md w-full flex">
-        <div className="w-full h-full bg-white shadow-2xl flex flex-col">
-          <div className="flex items-center justify-between p-6 border-b border-gray-100">
-            <h2 className="text-xl font-bold text-gray-900">Your Cart</h2>
-            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-500">
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-6">
-            {cartItems.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
-                <div className="bg-gray-100 p-4 rounded-full">
-                    <Package className="h-8 w-8 text-gray-400" />
-                </div>
-                <p className="text-gray-500 font-medium">Your cart is empty</p>
-                <button 
-                  onClick={onClose}
-                  className="text-blue-600 font-medium hover:text-blue-700 hover:underline"
-                >
-                  Start Building
-                </button>
-              </div>
-            ) : (
-              <ul className="space-y-6">
-                {cartItems.map(({ product, quantity }) => (
-                  <li key={product.id} className="flex py-2">
-                    <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
-                      <img
-                        src={product.image}
-                        alt={product.name_kh}
-                        onError={(e) => e.target.src = "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=500&q=80"}
-                        className="h-full w-full object-contain p-2"
-                      />
-                    </div>
-                    <div className="ml-4 flex flex-1 flex-col">
-                      <div>
-                        <div className="flex justify-between text-base font-medium text-gray-900">
-                          <h3 className="line-clamp-1">{product.name_kh}</h3>
-                          <p className="ml-4">៛{(product.price * quantity).toLocaleString()}</p>
+                    <div className="p-4 flex flex-col flex-grow">
+                        <div className="flex flex-wrap gap-1 mb-2">
+                            {Array.isArray(product.subcategory) ? (
+                                 <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wide bg-blue-50 px-2 py-0.5 rounded-full">{product.subcategory[product.subcategory.length - 1]}</span>
+                            ) : (
+                                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wide bg-blue-50 px-2 py-0.5 rounded-full">{product.subcategory}</span>
+                            )}
                         </div>
-                        <p className="mt-1 text-sm text-gray-500">
-                            {Array.isArray(product.subcategory) ? product.subcategory[product.subcategory.length-1] : product.subcategory}
-                        </p>
-                      </div>
-                      <div className="flex flex-1 items-end justify-between text-sm mt-2">
-                        <div className="flex items-center border border-gray-200 rounded-lg">
-                          <button 
-                            onClick={() => onUpdateQuantity(product.id, quantity - 1)}
-                            className="p-1 hover:bg-gray-100 rounded-l-lg disabled:opacity-50"
-                            disabled={quantity <= 1}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </button>
-                          <span className="px-2 font-medium min-w-[1.5rem] text-center">{quantity}</span>
-                          <button 
-                            onClick={() => onUpdateQuantity(product.id, quantity + 1)}
-                            className="p-1 hover:bg-gray-100 rounded-r-lg"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </button>
+                        <h3 className="text-base font-bold text-gray-900 mb-1 leading-tight line-clamp-2 min-h-[2.5rem]">{product.name_kh}</h3>
+                        <div className="flex items-center justify-between mt-auto pt-4">
+                            <div className="flex flex-col">
+                                <span className="text-lg font-bold text-gray-900">៛{product.price.toLocaleString()}</span>
+                                {product.stock <= 5 && <span className="text-xs text-orange-600 font-medium">Only {product.stock} left!</span>}
+                            </div>
+                            <button onClick={() => onAddToCart(product)} className="bg-yellow-400 text-black p-2.5 rounded-lg font-medium hover:bg-yellow-500 transition-colors flex items-center justify-center active:scale-95 transform shadow-sm" aria-label="Add to cart">
+                                <Plus className="h-5 w-5" />
+                            </button>
                         </div>
-
-                        <button
-                          type="button"
-                          onClick={() => onRemoveItem(product.id)}
-                          className="font-medium text-red-500 hover:text-red-600 flex items-center gap-1"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {cartItems.length > 0 && (
-            <div className="border-t border-gray-100 p-6 bg-gray-50">
-              <div className="flex justify-between text-base font-medium text-gray-900 mb-4">
-                <p>Subtotal</p>
-                <p>៛{subtotal.toLocaleString()}</p>
-              </div>
-              <p className="mt-0.5 text-sm text-gray-500 mb-6">
-                Shipping and taxes calculated at checkout.
-              </p>
-              <button
-                className="w-full flex items-center justify-center rounded-lg border border-transparent bg-yellow-400 px-6 py-3 text-base font-bold text-black shadow-sm hover:bg-yellow-500 transition-colors"
-                onClick={() => alert("Proceeding to checkout...")}
-              >
-                Checkout
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const SectionRow = ({ title, products, onAddToCart }) => {
-    const scrollRef = React.useRef(null);
-
-    const scroll = (direction) => {
-        if (scrollRef.current) {
-            const { current } = scrollRef;
-            const scrollAmount = 300;
-            if (direction === 'left') {
-                current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-            } else {
-                current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-            }
-        }
-    };
-
-    if (products.length === 0) return null;
-
-    return (
-        <div className="py-8 border-b border-gray-100 last:border-0">
-            <div className="flex items-center justify-between mb-4 px-4 sm:px-6 lg:px-8">
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h2>
-                <div className="hidden md:flex gap-2">
-                    <button onClick={() => scroll('left')} className="p-2 rounded-full border border-gray-200 hover:bg-gray-100 transition-colors">
-                        <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <button onClick={() => scroll('right')} className="p-2 rounded-full border border-gray-200 hover:bg-gray-100 transition-colors">
-                        <ChevronRight className="h-5 w-5" />
-                    </button>
                 </div>
-            </div>
-            
-            <div 
-                ref={scrollRef}
-                className="flex overflow-x-auto gap-4 pb-4 px-4 sm:px-6 lg:px-8 snap-x snap-mandatory hide-scrollbar"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-                {products.map(product => (
-                    <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
-                ))}
-            </div>
-        </div>
-    );
-};
-
-export default function App() {
-  const [selectedMainCategory, setSelectedMainCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [cartItems, setCartItems] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // Grouping Logic
-  const groupedProducts = useMemo(() => {
-    // 1. Filter first
-    let filtered = PRODUCTS_DATA.filter(product => {
-        // Search Filter
-        const matchesSearch = product.name_kh.toLowerCase().includes(searchQuery.toLowerCase());
-        
-        // Category Filter logic (Simulated for this dataset)
-        let matchesCategory = true;
-        if (selectedMainCategory !== "All") {
-             if (selectedMainCategory === "Ninjago") matchesCategory = product.categories.includes("LEGO Ninjago");
-             else if (selectedMainCategory === "Anime") matchesCategory = product.categories.includes("LEGO Anime");
-             else if (selectedMainCategory === "Formula 1") matchesCategory = Array.isArray(product.subcategory) && product.subcategory.includes("Formula 1");
-             else if (selectedMainCategory === "WWII") matchesCategory = typeof product.subcategory === 'string' && product.subcategory.includes("Lego WWII");
-             else matchesCategory = !product.categories.includes("LEGO Ninjago") && !product.categories.includes("LEGO Anime");
-        }
-
-        return matchesSearch && matchesCategory;
-    });
-
-    // 2. Group by "Swimlane" (Subcategory)
-    const groups = {};
-
-    filtered.forEach(product => {
-        let groupName = "Other";
-        
-        // Normalize subcategory to a string Key
-        if (Array.isArray(product.subcategory)) {
-            // E.g., ["Lego Ninjago", "Season 1"] -> "Season 1"
-            // E.g., ["Formula 1"] -> "Formula 1"
-            // E.g., ["Lego Ninjago", "Dragon Rising"] -> "Dragon Rising"
-            const relevantSub = product.subcategory.find(s => s.startsWith("Season") || s === "Formula 1" || s === "One Piece" || s === "Dragon Rising" || s === "Building Set");
-            groupName = relevantSub || product.subcategory[product.subcategory.length - 1]; 
-            
-            // Special prefix for Ninjago seasons to sort them nicely or group them under Ninjago visually?
-            // For now, let's keep the group name simple for the title.
-            if (product.categories.includes("LEGO Ninjago") && groupName.startsWith("Season")) {
-                groupName = `Ninjago - ${groupName}`;
-            }
-             if (product.categories.includes("LEGO Ninjago") && groupName === "Dragon Rising") {
-                groupName = `Ninjago - Dragon Rising`;
-            }
-             if (product.categories.includes("LEGO Ninjago") && groupName === "Building Set") {
-                groupName = `Ninjago - Sets & Merch`;
-            }
-
-        } else if (typeof product.subcategory === 'string') {
-            groupName = product.subcategory;
-        }
-
-        if (!groups[groupName]) {
-            groups[groupName] = [];
-        }
-        groups[groupName].push(product);
-    });
-
-    // 3. Sort groups (Optional: Keep Season 1 before Season 2, etc.)
-    // Converting to array of objects { title, products }
-    return Object.entries(groups).sort((a, b) => {
-        // Custom sort logic could go here, e.g., extract "Season X" number
-        const getSeasonNum = (str) => {
-            const match = str.match(/Season (\d+)/);
-            return match ? parseInt(match[1]) : 999;
+            );
         };
-        return getSeasonNum(a[0]) - getSeasonNum(b[0]);
-    }).map(([title, products]) => ({ title, products }));
 
-  }, [selectedMainCategory, searchQuery]);
-
-  // Cart logic
-  const addToCart = (product) => {
-    setCartItems(prev => {
-      const existing = prev.find(item => item.product.id === product.id);
-      if (existing) {
-        return prev.map(item => 
-          item.product.id === product.id 
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, { product, quantity: 1 }];
-    });
-    setIsCartOpen(true);
-  };
-
-  const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity < 1) return;
-    setCartItems(prev => prev.map(item => 
-      item.product.id === productId ? { ...item, quantity: newQuantity } : item
-    ));
-  };
-
-  const removeFromCart = (productId) => {
-    setCartItems(prev => prev.filter(item => item.product.id !== productId));
-  };
-
-  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-
-  return (
-    <div className="min-h-screen bg-white font-sans text-gray-900 pb-20">
-      <Header 
-        cartCount={cartCount} 
-        onCartClick={() => setIsCartOpen(true)}
-        isMobileMenuOpen={isMobileMenuOpen}
-        setIsMobileMenuOpen={setIsMobileMenuOpen}
-      />
-
-      <main className="max-w-screen-2xl mx-auto pt-8">
-        
-        {/* Search and Filter Section */}
-        <div className="px-4 sm:px-6 lg:px-8 mb-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="relative w-full md:w-96">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
+        const CartDrawer = ({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem }) => {
+          const subtotal = cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+          if (!isOpen) return null;
+          return (
+            <div className="fixed inset-0 z-[60] overflow-hidden">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={onClose} />
+              <div className="absolute inset-y-0 right-0 max-w-md w-full flex">
+                <div className="w-full h-full bg-white shadow-2xl flex flex-col">
+                  <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                    <h2 className="text-xl font-bold text-gray-900">Your Cart</h2>
+                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-500"><X className="h-6 w-6" /></button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-6">
+                    {cartItems.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
+                        <div className="bg-gray-100 p-4 rounded-full"><Package className="h-8 w-8 text-gray-400" /></div>
+                        <p className="text-gray-500 font-medium">Your cart is empty</p>
+                        <button onClick={onClose} className="text-blue-600 font-medium hover:text-blue-700 hover:underline">Start Building</button>
+                      </div>
+                    ) : (
+                      <ul className="space-y-6">
+                        {cartItems.map(({ product, quantity }) => (
+                          <li key={product.id} className="flex py-2">
+                            <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+                              <img src={product.image} onError={(e) => e.target.src = "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=500&q=80"} className="h-full w-full object-contain p-2" />
+                            </div>
+                            <div className="ml-4 flex flex-1 flex-col">
+                              <div>
+                                <div className="flex justify-between text-base font-medium text-gray-900">
+                                  <h3 className="line-clamp-1">{product.name_kh}</h3>
+                                  <p className="ml-4">៛{(product.price * quantity).toLocaleString()}</p>
+                                </div>
+                                <p className="mt-1 text-sm text-gray-500">
+                                    {Array.isArray(product.subcategory) ? product.subcategory[product.subcategory.length-1] : product.subcategory}
+                                </p>
+                              </div>
+                              <div className="flex flex-1 items-end justify-between text-sm mt-2">
+                                <div className="flex items-center border border-gray-200 rounded-lg">
+                                  <button onClick={() => onUpdateQuantity(product.id, quantity - 1)} className="p-1 hover:bg-gray-100 rounded-l-lg disabled:opacity-50" disabled={quantity <= 1}><Minus className="h-3 w-3" /></button>
+                                  <span className="px-2 font-medium min-w-[1.5rem] text-center">{quantity}</span>
+                                  <button onClick={() => onUpdateQuantity(product.id, quantity + 1)} className="p-1 hover:bg-gray-100 rounded-r-lg"><Plus className="h-3 w-3" /></button>
+                                </div>
+                                <button type="button" onClick={() => onRemoveItem(product.id)} className="font-medium text-red-500 hover:text-red-600 flex items-center gap-1"><Trash2 className="h-3 w-3" /></button>
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  {cartItems.length > 0 && (
+                    <div className="border-t border-gray-100 p-6 bg-gray-50">
+                      <div className="flex justify-between text-base font-medium text-gray-900 mb-4"><p>Subtotal</p><p>៛{subtotal.toLocaleString()}</p></div>
+                      <p className="mt-0.5 text-sm text-gray-500 mb-6">Shipping and taxes calculated at checkout.</p>
+                      <button className="w-full flex items-center justify-center rounded-lg border border-transparent bg-yellow-400 px-6 py-3 text-base font-bold text-black shadow-sm hover:bg-yellow-500 transition-colors" onClick={() => alert("Proceeding to checkout...")}>Checkout</button>
+                    </div>
+                  )}
                 </div>
-                <input
-                type="text"
-                placeholder="Search sets..."
-                className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-full leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-shadow"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                />
+              </div>
             </div>
+          );
+        };
 
-            <div className="flex items-center overflow-x-auto pb-2 md:pb-0 hide-scrollbar gap-2">
-                <Filter className="h-5 w-5 text-gray-400 mr-2 flex-shrink-0" />
-                {CATEGORIES.map(category => (
-                <button
-                    key={category}
-                    onClick={() => setSelectedMainCategory(category)}
-                    className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
-                    selectedMainCategory === category
-                        ? 'bg-yellow-400 text-black shadow-sm'
-                        : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                    }`}
-                >
-                    {category}
-                </button>
-                ))}
-            </div>
-            </div>
-        </div>
+        const SectionRow = ({ title, products, onAddToCart }) => {
+            const scrollRef = useRef(null);
+            const scroll = (direction) => {
+                if (scrollRef.current) {
+                    const { current } = scrollRef;
+                    const scrollAmount = 300;
+                    if (direction === 'left') {
+                        current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                    } else {
+                        current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                    }
+                }
+            };
+            if (products.length === 0) return null;
+            return (
+                <div className="py-8 border-b border-gray-100 last:border-0">
+                    <div className="flex items-center justify-between mb-4 px-4 sm:px-6 lg:px-8">
+                        <h2 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h2>
+                        <div className="hidden md:flex gap-2">
+                            <button onClick={() => scroll('left')} className="p-2 rounded-full border border-gray-200 hover:bg-gray-100 transition-colors"><ChevronLeft className="h-5 w-5" /></button>
+                            <button onClick={() => scroll('right')} className="p-2 rounded-full border border-gray-200 hover:bg-gray-100 transition-colors"><ChevronRight className="h-5 w-5" /></button>
+                        </div>
+                    </div>
+                    <div ref={scrollRef} className="flex overflow-x-auto gap-4 pb-4 px-4 sm:px-6 lg:px-8 snap-x snap-mandatory hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                        {products.map(product => <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />)}
+                    </div>
+                </div>
+            );
+        };
 
-        {/* Content - Swimlanes */}
-        {groupedProducts.length > 0 ? (
-          <div className="space-y-4">
-            {groupedProducts.map(group => (
-              <SectionRow 
-                key={group.title} 
-                title={group.title} 
-                products={group.products} 
-                onAddToCart={addToCart}
+        function App() {
+          const [selectedMainCategory, setSelectedMainCategory] = useState("All");
+          const [searchQuery, setSearchQuery] = useState("");
+          const [cartItems, setCartItems] = useState([]);
+          const [isCartOpen, setIsCartOpen] = useState(false);
+          const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+          const groupedProducts = useMemo(() => {
+            let filtered = PRODUCTS_DATA.filter(product => {
+                const matchesSearch = product.name_kh.toLowerCase().includes(searchQuery.toLowerCase());
+                let matchesCategory = true;
+                if (selectedMainCategory !== "All") {
+                     if (selectedMainCategory === "Ninjago") matchesCategory = product.categories.includes("LEGO Ninjago");
+                     else if (selectedMainCategory === "Anime") matchesCategory = product.categories.includes("LEGO Anime");
+                     else if (selectedMainCategory === "Formula 1") matchesCategory = Array.isArray(product.subcategory) && product.subcategory.includes("Formula 1");
+                     else if (selectedMainCategory === "WWII") matchesCategory = typeof product.subcategory === 'string' && product.subcategory.includes("Lego WWII");
+                     else matchesCategory = !product.categories.includes("LEGO Ninjago") && !product.categories.includes("LEGO Anime");
+                }
+                return matchesSearch && matchesCategory;
+            });
+
+            const groups = {};
+            filtered.forEach(product => {
+                let groupName = "Other";
+                if (Array.isArray(product.subcategory)) {
+                    const relevantSub = product.subcategory.find(s => s.startsWith("Season") || s === "Formula 1" || s === "One Piece" || s === "Dragon Rising" || s === "Building Set");
+                    groupName = relevantSub || product.subcategory[product.subcategory.length - 1]; 
+                    if (product.categories.includes("LEGO Ninjago") && groupName.startsWith("Season")) {
+                        groupName = `Ninjago - ${groupName}`;
+                    }
+                     if (product.categories.includes("LEGO Ninjago") && groupName === "Dragon Rising") {
+                        groupName = `Ninjago - Dragon Rising`;
+                    }
+                     if (product.categories.includes("LEGO Ninjago") && groupName === "Building Set") {
+                        groupName = `Ninjago - Sets & Merch`;
+                    }
+                } else if (typeof product.subcategory === 'string') {
+                    groupName = product.subcategory;
+                }
+                if (!groups[groupName]) {
+                    groups[groupName] = [];
+                }
+                groups[groupName].push(product);
+            });
+
+            return Object.entries(groups).sort((a, b) => {
+                const getSeasonNum = (str) => {
+                    const match = str.match(/Season (\d+)/);
+                    return match ? parseInt(match[1]) : 999;
+                };
+                return getSeasonNum(a[0]) - getSeasonNum(b[0]);
+            }).map(([title, products]) => ({ title, products }));
+          }, [selectedMainCategory, searchQuery]);
+
+          const addToCart = (product) => {
+            setCartItems(prev => {
+              const existing = prev.find(item => item.product.id === product.id);
+              if (existing) {
+                return prev.map(item => 
+                  item.product.id === product.id 
+                    ? { ...item, quantity: item.quantity + 1 }
+                    : item
+                );
+              }
+              return [...prev, { product, quantity: 1 }];
+            });
+            setIsCartOpen(true);
+          };
+
+          const updateQuantity = (productId, newQuantity) => {
+            if (newQuantity < 1) return;
+            setCartItems(prev => prev.map(item => 
+              item.product.id === productId ? { ...item, quantity: newQuantity } : item
+            ));
+          };
+
+          const removeFromCart = (productId) => {
+            setCartItems(prev => prev.filter(item => item.product.id !== productId));
+          };
+
+          const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+          return (
+            <div className="min-h-screen bg-white font-sans text-gray-900 pb-20">
+              <Header 
+                cartCount={cartCount} 
+                onCartClick={() => setIsCartOpen(true)}
+                isMobileMenuOpen={isMobileMenuOpen}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
               />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 px-4">
-            <div className="bg-gray-100 rounded-full h-20 w-20 flex items-center justify-center mx-auto mb-4">
-              <Search className="h-10 w-10 text-gray-400" />
+              <main className="max-w-screen-2xl mx-auto pt-8">
+                <div className="px-4 sm:px-6 lg:px-8 mb-8">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="relative w-full md:w-96">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Search className="h-5 w-5 text-gray-400" /></div>
+                        <input type="text" placeholder="Search sets..." className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-full leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-shadow" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                    </div>
+                    <div className="flex items-center overflow-x-auto pb-2 md:pb-0 hide-scrollbar gap-2">
+                        <Filter className="h-5 w-5 text-gray-400 mr-2 flex-shrink-0" />
+                        {CATEGORIES.map(category => (
+                        <button key={category} onClick={() => setSelectedMainCategory(category)} className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${selectedMainCategory === category ? 'bg-yellow-400 text-black shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}>
+                            {category}
+                        </button>
+                        ))}
+                    </div>
+                    </div>
+                </div>
+                {groupedProducts.length > 0 ? (
+                  <div className="space-y-4">
+                    {groupedProducts.map(group => <SectionRow key={group.title} title={group.title} products={group.products} onAddToCart={addToCart} />)}
+                  </div>
+                ) : (
+                  <div className="text-center py-20 px-4">
+                    <div className="bg-gray-100 rounded-full h-20 w-20 flex items-center justify-center mx-auto mb-4"><Search className="h-10 w-10 text-gray-400" /></div>
+                    <h3 className="text-lg font-bold text-gray-900">No sets found</h3>
+                    <p className="text-gray-500 mt-2">Try adjusting your search or filter to find what you're looking for.</p>
+                    <button onClick={() => {setSearchQuery(""); setSelectedMainCategory("All");}} className="mt-6 text-blue-600 font-bold hover:underline">Clear all filters</button>
+                  </div>
+                )}
+              </main>
+              <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} onUpdateQuantity={updateQuantity} onRemoveItem={removeFromCart} />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">No sets found</h3>
-            <p className="text-gray-500 mt-2">Try adjusting your search or filter to find what you're looking for.</p>
-            <button 
-              onClick={() => {setSearchQuery(""); setSelectedMainCategory("All");}}
-              className="mt-6 text-blue-600 font-bold hover:underline"
-            >
-              Clear all filters
-            </button>
-          </div>
-        )}
-      </main>
+          );
+        }
 
-      {/* Cart Sidebar */}
-      <CartDrawer 
-        isOpen={isCartOpen} 
-        onClose={() => setIsCartOpen(false)}
-        cartItems={cartItems}
-        onUpdateQuantity={updateQuantity}
-        onRemoveItem={removeFromCart}
-      />
-      
-    </div>
-  );
-}
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
 
 
