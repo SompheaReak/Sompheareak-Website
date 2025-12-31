@@ -1,115 +1,133 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Somphea Reak Store</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .card-hover:active { transform: scale(0.98); }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col items-center justify-center p-6">
+App.py Good Working
+import os
+import requests
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+from flask_sqlalchemy import SQLAlchemy
 
-    <!-- Header -->
-    <div class="text-center mb-10">
-        <div class="inline-flex items-center gap-2 mb-3 bg-white px-4 py-1.5 rounded-full shadow-sm border border-slate-100">
-            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Store Open</span>
-        </div>
-        <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-2">SOMPHEA REAK</h1>
-        <p class="text-slate-500 font-medium">Select a category to enter</p>
-    </div>
+app = Flask(__name__)
+app.secret_key = 'somphea_reak_studio_pro_2025'
 
-    <!-- Navigation Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+# --- 1. DATABASE SETUP (Using v2 to fix deployment) ---
+basedir = os.path.abspath(os.path.dirname(__file__))
+# We renamed this to 'shop_v2.db' to force a fresh database creation
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'shop_v2.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# --- 2. MODELS ---
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200))
+    price = db.Column(db.Integer)
+    image = db.Column(db.String(500))
+    category = db.Column(db.String(100))
+    stock = db.Column(db.Integer, default=0)
+
+class Setting(db.Model):
+    key = db.Column(db.String(50), primary_key=True)
+    value = db.Column(db.String(50))
+
+# --- 3. CONFIG ---
+ADMIN_PASS = 'Thesong_Admin@2022?!$'
+BOT_TOKEN = "7528700801:AAGTvXjk5qPBnq_qx69ZOW4RMLuGy40w5k8"
+CHAT_ID = "-1002654437316"
+
+# --- 4. ROUTES ---
+@app.route('/')
+def home():
+    return render_template('custom_bracelet.html')
+
+@app.route('/admin/panel')
+def admin_panel():
+    if not session.get('admin'): return redirect(url_for('admin_login'))
+    all_p = Product.query.all()
+    grouped = {}
+    for p in all_p:
+        cat = p.category if p.category else "General"
+        if cat not in grouped: grouped[cat] = []
+        grouped[cat].append(p)
+    
+    # Safe check for override
+    try:
+        override = Setting.query.get('stock_override')
+        override_val = override.value if override else "off"
+    except:
+        override_val = "off"
+    
+    return render_template('admin_panel.html', grouped=grouped, override=override_val)
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        if request.form.get('password') == ADMIN_PASS:
+            session['admin'] = True
+            return redirect(url_for('admin_panel'))
+    return render_template('admin_login.html')
+
+# --- 5. API ---
+@app.route('/api/get-data')
+def get_data():
+    try:
+        override = Setting.query.get('stock_override')
+        val = override.value if override else "off"
+    except:
+        val = "off"
         
-        <!-- 1. Link to custom_bracelet.html -->
-        <a href="/bracelet" class="card-hover group relative overflow-hidden bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-emerald-300 transition-all">
-            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <i data-lucide="gem" class="w-24 h-24 text-emerald-600 rotate-12"></i>
-            </div>
-            <div class="relative z-10 flex flex-col h-full justify-between min-h-[120px]">
-                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-4">
-                    <i data-lucide="sparkles" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold text-slate-900 leading-tight">Custom Bracelet</h2>
-                    <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider mt-1 flex items-center gap-1">
-                        Open Studio <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                    </p>
-                </div>
-            </div>
-        </a>
+    return jsonify({
+        "stock": {p.id: p.stock for p in Product.query.all()},
+        "override": val
+    })
 
-        <!-- 2. Link to LEGO.html -->
-        <a href="/lego" class="card-hover group relative overflow-hidden bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-yellow-300 transition-all">
-            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <i data-lucide="blocks" class="w-24 h-24 text-yellow-600 -rotate-12"></i>
-            </div>
-            <div class="relative z-10 flex flex-col h-full justify-between min-h-[120px]">
-                <div class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-2xl flex items-center justify-center mb-4">
-                    <i data-lucide="cuboid" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold text-slate-900 leading-tight">LEGO World</h2>
-                    <p class="text-xs font-bold text-yellow-600 uppercase tracking-wider mt-1 flex items-center gap-1">
-                        View Sets <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                    </p>
-                </div>
-            </div>
-        </a>
+@app.route('/api/sync', methods=['POST'])
+def sync_catalog():
+    data = request.json
+    items = data.get('items', [])
+    for item in items:
+        p = Product.query.get(item['id'])
+        if not p:
+            new_p = Product(id=item['id'], name=item['name_kh'], price=item['price'], image=item['image'], category=item['categories'][0], stock=0)
+            db.session.add(new_p)
+    db.session.commit()
+    return jsonify(success=True)
 
-        <!-- 3. Link to Lucky_draw.html -->
-        <a href="/lucky-draw" class="card-hover group relative overflow-hidden bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-purple-300 transition-all">
-            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <i data-lucide="gift" class="w-24 h-24 text-purple-600 rotate-6"></i>
-            </div>
-            <div class="relative z-10 flex flex-col h-full justify-between min-h-[120px]">
-                <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-4">
-                    <i data-lucide="party-popper" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold text-slate-900 leading-tight">Lucky Draw</h2>
-                    <p class="text-xs font-bold text-purple-600 uppercase tracking-wider mt-1 flex items-center gap-1">
-                        Play Now <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                    </p>
-                </div>
-            </div>
-        </a>
+@app.route('/admin/api/update-stock', methods=['POST'])
+def update_stock():
+    if not session.get('admin'): return jsonify(success=False), 403
+    data = request.json
+    p = Product.query.get(data['id'])
+    if p:
+        p.stock = int(data['amount'])
+        db.session.commit()
+        return jsonify(success=True)
+    return jsonify(success=False)
 
-        <!-- 4. Link to Toy.html -->
-        <a href="/toys" class="card-hover group relative overflow-hidden bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-blue-300 transition-all">
-            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <i data-lucide="gamepad-2" class="w-24 h-24 text-blue-600 -rotate-6"></i>
-            </div>
-            <div class="relative z-10 flex flex-col h-full justify-between min-h-[120px]">
-                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-4">
-                    <i data-lucide="rocket" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold text-slate-900 leading-tight">Toys</h2>
-                    <p class="text-xs font-bold text-blue-600 uppercase tracking-wider mt-1 flex items-center gap-1">
-                        Shop All <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                    </p>
-                </div>
-            </div>
-        </a>
+@app.route('/admin/api/toggle-override', methods=['POST'])
+def toggle_override():
+    if not session.get('admin'): return jsonify(success=False), 403
+    val = request.json.get('value')
+    sett = Setting.query.get('stock_override')
+    if not sett: sett = Setting(key='stock_override', value=val)
+    else: sett.value = val
+    db.session.add(sett)
+    db.session.commit()
+    return jsonify(success=True)
 
-    </div>
+@app.route('/admin/api/process-receipt', methods=['POST'])
+def process_receipt():
+    if not session.get('admin'): return jsonify(success=False), 403
+    data = request.json
+    for item in data['items']:
+        p = Product.query.get(item['id'])
+        if p: p.stock = max(0, p.stock - int(item['qty']))
+    db.session.commit()
+    return jsonify(success=True)
 
-    <!-- Footer -->
-    <div class="mt-12 text-center text-slate-400 text-xs font-bold tracking-widest uppercase">
-        © 2024 Somphea Reak App
-    </div>
+# Ensure tables exist
+with app.app_context():
+    db.create_all()
 
-    <script>
-        lucide.createIcons();
-    </script>
-</body>
-</html>
+# Port configuration for Render/Heroku
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
