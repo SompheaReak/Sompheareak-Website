@@ -55,10 +55,16 @@
 <body>
     <div id="root"></div>
 
+    <!-- 
+      CRITICAL FIX: 
+      The {% raw %} tag below tells Flask to ignore the React code.
+      Without this, Flask tries to read the { curly braces } and crashes.
+    -->
     <script type="text/babel">
+    {% raw %}
         const { useState, useEffect, useMemo } = React;
 
-        // --- MOCK DATA (With Variants) ---
+        // --- MOCK DATA ---
         const CATEGORIES = ["All", "WWII Soldier", "Ninjago", "City", "Building", "Tanks", "Guns"];
 
         const PRODUCTS = [
@@ -114,7 +120,6 @@
 
         // --- COMPONENTS ---
 
-        // 1. Toast Notification
         const Toast = ({ message, onClose }) => {
             useEffect(() => { const timer = setTimeout(onClose, 2000); return () => clearTimeout(timer); }, [onClose]);
             return (
@@ -125,7 +130,6 @@
             );
         };
 
-        // 2. Product Card
         const ProductCard = ({ product, onClick }) => (
             <div onClick={() => onClick(product)} className="bg-white rounded-xl overflow-hidden shadow-sm active:scale-95 transition-transform duration-200">
                 <div className="aspect-square relative bg-gray-100">
@@ -146,7 +150,6 @@
             </div>
         );
 
-        // 3. Gallery Viewer (Full Screen with Navigation)
         const ImageViewer = ({ images, initialIndex, onClose }) => {
             const [index, setIndex] = useState(initialIndex || 0);
             
@@ -185,7 +188,6 @@
             );
         };
 
-        // 4. Cart Drawer
         const CartDrawer = ({ items, onClose, onRemove }) => {
             const total = items.reduce((sum, item) => sum + (item.variant.price * item.qty), 0);
             
@@ -240,13 +242,12 @@
             );
         };
 
-        // 5. Product Detail Sheet
         const ProductDetail = ({ product, onBack, onAddToCart }) => {
             const [selectedVariant, setSelectedVariant] = useState(product.variants[0]);
             const [qty, setQty] = useState(1);
             const [galleryOpen, setGalleryOpen] = useState(false);
 
-            // Create gallery list: [Selected Variant Image, ...Others]
+            // Create gallery list
             const galleryImages = useMemo(() => {
                 const otherVariants = product.variants.filter(v => v.id !== selectedVariant.id).map(v => v.image);
                 return [selectedVariant.image, ...otherVariants];
@@ -386,6 +387,7 @@
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
+    {% endraw %}
     </script>
 </body>
 </html>
