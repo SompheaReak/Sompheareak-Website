@@ -45,6 +45,11 @@ def lego_shop():
     """The New React LEGO Shop"""
     return render_template('lego.html')
 
+@app.route('/toy-universe')
+def toy_universe():
+    """The New TaoBao Style Toy Shop"""
+    return render_template('toy.html')
+
 @app.route('/lucky-draw')
 def lucky_draw():
     """The Lucky Draw Game"""
@@ -52,7 +57,6 @@ def lucky_draw():
 
 @app.route('/hot-sale')
 def hot_sale():
-    # Placeholder or create a template for this later
     return "<h1>Hot Sale Coming Soon</h1>"
 
 # --- 5. ADMIN ROUTES ---
