@@ -10,9 +10,10 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700&display=swap');
         
         body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
+            font-family: 'Plus Jakarta Sans', 'Noto Sans Khmer', sans-serif; 
             background-color: #f5f5f5;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
@@ -39,6 +40,14 @@
         .cart-drawer-transition {
             transition: transform 0.3s ease-in-out;
         }
+        
+        /* Checkbox Style */
+        .check-active {
+            color: #ff5000;
+        }
+        .check-inactive {
+            color: #d1d5db;
+        }
     </style>
 </head>
 <body class="pb-20">
@@ -50,6 +59,7 @@
             <i class="fa-solid fa-magnifying-glass text-gray-400 text-sm"></i>
             <input type="text" placeholder="Search toy universe..." class="bg-transparent text-sm w-full outline-none text-gray-800">
         </div>
+        <!-- Cart Icon -->
         <div class="relative cursor-pointer" onclick="openCart()">
             <i class="fa-solid fa-cart-shopping text-gray-600 text-xl"></i>
             <span id="cart-count" class="absolute -top-2 -right-2 bg-taobao text-white text-[9px] font-bold px-1.5 rounded-full border border-white hidden">0</span>
@@ -93,7 +103,7 @@
                             <i class="fa-solid fa-expand"></i>
                         </div>
                         
-                        <!-- Swipe Hint Arrows (Clickable) -->
+                        <!-- Swipe Hint Arrows -->
                         <div onclick="changeVariantByIndex(-1)" class="absolute top-1/2 -left-2 -translate-y-1/2 bg-white/90 rounded-full w-5 h-5 flex items-center justify-center shadow-md cursor-pointer z-10 text-gray-500 hover:text-taobao">
                             <i class="fa-solid fa-chevron-left text-[10px]"></i>
                         </div>
@@ -103,7 +113,11 @@
                     </div>
 
                     <div class="flex flex-col justify-end pb-1">
-                        <div class="text-taobao text-3xl font-black mb-1 leading-none tracking-tighter">$<span id="modal-price">0.00</span></div>
+                        <!-- Dual Currency Price -->
+                        <div class="font-black mb-1 leading-none tracking-tighter" id="modal-price-container">
+                            <span class="text-taobao text-2xl" id="modal-price-riel">0៛</span>
+                            <span class="text-gray-500 text-sm ml-1" id="modal-price-usd">$0.00</span>
+                        </div>
                         <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">In Stock: 999+</div>
                         <div class="text-xs text-gray-800 font-bold mt-2 line-clamp-2" id="modal-selected-label">Please select model</div>
                     </div>
@@ -113,15 +127,8 @@
                 <div class="mb-6">
                     <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Model Selection</h3>
                     
-                    <!-- Visual Thumbs -->
-                    <div class="flex gap-3 overflow-x-auto hide-scrollbar mb-4" id="sku-thumbs-container">
-                        <!-- Thumbs injected via JS -->
-                    </div>
-
-                    <!-- Text Pills -->
-                    <div class="flex flex-wrap gap-2" id="sku-container">
-                        <!-- Pills injected via JS -->
-                    </div>
+                    <div class="flex gap-3 overflow-x-auto hide-scrollbar mb-4" id="sku-thumbs-container"></div>
+                    <div class="flex flex-wrap gap-2" id="sku-container"></div>
                 </div>
 
                 <!-- Quantity -->
@@ -135,34 +142,42 @@
                 </div>
             </div>
 
-            <!-- Bottom Actions (Only Add to Bag) -->
+            <!-- Bottom Actions -->
             <div class="absolute bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-gray-100 flex gap-3 z-20">
                 <button onclick="addToCart()" class="flex-1 bg-taobao text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-orange-100 active:scale-95 transition-transform">Add to Bag</button>
             </div>
         </div>
     </div>
 
-    <!-- 5. CART DRAWER -->
+    <!-- 5. CART DRAWER (With Scrolling Fix & Checkboxes) -->
     <div id="cart-drawer" class="fixed inset-0 z-[70] bg-black/50 hidden" onclick="if(event.target == this) closeCart()">
-        <div id="cart-content" class="absolute top-0 right-0 w-80 h-full bg-white shadow-2xl cart-drawer-transition translate-x-full flex flex-col">
-            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h2 class="font-black text-lg">My Bag</h2>
-                <button onclick="closeCart()" class="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm"><i class="fa-solid fa-xmark"></i></button>
+        <div id="cart-content" class="absolute top-0 right-0 w-80 h-[100dvh] bg-white shadow-2xl cart-drawer-transition translate-x-full flex flex-col">
+            
+            <!-- Cart Header -->
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white z-10 flex-none">
+                <h2 class="font-black text-lg">My Bag <span id="cart-header-count" class="text-gray-400 text-xs font-normal">(0)</span></h2>
+                <button onclick="closeCart()" class="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center shadow-sm text-gray-500"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
-            <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-4">
-                <div id="empty-cart-msg" class="flex flex-col items-center justify-center h-64 text-gray-300">
+            <!-- Cart Items (Scrollable Area) -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 bg-gray-50" id="cart-items">
+                <div id="empty-cart-msg" class="flex flex-col items-center justify-center h-full text-gray-300">
                     <i class="fa-solid fa-cart-shopping text-4xl mb-2"></i>
                     <p class="text-xs font-bold uppercase">Empty</p>
                 </div>
+                <!-- Items injected here -->
             </div>
 
-            <div class="p-4 border-t border-gray-100 bg-gray-50">
-                <div class="flex justify-between mb-4">
-                    <span class="text-xs font-bold text-gray-500">Total</span>
-                    <span class="text-xl font-black text-taobao" id="cart-total-price">$0.00</span>
+            <!-- Cart Footer (Fixed Bottom) -->
+            <div class="p-4 border-t border-gray-100 bg-white z-10 flex-none">
+                <div class="flex justify-between items-end mb-4">
+                    <span class="text-xs font-bold text-gray-500">Total Selected</span>
+                    <div class="text-right">
+                        <div class="text-xl font-black text-taobao leading-none" id="cart-total-riel">0៛</div>
+                        <div class="text-xs font-bold text-gray-400" id="cart-total-usd">$0.00</div>
+                    </div>
                 </div>
-                <button class="w-full bg-black text-white font-black py-3 rounded-xl uppercase text-xs">Checkout</button>
+                <button class="w-full bg-black text-white font-black py-3.5 rounded-xl uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-transform">Checkout</button>
             </div>
         </div>
     </div>
@@ -175,16 +190,9 @@
         
         <img id="zoom-img" src="" class="max-w-full max-h-full object-contain pointer-events-none transition-opacity duration-200">
         
-        <!-- Navigation Arrows -->
-        <button onclick="changeVariantByIndex(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4">
-            <i class="fa-solid fa-chevron-left text-3xl"></i>
-        </button>
-        <button onclick="changeVariantByIndex(1)" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4">
-            <i class="fa-solid fa-chevron-right text-3xl"></i>
-        </button>
-
+        <button onclick="changeVariantByIndex(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4"><i class="fa-solid fa-chevron-left text-3xl"></i></button>
+        <button onclick="changeVariantByIndex(1)" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4"><i class="fa-solid fa-chevron-right text-3xl"></i></button>
         <button class="absolute top-8 right-8 text-white/50 text-2xl p-2"><i class="fa-solid fa-xmark"></i></button>
-        
         <div class="absolute bottom-8 text-white/50 text-xs font-bold uppercase tracking-widest">Swipe for next</div>
     </div>
 
@@ -194,6 +202,7 @@
     </div>
 
     <script>
+        // --- FIXED DATA (Added commas) ---
         const PRODUCTS = [
             {
                 id: 1, title: "WWII អាវុធធន់ធ្ងន់", sold: "1.2k", category: "WWII Soldier",
@@ -201,21 +210,20 @@
                 variants: [
                     { id: "v1", name: "RPG", price: 2.50, image: "static/images/lego-wwii-02.jpg" },
                     { id: "v11", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 3.00, image: "static/images/lego-wwii-101.jpg" },
-                    { id: "v12", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 15.00, image: "static/images/lego-wwii-102.jpg" }
+                    { id: "v12", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 15.00, image: "static/images/lego-wwii-102.jpg" },
                     { id: "v13", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 2.50, image: "static/images/lego-wwii-103.jpg" },
                     { id: "v14", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 3.00, image: "static/images/lego-wwii-104.jpg" },
-                    { id: "v15", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 15.00, image: "static/images/lego-wwii-105.jpg" }
+                    { id: "v15", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 15.00, image: "static/images/lego-wwii-105.jpg" },
                     { id: "v21", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 3.00, image: "static/images/lego-wwii-201.jpg" },
-                    { id: "v22", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 15.00, image: "static/images/lego-wwii-202.jpg" }
+                    { id: "v22", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 15.00, image: "static/images/lego-wwii-202.jpg" },
                     { id: "v23", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 2.50, image: "static/images/lego-wwii-203.jpg" },
                     { id: "v24", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 3.00, image: "static/images/lego-wwii-204.jpg" },
-                    { id: "v25", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 15.00, image: "static/images/lego-wwii-205.jpg" }
+                    { id: "v25", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 15.00, image: "static/images/lego-wwii-205.jpg" },
                     { id: "v31", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 3.00, image: "static/images/lego-wwii-301.jpg" },
-                    { id: "v32", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 15.00, image: "static/images/lego-wwii-302.jpg" }
+                    { id: "v32", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 15.00, image: "static/images/lego-wwii-302.jpg" },
                     { id: "v33", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 2.50, image: "static/images/lego-wwii-303.jpg" },
                     { id: "v34", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 3.00, image: "static/images/lego-wwii-304.jpg" },
                     { id: "v35", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 15.00, image: "static/images/lego-wwii-305.jpg" }
-
                ]
             },
             {
@@ -239,22 +247,36 @@
         let currentProduct = null, selectedVariant = null, qty = 1;
         let cart = [];
         let currentVariantIndex = 0; 
-        let isDragging = false; // Flag to prevent click after drag
+        let isDragging = false; 
+        const EXCHANGE_RATE = 4000;
+
+        function formatCurrency(usd) {
+            const riel = Math.round(usd * EXCHANGE_RATE).toLocaleString();
+            return {
+                riel: `${riel}៛`,
+                usd: `$${usd.toFixed(2)}`
+            };
+        }
 
         // --- INIT ---
         function init(data = PRODUCTS) {
-            document.getElementById('product-grid').innerHTML = data.map(p => `
+            document.getElementById('product-grid').innerHTML = data.map(p => {
+                const price = formatCurrency(p.variants[0].price);
+                return `
                 <div onclick="openProduct(${p.id})" class="bg-white rounded-2xl overflow-hidden shadow-sm active:scale-95 transition-all">
                     <div class="aspect-square relative"><img src="${p.thumbnail}" class="w-full h-full object-cover"></div>
                     <div class="p-3">
                         <h3 class="text-[11px] font-bold text-gray-800 line-clamp-2 h-8 leading-tight mb-1">${p.title}</h3>
                         <div class="flex items-end justify-between">
-                            <div class="text-sm font-black text-taobao leading-none">$${p.variants[0].price.toFixed(2)}</div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-black text-taobao leading-none">${price.riel}</span>
+                                <span class="text-[9px] text-gray-400 font-bold">${price.usd}</span>
+                            </div>
                             <span class="text-[9px] text-gray-400 font-bold">${p.sold} sold</span>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function filterCat(cat, btn) {
@@ -304,12 +326,13 @@
             let newIndex = currentVariantIndex + offset;
             if(newIndex < 0) newIndex = currentProduct.variants.length - 1;
             if(newIndex >= currentProduct.variants.length) newIndex = 0;
-            
             selectVariant(currentProduct.variants[newIndex].id);
         }
 
         function updateModalUI() {
-            document.getElementById('modal-price').innerText = selectedVariant.price.toFixed(2);
+            const price = formatCurrency(selectedVariant.price);
+            document.getElementById('modal-price-riel').innerText = price.riel;
+            document.getElementById('modal-price-usd').innerText = price.usd;
             document.getElementById('modal-selected-label').innerText = `Selected: ${selectedVariant.name}`;
             document.getElementById('modal-qty').innerText = qty;
 
@@ -321,25 +344,15 @@
                 zoomImg.src = selectedVariant.image;
             }
 
-            const thumbs = document.getElementById('sku-thumbs-container').children;
-            for(let img of thumbs) {
-                if(img.dataset.id === selectedVariant.id) {
-                    img.classList.remove('border-transparent');
-                    img.classList.add('border-orange-500');
-                } else {
-                    img.classList.add('border-transparent');
-                    img.classList.remove('border-orange-500');
-                }
-            }
-
-            const pills = document.getElementById('sku-container').children;
-            for(let btn of pills) {
-                if(btn.dataset.id === selectedVariant.id) {
-                    btn.classList.add('sku-active');
-                } else {
-                    btn.classList.remove('sku-active');
-                }
-            }
+            // Highlights
+            Array.from(document.getElementById('sku-thumbs-container').children).forEach(img => {
+                img.classList.toggle('border-orange-500', img.dataset.id === selectedVariant.id);
+                img.classList.toggle('border-transparent', img.dataset.id !== selectedVariant.id);
+            });
+            
+            Array.from(document.getElementById('sku-container').children).forEach(btn => {
+                btn.classList.toggle('sku-active', btn.dataset.id === selectedVariant.id);
+            });
         }
 
         function updateQty(delta) { 
@@ -353,46 +366,25 @@
             setTimeout(() => { document.getElementById('detail-modal').classList.add('hidden'); }, 300);
         }
 
-        function handleImageClick() {
-            if(!isDragging) zoomImage();
-        }
+        function handleImageClick() { if(!isDragging) zoomImage(); }
 
         function zoomImage() {
             document.getElementById('zoom-img').src = selectedVariant.image;
-            const overlay = document.getElementById('zoom-overlay');
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex');
+            document.getElementById('zoom-overlay').classList.remove('hidden');
+            document.getElementById('zoom-overlay').classList.add('flex');
         }
 
-        // --- SWIPE LOGIC (Touch + Mouse) ---
-        let startX = 0;
-        let endX = 0;
-
-        function handleTouchStart(e) {
-            startX = e.changedTouches[0].screenX;
-            isDragging = false;
-        }
-
-        function handleTouchEnd(e) {
-            endX = e.changedTouches[0].screenX;
-            checkSwipe();
-        }
-
-        function handleMouseDown(e) {
-            startX = e.screenX;
-            isDragging = false;
-        }
-
-        function handleMouseUp(e) {
-            endX = e.screenX;
-            checkSwipe();
-        }
-
+        // --- SWIPE LOGIC ---
+        let startX = 0, endX = 0;
+        function handleTouchStart(e) { startX = e.changedTouches[0].screenX; isDragging = false; }
+        function handleTouchEnd(e) { endX = e.changedTouches[0].screenX; checkSwipe(); }
+        function handleMouseDown(e) { startX = e.screenX; isDragging = false; }
+        function handleMouseUp(e) { endX = e.screenX; checkSwipe(); }
         function checkSwipe() {
             if (Math.abs(endX - startX) > 30) {
-                isDragging = true; // It was a drag, not a click
-                if (endX < startX) changeVariantByIndex(1); // Swipe Left -> Next
-                if (endX > startX) changeVariantByIndex(-1); // Swipe Right -> Prev
+                isDragging = true;
+                if (endX < startX) changeVariantByIndex(1);
+                if (endX > startX) changeVariantByIndex(-1);
             }
         }
 
@@ -403,34 +395,45 @@
                 variantName: selectedVariant.name,
                 price: selectedVariant.price,
                 image: selectedVariant.image,
-                qty: qty
+                qty: qty,
+                checked: true // Default checked
             });
-
             updateCartBadge();
             closeModal();
-            
             const toast = document.getElementById('toast');
-            toast.classList.remove('hidden');
-            toast.classList.add('flex');
-            setTimeout(() => { 
-                toast.classList.add('hidden'); 
-                toast.classList.remove('flex');
-            }, 2000);
+            toast.classList.remove('hidden'); toast.classList.add('flex');
+            setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('flex'); }, 2000);
         }
 
         function updateCartBadge() {
-            const count = cart.reduce((acc, item) => acc + item.qty, 0);
+            const count = cart.length;
             const badge = document.getElementById('cart-count');
             badge.innerText = count;
-            badge.classList.remove('hidden');
+            if(count > 0) badge.classList.remove('hidden');
         }
 
         function openCart() {
-            const drawer = document.getElementById('cart-drawer');
-            const content = document.getElementById('cart-content');
+            renderCartItems();
+            document.getElementById('cart-drawer').classList.remove('hidden');
+            setTimeout(() => { document.getElementById('cart-content').classList.remove('translate-x-full'); }, 10);
+        }
+
+        function closeCart() {
+            document.getElementById('cart-content').classList.add('translate-x-full');
+            setTimeout(() => { document.getElementById('cart-drawer').classList.add('hidden'); }, 300);
+        }
+
+        function toggleCartItem(index) {
+            cart[index].checked = !cart[index].checked;
+            renderCartItems();
+        }
+
+        function renderCartItems() {
             const list = document.getElementById('cart-items');
             const emptyMsg = document.getElementById('empty-cart-msg');
-            const totalDisplay = document.getElementById('cart-total-price');
+            const headerCount = document.getElementById('cart-header-count');
+            
+            headerCount.innerText = `(${cart.length})`;
 
             if(cart.length === 0) {
                 emptyMsg.style.display = 'flex';
@@ -438,32 +441,39 @@
                 list.appendChild(emptyMsg);
             } else {
                 emptyMsg.style.display = 'none';
-                list.innerHTML = cart.map(item => `
-                    <div class="flex gap-3 bg-gray-50 p-2 rounded-xl">
-                        <img src="${item.image}" class="w-16 h-16 rounded-lg object-cover">
-                        <div class="flex-1">
-                            <div class="text-[10px] font-bold text-gray-800 line-clamp-1">${item.productTitle}</div>
-                            <div class="text-[9px] text-gray-400 mt-0.5">${item.variantName}</div>
-                            <div class="flex justify-between items-end mt-1">
-                                <div class="text-sm font-black text-taobao">$${item.price.toFixed(2)}</div>
-                                <div class="text-xs font-bold text-gray-500">x${item.qty}</div>
+                list.innerHTML = cart.map((item, idx) => {
+                    const price = formatCurrency(item.price);
+                    return `
+                    <div class="flex gap-3 bg-white p-3 rounded-2xl shadow-sm border border-gray-100 items-center">
+                        <!-- Checkbox -->
+                        <div onclick="toggleCartItem(${idx})" class="cursor-pointer p-1">
+                            <i class="fa-solid fa-circle-check text-xl ${item.checked ? 'check-active' : 'check-inactive'}"></i>
+                        </div>
+                        
+                        <img src="${item.image}" class="w-16 h-16 rounded-lg object-cover bg-gray-50">
+                        
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs font-bold text-gray-800 line-clamp-1">${item.productTitle}</div>
+                            <div class="text-[10px] text-gray-400 mt-0.5 bg-gray-50 inline-block px-1.5 py-0.5 rounded">${item.variantName}</div>
+                            <div class="flex justify-between items-end mt-1.5">
+                                <div class="flex flex-col leading-none">
+                                    <span class="text-sm font-black text-taobao">${price.riel}</span>
+                                    <span class="text-[10px] font-bold text-gray-400">${price.usd}</span>
+                                </div>
+                                <div class="text-xs font-bold text-gray-800">x${item.qty}</div>
                             </div>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
             }
-
-            const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-            totalDisplay.innerText = '$' + total.toFixed(2);
-
-            drawer.classList.remove('hidden');
-            setTimeout(() => { content.classList.remove('translate-x-full'); }, 10);
+            updateCartTotal();
         }
 
-        function closeCart() {
-            const content = document.getElementById('cart-content');
-            content.classList.add('translate-x-full');
-            setTimeout(() => { document.getElementById('cart-drawer').classList.add('hidden'); }, 300);
+        function updateCartTotal() {
+            const totalUsd = cart.reduce((acc, item) => item.checked ? acc + (item.price * item.qty) : acc, 0);
+            const price = formatCurrency(totalUsd);
+            document.getElementById('cart-total-riel').innerText = price.riel;
+            document.getElementById('cart-total-usd').innerText = price.usd;
         }
 
         init();
