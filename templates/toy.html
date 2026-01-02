@@ -32,11 +32,6 @@
             color: #ff5000 !important;
         }
 
-        /* Thumb Active Highlight */
-        .thumb-active {
-            border: 2px solid #ff5000 !important;
-        }
-
         .modal-transition {
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -55,7 +50,6 @@
             <i class="fa-solid fa-magnifying-glass text-gray-400 text-sm"></i>
             <input type="text" placeholder="Search toy universe..." class="bg-transparent text-sm w-full outline-none text-gray-800">
         </div>
-        <!-- Cart Icon with Click Event -->
         <div class="relative cursor-pointer" onclick="openCart()">
             <i class="fa-solid fa-cart-shopping text-gray-600 text-xl"></i>
             <span id="cart-count" class="absolute -top-2 -right-2 bg-taobao text-white text-[9px] font-bold px-1.5 rounded-full border border-white hidden">0</span>
@@ -85,24 +79,26 @@
             <div class="overflow-y-auto p-5 pb-32">
                 <!-- Header Info -->
                 <div class="flex gap-4 mb-6">
-                    <div class="relative group w-28 h-28 flex-shrink-0">
+                    <div class="relative group w-28 h-28 flex-shrink-0 select-none">
                         <!-- Main Modal Image with Swipe -->
                         <img id="modal-img" src="" 
-                             class="w-full h-full object-cover rounded-xl shadow-md border border-gray-100 active:scale-95 transition-transform" 
-                             onclick="zoomImage()"
+                             class="w-full h-full object-cover rounded-xl shadow-md border border-gray-100 active:scale-95 transition-transform cursor-grab" 
+                             onclick="handleImageClick()"
                              ontouchstart="handleTouchStart(event)" 
-                             ontouchend="handleTouchEnd(event)">
+                             ontouchend="handleTouchEnd(event)"
+                             onmousedown="handleMouseDown(event)"
+                             onmouseup="handleMouseUp(event)">
                         
                         <div class="absolute bottom-1 right-1 bg-black/40 text-white text-[8px] px-1 rounded pointer-events-none">
                             <i class="fa-solid fa-expand"></i>
                         </div>
                         
-                        <!-- Swipe Hint Arrows (Visual only) -->
-                        <div class="absolute top-1/2 -left-2 -translate-y-1/2 bg-white/80 rounded-full w-4 h-4 flex items-center justify-center shadow-sm pointer-events-none opacity-50">
-                            <i class="fa-solid fa-chevron-left text-[8px]"></i>
+                        <!-- Swipe Hint Arrows (Clickable) -->
+                        <div onclick="changeVariantByIndex(-1)" class="absolute top-1/2 -left-2 -translate-y-1/2 bg-white/90 rounded-full w-5 h-5 flex items-center justify-center shadow-md cursor-pointer z-10 text-gray-500 hover:text-taobao">
+                            <i class="fa-solid fa-chevron-left text-[10px]"></i>
                         </div>
-                        <div class="absolute top-1/2 -right-2 -translate-y-1/2 bg-white/80 rounded-full w-4 h-4 flex items-center justify-center shadow-sm pointer-events-none opacity-50">
-                            <i class="fa-solid fa-chevron-right text-[8px]"></i>
+                        <div onclick="changeVariantByIndex(1)" class="absolute top-1/2 -right-2 -translate-y-1/2 bg-white/90 rounded-full w-5 h-5 flex items-center justify-center shadow-md cursor-pointer z-10 text-gray-500 hover:text-taobao">
+                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
                         </div>
                     </div>
 
@@ -139,7 +135,7 @@
                 </div>
             </div>
 
-            <!-- Bottom Actions (Single Button Now) -->
+            <!-- Bottom Actions (Only Add to Bag) -->
             <div class="absolute bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-gray-100 flex gap-3 z-20">
                 <button onclick="addToCart()" class="flex-1 bg-taobao text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-orange-100 active:scale-95 transition-transform">Add to Bag</button>
             </div>
@@ -179,7 +175,7 @@
         
         <img id="zoom-img" src="" class="max-w-full max-h-full object-contain pointer-events-none transition-opacity duration-200">
         
-        <!-- Navigation Arrows for Desktop/Visual -->
+        <!-- Navigation Arrows -->
         <button onclick="changeVariantByIndex(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4">
             <i class="fa-solid fa-chevron-left text-3xl"></i>
         </button>
@@ -228,7 +224,8 @@
 
         let currentProduct = null, selectedVariant = null, qty = 1;
         let cart = [];
-        let currentVariantIndex = 0; // Track index for swipe/scroll
+        let currentVariantIndex = 0; 
+        let isDragging = false; // Flag to prevent click after drag
 
         // --- INIT ---
         function init(data = PRODUCTS) {
@@ -298,22 +295,18 @@
         }
 
         function updateModalUI() {
-            // Update Text
             document.getElementById('modal-price').innerText = selectedVariant.price.toFixed(2);
             document.getElementById('modal-selected-label').innerText = `Selected: ${selectedVariant.name}`;
             document.getElementById('modal-qty').innerText = qty;
 
-            // Update Main Image
             const mainImg = document.getElementById('modal-img');
             mainImg.src = selectedVariant.image;
             
-            // Update Zoom Image if visible
             const zoomImg = document.getElementById('zoom-img');
             if(!document.getElementById('zoom-overlay').classList.contains('hidden')) {
                 zoomImg.src = selectedVariant.image;
             }
 
-            // Highlight Thumbs
             const thumbs = document.getElementById('sku-thumbs-container').children;
             for(let img of thumbs) {
                 if(img.dataset.id === selectedVariant.id) {
@@ -325,7 +318,6 @@
                 }
             }
 
-            // Highlight Pills
             const pills = document.getElementById('sku-container').children;
             for(let btn of pills) {
                 if(btn.dataset.id === selectedVariant.id) {
@@ -347,6 +339,10 @@
             setTimeout(() => { document.getElementById('detail-modal').classList.add('hidden'); }, 300);
         }
 
+        function handleImageClick() {
+            if(!isDragging) zoomImage();
+        }
+
         function zoomImage() {
             document.getElementById('zoom-img').src = selectedVariant.image;
             const overlay = document.getElementById('zoom-overlay');
@@ -354,24 +350,36 @@
             overlay.classList.add('flex');
         }
 
-        // --- SWIPE LOGIC ---
-        let touchStartX = 0;
-        let touchEndX = 0;
+        // --- SWIPE LOGIC (Touch + Mouse) ---
+        let startX = 0;
+        let endX = 0;
 
         function handleTouchStart(e) {
-            touchStartX = e.changedTouches[0].screenX;
+            startX = e.changedTouches[0].screenX;
+            isDragging = false;
         }
 
         function handleTouchEnd(e) {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
+            endX = e.changedTouches[0].screenX;
+            checkSwipe();
         }
 
-        function handleSwipe() {
-            // Swipe Left (Next)
-            if (touchEndX < touchStartX - 50) changeVariantByIndex(1);
-            // Swipe Right (Prev)
-            if (touchEndX > touchStartX + 50) changeVariantByIndex(-1);
+        function handleMouseDown(e) {
+            startX = e.screenX;
+            isDragging = false;
+        }
+
+        function handleMouseUp(e) {
+            endX = e.screenX;
+            checkSwipe();
+        }
+
+        function checkSwipe() {
+            if (Math.abs(endX - startX) > 30) {
+                isDragging = true; // It was a drag, not a click
+                if (endX < startX) changeVariantByIndex(1); // Swipe Left -> Next
+                if (endX > startX) changeVariantByIndex(-1); // Swipe Right -> Prev
+            }
         }
 
         // --- CART LOGIC ---
