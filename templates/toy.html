@@ -25,39 +25,44 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* TaoBao Active SKU Highlight */
+        /* Active SKU Highlight */
         .sku-active {
-            border: 2px solid #ff5000 !important;
+            border: 1px solid #ff5000 !important;
             background-color: #fff1eb !important;
             color: #ff5000 !important;
         }
 
-        .modal-transition {
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        /* Thumb Active Highlight */
+        .thumb-active {
+            border: 2px solid #ff5000 !important;
         }
 
-        /* Animation for category selection line */
-        .cat-line {
-            transition: all 0.3s ease;
+        .modal-transition {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .cart-drawer-transition {
+            transition: transform 0.3s ease-in-out;
         }
     </style>
 </head>
 <body class="pb-20">
 
-    <!-- 1. HEADER & SEARCH -->
+    <!-- 1. HEADER -->
     <header class="sticky top-0 z-50 bg-white px-4 py-3 flex items-center gap-3 border-b border-gray-100">
         <a href="/" class="text-gray-400"><i class="fa-solid fa-chevron-left"></i></a>
         <div class="flex-1 bg-gray-100 rounded-full h-9 flex items-center px-4 gap-2 border border-gray-50">
             <i class="fa-solid fa-magnifying-glass text-gray-400 text-sm"></i>
             <input type="text" placeholder="Search toy universe..." class="bg-transparent text-sm w-full outline-none text-gray-800">
         </div>
-        <div class="relative">
+        <!-- Cart Icon with Click Event -->
+        <div class="relative cursor-pointer" onclick="openCart()">
             <i class="fa-solid fa-cart-shopping text-gray-600 text-xl"></i>
             <span id="cart-count" class="absolute -top-2 -right-2 bg-taobao text-white text-[9px] font-bold px-1.5 rounded-full border border-white hidden">0</span>
         </div>
     </header>
 
-    <!-- 2. SUBCATEGORIES (TaoBao Style Scroller) -->
+    <!-- 2. SUBCATEGORIES -->
     <nav class="sticky top-[61px] z-40 bg-white border-b border-gray-50 overflow-x-auto hide-scrollbar flex px-4 py-2 gap-6" id="category-nav">
         <button onclick="filterCat('All', this)" class="text-taobao text-xs font-bold whitespace-nowrap border-b-2 border-taobao pb-1">All</button>
         <button onclick="filterCat('WWII Soldier', this)" class="text-gray-500 text-xs font-bold whitespace-nowrap pb-1">WWII Soldier</button>
@@ -71,35 +76,55 @@
         <!-- Products injected by JS -->
     </main>
 
-    <!-- 4. SKU SELECTOR MODAL (TaoBao Detail View) -->
+    <!-- 4. PRODUCT DETAIL MODAL -->
     <div id="detail-modal" class="fixed inset-0 z-[60] bg-black/50 hidden opacity-0 transition-opacity duration-300" onclick="if(event.target == this) closeModal()">
         <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl modal-transition translate-y-full flex flex-col max-h-[92vh]">
             
-            <!-- Close Indicator Line -->
             <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-1"></div>
 
             <div class="overflow-y-auto p-5 pb-32">
-                <!-- Header Info (Main Price & Image) -->
+                <!-- Header Info -->
                 <div class="flex gap-4 mb-6">
-                    <div class="relative group">
-                        <img id="modal-img" src="" class="w-28 h-28 object-cover rounded-xl shadow-md border border-gray-100 active:scale-95 transition-transform" onclick="zoomImage()">
-                        <div class="absolute bottom-1 right-1 bg-black/40 text-white text-[8px] px-1 rounded"><i class="fa-solid fa-expand"></i></div>
+                    <div class="relative group w-28 h-28 flex-shrink-0">
+                        <!-- Main Modal Image with Swipe -->
+                        <img id="modal-img" src="" 
+                             class="w-full h-full object-cover rounded-xl shadow-md border border-gray-100 active:scale-95 transition-transform" 
+                             onclick="zoomImage()"
+                             ontouchstart="handleTouchStart(event)" 
+                             ontouchend="handleTouchEnd(event)">
+                        
+                        <div class="absolute bottom-1 right-1 bg-black/40 text-white text-[8px] px-1 rounded pointer-events-none">
+                            <i class="fa-solid fa-expand"></i>
+                        </div>
+                        
+                        <!-- Swipe Hint Arrows (Visual only) -->
+                        <div class="absolute top-1/2 -left-2 -translate-y-1/2 bg-white/80 rounded-full w-4 h-4 flex items-center justify-center shadow-sm pointer-events-none opacity-50">
+                            <i class="fa-solid fa-chevron-left text-[8px]"></i>
+                        </div>
+                        <div class="absolute top-1/2 -right-2 -translate-y-1/2 bg-white/80 rounded-full w-4 h-4 flex items-center justify-center shadow-sm pointer-events-none opacity-50">
+                            <i class="fa-solid fa-chevron-right text-[8px]"></i>
+                        </div>
                     </div>
+
                     <div class="flex flex-col justify-end pb-1">
                         <div class="text-taobao text-3xl font-black mb-1 leading-none tracking-tighter">$<span id="modal-price">0.00</span></div>
                         <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">In Stock: 999+</div>
-                        <div class="text-xs text-gray-800 font-bold mt-2" id="modal-selected-label">Please select model</div>
+                        <div class="text-xs text-gray-800 font-bold mt-2 line-clamp-2" id="modal-selected-label">Please select model</div>
                     </div>
                 </div>
 
-                <!-- Model Selection Row (Thumbnails) -->
+                <!-- Model Selection -->
                 <div class="mb-6">
                     <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Model Selection</h3>
+                    
+                    <!-- Visual Thumbs -->
                     <div class="flex gap-3 overflow-x-auto hide-scrollbar mb-4" id="sku-thumbs-container">
-                        <!-- Thumbs injected by JS -->
+                        <!-- Thumbs injected via JS -->
                     </div>
+
+                    <!-- Text Pills -->
                     <div class="flex flex-wrap gap-2" id="sku-container">
-                        <!-- Pills injected by JS -->
+                        <!-- Pills injected via JS -->
                     </div>
                 </div>
 
@@ -112,31 +137,64 @@
                         <button onclick="updateQty(1)" class="w-9 h-9 flex items-center justify-center bg-white rounded-lg shadow-sm font-bold text-gray-400">+</button>
                     </div>
                 </div>
-                
-                <!-- Extra Detail Mock -->
-                <div class="mt-6 border-t border-gray-50 pt-4">
-                    <h3 class="text-xs font-black text-gray-400 uppercase mb-2">Description</h3>
-                    <p class="text-xs text-gray-500 leading-relaxed">Official collection model. High-precision details, environmentally friendly materials. Perfect for collectors and tactical enthusiasts.</p>
-                </div>
             </div>
 
-            <!-- Bottom Actions -->
+            <!-- Bottom Actions (Single Button Now) -->
             <div class="absolute bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-gray-100 flex gap-3 z-20">
-                <button onclick="addToCart()" class="flex-1 bg-yellow-400 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest">Add to Bag</button>
-                <button onclick="alert('Proceeding to Checkout...')" class="flex-1 bg-taobao text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-orange-100">Buy Now</button>
+                <button onclick="addToCart()" class="flex-1 bg-taobao text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-orange-100 active:scale-95 transition-transform">Add to Bag</button>
             </div>
         </div>
     </div>
 
-    <!-- 5. FULL IMAGE ZOOM OVERLAY -->
-    <div id="zoom-overlay" class="fixed inset-0 z-[100] bg-black hidden items-center justify-center p-4 fade-in" onclick="this.classList.add('hidden'); this.classList.remove('flex')">
-        <img id="zoom-img" src="" class="max-w-full max-h-full object-contain">
-        <button class="absolute top-8 right-8 text-white/50 text-2xl"><i class="fa-solid fa-xmark"></i></button>
+    <!-- 5. CART DRAWER -->
+    <div id="cart-drawer" class="fixed inset-0 z-[70] bg-black/50 hidden" onclick="if(event.target == this) closeCart()">
+        <div id="cart-content" class="absolute top-0 right-0 w-80 h-full bg-white shadow-2xl cart-drawer-transition translate-x-full flex flex-col">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h2 class="font-black text-lg">My Bag</h2>
+                <button onclick="closeCart()" class="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-4">
+                <div id="empty-cart-msg" class="flex flex-col items-center justify-center h-64 text-gray-300">
+                    <i class="fa-solid fa-cart-shopping text-4xl mb-2"></i>
+                    <p class="text-xs font-bold uppercase">Empty</p>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-gray-100 bg-gray-50">
+                <div class="flex justify-between mb-4">
+                    <span class="text-xs font-bold text-gray-500">Total</span>
+                    <span class="text-xl font-black text-taobao" id="cart-total-price">$0.00</span>
+                </div>
+                <button class="w-full bg-black text-white font-black py-3 rounded-xl uppercase text-xs">Checkout</button>
+            </div>
+        </div>
     </div>
 
-    <!-- 6. TOAST -->
-    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-black/80 backdrop-blur-md text-white px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest hidden transition-all shadow-2xl">
-        <i class="fa-solid fa-circle-check text-green-400 mr-2"></i> Added to Universe
+    <!-- 6. ZOOM OVERLAY -->
+    <div id="zoom-overlay" class="fixed inset-0 z-[100] bg-black hidden items-center justify-center p-4 fade-in" 
+         onclick="if(event.target == this || event.target.tagName == 'I') { this.classList.add('hidden'); this.classList.remove('flex'); }"
+         ontouchstart="handleTouchStart(event)" 
+         ontouchend="handleTouchEnd(event)">
+        
+        <img id="zoom-img" src="" class="max-w-full max-h-full object-contain pointer-events-none transition-opacity duration-200">
+        
+        <!-- Navigation Arrows for Desktop/Visual -->
+        <button onclick="changeVariantByIndex(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4">
+            <i class="fa-solid fa-chevron-left text-3xl"></i>
+        </button>
+        <button onclick="changeVariantByIndex(1)" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4">
+            <i class="fa-solid fa-chevron-right text-3xl"></i>
+        </button>
+
+        <button class="absolute top-8 right-8 text-white/50 text-2xl p-2"><i class="fa-solid fa-xmark"></i></button>
+        
+        <div class="absolute bottom-8 text-white/50 text-xs font-bold uppercase tracking-widest">Swipe for next</div>
+    </div>
+
+    <!-- 7. TOAST -->
+    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-black/90 backdrop-blur text-white px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hidden shadow-2xl flex items-center gap-2">
+        <i class="fa-solid fa-circle-check text-green-400"></i> Added to Bag
     </div>
 
     <script>
@@ -157,11 +215,22 @@
                     { id: "n1", name: "Lloyd Mech", price: 12.00, image: "https://images.unsplash.com/photo-1611604548018-d56bbd85d681?auto=format&fit=crop&q=80&w=400" },
                     { id: "n2", name: "Gold Dragon", price: 45.00, image: "https://images.unsplash.com/photo-1560156710-0580240f9f19?auto=format&fit=crop&q=80&w=400" }
                 ]
+            },
+            {
+                id: 3, title: "Modern City Police Pursuit Base", sold: "310", category: "City",
+                thumbnail: "https://images.unsplash.com/photo-1598555230303-6c8411b438a1?auto=format&fit=crop&q=80&w=400",
+                variants: [
+                    { id: "c1", name: "Police Car", price: 8.00, image: "https://images.unsplash.com/photo-1598555230303-6c8411b438a1?auto=format&fit=crop&q=80&w=400" },
+                    { id: "c2", name: "Main Station", price: 55.00, image: "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?auto=format&fit=crop&q=80&w=400" }
+                ]
             }
         ];
 
-        let currentProduct = null, selectedVariant = null, qty = 1, cartTotal = 0;
+        let currentProduct = null, selectedVariant = null, qty = 1;
+        let cart = [];
+        let currentVariantIndex = 0; // Track index for swipe/scroll
 
+        // --- INIT ---
         function init(data = PRODUCTS) {
             document.getElementById('product-grid').innerHTML = data.map(p => `
                 <div onclick="openProduct(${p.id})" class="bg-white rounded-2xl overflow-hidden shadow-sm active:scale-95 transition-all">
@@ -178,48 +247,99 @@
         }
 
         function filterCat(cat, btn) {
-            const btns = document.querySelectorAll('#category-nav button');
-            btns.forEach(b => {
-                b.className = "text-gray-500 text-xs font-bold whitespace-nowrap pb-1";
-            });
+            document.querySelectorAll('#category-nav button').forEach(b => b.className = "text-gray-500 text-xs font-bold whitespace-nowrap pb-1");
             btn.className = "text-taobao text-xs font-bold whitespace-nowrap border-b-2 border-taobao pb-1";
-            
             if(cat === 'All') init(PRODUCTS);
             else init(PRODUCTS.filter(p => p.category === cat));
         }
 
+        // --- MODAL LOGIC ---
         function openProduct(id) {
             currentProduct = PRODUCTS.find(p => p.id === id);
             selectedVariant = currentProduct.variants[0];
+            currentVariantIndex = 0;
             qty = 1;
             
             document.getElementById('sku-thumbs-container').innerHTML = currentProduct.variants.map(v => `
-                <img src="${v.image}" onclick="selectVariant('${v.id}')" class="w-14 h-14 object-cover rounded-lg border-2 ${v.id === selectedVariant.id ? 'border-orange-500' : 'border-transparent'}">
+                <img src="${v.image}" data-id="${v.id}" onclick="selectVariant('${v.id}')" class="w-14 h-14 object-cover rounded-lg border-2 border-transparent transition-all">
             `).join('');
 
             document.getElementById('sku-container').innerHTML = currentProduct.variants.map(v => `
-                <button onclick="selectVariant('${v.id}')" class="px-4 py-2 rounded-xl text-xs font-bold border border-gray-100 bg-gray-50 text-gray-500 transition-all ${v.id === selectedVariant.id ? 'sku-active' : ''}">${v.name}</button>
+                <button data-id="${v.id}" onclick="selectVariant('${v.id}')" class="px-4 py-2 rounded-xl text-xs font-bold border border-gray-100 bg-gray-50 text-gray-500 transition-all">${v.name}</button>
             `).join('');
 
             updateModalUI();
+            
             const modal = document.getElementById('detail-modal');
             modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.add('opacity-100'); document.querySelector('.modal-transition').classList.remove('translate-y-full'); }, 10);
+            setTimeout(() => { 
+                modal.classList.add('opacity-100'); 
+                document.querySelector('.modal-transition').classList.remove('translate-y-full'); 
+            }, 10);
         }
 
         function selectVariant(id) {
-            selectedVariant = currentProduct.variants.find(v => v.id === id);
-            openProduct(currentProduct.id); // Re-render to update classes
+            selectedVariant = currentProduct.variants.find((v, idx) => {
+                if(v.id === id) {
+                    currentVariantIndex = idx;
+                    return true;
+                }
+                return false;
+            });
+            updateModalUI();
+        }
+
+        function changeVariantByIndex(offset) {
+            let newIndex = currentVariantIndex + offset;
+            if(newIndex < 0) newIndex = currentProduct.variants.length - 1;
+            if(newIndex >= currentProduct.variants.length) newIndex = 0;
+            
+            selectVariant(currentProduct.variants[newIndex].id);
         }
 
         function updateModalUI() {
-            document.getElementById('modal-img').src = selectedVariant.image;
+            // Update Text
             document.getElementById('modal-price').innerText = selectedVariant.price.toFixed(2);
             document.getElementById('modal-selected-label').innerText = `Selected: ${selectedVariant.name}`;
             document.getElementById('modal-qty').innerText = qty;
+
+            // Update Main Image
+            const mainImg = document.getElementById('modal-img');
+            mainImg.src = selectedVariant.image;
+            
+            // Update Zoom Image if visible
+            const zoomImg = document.getElementById('zoom-img');
+            if(!document.getElementById('zoom-overlay').classList.contains('hidden')) {
+                zoomImg.src = selectedVariant.image;
+            }
+
+            // Highlight Thumbs
+            const thumbs = document.getElementById('sku-thumbs-container').children;
+            for(let img of thumbs) {
+                if(img.dataset.id === selectedVariant.id) {
+                    img.classList.remove('border-transparent');
+                    img.classList.add('border-orange-500');
+                } else {
+                    img.classList.add('border-transparent');
+                    img.classList.remove('border-orange-500');
+                }
+            }
+
+            // Highlight Pills
+            const pills = document.getElementById('sku-container').children;
+            for(let btn of pills) {
+                if(btn.dataset.id === selectedVariant.id) {
+                    btn.classList.add('sku-active');
+                } else {
+                    btn.classList.remove('sku-active');
+                }
+            }
         }
 
-        function updateQty(delta) { qty = Math.max(1, qty + delta); updateModalUI(); }
+        function updateQty(delta) { 
+            qty = Math.max(1, qty + delta); 
+            document.getElementById('modal-qty').innerText = qty;
+        }
 
         function closeModal() {
             document.querySelector('.modal-transition').classList.add('translate-y-full');
@@ -234,19 +354,99 @@
             overlay.classList.add('flex');
         }
 
+        // --- SWIPE LOGIC ---
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        function handleTouchStart(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        }
+
+        function handleTouchEnd(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }
+
+        function handleSwipe() {
+            // Swipe Left (Next)
+            if (touchEndX < touchStartX - 50) changeVariantByIndex(1);
+            // Swipe Right (Prev)
+            if (touchEndX > touchStartX + 50) changeVariantByIndex(-1);
+        }
+
+        // --- CART LOGIC ---
         function addToCart() {
-            cartTotal += qty;
-            const badge = document.getElementById('cart-count');
-            badge.innerText = cartTotal;
-            badge.classList.remove('hidden');
+            cart.push({
+                productTitle: currentProduct.title,
+                variantName: selectedVariant.name,
+                price: selectedVariant.price,
+                image: selectedVariant.image,
+                qty: qty
+            });
+
+            updateCartBadge();
             closeModal();
+            
             const toast = document.getElementById('toast');
             toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 2000);
+            toast.classList.add('flex');
+            setTimeout(() => { 
+                toast.classList.add('hidden'); 
+                toast.classList.remove('flex');
+            }, 2000);
+        }
+
+        function updateCartBadge() {
+            const count = cart.reduce((acc, item) => acc + item.qty, 0);
+            const badge = document.getElementById('cart-count');
+            badge.innerText = count;
+            badge.classList.remove('hidden');
+        }
+
+        function openCart() {
+            const drawer = document.getElementById('cart-drawer');
+            const content = document.getElementById('cart-content');
+            const list = document.getElementById('cart-items');
+            const emptyMsg = document.getElementById('empty-cart-msg');
+            const totalDisplay = document.getElementById('cart-total-price');
+
+            if(cart.length === 0) {
+                emptyMsg.style.display = 'flex';
+                list.innerHTML = '';
+                list.appendChild(emptyMsg);
+            } else {
+                emptyMsg.style.display = 'none';
+                list.innerHTML = cart.map(item => `
+                    <div class="flex gap-3 bg-gray-50 p-2 rounded-xl">
+                        <img src="${item.image}" class="w-16 h-16 rounded-lg object-cover">
+                        <div class="flex-1">
+                            <div class="text-[10px] font-bold text-gray-800 line-clamp-1">${item.productTitle}</div>
+                            <div class="text-[9px] text-gray-400 mt-0.5">${item.variantName}</div>
+                            <div class="flex justify-between items-end mt-1">
+                                <div class="text-sm font-black text-taobao">$${item.price.toFixed(2)}</div>
+                                <div class="text-xs font-bold text-gray-500">x${item.qty}</div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            totalDisplay.innerText = '$' + total.toFixed(2);
+
+            drawer.classList.remove('hidden');
+            setTimeout(() => { content.classList.remove('translate-x-full'); }, 10);
+        }
+
+        function closeCart() {
+            const content = document.getElementById('cart-content');
+            content.classList.add('translate-x-full');
+            setTimeout(() => { document.getElementById('cart-drawer').classList.add('hidden'); }, 300);
         }
 
         init();
     </script>
 </body>
 </html>
+
 
