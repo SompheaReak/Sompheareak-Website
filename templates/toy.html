@@ -17,7 +17,13 @@
             background-color: #f5f5f5;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
+            padding-bottom: 90px; /* Space for bottom nav */
         }
+
+        /* Your Brand Color: R144 G215 B48 => Hex #90D730 */
+        .text-brand { color: #90D730; }
+        .bg-brand { background-color: #90D730; }
+        .border-brand { border-color: #90D730; }
 
         .text-taobao { color: #ff5000; }
         .bg-taobao { background-color: #ff5000; }
@@ -44,26 +50,38 @@
         /* Checkbox Style */
         .check-active { color: #ff5000; }
         .check-inactive { color: #d1d5db; }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
     </style>
 </head>
-<body class="pb-20">
+<body>
 
-    <!-- 1. HEADER -->
-    <header class="sticky top-0 z-50 bg-white px-4 py-3 flex items-center gap-3 border-b border-gray-100">
-        <a href="/" class="text-gray-400"><i class="fa-solid fa-chevron-left"></i></a>
-        <div class="flex-1 bg-gray-100 rounded-full h-9 flex items-center px-4 gap-2 border border-gray-50">
-            <i class="fa-solid fa-magnifying-glass text-gray-400 text-sm"></i>
-            <input type="text" placeholder="Search toy universe..." class="bg-transparent text-sm w-full outline-none text-gray-800">
+    <!-- 1. APP HEADER (Professional & Minimal) -->
+    <header class="sticky top-0 z-50 glass px-4 py-3 flex items-center justify-between border-b border-gray-100 shadow-sm transition-all duration-300">
+        <!-- Logo Area -->
+        <div class="flex items-center gap-2">
+            <!-- Tries to load image, falls back to text if image missing -->
+            <a href="/" class="flex items-center gap-2 group">
+                <img src="static/images/logo.jpg" onerror="this.style.display='none'; document.getElementById('logo-text').style.display='block'" class="h-8 object-contain">
+                <span id="logo-text" style="display:none;" class="font-black text-xl tracking-tighter text-brand">SOMPHEA REAK</span>
+            </a>
         </div>
-        <!-- Cart Icon -->
-        <div class="relative cursor-pointer w-8 h-8 flex items-center justify-center" onclick="openCart()">
-            <i class="fa-solid fa-cart-shopping text-gray-600 text-xl"></i>
-            <span id="cart-count" class="absolute -top-1 -right-1 bg-taobao text-white text-[9px] font-bold px-1.5 rounded-full border border-white hidden">0</span>
+        
+        <!-- Header Actions -->
+        <div class="flex items-center gap-3">
+            <a href="https://t.me/Somphea_Reak" target="_blank" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:text-blue-500 hover:bg-blue-50 transition-colors">
+                <i class="fa-regular fa-comments"></i>
+            </a>
         </div>
     </header>
 
     <!-- 2. SUBCATEGORIES -->
-    <nav class="sticky top-[61px] z-40 bg-white border-b border-gray-50 overflow-x-auto hide-scrollbar flex px-4 py-2 gap-6" id="category-nav">
+    <nav class="sticky top-[57px] z-40 bg-white/95 backdrop-blur border-b border-gray-50 overflow-x-auto hide-scrollbar flex px-4 py-2 gap-6 shadow-sm" id="category-nav">
         <button onclick="filterCat('All', this)" class="text-taobao text-xs font-bold whitespace-nowrap border-b-2 border-taobao pb-1">All</button>
         <button onclick="filterCat('WWII Soldier', this)" class="text-gray-500 text-xs font-bold whitespace-nowrap pb-1">WWII Soldier</button>
         <button onclick="filterCat('Ninjago', this)" class="text-gray-500 text-xs font-bold whitespace-nowrap pb-1">Ninjago</button>
@@ -76,9 +94,33 @@
         <!-- Products injected by JS -->
     </main>
 
-    <!-- 4. PRODUCT DETAIL MODAL -->
+    <!-- 4. BOTTOM NAVIGATION BAR (TaoBao Style) -->
+    <div class="fixed bottom-0 left-0 right-0 glass border-t border-gray-100 px-6 py-2 flex justify-between items-center z-[45] pb-safe">
+        <!-- Home -->
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center gap-1 text-gray-800 active:scale-90 transition-transform w-16">
+            <i class="fa-solid fa-store text-xl"></i>
+            <span class="text-[10px] font-bold">Shop</span>
+        </button>
+        
+        <!-- Telegram Chat -->
+        <a href="https://t.me/Somphea_Reak" target="_blank" class="flex flex-col items-center gap-1 text-gray-400 hover:text-[#0088cc] active:scale-90 transition-transform w-16">
+            <i class="fa-brands fa-telegram text-xl"></i>
+            <span class="text-[10px] font-bold">Chat</span>
+        </a>
+
+        <!-- Cart (Moved Here) -->
+        <button onclick="openCart()" class="flex flex-col items-center gap-1 text-gray-400 hover:text-taobao active:scale-90 transition-transform w-16 relative">
+            <div class="relative">
+                <i class="fa-solid fa-bag-shopping text-xl"></i>
+                <span id="nav-cart-badge" class="absolute -top-1.5 -right-1.5 bg-taobao text-white text-[9px] font-bold px-1 rounded-full border border-white hidden animate-bounce">0</span>
+            </div>
+            <span class="text-[10px] font-bold">My Bag</span>
+        </button>
+    </div>
+
+    <!-- 5. PRODUCT DETAIL MODAL -->
     <div id="detail-modal" class="fixed inset-0 z-[60] bg-black/50 hidden opacity-0 transition-opacity duration-300" onclick="if(event.target == this) closeModal()">
-        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl modal-transition translate-y-full flex flex-col max-h-[92vh]">
+        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl modal-transition translate-y-full flex flex-col max-h-[85vh]">
             
             <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-1"></div>
 
@@ -86,7 +128,7 @@
                 <!-- Header Info -->
                 <div class="flex gap-4 mb-6">
                     <div class="relative group w-28 h-28 flex-shrink-0 select-none">
-                        <!-- Main Modal Image with Swipe -->
+                        <!-- Main Modal Image -->
                         <img id="modal-img" src="" 
                              class="w-full h-full object-cover rounded-xl shadow-md border border-gray-100 active:scale-95 transition-transform cursor-grab" 
                              onclick="handleImageClick()"
@@ -97,14 +139,6 @@
                         
                         <div class="absolute bottom-1 right-1 bg-black/40 text-white text-[8px] px-1 rounded pointer-events-none">
                             <i class="fa-solid fa-expand"></i>
-                        </div>
-                        
-                        <!-- Swipe Hint Arrows -->
-                        <div onclick="changeVariantByIndex(-1)" class="absolute top-1/2 -left-2 -translate-y-1/2 bg-white/90 rounded-full w-6 h-6 flex items-center justify-center shadow-md cursor-pointer z-10 text-gray-500 hover:text-taobao">
-                            <i class="fa-solid fa-chevron-left text-[10px]"></i>
-                        </div>
-                        <div onclick="changeVariantByIndex(1)" class="absolute top-1/2 -right-2 -translate-y-1/2 bg-white/90 rounded-full w-6 h-6 flex items-center justify-center shadow-md cursor-pointer z-10 text-gray-500 hover:text-taobao">
-                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
                         </div>
                     </div>
 
@@ -122,7 +156,6 @@
                 <!-- Model Selection -->
                 <div class="mb-6">
                     <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Model Selection</h3>
-                    
                     <div class="flex gap-3 overflow-x-auto hide-scrollbar mb-4" id="sku-thumbs-container"></div>
                     <div class="flex flex-wrap gap-2" id="sku-container"></div>
                 </div>
@@ -145,27 +178,26 @@
         </div>
     </div>
 
-    <!-- 5. CART DRAWER (Fixed Scrolling) -->
+    <!-- 6. CART DRAWER (App Style) -->
     <div id="cart-drawer" class="fixed inset-0 z-[70] bg-black/50 hidden" onclick="if(event.target == this) closeCart()">
-        <div id="cart-content" class="absolute top-0 right-0 w-80 h-[100dvh] bg-white shadow-2xl cart-drawer-transition translate-x-full flex flex-col">
+        <div id="cart-content" class="absolute top-0 right-0 w-full md:w-96 h-[100dvh] bg-white shadow-2xl cart-drawer-transition translate-x-full flex flex-col">
             
             <!-- Cart Header -->
             <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white z-20 flex-none shadow-sm">
                 <h2 class="font-black text-lg">My Bag <span id="cart-header-count" class="text-gray-400 text-xs font-normal">(0)</span></h2>
-                <button onclick="closeCart()" class="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center shadow-sm text-gray-500"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeCart()" class="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center shadow-sm text-gray-500 active:scale-90 transition-transform"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
             
-            <!-- Cart Items (Scrollable) -->
-            <div class="flex-1 overflow-y-auto p-4 space-y-3 min-h-0 bg-gray-50" id="cart-items">
+            <!-- Cart Items -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3 min-h-0 bg-gray-50 pb-32" id="cart-items">
                 <div id="empty-cart-msg" class="flex flex-col items-center justify-center h-full text-gray-300">
-                    <i class="fa-solid fa-cart-shopping text-4xl mb-2"></i>
-                    <p class="text-xs font-bold uppercase">Empty</p>
+                    <i class="fa-solid fa-bag-shopping text-4xl mb-2 opacity-50"></i>
+                    <p class="text-xs font-bold uppercase tracking-widest">Your bag is empty</p>
                 </div>
-                <!-- Items injected here -->
             </div>
 
-            <!-- Cart Footer (Fixed) -->
-            <div class="p-4 border-t border-gray-100 bg-white z-20 flex-none shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+            <!-- Cart Footer -->
+            <div class="p-4 border-t border-gray-100 bg-white z-20 flex-none shadow-[0_-5px_15px_rgba(0,0,0,0.05)] safe-pb">
                 <div class="flex justify-between items-end mb-4">
                     <span class="text-xs font-bold text-gray-500">Total Selected</span>
                     <div class="text-right">
@@ -173,31 +205,65 @@
                         <div class="text-xs font-bold text-gray-400" id="cart-total-usd">$0.00</div>
                     </div>
                 </div>
-                <button class="w-full bg-black text-white font-black py-3.5 rounded-xl uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-transform">Checkout</button>
+                <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-4 rounded-xl uppercase text-xs tracking-widest shadow-lg active:scale-95 transition-transform flex justify-between px-6">
+                    <span>Checkout</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- 6. ZOOM OVERLAY -->
-    <div id="zoom-overlay" class="fixed inset-0 z-[100] bg-black hidden items-center justify-center p-4 fade-in" 
+    <!-- 7. CHECKOUT FORM MODAL -->
+    <div id="checkout-modal" class="fixed inset-0 z-[80] bg-black/60 hidden items-center justify-center p-4 backdrop-blur-sm" onclick="if(event.target == this) closeCheckout()">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl transform scale-100 transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-black text-gray-800">Delivery Info</h2>
+                <button onclick="closeCheckout()" class="text-gray-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Your Name</label>
+                    <input type="text" id="cust-name" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm font-bold focus:outline-none focus:border-taobao focus:ring-1 focus:ring-taobao transition-all" placeholder="Enter your name">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Phone Number</label>
+                    <input type="tel" id="cust-phone" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm font-bold focus:outline-none focus:border-taobao focus:ring-1 focus:ring-taobao transition-all" placeholder="012 345 678">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Address</label>
+                    <textarea id="cust-address" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-sm font-bold focus:outline-none focus:border-taobao focus:ring-1 focus:ring-taobao transition-all h-24 resize-none" placeholder="House number, Street, City..."></textarea>
+                </div>
+            </div>
+
+            <button onclick="sendOrderToTelegram()" class="w-full bg-[#0088cc] text-white font-black py-4 rounded-xl shadow-lg shadow-blue-200 active:scale-95 transition-transform flex items-center justify-center gap-2">
+                <i class="fa-brands fa-telegram text-xl"></i>
+                <span>Send to Telegram</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 8. ZOOM OVERLAY -->
+    <div id="zoom-overlay" class="fixed inset-0 z-[100] bg-black/95 hidden items-center justify-center p-4 fade-in" 
          onclick="if(event.target == this || event.target.tagName == 'I') { this.classList.add('hidden'); this.classList.remove('flex'); }"
          ontouchstart="handleTouchStart(event)" 
          ontouchend="handleTouchEnd(event)">
         
         <img id="zoom-img" src="" class="max-w-full max-h-full object-contain pointer-events-none transition-opacity duration-200">
-        
-        <button onclick="changeVariantByIndex(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4"><i class="fa-solid fa-chevron-left text-3xl"></i></button>
-        <button onclick="changeVariantByIndex(1)" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white p-4"><i class="fa-solid fa-chevron-right text-3xl"></i></button>
-        <button class="absolute top-8 right-8 text-white/50 text-2xl p-2"><i class="fa-solid fa-xmark"></i></button>
-        <div class="absolute bottom-8 text-white/50 text-xs font-bold uppercase tracking-widest">Swipe for next</div>
+        <button class="absolute top-6 right-6 text-white/50 text-2xl p-4 bg-white/10 rounded-full"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
-    <!-- 7. TOAST -->
-    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-black/90 backdrop-blur text-white px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hidden shadow-2xl flex items-center gap-2">
-        <i class="fa-solid fa-circle-check text-green-400"></i> Added to Bag
+    <!-- 9. TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-black/80 backdrop-blur-md text-white px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hidden shadow-2xl items-center gap-2 transform transition-all duration-300">
+        <i class="fa-solid fa-circle-check text-brand"></i>
+        <span>Added to Bag</span>
     </div>
 
     <script>
+        // --- CONFIGURATION ---
+        const TELEGRAM_USERNAME = "Somphea_Reak"; 
+        const EXCHANGE_RATE = 4000;
+
         // --- FIXED DATA (ALL COMMAS RESTORED) ---
         const PRODUCTS = [
             {
@@ -307,7 +373,7 @@
             },
             {
                 id: 8, title: "LEGO Ninjago", sold: "310", category: "Ninjago",
-                thumbnail: "static/images/lego-ninjago-thumbnail.jpg",
+                thumbnail: "static/images/lego-ninjago-71808.jpg",
                 variants: [
                     { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
                     { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
@@ -326,24 +392,21 @@
         let cart = [];
         let currentVariantIndex = 0; 
         let isDragging = false; 
-        const EXCHANGE_RATE = 4000;
 
         // --- SIMULATED VISITOR ALERT ---
         window.onload = function() {
-            // Check if we've visited before (using LocalStorage)
             if(!localStorage.getItem('visited')) {
-                // First time visit
                 console.log("New Visitor detected!"); 
                 localStorage.setItem('visited', 'true');
-                
-                // Simulate an "Admin Notification" just for show
-                // In real life, you would send a fetch request to your backend here
-                // fetch('https://your-api.com/notify', { method: 'POST' ... })
             }
             init(PRODUCTS);
         };
 
+        // --- SAFE CURRENCY FORMATTER (No crashing!) ---
         function formatCurrency(usd) {
+            if (usd === undefined || usd === null || isNaN(usd)) {
+                return { riel: "0៛", usd: "$0.00" };
+            }
             const riel = Math.round(usd * EXCHANGE_RATE).toLocaleString();
             return {
                 riel: `${riel}៛`,
@@ -356,15 +419,16 @@
             const grid = document.getElementById('product-grid');
             if(!grid) return;
             grid.innerHTML = data.map(p => {
+                if (!p.variants || p.variants.length === 0) return '';
                 const price = formatCurrency(p.variants[0].price);
                 return `
                 <div onclick="openProduct(${p.id})" class="bg-white rounded-2xl overflow-hidden shadow-sm active:scale-95 transition-all">
-                    <div class="aspect-square relative"><img src="${p.thumbnail}" class="w-full h-full object-cover"></div>
+                    <div class="aspect-square relative bg-gray-50"><img src="${p.thumbnail}" class="w-full h-full object-cover"></div>
                     <div class="p-3">
                         <h3 class="text-[11px] font-bold text-gray-800 line-clamp-2 h-8 leading-tight mb-1">${p.title}</h3>
                         <div class="flex items-end justify-between">
                             <div class="flex flex-col">
-                                <span class="text-sm font-black text-taobao leading-none">${price.riel}</span>
+                                <span class="text-sm font-black text-brand leading-none">${price.riel}</span>
                                 <span class="text-[9px] text-gray-400 font-bold">${price.usd}</span>
                             </div>
                             <span class="text-[9px] text-gray-400 font-bold">${p.sold} sold</span>
@@ -376,7 +440,7 @@
 
         function filterCat(cat, btn) {
             document.querySelectorAll('#category-nav button').forEach(b => b.className = "text-gray-500 text-xs font-bold whitespace-nowrap pb-1");
-            btn.className = "text-taobao text-xs font-bold whitespace-nowrap border-b-2 border-taobao pb-1";
+            btn.className = "text-brand text-xs font-bold whitespace-nowrap border-b-2 border-brand pb-1";
             if(cat === 'All') init(PRODUCTS);
             else init(PRODUCTS.filter(p => p.category === cat));
         }
@@ -384,6 +448,8 @@
         // --- MODAL LOGIC ---
         function openProduct(id) {
             currentProduct = PRODUCTS.find(p => p.id === id);
+            if (!currentProduct) return;
+            
             selectedVariant = currentProduct.variants[0];
             currentVariantIndex = 0;
             qty = 1;
@@ -441,7 +507,7 @@
 
             // Highlights
             Array.from(document.getElementById('sku-thumbs-container').children).forEach(img => {
-                img.classList.toggle('border-orange-500', img.dataset.id === selectedVariant.id);
+                img.classList.toggle('border-brand', img.dataset.id === selectedVariant.id);
                 img.classList.toggle('border-transparent', img.dataset.id !== selectedVariant.id);
             });
             
@@ -495,16 +561,22 @@
             });
             updateCartBadge();
             closeModal();
+            
+            // Show toast animation
             const toast = document.getElementById('toast');
-            toast.classList.remove('hidden'); toast.classList.add('flex');
-            setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('flex'); }, 2000);
+            toast.classList.remove('hidden'); 
+            toast.classList.add('flex', 'translate-y-0', 'opacity-100');
+            setTimeout(() => { 
+                toast.classList.add('hidden'); 
+            }, 2000);
         }
 
         function updateCartBadge() {
             const count = cart.length;
-            const badge = document.getElementById('cart-count');
+            const badge = document.getElementById('nav-cart-badge');
             badge.innerText = count;
             if(count > 0) badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
         }
 
         function openCart() {
@@ -537,26 +609,31 @@
             } else {
                 emptyMsg.style.display = 'none';
                 list.innerHTML = cart.map((item, idx) => {
-                    const price = formatCurrency(item.price);
-                    return `
-                    <div class="flex gap-3 bg-white p-3 rounded-2xl shadow-sm border border-gray-100 items-center">
-                        <div onclick="toggleCartItem(${idx})" class="cursor-pointer p-2 -ml-2">
-                            <i class="fa-solid fa-circle-check text-xl ${item.checked ? 'check-active' : 'check-inactive'}"></i>
-                        </div>
-                        <img src="${item.image}" class="w-16 h-16 rounded-lg object-cover bg-gray-50 flex-shrink-0">
-                        <div class="flex-1 min-w-0">
-                            <div class="text-xs font-bold text-gray-800 line-clamp-1">${item.productTitle}</div>
-                            <div class="text-[10px] text-gray-400 mt-0.5 bg-gray-50 inline-block px-1.5 py-0.5 rounded">${item.variantName}</div>
-                            <div class="flex justify-between items-end mt-1.5">
-                                <div class="flex flex-col leading-none">
-                                    <span class="text-sm font-black text-taobao">${price.riel}</span>
-                                    <span class="text-[10px] font-bold text-gray-400">${price.usd}</span>
+                    try {
+                        const price = formatCurrency(item.price);
+                        return `
+                        <div class="flex gap-3 bg-white p-3 rounded-2xl shadow-sm border border-gray-100 items-center">
+                            <div onclick="toggleCartItem(${idx})" class="cursor-pointer p-2 -ml-2">
+                                <i class="fa-solid fa-circle-check text-xl ${item.checked ? 'check-active' : 'check-inactive'}"></i>
+                            </div>
+                            <img src="${item.image}" class="w-16 h-16 rounded-lg object-cover bg-gray-50 flex-shrink-0">
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold text-gray-800 line-clamp-1">${item.productTitle}</div>
+                                <div class="text-[10px] text-gray-400 mt-0.5 bg-gray-50 inline-block px-1.5 py-0.5 rounded">${item.variantName}</div>
+                                <div class="flex justify-between items-end mt-1.5">
+                                    <div class="flex flex-col leading-none">
+                                        <span class="text-sm font-black text-brand">${price.riel}</span>
+                                        <span class="text-[10px] font-bold text-gray-400">${price.usd}</span>
+                                    </div>
+                                    <div class="text-xs font-bold text-gray-800">x${item.qty}</div>
                                 </div>
-                                <div class="text-xs font-bold text-gray-800">x${item.qty}</div>
                             </div>
                         </div>
-                    </div>
-                `}).join('');
+                        `;
+                    } catch(e) {
+                        return ""; 
+                    }
+                }).join('');
             }
             updateCartTotal();
         }
@@ -567,6 +644,59 @@
             document.getElementById('cart-total-riel').innerText = price.riel;
             document.getElementById('cart-total-usd').innerText = price.usd;
         }
+
+        // --- CHECKOUT LOGIC ---
+        function openCheckout() {
+            const selectedItems = cart.filter(item => item.checked);
+            if (selectedItems.length === 0) {
+                alert("Please select at least one item to checkout!");
+                return;
+            }
+            document.getElementById('checkout-modal').classList.remove('hidden');
+            document.getElementById('checkout-modal').classList.add('flex');
+        }
+
+        function closeCheckout() {
+            document.getElementById('checkout-modal').classList.add('hidden');
+            document.getElementById('checkout-modal').classList.remove('flex');
+        }
+
+        function sendOrderToTelegram() {
+            const name = document.getElementById('cust-name').value;
+            const phone = document.getElementById('cust-phone').value;
+            const address = document.getElementById('cust-address').value;
+
+            if (!name || !phone) {
+                alert("Please enter your Name and Phone Number.");
+                return;
+            }
+
+            const selectedItems = cart.filter(item => item.checked);
+            let message = `🛒 *New Order from ${name}*\n`;
+            message += `📞 Phone: ${phone}\n`;
+            message += `📍 Address: ${address}\n\n`;
+            message += `*Order Details:*\n`;
+
+            let totalUsd = 0;
+
+            selectedItems.forEach((item, index) => {
+                const itemTotal = item.price * item.qty;
+                totalUsd += itemTotal;
+                message += `${index + 1}. ${item.productTitle} (${item.variantName}) x${item.qty} - $${itemTotal.toFixed(2)}\n`;
+                // Basic image link if available (not uploaded, just link)
+                // message += `   [Image](${item.image})\n`; 
+            });
+
+            const totalRiel = Math.round(totalUsd * EXCHANGE_RATE).toLocaleString();
+            message += `\n💰 *TOTAL: $${totalUsd.toFixed(2)} (${totalRiel}៛)*`;
+
+            const encodedMessage = encodeURIComponent(message);
+            const telegramUrl = `https://t.me/${TELEGRAM_USERNAME}?text=${encodedMessage}`;
+
+            window.open(telegramUrl, '_blank');
+        }
+
+        init();
     </script>
 </body>
 </html>
