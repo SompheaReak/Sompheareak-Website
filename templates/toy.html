@@ -92,7 +92,6 @@
         <button onclick="openCart()" class="flex flex-col items-center gap-1 text-gray-400 hover:text-taobao w-16 relative active:scale-90 transition-transform">
             <div class="relative">
                 <i class="fa-solid fa-cart-shopping text-xl"></i>
-                <!-- Badge Fixed: visible by default if JS enables it, z-index high -->
                 <span id="nav-cart-badge" class="absolute -top-2 -right-2 z-10 bg-taobao text-white text-[9px] font-bold px-1.5 h-4 flex items-center justify-center rounded-full border-2 border-white hidden animate-bounce shadow-sm">0</span>
             </div>
             <span class="text-[10px] font-bold">My Bag</span>
@@ -103,8 +102,10 @@
     <div id="detail-modal" class="fixed inset-0 z-[60] bg-black/60 hidden opacity-0 transition-opacity duration-300" onclick="if(event.target == this) closeModal()">
         <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[1.5rem] smooth-transform translate-y-full flex flex-col max-h-[85vh] shadow-2xl">
             <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mt-3 mb-2"></div>
+            
             <div class="overflow-y-auto p-5 pb-32">
-                <div class="flex gap-4 mb-6">
+                <!-- Header Info -->
+                <div class="flex gap-4 mb-4">
                     <div class="relative w-28 h-28 flex-shrink-0 bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
                         <img id="modal-img" src="" class="w-full h-full object-cover cursor-zoom-in" onclick="zoomImage()">
                     </div>
@@ -117,10 +118,22 @@
                         <div class="text-xs text-gray-800 font-bold line-clamp-2" id="modal-selected-label">Select Model</div>
                     </div>
                 </div>
+
+                <!-- Image Scroll Bar -->
+                <div class="mb-5">
+                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 pl-1">Preview</h3>
+                    <div class="flex gap-2.5 overflow-x-auto hide-scrollbar pb-2" id="sku-gallery">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Text Selection -->
                 <div class="mb-6">
-                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Select Model</h3>
+                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 pl-1">Select Model</h3>
                     <div class="flex flex-wrap gap-2" id="sku-container"></div>
                 </div>
+
+                <!-- Quantity -->
                 <div class="flex justify-between items-center py-4 border-t border-gray-50">
                     <span class="text-sm font-bold text-gray-900">Quantity</span>
                     <div class="flex items-center bg-gray-100 rounded-lg p-1">
@@ -130,6 +143,8 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Add to Cart Footer -->
             <div class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-50 z-20 pb-safe">
                 <button onclick="addToCart()" class="w-full taobao-orange text-white font-bold py-3.5 rounded-full shadow-lg shadow-orange-200 active:scale-95 transition-transform">
                     Add to Bag
@@ -173,10 +188,7 @@
                 </button>
             </div>
             
-            <!-- Scrollable Content -->
             <div class="overflow-y-auto hide-scrollbar flex-1 space-y-4 mb-4">
-                
-                <!-- Delivery Info -->
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3">
                     <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Delivery Info</h3>
                     <div class="bg-white rounded-lg px-3 py-2 border border-gray-200 focus-within:border-taobao transition-all group" id="field-name">
@@ -190,13 +202,9 @@
                     </div>
                 </div>
 
-                <!-- Invoice Items -->
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
                     <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Order Items</h3>
-                    <div id="invoice-items" class="space-y-3">
-                        <!-- Items injected here -->
-                    </div>
-                    
+                    <div id="invoice-items" class="space-y-3"></div>
                     <div class="border-t border-dashed border-gray-300 mt-4 pt-3 flex justify-between items-end">
                         <span class="text-xs font-bold text-gray-500">Total Amount</span>
                         <div class="text-right">
@@ -207,7 +215,6 @@
                 </div>
             </div>
 
-            <!-- Send Button -->
             <div class="flex-none pt-2">
                 <button onclick="sendOrderToTelegram()" id="btn-send" class="w-full bg-[#0088cc] text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-100 active:scale-95 transition-transform flex items-center justify-center gap-2">
                     <i class="fa-brands fa-telegram text-xl"></i>
@@ -369,7 +376,6 @@
         }
 
         function init() {
-            // Load Cart from LocalStorage
             const savedCart = localStorage.getItem('toy_cart');
             if(savedCart) {
                 try {
@@ -380,7 +386,6 @@
                     localStorage.removeItem('toy_cart');
                 }
             }
-
             renderTabs();
             renderProducts(PRODUCTS);
         }
@@ -435,12 +440,23 @@
             currentProduct = PRODUCTS.find(p => p.id === id);
             selectedVariant = currentProduct.variants[0];
             qty = 1;
+            
+            // Populate Image Gallery
+            document.getElementById('sku-gallery').innerHTML = currentProduct.variants.map(v => `
+                <div onclick="selectVariant('${v.id}')" 
+                    class="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${selectedVariant.id === v.id ? 'border-taobao' : 'border-transparent'}">
+                    <img src="${v.image}" class="w-full h-full object-cover">
+                </div>
+            `).join('');
+
+            // Populate Text Buttons
             document.getElementById('sku-container').innerHTML = currentProduct.variants.map(v => `
                 <button onclick="selectVariant('${v.id}')" 
                     class="px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${selectedVariant.id === v.id ? 'sku-active' : 'border-gray-200 bg-gray-50 text-gray-600'}">
                     ${v.name}
                 </button>
             `).join('');
+
             updateModalUI();
             const modal = document.getElementById('detail-modal');
             modal.classList.remove('hidden');
@@ -449,10 +465,21 @@
 
         function selectVariant(id) {
             selectedVariant = currentProduct.variants.find(v => v.id === id);
+            
+            // Update Text Buttons
             Array.from(document.getElementById('sku-container').children).forEach((btn, idx) => {
                 const v = currentProduct.variants[idx];
                 btn.className = `px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${v.id === selectedVariant.id ? 'sku-active' : 'border-gray-200 bg-gray-50 text-gray-600'}`;
             });
+
+            // Update Image Gallery
+            Array.from(document.getElementById('sku-gallery').children).forEach((div, idx) => {
+                const v = currentProduct.variants[idx];
+                div.className = `relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${v.id === selectedVariant.id ? 'border-taobao' : 'border-transparent'}`;
+                // Auto scroll to active
+                if(v.id === selectedVariant.id) div.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            });
+
             updateModalUI();
         }
 
@@ -543,7 +570,6 @@
             const activeItems = cart.filter(i => i.checked);
             if(activeItems.length === 0) return alert("Please select items to checkout");
             
-            // Populate Invoice Items
             const invoiceList = document.getElementById('invoice-items');
             invoiceList.innerHTML = activeItems.map(item => {
                 const total = formatCurrency(item.price * item.qty);
@@ -562,7 +588,6 @@
                 `;
             }).join('');
 
-            // Update Total
             const totalUsd = activeItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
             const totalPrice = formatCurrency(totalUsd);
             document.getElementById('invoice-total-riel').innerText = totalPrice.riel;
@@ -621,7 +646,6 @@
 
             const url = `https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(msg)}`;
             
-            // DIRECT OPEN - NO DELAY
             window.open(url, '_blank');
             closeCheckout();
         }
