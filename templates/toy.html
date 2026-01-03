@@ -6,6 +6,7 @@
     <title>Somphea Reak | Toy Universe</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -51,6 +52,18 @@
             background-color: #fff1eb;
             border: 1px solid #ff5000;
             color: #ff5000;
+        }
+
+        /* Hidden Receipt Styles for Capture */
+        #receipt-render-node {
+            font-family: 'Noto Sans Khmer', sans-serif;
+            background: white;
+            width: 375px; /* Fixed width for consistent capture */
+            padding: 24px;
+            position: fixed;
+            left: -9999px; /* Hide off-screen */
+            top: 0;
+            z-index: -10;
         }
     </style>
 </head>
@@ -182,13 +195,14 @@
         <div id="checkout-panel" class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[1.5rem] smooth-transform translate-y-full flex flex-col p-6 pb-safe shadow-2xl max-h-[90vh] overflow-hidden">
             
             <div class="flex justify-between items-center mb-4 flex-none">
-                <h2 class="text-xl font-black text-gray-800"><i class="fa-solid fa-receipt text-taobao mr-2"></i>Invoice</h2>
+                <h2 class="text-xl font-black text-gray-800" id="checkout-title"><i class="fa-solid fa-receipt text-taobao mr-2"></i>Invoice</h2>
                 <button onclick="closeCheckout()" class="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             
-            <div class="overflow-y-auto hide-scrollbar flex-1 space-y-4 mb-4">
+            <!-- STATE 1: Input Form -->
+            <div id="checkout-form" class="overflow-y-auto hide-scrollbar flex-1 space-y-4 mb-4">
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3">
                     <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Delivery Info</h3>
                     <div class="bg-white rounded-lg px-3 py-2 border border-gray-200 focus-within:border-taobao transition-all group" id="field-name">
@@ -215,15 +229,74 @@
                 </div>
             </div>
 
-            <div class="flex-none pt-2">
-                <button onclick="sendOrderToTelegram()" id="btn-send" class="w-full bg-[#0088cc] text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-100 active:scale-95 transition-transform flex items-center justify-center gap-2">
-                    <i class="fa-brands fa-telegram text-xl"></i>
-                    <span>Confirm & Send Order</span>
-                </button>
-                <div class="text-center mt-2">
-                    <p class="text-[9px] text-gray-400">Order details will be opened in Telegram.</p>
+            <!-- STATE 2: Generated Image Preview -->
+            <div id="checkout-result" class="overflow-y-auto hide-scrollbar flex-1 mb-4 hidden flex flex-col items-center">
+                <p class="text-xs text-gray-500 mb-2 font-bold">Screenshot generated!</p>
+                <div class="w-full border rounded-xl overflow-hidden shadow-lg">
+                    <img id="generated-invoice-img" src="" class="w-full h-auto">
                 </div>
+                <a id="download-link" href="#" download="invoice.png" class="mt-4 text-[#0088cc] text-xs font-bold underline">Download Image</a>
             </div>
+
+            <div class="flex-none pt-2" id="checkout-footer">
+                <button onclick="generateInvoice()" id="btn-generate" class="w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Generate Invoice Image</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIDDEN RECEIPT TEMPLATE (For HTML2Canvas) -->
+    <div id="receipt-render-node">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-black text-brand tracking-tighter mb-1">SOMPHEA REAK</h1>
+            <p class="text-[10px] text-gray-400 uppercase tracking-widest">Toy Universe Invoice</p>
+        </div>
+        
+        <div class="border-b border-dashed border-gray-300 pb-4 mb-4">
+            <div class="flex justify-between text-xs mb-1">
+                <span class="text-gray-500">Date:</span>
+                <span class="font-bold text-gray-800" id="receipt-date"></span>
+            </div>
+            <div class="flex justify-between text-xs mb-1">
+                <span class="text-gray-500">Customer:</span>
+                <span class="font-bold text-gray-800" id="receipt-name"></span>
+            </div>
+            <div class="flex justify-between text-xs">
+                <span class="text-gray-500">Phone:</span>
+                <span class="font-bold text-gray-800" id="receipt-phone"></span>
+            </div>
+            <div class="text-xs mt-1 text-gray-500" id="receipt-address"></div>
+        </div>
+
+        <table class="w-full text-xs mb-4">
+            <thead>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left py-2 text-gray-500 font-bold uppercase">Item</th>
+                    <th class="text-center py-2 text-gray-500 font-bold uppercase">Qty</th>
+                    <th class="text-right py-2 text-gray-500 font-bold uppercase">Total</th>
+                </tr>
+            </thead>
+            <tbody id="receipt-items-body" class="text-gray-800 font-medium">
+                <!-- Items Injected -->
+            </tbody>
+        </table>
+
+        <div class="border-t border-dashed border-gray-300 pt-4">
+            <div class="flex justify-between items-center mb-1">
+                <span class="font-bold text-gray-500">Total USD</span>
+                <span class="font-black text-lg text-gray-900" id="receipt-total-usd">$0.00</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="font-bold text-gray-500">Total Riel</span>
+                <span class="font-black text-xl text-taobao" id="receipt-total-riel">0៛</span>
+            </div>
+        </div>
+        
+        <div class="mt-8 text-center">
+            <p class="text-[9px] text-gray-400">Thank you for shopping with us!</p>
+            <p class="text-[9px] text-gray-300 mt-1">Somphea Reak</p>
         </div>
     </div>
 
@@ -382,7 +455,6 @@
                     cart = JSON.parse(savedCart);
                     updateCartCount();
                 } catch(e) {
-                    console.error("Cart load error", e);
                     localStorage.removeItem('toy_cart');
                 }
             }
@@ -441,7 +513,6 @@
             selectedVariant = currentProduct.variants[0];
             qty = 1;
             
-            // Populate Image Gallery
             document.getElementById('sku-gallery').innerHTML = currentProduct.variants.map(v => `
                 <div onclick="selectVariant('${v.id}')" 
                     class="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${selectedVariant.id === v.id ? 'border-taobao' : 'border-transparent'}">
@@ -449,7 +520,6 @@
                 </div>
             `).join('');
 
-            // Populate Text Buttons
             document.getElementById('sku-container').innerHTML = currentProduct.variants.map(v => `
                 <button onclick="selectVariant('${v.id}')" 
                     class="px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${selectedVariant.id === v.id ? 'sku-active' : 'border-gray-200 bg-gray-50 text-gray-600'}">
@@ -466,17 +536,14 @@
         function selectVariant(id) {
             selectedVariant = currentProduct.variants.find(v => v.id === id);
             
-            // Update Text Buttons
             Array.from(document.getElementById('sku-container').children).forEach((btn, idx) => {
                 const v = currentProduct.variants[idx];
                 btn.className = `px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${v.id === selectedVariant.id ? 'sku-active' : 'border-gray-200 bg-gray-50 text-gray-600'}`;
             });
 
-            // Update Image Gallery
             Array.from(document.getElementById('sku-gallery').children).forEach((div, idx) => {
                 const v = currentProduct.variants[idx];
                 div.className = `relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${v.id === selectedVariant.id ? 'border-taobao' : 'border-transparent'}`;
-                // Auto scroll to active
                 if(v.id === selectedVariant.id) div.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             });
 
@@ -565,11 +632,12 @@
             document.getElementById('cart-total-usd').innerText = price.usd;
         }
 
-        // --- CHECKOUT LOGIC ---
+        // --- CHECKOUT & INVOICE GENERATION LOGIC ---
         function openCheckout() {
             const activeItems = cart.filter(i => i.checked);
             if(activeItems.length === 0) return alert("Please select items to checkout");
             
+            // Populate Modal Invoice Items
             const invoiceList = document.getElementById('invoice-items');
             invoiceList.innerHTML = activeItems.map(item => {
                 const total = formatCurrency(item.price * item.qty);
@@ -593,6 +661,13 @@
             document.getElementById('invoice-total-riel').innerText = totalPrice.riel;
             document.getElementById('invoice-total-usd').innerText = totalPrice.usd;
 
+            // Show Form State, Hide Result State
+            document.getElementById('checkout-form').classList.remove('hidden');
+            document.getElementById('checkout-result').classList.add('hidden');
+            document.getElementById('btn-generate').innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i><span>Generate Invoice Image</span>`;
+            document.getElementById('btn-generate').onclick = generateInvoice;
+            document.getElementById('checkout-footer').classList.remove('hidden');
+
             const modal = document.getElementById('checkout-modal');
             modal.classList.remove('hidden');
             setTimeout(() => { document.getElementById('checkout-panel').classList.remove('translate-y-full'); }, 10);
@@ -603,13 +678,11 @@
             setTimeout(() => { document.getElementById('checkout-modal').classList.add('hidden'); }, 300);
         }
 
-        function sendOrderToTelegram() {
-            const nameEl = document.getElementById('cust-name');
-            const phoneEl = document.getElementById('cust-phone');
-            const name = nameEl.value.trim();
-            const phone = phoneEl.value.trim();
+        function generateInvoice() {
+            const name = document.getElementById('cust-name').value.trim();
+            const phone = document.getElementById('cust-phone').value.trim();
             const address = document.getElementById('cust-address').value.trim();
-
+            
             let isValid = true;
             if(!name) { document.getElementById('field-name').classList.add('border-red-500', 'bg-red-50', 'shake'); isValid = false; } 
             else { document.getElementById('field-name').classList.remove('border-red-500', 'bg-red-50', 'shake'); }
@@ -619,35 +692,76 @@
 
             if(!isValid) { setTimeout(() => { document.querySelectorAll('.shake').forEach(el => el.classList.remove('shake')); }, 500); return; }
 
+            // 1. Populate Hidden Receipt
+            const today = new Date().toLocaleDateString();
+            document.getElementById('receipt-date').innerText = today;
+            document.getElementById('receipt-name').innerText = name;
+            document.getElementById('receipt-phone').innerText = phone;
+            document.getElementById('receipt-address').innerText = address || "No address provided";
+
             const activeItems = cart.filter(i => i.checked);
             const totalUsd = activeItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
-            const totalRiel = Math.round(totalUsd * EXCHANGE_RATE).toLocaleString();
+            const totalPrice = formatCurrency(totalUsd);
 
-            let msg = `🧾 *INVOICE*\n`;
-            msg += `──────────────\n`;
-            msg += `👤 *Customer:* ${name}\n`;
-            msg += `📞 *Phone:* ${phone}\n`;
-            if(address) msg += `📍 *Address:* ${address}\n`;
-            msg += `──────────────\n`;
-            msg += `*ORDER ITEMS:*\n`;
+            document.getElementById('receipt-items-body').innerHTML = activeItems.map(item => `
+                <tr class="border-b border-gray-100">
+                    <td class="py-2 text-left flex gap-2 items-center">
+                        <img src="${item.image}" style="width: 32px; height: 32px; border-radius: 4px; object-fit: cover;">
+                        <div>
+                            <div class="line-clamp-1">${item.title}</div>
+                            <div class="text-[9px] text-gray-400">${item.variantName}</div>
+                        </div>
+                    </td>
+                    <td class="py-2 text-center align-middle">${item.qty}</td>
+                    <td class="py-2 text-right align-middle">$${(item.price * item.qty).toFixed(2)}</td>
+                </tr>
+            `).join('');
 
-            const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
+            document.getElementById('receipt-total-usd').innerText = totalPrice.usd;
+            document.getElementById('receipt-total-riel').innerText = totalPrice.riel;
 
-            activeItems.forEach((item, i) => {
-                const subtotal = (item.price * item.qty).toFixed(2);
-                msg += `${i+1}. ${item.title} (${item.variantName})\n`;
-                msg += `   Qty: ${item.qty}  |  Price: $${subtotal}\n`;
-                const imgUrl = `${baseUrl}/${item.image}`;
-                msg += `   [View Image](${imgUrl})\n\n`;
-            });
+            // 2. Change Button State
+            const btn = document.getElementById('btn-generate');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Generating...</span>`;
 
-            msg += `──────────────\n`;
-            msg += `💰 *TOTAL: $${totalUsd.toFixed(2)} (${totalRiel}៛)*`;
+            // 3. Capture with HTML2Canvas
+            const node = document.getElementById('receipt-render-node');
+            
+            // Wait slightly for DOM to settle
+            setTimeout(() => {
+                html2canvas(node, { scale: 2, useCORS: true }).then(canvas => {
+                    const imgData = canvas.toDataURL("image/png");
+                    
+                    // 4. Show Result
+                    document.getElementById('generated-invoice-img').src = imgData;
+                    document.getElementById('download-link').href = imgData;
+                    
+                    document.getElementById('checkout-form').classList.add('hidden');
+                    document.getElementById('checkout-result').classList.remove('hidden');
+                    document.getElementById('checkout-result').classList.add('flex');
+                    
+                    // 5. Update Button to Open Telegram
+                    btn.innerHTML = `<i class="fa-brands fa-telegram text-xl"></i><span>Open Telegram & Send</span>`;
+                    btn.classList.remove('bg-black');
+                    btn.classList.add('bg-[#0088cc]');
+                    btn.onclick = () => openTelegramWithText(name, phone, address);
+                    
+                }).catch(err => {
+                    alert("Error generating image. Please try again.");
+                    console.error(err);
+                    btn.innerHTML = `<span>Try Again</span>`;
+                });
+            }, 500);
+        }
+
+        function openTelegramWithText(name, phone, address) {
+            let msg = `🧾 *INVOICE ATTACHED*\n`;
+            msg += `👤 ${name}\n📞 ${phone}\n`;
+            if(address) msg += `📍 ${address}\n`;
+            msg += `\n*Please see the attached image for order details.*`;
 
             const url = `https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(msg)}`;
-            
             window.open(url, '_blank');
-            closeCheckout();
         }
 
         function zoomImage() {
