@@ -92,7 +92,8 @@
         <button onclick="openCart()" class="flex flex-col items-center gap-1 text-gray-400 hover:text-taobao w-16 relative active:scale-90 transition-transform">
             <div class="relative">
                 <i class="fa-solid fa-cart-shopping text-xl"></i>
-                <span id="nav-cart-badge" class="absolute -top-2 -right-2 bg-taobao text-white text-[9px] font-bold px-1.5 h-4 flex items-center justify-center rounded-full border border-white hidden animate-bounce">0</span>
+                <!-- Badge Fixed: visible by default if JS enables it, z-index high -->
+                <span id="nav-cart-badge" class="absolute -top-2 -right-2 z-10 bg-taobao text-white text-[9px] font-bold px-1.5 h-4 flex items-center justify-center rounded-full border-2 border-white hidden animate-bounce shadow-sm">0</span>
             </div>
             <span class="text-[10px] font-bold">My Bag</span>
         </button>
@@ -154,46 +155,67 @@
                     </div>
                 </div>
                 <button onclick="openCheckout()" class="w-full taobao-orange text-white font-bold py-3.5 rounded-full shadow-lg active:scale-95 transition-transform flex justify-between px-6 items-center">
-                    <span>Checkout</span>
-                    <i class="fa-solid fa-arrow-right"></i>
+                    <span>Invoice & Checkout</span>
+                    <i class="fa-solid fa-file-invoice"></i>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- 7. CHECKOUT MODAL -->
+    <!-- 7. CHECKOUT / INVOICE MODAL -->
     <div id="checkout-modal" class="fixed inset-0 z-[90] bg-black/80 hidden transition-opacity duration-300" onclick="if(event.target == this) closeCheckout()">
-        <div id="checkout-panel" class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[1.5rem] smooth-transform translate-y-full flex flex-col p-6 pb-safe shadow-2xl">
+        <div id="checkout-panel" class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[1.5rem] smooth-transform translate-y-full flex flex-col p-6 pb-safe shadow-2xl max-h-[90vh] overflow-hidden">
             
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-black text-gray-800">Delivery Info</h2>
+            <div class="flex justify-between items-center mb-4 flex-none">
+                <h2 class="text-xl font-black text-gray-800"><i class="fa-solid fa-receipt text-taobao mr-2"></i>Invoice</h2>
                 <button onclick="closeCheckout()" class="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             
-            <div class="space-y-4 mb-6">
-                <div class="bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 focus-within:border-taobao focus-within:bg-white transition-all group" id="field-name">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Your Name *</label>
-                    <input type="text" id="cust-name" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 placeholder-gray-300" placeholder="Enter name">
+            <!-- Scrollable Content -->
+            <div class="overflow-y-auto hide-scrollbar flex-1 space-y-4 mb-4">
+                
+                <!-- Delivery Info -->
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3">
+                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Delivery Info</h3>
+                    <div class="bg-white rounded-lg px-3 py-2 border border-gray-200 focus-within:border-taobao transition-all group" id="field-name">
+                        <input type="text" id="cust-name" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 placeholder-gray-300" placeholder="Your Name *">
+                    </div>
+                    <div class="bg-white rounded-lg px-3 py-2 border border-gray-200 focus-within:border-taobao transition-all group" id="field-phone">
+                        <input type="tel" id="cust-phone" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 placeholder-gray-300" placeholder="Phone Number *">
+                    </div>
+                    <div class="bg-white rounded-lg px-3 py-2 border border-gray-200 focus-within:border-taobao transition-all group">
+                        <textarea id="cust-address" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 h-10 resize-none placeholder-gray-300" placeholder="Address..."></textarea>
+                    </div>
                 </div>
-                <div class="bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 focus-within:border-taobao focus-within:bg-white transition-all group" id="field-phone">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Phone Number *</label>
-                    <input type="tel" id="cust-phone" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 placeholder-gray-300" placeholder="012 345 678">
-                </div>
-                <div class="bg-gray-50 rounded-xl px-4 py-3 border border-gray-100 focus-within:border-taobao focus-within:bg-white transition-all group">
-                    <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Address (Optional)</label>
-                    <textarea id="cust-address" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 h-16 resize-none placeholder-gray-300" placeholder="Home, Street, City..."></textarea>
+
+                <!-- Invoice Items -->
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Order Items</h3>
+                    <div id="invoice-items" class="space-y-3">
+                        <!-- Items injected here -->
+                    </div>
+                    
+                    <div class="border-t border-dashed border-gray-300 mt-4 pt-3 flex justify-between items-end">
+                        <span class="text-xs font-bold text-gray-500">Total Amount</span>
+                        <div class="text-right">
+                            <div class="text-lg font-black text-taobao" id="invoice-total-riel">0៛</div>
+                            <div class="text-[10px] font-bold text-gray-400" id="invoice-total-usd">$0.00</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <button onclick="sendOrderToTelegram()" id="btn-send" class="w-full bg-[#0088cc] text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-100 active:scale-95 transition-transform flex items-center justify-center gap-2">
-                <i class="fa-brands fa-telegram text-xl"></i>
-                <span>Open Telegram & Send</span>
-            </button>
-            
-            <div class="text-center mt-3">
-                <p class="text-[10px] text-gray-400">Note: You must press "Send" inside the Telegram app.</p>
+            <!-- Send Button -->
+            <div class="flex-none pt-2">
+                <button onclick="sendOrderToTelegram()" id="btn-send" class="w-full bg-[#0088cc] text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-100 active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-telegram text-xl"></i>
+                    <span>Confirm & Send Order</span>
+                </button>
+                <div class="text-center mt-2">
+                    <p class="text-[9px] text-gray-400">Order details will be opened in Telegram.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -459,7 +481,7 @@
             if (existingItem) { existingItem.qty += qty; } 
             else { cart.push({ variantId: selectedVariant.id, title: currentProduct.title, variantName: selectedVariant.name, price: selectedVariant.price, image: selectedVariant.image, qty: qty, checked: true }); }
             
-            saveCart(); // Save to local storage
+            saveCart(); 
             closeModal(); 
             showToast();
         }
@@ -520,6 +542,32 @@
         function openCheckout() {
             const activeItems = cart.filter(i => i.checked);
             if(activeItems.length === 0) return alert("Please select items to checkout");
+            
+            // Populate Invoice Items
+            const invoiceList = document.getElementById('invoice-items');
+            invoiceList.innerHTML = activeItems.map(item => {
+                const total = formatCurrency(item.price * item.qty);
+                return `
+                    <div class="flex gap-3 bg-white p-2 rounded-lg border border-gray-100">
+                        <img src="${item.image}" class="w-12 h-12 rounded object-cover flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-[11px] font-bold text-gray-800 line-clamp-1">${item.title}</div>
+                            <div class="text-[10px] text-gray-400">${item.variantName}</div>
+                            <div class="flex justify-between items-end mt-1">
+                                <span class="text-[10px] text-gray-500">x${item.qty}</span>
+                                <span class="text-xs font-black text-gray-800">${total.riel}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Update Total
+            const totalUsd = activeItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            const totalPrice = formatCurrency(totalUsd);
+            document.getElementById('invoice-total-riel').innerText = totalPrice.riel;
+            document.getElementById('invoice-total-usd').innerText = totalPrice.usd;
+
             const modal = document.getElementById('checkout-modal');
             modal.classList.remove('hidden');
             setTimeout(() => { document.getElementById('checkout-panel').classList.remove('translate-y-full'); }, 10);
@@ -550,20 +598,25 @@
             const totalUsd = activeItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
             const totalRiel = Math.round(totalUsd * EXCHANGE_RATE).toLocaleString();
 
-            let msg = `🛒 *NEW ORDER*\n`;
-            msg += `👤 ${name}\n📞 ${phone}\n📍 ${address}\n\n`;
-            msg += `*ORDER LIST:*\n`;
+            let msg = `🧾 *INVOICE*\n`;
+            msg += `──────────────\n`;
+            msg += `👤 *Customer:* ${name}\n`;
+            msg += `📞 *Phone:* ${phone}\n`;
+            if(address) msg += `📍 *Address:* ${address}\n`;
+            msg += `──────────────\n`;
+            msg += `*ORDER ITEMS:*\n`;
 
             const baseUrl = window.location.origin + window.location.pathname.replace(/\/$/, '');
 
             activeItems.forEach((item, i) => {
                 const subtotal = (item.price * item.qty).toFixed(2);
                 msg += `${i+1}. ${item.title} (${item.variantName})\n`;
-                msg += `   Qty: ${item.qty} | $${subtotal}\n`;
+                msg += `   Qty: ${item.qty}  |  Price: $${subtotal}\n`;
                 const imgUrl = `${baseUrl}/${item.image}`;
                 msg += `   [View Image](${imgUrl})\n\n`;
             });
 
+            msg += `──────────────\n`;
             msg += `💰 *TOTAL: $${totalUsd.toFixed(2)} (${totalRiel}៛)*`;
 
             const url = `https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(msg)}`;
