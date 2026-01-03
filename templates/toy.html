@@ -96,22 +96,34 @@
             opacity: 0.8;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
+
+        /* Snap Scroll for Zoom Gallery */
+        .snap-x-mandatory {
+            scroll-snap-type: x mandatory;
+        }
+        .snap-center {
+            scroll-snap-align: center;
+        }
     </style>
 </head>
 <body>
 
     <!-- 1. HEADER -->
     <header class="sticky top-0 z-50 glass-nav px-4 py-3 flex items-center justify-between shadow-sm">
-        <a href="/" class="flex items-center gap-2 group">
-            <!-- Cambodia Flag GIF -->
-            <img src="https://i.gifer.com/origin/21/2143717c1803737a475306541b222956_w200.gif" class="h-6 w-8 object-cover rounded shadow-sm border border-gray-100">
-            
-            <!-- Brand Logo -->
-            <img src="static/images/logo.png" class="h-9 w-9 object-contain rounded-full border border-gray-100 bg-white p-0.5 shadow-sm">
-            
-            <!-- Brand Name -->
-            <span class="font-black text-xl tracking-tighter text-brand">SOMPHEA REAK</span>
-        </a>
+        <div class="flex items-center gap-3">
+             <!-- Home Button -->
+             <a href="/" class="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center active:scale-90 transition-transform">
+                <i class="fa-solid fa-house"></i>
+            </a>
+
+            <!-- Logo Area -->
+            <a href="/" class="flex items-center gap-2 group">
+                <img src="https://i.gifer.com/origin/21/2143717c1803737a475306541b222956_w200.gif" class="h-5 w-7 object-cover rounded shadow-sm border border-gray-100">
+                <img src="static/images/logo.png" class="h-8 w-8 object-contain rounded-full border border-gray-100 bg-white p-0.5 shadow-sm">
+                <span class="font-black text-lg tracking-tighter text-brand hidden sm:block">SOMPHEA REAK</span>
+            </a>
+        </div>
+       
         <a href="https://t.me/somphea_reak" target="_blank" class="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-[#0088cc] shadow-sm active:scale-90 transition-transform">
             <i class="fa-brands fa-telegram text-lg"></i>
         </a>
@@ -142,7 +154,6 @@
         <button onclick="openCart()" class="flex flex-col items-center gap-1 text-gray-400 hover:text-taobao w-16 relative active:scale-90 transition-transform">
             <div class="relative">
                 <i id="nav-cart-icon" class="fa-solid fa-cart-shopping text-xl"></i>
-                <!-- Badge Adjusted: visible on top right -->
                 <span id="nav-cart-badge" class="absolute -top-2.5 -right-2.5 z-10 bg-taobao text-white text-[9px] font-bold px-1.5 min-w-[16px] h-4 flex items-center justify-center rounded-full border-2 border-white hidden shadow-sm">0</span>
             </div>
             <span class="text-[10px] font-bold">My Bag</span>
@@ -158,7 +169,11 @@
                 <!-- Header Info -->
                 <div class="flex gap-4 mb-4">
                     <div class="relative w-28 h-28 flex-shrink-0 bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
-                        <img id="modal-img" src="" class="w-full h-full object-cover cursor-zoom-in" onclick="zoomImage()">
+                        <!-- Click to Zoom -->
+                        <img id="modal-img" src="" class="w-full h-full object-cover cursor-zoom-in" onclick="openZoomGallery()">
+                        <div class="absolute bottom-1 right-1 bg-black/50 text-white text-[9px] px-1.5 rounded backdrop-blur-sm pointer-events-none">
+                            <i class="fa-solid fa-magnifying-glass"></i> Zoom
+                        </div>
                     </div>
                     <div class="flex flex-col justify-end pb-1">
                         <div class="font-black mb-1 leading-none tracking-tighter text-taobao">
@@ -285,9 +300,20 @@
         </div>
     </div>
 
-    <!-- 8. ZOOM OVERLAY -->
-    <div id="zoom-overlay" class="fixed inset-0 z-[100] bg-black hidden items-center justify-center p-4 fade-in" onclick="this.classList.add('hidden'); this.classList.remove('flex')">
-        <img id="zoom-img" src="" class="max-w-full max-h-full object-contain">
+    <!-- 8. ZOOM GALLERY OVERLAY -->
+    <div id="zoom-overlay" class="fixed inset-0 z-[100] bg-black hidden flex-col transition-opacity duration-300 opacity-0">
+        <!-- Close Button -->
+        <button onclick="closeZoomGallery()" class="absolute top-4 right-4 z-[110] w-10 h-10 bg-white/20 backdrop-blur rounded-full text-white flex items-center justify-center active:scale-90 transition-transform">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        
+        <!-- Gallery Container -->
+        <div id="zoom-gallery-container" class="flex-1 flex overflow-x-auto snap-x-mandatory hide-scrollbar items-center">
+            <!-- Images Injected JS -->
+        </div>
+
+        <!-- Dots Indicator -->
+        <div id="zoom-indicators" class="absolute bottom-10 left-0 right-0 flex justify-center gap-2 pointer-events-none"></div>
     </div>
 
     <!-- 9. TOAST NOTIFICATION -->
@@ -613,8 +639,8 @@
             // Delay updating the count slightly so it syncs with the "arrival" of the flying image
             setTimeout(() => {
                 saveCart(); 
-                closeModal(); 
-                // showToast(); // Toast is less needed with the flying animation
+                // Removed closeModal() so user stays on product
+                showToast(); 
             }, 550);
         }
 
@@ -636,6 +662,20 @@
             setTimeout(() => { document.getElementById('cart-drawer').classList.add('hidden'); }, 300);
         }
 
+        function updateCartItemQty(index, delta) {
+            const item = cart[index];
+            item.qty += delta;
+            
+            if (item.qty <= 0) {
+                // Confirm deletion if dropping below 1? Or just remove. 
+                // Let's keep it at min 1 here, use delete button for removal
+                item.qty = 1;
+            }
+            
+            saveCart();
+            renderCartItems();
+        }
+
         function renderCartItems() {
             const container = document.getElementById('cart-items');
             if(cart.length === 0) {
@@ -650,9 +690,18 @@
                         <div class="flex-1 min-w-0">
                             <div class="text-xs text-gray-800 font-bold line-clamp-1">${item.title}</div>
                             <div class="text-[10px] text-gray-400 mt-0.5 bg-gray-50 inline-block px-1.5 rounded border border-gray-100">${item.variantName}</div>
-                            <div class="flex justify-between items-end mt-1"><div class="font-black text-taobao text-sm">${price.riel}</div><div class="text-xs font-bold text-gray-800">x${item.qty}</div></div>
+                            <div class="flex justify-between items-end mt-2">
+                                <div class="font-black text-taobao text-sm">${price.riel}</div>
+                                
+                                <!-- New Qty Controls -->
+                                <div class="flex items-center bg-gray-100 rounded-lg p-0.5">
+                                    <button onclick="updateCartItemQty(${idx}, -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 font-bold active:scale-90 text-xs">-</button>
+                                    <span class="w-8 text-center font-bold text-xs">${item.qty}</span>
+                                    <button onclick="updateCartItemQty(${idx}, 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 font-bold active:scale-90 text-xs">+</button>
+                                </div>
+                            </div>
                         </div>
-                        <button onclick="removeItem(${idx})" class="text-gray-300 hover:text-red-500 px-2"><i class="fa-solid fa-trash-can"></i></button>
+                        <button onclick="removeItem(${idx})" class="text-gray-300 hover:text-red-500 px-2 self-start"><i class="fa-solid fa-trash-can"></i></button>
                     </div>`;
                 }).join('');
             }
@@ -668,6 +717,50 @@
             const price = formatCurrency(totalUsd);
             document.getElementById('cart-total-riel').innerText = price.riel;
             document.getElementById('cart-total-usd').innerText = price.usd;
+        }
+
+        // --- ZOOM GALLERY LOGIC ---
+        function openZoomGallery() {
+            // Populate the gallery with all variants
+            const gallery = document.getElementById('zoom-gallery-container');
+            const indicators = document.getElementById('zoom-indicators');
+            
+            gallery.innerHTML = currentProduct.variants.map((v, i) => `
+                <div class="w-full h-full flex-shrink-0 snap-center flex items-center justify-center p-2 relative" id="zoom-slide-${v.id}">
+                    <img src="${v.image}" class="max-w-full max-h-full object-contain shadow-2xl rounded-lg">
+                     <div class="absolute bottom-20 bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md">
+                        ${v.name}
+                    </div>
+                </div>
+            `).join('');
+
+            // Indicators
+            indicators.innerHTML = currentProduct.variants.map((v, i) => `
+                <div class="w-2 h-2 rounded-full transition-colors ${selectedVariant.id === v.id ? 'bg-white' : 'bg-white/30'}"></div>
+            `).join('');
+
+            const overlay = document.getElementById('zoom-overlay');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            // Allow display:flex to apply before animating opacity
+            requestAnimationFrame(() => {
+                overlay.classList.remove('opacity-0');
+                // Scroll to current selected variant
+                const targetSlide = document.getElementById(`zoom-slide-${selectedVariant.id}`);
+                if(targetSlide) {
+                    targetSlide.scrollIntoView({ behavior: 'auto' });
+                }
+            });
+        }
+
+        function closeZoomGallery() {
+            const overlay = document.getElementById('zoom-overlay');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => {
+                overlay.classList.remove('flex');
+                overlay.classList.add('hidden');
+            }, 300);
         }
 
         // --- CHECKOUT & INVOICE GENERATION LOGIC ---
@@ -854,12 +947,6 @@
 
             const url = `https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(msg)}`;
             window.open(url, '_blank');
-        }
-
-        function zoomImage() {
-            document.getElementById('zoom-img').src = selectedVariant.image;
-            document.getElementById('zoom-overlay').classList.remove('hidden');
-            document.getElementById('zoom-overlay').classList.add('flex');
         }
 
         function showToast() {
