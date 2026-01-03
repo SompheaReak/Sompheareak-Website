@@ -28,8 +28,13 @@
         .text-taobao { color: #ff5000; }
         .border-taobao { border-color: #ff5000; }
         
+        /* Smooth Scrolling */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scrollbar { 
+            -ms-overflow-style: none; 
+            scrollbar-width: none; 
+            -webkit-overflow-scrolling: touch;
+        }
 
         /* Animations */
         .smooth-transform { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -40,6 +45,24 @@
             20%, 80% { transform: translate3d(2px, 0, 0); }
             30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
             40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            opacity: 0; /* Hidden initially */
+            animation: fadeInUp 0.4s ease-out forwards;
+        }
+
+        @keyframes badgePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+        .badge-anim {
+            animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .glass-nav {
@@ -54,16 +77,24 @@
             color: #ff5000;
         }
 
-        /* Hidden Receipt Styles for Capture */
-        #receipt-render-node {
+        .screenshot-frame {
             font-family: 'Noto Sans Khmer', sans-serif;
-            background: white;
-            width: 375px; /* Fixed width for consistent capture */
-            padding: 24px;
+            background: #fff;
+            width: 400px;
+            padding: 30px;
+            box-sizing: border-box;
+            border-radius: 0;
+        }
+
+        /* Flying Image Animation Class */
+        .flying-img {
             position: fixed;
-            left: -9999px; /* Hide off-screen */
-            top: 0;
-            z-index: -10;
+            z-index: 9999;
+            pointer-events: none;
+            transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            border-radius: 50%;
+            opacity: 0.8;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -72,8 +103,14 @@
     <!-- 1. HEADER -->
     <header class="sticky top-0 z-50 glass-nav px-4 py-3 flex items-center justify-between shadow-sm">
         <a href="/" class="flex items-center gap-2 group">
-            <img src="static/images/logo.png" onerror="this.style.display='none'; document.getElementById('logo-text').style.display='block'" class="h-9 object-contain">
-            <span id="logo-text" style="display:none;" class="font-black text-xl tracking-tighter text-brand">SOMPHEA REAK</span>
+            <!-- Cambodia Flag GIF -->
+            <img src="https://i.gifer.com/origin/21/2143717c1803737a475306541b222956_w200.gif" class="h-6 w-8 object-cover rounded shadow-sm border border-gray-100">
+            
+            <!-- Brand Logo -->
+            <img src="static/images/logo.png" class="h-9 w-9 object-contain rounded-full border border-gray-100 bg-white p-0.5 shadow-sm">
+            
+            <!-- Brand Name -->
+            <span class="font-black text-xl tracking-tighter text-brand">SOMPHEA REAK</span>
         </a>
         <a href="https://t.me/somphea_reak" target="_blank" class="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-[#0088cc] shadow-sm active:scale-90 transition-transform">
             <i class="fa-brands fa-telegram text-lg"></i>
@@ -104,8 +141,9 @@
 
         <button onclick="openCart()" class="flex flex-col items-center gap-1 text-gray-400 hover:text-taobao w-16 relative active:scale-90 transition-transform">
             <div class="relative">
-                <i class="fa-solid fa-cart-shopping text-xl"></i>
-                <span id="nav-cart-badge" class="absolute -top-2 -right-2 z-10 bg-taobao text-white text-[9px] font-bold px-1.5 h-4 flex items-center justify-center rounded-full border-2 border-white hidden animate-bounce shadow-sm">0</span>
+                <i id="nav-cart-icon" class="fa-solid fa-cart-shopping text-xl"></i>
+                <!-- Badge Adjusted: visible on top right -->
+                <span id="nav-cart-badge" class="absolute -top-2.5 -right-2.5 z-10 bg-taobao text-white text-[9px] font-bold px-1.5 min-w-[16px] h-4 flex items-center justify-center rounded-full border-2 border-white hidden shadow-sm">0</span>
             </div>
             <span class="text-[10px] font-bold">My Bag</span>
         </button>
@@ -135,7 +173,7 @@
                 <!-- Image Scroll Bar -->
                 <div class="mb-5">
                     <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 pl-1">Preview</h3>
-                    <div class="flex gap-2.5 overflow-x-auto hide-scrollbar pb-2" id="sku-gallery">
+                    <div class="flex gap-2.5 overflow-x-auto hide-scrollbar pb-2 pr-4" id="sku-gallery" style="-webkit-overflow-scrolling: touch;">
                         <!-- Injected via JS -->
                     </div>
                 </div>
@@ -231,7 +269,7 @@
 
             <!-- STATE 2: Generated Image Preview -->
             <div id="checkout-result" class="overflow-y-auto hide-scrollbar flex-1 mb-4 hidden flex flex-col items-center">
-                <p class="text-xs text-gray-500 mb-2 font-bold">Screenshot generated!</p>
+                <p class="text-xs text-gray-500 mb-2 font-bold">Long press to save or click download</p>
                 <div class="w-full border rounded-xl overflow-hidden shadow-lg">
                     <img id="generated-invoice-img" src="" class="w-full h-auto">
                 </div>
@@ -247,59 +285,6 @@
         </div>
     </div>
 
-    <!-- HIDDEN RECEIPT TEMPLATE (For HTML2Canvas) -->
-    <div id="receipt-render-node">
-        <div class="text-center mb-6">
-            <h1 class="text-2xl font-black text-brand tracking-tighter mb-1">SOMPHEA REAK</h1>
-            <p class="text-[10px] text-gray-400 uppercase tracking-widest">Toy Universe Invoice</p>
-        </div>
-        
-        <div class="border-b border-dashed border-gray-300 pb-4 mb-4">
-            <div class="flex justify-between text-xs mb-1">
-                <span class="text-gray-500">Date:</span>
-                <span class="font-bold text-gray-800" id="receipt-date"></span>
-            </div>
-            <div class="flex justify-between text-xs mb-1">
-                <span class="text-gray-500">Customer:</span>
-                <span class="font-bold text-gray-800" id="receipt-name"></span>
-            </div>
-            <div class="flex justify-between text-xs">
-                <span class="text-gray-500">Phone:</span>
-                <span class="font-bold text-gray-800" id="receipt-phone"></span>
-            </div>
-            <div class="text-xs mt-1 text-gray-500" id="receipt-address"></div>
-        </div>
-
-        <table class="w-full text-xs mb-4">
-            <thead>
-                <tr class="border-b border-gray-200">
-                    <th class="text-left py-2 text-gray-500 font-bold uppercase">Item</th>
-                    <th class="text-center py-2 text-gray-500 font-bold uppercase">Qty</th>
-                    <th class="text-right py-2 text-gray-500 font-bold uppercase">Total</th>
-                </tr>
-            </thead>
-            <tbody id="receipt-items-body" class="text-gray-800 font-medium">
-                <!-- Items Injected -->
-            </tbody>
-        </table>
-
-        <div class="border-t border-dashed border-gray-300 pt-4">
-            <div class="flex justify-between items-center mb-1">
-                <span class="font-bold text-gray-500">Total USD</span>
-                <span class="font-black text-lg text-gray-900" id="receipt-total-usd">$0.00</span>
-            </div>
-            <div class="flex justify-between items-center">
-                <span class="font-bold text-gray-500">Total Riel</span>
-                <span class="font-black text-xl text-taobao" id="receipt-total-riel">0៛</span>
-            </div>
-        </div>
-        
-        <div class="mt-8 text-center">
-            <p class="text-[9px] text-gray-400">Thank you for shopping with us!</p>
-            <p class="text-[9px] text-gray-300 mt-1">Somphea Reak</p>
-        </div>
-    </div>
-
     <!-- 8. ZOOM OVERLAY -->
     <div id="zoom-overlay" class="fixed inset-0 z-[100] bg-black hidden items-center justify-center p-4 fade-in" onclick="this.classList.add('hidden'); this.classList.remove('flex')">
         <img id="zoom-img" src="" class="max-w-full max-h-full object-contain">
@@ -310,11 +295,18 @@
         <i class="fa-solid fa-check-circle text-brand"></i> Added to Bag
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 z-[110] bg-black/50 hidden items-center justify-center backdrop-blur-sm">
+        <div class="bg-white p-4 rounded-full shadow-xl">
+            <i class="fa-solid fa-spinner fa-spin text-2xl text-taobao"></i>
+        </div>
+    </div>
+
     <script>
         const TELEGRAM_USERNAME = "somphea_reak"; 
         const EXCHANGE_RATE = 4000;
 
-        const PRODUCTS = [
+        const FULL_PRODUCTS = [
             {
                 id: 1, title: "WWII អាវុធធន់ធ្ងន់", sold: "1.2k", category: "WWII Soldier",
                 thumbnail: "static/images/lego-wwii-01.jpg",
@@ -459,7 +451,7 @@
                 }
             }
             renderTabs();
-            renderProducts(PRODUCTS);
+            renderProducts(FULL_PRODUCTS);
         }
 
         function saveCart() {
@@ -481,17 +473,19 @@
         function filterCat(cat) {
             currentCategory = cat;
             renderTabs();
-            const filtered = cat === 'All' ? PRODUCTS : PRODUCTS.filter(p => p.category === cat);
+            const filtered = cat === 'All' ? FULL_PRODUCTS : FULL_PRODUCTS.filter(p => p.category === cat);
             renderProducts(filtered);
         }
 
         function renderProducts(data) {
             const grid = document.getElementById('product-grid');
-            grid.innerHTML = data.map(p => {
+            grid.innerHTML = data.map((p, index) => {
                 if(!p.variants || p.variants.length === 0) return '';
                 const price = formatCurrency(p.variants[0].price);
+                // Staggered Fade In Animation
+                const delay = index * 50; 
                 return `
-                <div onclick="openProduct(${p.id})" class="bg-white rounded-xl p-2 pb-3 shadow-sm active:scale-95 transition-transform">
+                <div onclick="openProduct(${p.id})" class="bg-white rounded-xl p-2 pb-3 shadow-sm active:scale-95 transition-transform animate-fade-in-up" style="animation-delay: ${delay}ms">
                     <div class="aspect-square bg-gray-50 rounded-lg overflow-hidden mb-2 relative">
                         <img src="${p.thumbnail}" class="w-full h-full object-cover">
                     </div>
@@ -509,7 +503,7 @@
         }
 
         function openProduct(id) {
-            currentProduct = PRODUCTS.find(p => p.id === id);
+            currentProduct = FULL_PRODUCTS.find(p => p.id === id);
             selectedVariant = currentProduct.variants[0];
             qty = 1;
             
@@ -570,14 +564,58 @@
             setTimeout(() => { document.getElementById('detail-modal').classList.add('hidden'); }, 300);
         }
 
+        function animateFlyToCart() {
+            const imgToFly = document.getElementById('modal-img');
+            const cartIcon = document.getElementById('nav-cart-icon');
+
+            if (imgToFly && cartIcon) {
+                const imgClone = imgToFly.cloneNode(true);
+                const rect = imgToFly.getBoundingClientRect();
+                const targetRect = cartIcon.getBoundingClientRect();
+
+                imgClone.className = 'flying-img';
+                imgClone.style.top = rect.top + 'px';
+                imgClone.style.left = rect.left + 'px';
+                imgClone.style.width = rect.width + 'px';
+                imgClone.style.height = rect.height + 'px';
+
+                document.body.appendChild(imgClone);
+
+                requestAnimationFrame(() => {
+                    imgClone.style.top = (targetRect.top + targetRect.height / 2 - 20) + 'px';
+                    imgClone.style.left = (targetRect.left + targetRect.width / 2 - 20) + 'px';
+                    imgClone.style.width = '40px';
+                    imgClone.style.height = '40px';
+                    imgClone.style.opacity = '0.5';
+                });
+
+                setTimeout(() => {
+                    document.body.removeChild(imgClone);
+                    
+                    // Trigger badge animation
+                    const badge = document.getElementById('nav-cart-badge');
+                    badge.classList.remove('hidden');
+                    badge.classList.add('badge-anim');
+                    setTimeout(() => badge.classList.remove('badge-anim'), 300);
+
+                }, 600);
+            }
+        }
+
         function addToCart() {
+            // Start the visual animation first
+            animateFlyToCart();
+
             const existingItem = cart.find(item => item.variantId === selectedVariant.id);
             if (existingItem) { existingItem.qty += qty; } 
             else { cart.push({ variantId: selectedVariant.id, title: currentProduct.title, variantName: selectedVariant.name, price: selectedVariant.price, image: selectedVariant.image, qty: qty, checked: true }); }
             
-            saveCart(); 
-            closeModal(); 
-            showToast();
+            // Delay updating the count slightly so it syncs with the "arrival" of the flying image
+            setTimeout(() => {
+                saveCart(); 
+                closeModal(); 
+                // showToast(); // Toast is less needed with the flying animation
+            }, 550);
         }
 
         function updateCartCount() {
@@ -637,7 +675,7 @@
             const activeItems = cart.filter(i => i.checked);
             if(activeItems.length === 0) return alert("Please select items to checkout");
             
-            // Populate Modal Invoice Items
+            // Populate Modal Invoice Items for visual feedback
             const invoiceList = document.getElementById('invoice-items');
             invoiceList.innerHTML = activeItems.map(item => {
                 const total = formatCurrency(item.price * item.qty);
@@ -661,7 +699,7 @@
             document.getElementById('invoice-total-riel').innerText = totalPrice.riel;
             document.getElementById('invoice-total-usd').innerText = totalPrice.usd;
 
-            // Show Form State, Hide Result State
+            // Show Form State
             document.getElementById('checkout-form').classList.remove('hidden');
             document.getElementById('checkout-result').classList.add('hidden');
             document.getElementById('btn-generate').innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i><span>Generate Invoice Image</span>`;
@@ -678,7 +716,7 @@
             setTimeout(() => { document.getElementById('checkout-modal').classList.add('hidden'); }, 300);
         }
 
-        function generateInvoice() {
+        async function generateInvoice() {
             const name = document.getElementById('cust-name').value.trim();
             const phone = document.getElementById('cust-phone').value.trim();
             const address = document.getElementById('cust-address').value.trim();
@@ -692,66 +730,120 @@
 
             if(!isValid) { setTimeout(() => { document.querySelectorAll('.shake').forEach(el => el.classList.remove('shake')); }, 500); return; }
 
-            // 1. Populate Hidden Receipt
-            const today = new Date().toLocaleDateString();
-            document.getElementById('receipt-date').innerText = today;
-            document.getElementById('receipt-name').innerText = name;
-            document.getElementById('receipt-phone').innerText = phone;
-            document.getElementById('receipt-address').innerText = address || "No address provided";
+            // Show loading
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            document.getElementById('loadingOverlay').classList.add('flex');
 
             const activeItems = cart.filter(i => i.checked);
             const totalUsd = activeItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
             const totalPrice = formatCurrency(totalUsd);
 
-            document.getElementById('receipt-items-body').innerHTML = activeItems.map(item => `
-                <tr class="border-b border-gray-100">
-                    <td class="py-2 text-left flex gap-2 items-center">
-                        <img src="${item.image}" style="width: 32px; height: 32px; border-radius: 4px; object-fit: cover;">
-                        <div>
-                            <div class="line-clamp-1">${item.title}</div>
-                            <div class="text-[9px] text-gray-400">${item.variantName}</div>
-                        </div>
-                    </td>
-                    <td class="py-2 text-center align-middle">${item.qty}</td>
-                    <td class="py-2 text-right align-middle">$${(item.price * item.qty).toFixed(2)}</td>
-                </tr>
-            `).join('');
-
-            document.getElementById('receipt-total-usd').innerText = totalPrice.usd;
-            document.getElementById('receipt-total-riel').innerText = totalPrice.riel;
-
-            // 2. Change Button State
-            const btn = document.getElementById('btn-generate');
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Generating...</span>`;
-
-            // 3. Capture with HTML2Canvas
-            const node = document.getElementById('receipt-render-node');
+            // 1. Create a hidden container off-screen
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'fixed';
+            tempDiv.style.left = '-9999px';
+            tempDiv.style.top = '0';
+            tempDiv.className = 'screenshot-frame'; 
             
-            // Wait slightly for DOM to settle
-            setTimeout(() => {
-                html2canvas(node, { scale: 2, useCORS: true }).then(canvas => {
-                    const imgData = canvas.toDataURL("image/png");
-                    
-                    // 4. Show Result
-                    document.getElementById('generated-invoice-img').src = imgData;
-                    document.getElementById('download-link').href = imgData;
-                    
-                    document.getElementById('checkout-form').classList.add('hidden');
-                    document.getElementById('checkout-result').classList.remove('hidden');
-                    document.getElementById('checkout-result').classList.add('flex');
-                    
-                    // 5. Update Button to Open Telegram
-                    btn.innerHTML = `<i class="fa-brands fa-telegram text-xl"></i><span>Open Telegram & Send</span>`;
-                    btn.classList.remove('bg-black');
-                    btn.classList.add('bg-[#0088cc]');
-                    btn.onclick = () => openTelegramWithText(name, phone, address);
-                    
-                }).catch(err => {
-                    alert("Error generating image. Please try again.");
-                    console.error(err);
-                    btn.innerHTML = `<span>Try Again</span>`;
-                });
-            }, 500);
+            // 2. Build the Content
+            let html = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #90D730; font-weight: 900; font-size: 24px; margin-bottom: 4px; letter-spacing: -1px;">SOMPHEA REAK</h1>
+                    <p style="color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 2px;">Toy Universe Invoice</p>
+                </div>
+                
+                <div style="background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+                        <span style="color: #64748b;">Date</span>
+                        <span style="font-weight: 700; color: #1e293b;">${new Date().toLocaleDateString()}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+                        <span style="color: #64748b;">Customer</span>
+                        <span style="font-weight: 700; color: #1e293b;">${name}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+                        <span style="color: #64748b;">Phone</span>
+                        <span style="font-weight: 700; color: #1e293b;">${phone}</span>
+                    </div>
+                    ${address ? `<div style="font-size: 10px; color: #64748b; margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">${address}</div>` : ''}
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <th style="text-align: left; padding-bottom: 8px; color: #64748b;">Item</th>
+                                <th style="text-align: center; padding-bottom: 8px; color: #64748b;">Qty</th>
+                                <th style="text-align: right; padding-bottom: 8px; color: #64748b;">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            activeItems.forEach(item => {
+                html += `
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 10px 0; display: flex; align-items: center; gap: 8px;">
+                            <img src="${item.image}" style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover; flex-shrink: 0;">
+                            <div>
+                                <div style="font-weight: 700; color: #1e293b; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</div>
+                                <div style="font-size: 9px; color: #94a3b8;">${item.variantName}</div>
+                            </div>
+                        </td>
+                        <td style="text-align: center; vertical-align: middle; color: #475569; font-weight: 600;">${item.qty}</td>
+                        <td style="text-align: right; vertical-align: middle; font-weight: 700; color: #1e293b;">$${(item.price * item.qty).toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="border-top: 2px dashed #e2e8f0; padding-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span style="font-weight: 700; color: #64748b; font-size: 12px;">Total USD</span>
+                        <span style="font-weight: 900; color: #1e293b; font-size: 16px;">${totalPrice.usd}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 700; color: #64748b; font-size: 12px;">Total Riel</span>
+                        <span style="font-weight: 900; color: #ff5000; font-size: 20px;">${totalPrice.riel}</span>
+                    </div>
+                </div>
+            `;
+            
+            tempDiv.innerHTML = html;
+            document.body.appendChild(tempDiv);
+
+            try {
+                // 3. Generate Screenshot with High Scale
+                const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 3, backgroundColor: "#ffffff" });
+                const imgData = canvas.toDataURL("image/png");
+
+                // 4. Show Result
+                document.getElementById('generated-invoice-img').src = imgData;
+                document.getElementById('download-link').href = imgData;
+                
+                document.getElementById('checkout-form').classList.add('hidden');
+                document.getElementById('checkout-result').classList.remove('hidden');
+                document.getElementById('checkout-result').classList.add('flex');
+                
+                // 5. Update Button
+                const btn = document.getElementById('btn-generate');
+                btn.innerHTML = `<i class="fa-brands fa-telegram text-xl"></i><span>Open Telegram & Send</span>`;
+                btn.classList.remove('bg-black');
+                btn.classList.add('bg-[#0088cc]');
+                btn.onclick = () => openTelegramWithText(name, phone, address);
+
+            } catch(err) {
+                console.error(err);
+                alert("Generation failed. Please try again.");
+            } finally {
+                document.body.removeChild(tempDiv);
+                document.getElementById('loadingOverlay').classList.remove('flex');
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }
         }
 
         function openTelegramWithText(name, phone, address) {
