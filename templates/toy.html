@@ -109,28 +109,34 @@
 <body>
 
     <!-- 1. HEADER -->
-    <header class="sticky top-0 z-50 glass-nav px-4 py-3 flex items-center justify-between shadow-sm">
-        <div class="flex items-center gap-3">
-             <!-- Home Button -->
-             <a href="/" class="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center active:scale-90 transition-transform">
-                <i class="fa-solid fa-house"></i>
-            </a>
+    <!-- Increased height slightly to accommodate stacked logo -->
+    <header class="sticky top-0 z-50 glass-nav px-4 py-2 flex items-center justify-between shadow-sm h-[72px]">
+        <!-- Left: Home Button -->
+        <a href="/" class="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center active:scale-90 transition-transform flex-shrink-0 z-10">
+            <i class="fa-solid fa-house"></i>
+        </a>
 
-            <!-- Logo Area -->
-            <a href="/" class="flex items-center gap-2 group">
-                <img src="static/images/flag.jpg" class="h-5 w-7 object-cover rounded shadow-sm border border-gray-100">
-                <img src="static/images/logo.jpg" class="h-8 w-8 object-contain rounded-full border border-gray-100 bg-white p-0.5 shadow-sm">
-                <span class="font-black text-lg tracking-tighter text-brand hidden sm:block">SOMPHEA REAK</span>
-            </a>
-        </div>
+        <!-- Center: Brand Identity (Flag on Top, Logo + Big Name) -->
+        <a href="/" class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center pt-1 group whitespace-nowrap">
+            <!-- Flag -->
+            <img src="https://i.gifer.com/origin/21/2143717c1803737a475306541b222956_w200.gif" class="h-3 w-5 object-cover rounded shadow-sm border border-gray-200 mb-0.5">
+            
+            <!-- Logo + Name -->
+            <div class="flex items-center gap-1.5">
+                <img src="static/images/logo.png" onerror="this.src='static/images/logo.jpg'" class="h-9 w-auto object-contain drop-shadow-sm">
+                <span class="font-black text-xl tracking-tighter text-brand leading-none mt-0.5">SOMPHEA REAK</span>
+            </div>
+        </a>
        
-        <a href="https://t.me/somphea_reak" target="_blank" class="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-[#0088cc] shadow-sm active:scale-90 transition-transform">
+        <!-- Right: Telegram -->
+        <a href="https://t.me/somphea_reak" target="_blank" class="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-[#0088cc] shadow-sm active:scale-90 transition-transform flex-shrink-0 z-10">
             <i class="fa-brands fa-telegram text-lg"></i>
         </a>
     </header>
 
     <!-- 2. CATEGORY TABS -->
-    <nav class="sticky top-[60px] z-40 bg-[#f2f2f2] overflow-x-auto hide-scrollbar flex px-4 pb-3 pt-1 gap-2" id="category-nav">
+    <!-- Adjusted top position for taller header -->
+    <nav class="sticky top-[72px] z-40 bg-[#f2f2f2] overflow-x-auto hide-scrollbar flex px-4 pb-3 pt-1 gap-2" id="category-nav">
         <!-- Injected via JS -->
     </nav>
 
@@ -160,60 +166,73 @@
         </button>
     </div>
 
-    <!-- 5. PRODUCT DETAIL MODAL -->
-    <div id="detail-modal" class="fixed inset-0 z-[60] bg-black/60 hidden opacity-0 transition-opacity duration-300" onclick="if(event.target == this) closeModal()">
-        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[1.5rem] smooth-transform translate-y-full flex flex-col max-h-[85vh] shadow-2xl">
-            <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mt-3 mb-2"></div>
+    <!-- 5. PRODUCT DETAIL MODAL (FULL SCREEN) -->
+    <div id="detail-modal" class="fixed inset-0 z-[60] bg-white hidden opacity-0 transition-opacity duration-300 flex-col" style="transition: opacity 0.3s ease-in-out;">
+        <!-- Full Screen Content Container -->
+        <div class="flex-1 flex flex-col h-full relative bg-white">
             
-            <div class="overflow-y-auto p-5 pb-32">
+            <!-- Return / Back Button Header -->
+            <div class="absolute top-0 left-0 right-0 z-20 p-4 flex justify-between items-start pointer-events-none">
+                <button onclick="closeModal()" class="pointer-events-auto w-10 h-10 bg-black/10 backdrop-blur-md rounded-full text-black flex items-center justify-center active:scale-90 transition-transform shadow-sm">
+                    <i class="fa-solid fa-arrow-left text-lg"></i>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto pb-32">
                 <!-- Header Info -->
-                <div class="flex gap-4 mb-4">
-                    <div class="relative w-28 h-28 flex-shrink-0 bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
-                        <!-- Click to Zoom -->
-                        <img id="modal-img" src="" class="w-full h-full object-cover cursor-zoom-in" onclick="openZoomGallery()">
-                        <div class="absolute bottom-1 right-1 bg-black/50 text-white text-[9px] px-1.5 rounded backdrop-blur-sm pointer-events-none">
-                            <i class="fa-solid fa-magnifying-glass"></i> Zoom
+                <div class="relative w-full aspect-square bg-gray-50 overflow-hidden">
+                    <img id="modal-img" src="" class="w-full h-full object-cover cursor-zoom-in" onclick="openZoomGallery()">
+                    <div class="absolute bottom-3 right-3 bg-black/50 text-white text-[10px] px-2 py-1 rounded-md backdrop-blur-sm pointer-events-none font-bold">
+                        <i class="fa-solid fa-expand mr-1"></i> Full View
+                    </div>
+                </div>
+
+                <div class="px-5 pt-5">
+                    <div class="flex flex-col justify-end pb-1 mb-4">
+                        <div class="font-black mb-1 leading-none tracking-tighter text-taobao flex items-baseline gap-2">
+                            <span class="text-3xl" id="modal-price-riel">0៛</span>
+                            <span class="text-lg text-gray-500 font-normal" id="modal-price-usd">$0.00</span>
+                        </div>
+                        <div class="text-[10px] text-green-500 font-bold uppercase tracking-widest mb-1 flex items-center gap-1">
+                            <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> In Stock
+                        </div>
+                        <div class="text-sm text-gray-800 font-bold line-clamp-2" id="modal-selected-label">Select Model</div>
+                    </div>
+
+                    <!-- Image Scroll Bar -->
+                    <div class="mb-5">
+                        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 pl-1">Preview</h3>
+                        <div class="flex gap-2.5 overflow-x-auto hide-scrollbar pb-2 pr-4" id="sku-gallery" style="-webkit-overflow-scrolling: touch;">
+                            <!-- Injected via JS -->
                         </div>
                     </div>
-                    <div class="flex flex-col justify-end pb-1">
-                        <div class="font-black mb-1 leading-none tracking-tighter text-taobao">
-                            <span class="text-2xl" id="modal-price-riel">0៛</span>
-                            <span class="text-sm text-gray-500 ml-1 font-normal" id="modal-price-usd">$0.00</span>
+
+                    <!-- Text Selection -->
+                    <div class="mb-6">
+                        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 pl-1">Select Model</h3>
+                        <div class="flex flex-wrap gap-2" id="sku-container"></div>
+                    </div>
+
+                    <!-- Quantity -->
+                    <div class="flex justify-between items-center py-4 border-t border-gray-50">
+                        <span class="text-sm font-bold text-gray-900">Quantity</span>
+                        <div class="flex items-center bg-gray-100 rounded-lg p-1">
+                            <button onclick="updateQty(-1)" class="w-10 h-10 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 font-bold active:scale-90 text-lg">-</button>
+                            <span id="modal-qty" class="w-12 text-center font-bold text-lg">1</span>
+                            <button onclick="updateQty(1)" class="w-10 h-10 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 font-bold active:scale-90 text-lg">+</button>
                         </div>
-                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">In Stock</div>
-                        <div class="text-xs text-gray-800 font-bold line-clamp-2" id="modal-selected-label">Select Model</div>
                     </div>
-                </div>
-
-                <!-- Image Scroll Bar -->
-                <div class="mb-5">
-                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 pl-1">Preview</h3>
-                    <div class="flex gap-2.5 overflow-x-auto hide-scrollbar pb-2 pr-4" id="sku-gallery" style="-webkit-overflow-scrolling: touch;">
-                        <!-- Injected via JS -->
-                    </div>
-                </div>
-
-                <!-- Text Selection -->
-                <div class="mb-6">
-                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 pl-1">Select Model</h3>
-                    <div class="flex flex-wrap gap-2" id="sku-container"></div>
-                </div>
-
-                <!-- Quantity -->
-                <div class="flex justify-between items-center py-4 border-t border-gray-50">
-                    <span class="text-sm font-bold text-gray-900">Quantity</span>
-                    <div class="flex items-center bg-gray-100 rounded-lg p-1">
-                        <button onclick="updateQty(-1)" class="w-9 h-9 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 font-bold active:scale-90">-</button>
-                        <span id="modal-qty" class="w-10 text-center font-bold text-sm">1</span>
-                        <button onclick="updateQty(1)" class="w-9 h-9 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 font-bold active:scale-90">+</button>
-                    </div>
+                    
+                    <!-- Spacing for bottom bar -->
+                    <div class="h-8"></div>
                 </div>
             </div>
 
             <!-- Add to Cart Footer -->
-            <div class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-50 z-20 pb-safe">
-                <button onclick="addToCart()" class="w-full taobao-orange text-white font-bold py-3.5 rounded-full shadow-lg shadow-orange-200 active:scale-95 transition-transform">
-                    Add to Bag
+            <div class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-50 z-20 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+                <button onclick="addToCart()" class="w-full taobao-orange text-white font-bold py-4 rounded-full shadow-lg shadow-orange-200 active:scale-95 transition-transform flex items-center justify-center gap-2 text-lg">
+                    <span>Add to Bag</span>
+                    <i class="fa-solid fa-bag-shopping"></i>
                 </button>
             </div>
         </div>
@@ -301,14 +320,15 @@
     </div>
 
     <!-- 8. ZOOM GALLERY OVERLAY -->
-    <div id="zoom-overlay" class="fixed inset-0 z-[100] bg-black hidden flex-col transition-opacity duration-300 opacity-0">
+    <div id="zoom-overlay" onclick="closeZoomGallery()" class="fixed inset-0 z-[100] bg-black hidden flex-col transition-opacity duration-300 opacity-0 cursor-pointer">
         <!-- Close Button -->
         <button onclick="closeZoomGallery()" class="absolute top-4 right-4 z-[110] w-10 h-10 bg-white/20 backdrop-blur rounded-full text-white flex items-center justify-center active:scale-90 transition-transform">
             <i class="fa-solid fa-xmark text-xl"></i>
         </button>
         
         <!-- Gallery Container -->
-        <div id="zoom-gallery-container" class="flex-1 flex overflow-x-auto snap-x-mandatory hide-scrollbar items-center">
+        <!-- Added stopPropagation to prevent close when swiping/tapping image area -->
+        <div id="zoom-gallery-container" onclick="event.stopPropagation()" class="flex-1 flex overflow-x-auto snap-x-mandatory hide-scrollbar items-center">
             <!-- Images Injected JS -->
         </div>
 
@@ -428,7 +448,7 @@
             },
             {
                 id: 7, title: "Ninjago", sold: "310", category: "Ninjago",
-                thumbnail: "static/images/lego-ninjago-8000-thumbnail.jpg",
+                thumbnail: "static/images/lego-ninjago-8000-01.jpg",
                 variants: [
                     { id: "njo-A", name: "Ninjago A", price: 2.00, image: "static/images/lego-ninjago-8000-01.jpg" },
                     { id: "njo-B", name: "Ninjago B", price: 2.00, image: "static/images/lego-ninjago-8000-02.jpg" },
@@ -440,7 +460,7 @@
             },
             {
                 id: 8, title: "LEGO Ninjago", sold: "310", category: "Ninjago",
-                thumbnail: "static/images/lego-ninjago-thumbnail.jpg",
+                thumbnail: "static/images/lego-ninjago-71808.jpg",
                 variants: [
                     { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
                     { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
@@ -453,6 +473,39 @@
                     { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
                 ]
             },
+            {
+                id: 8, title: "LEGO Ninjago", sold: "310", category: "Ninjago",
+                thumbnail: "static/images/lego-ninjago-71808.jpg",
+                variants: [
+                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
+                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
+                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
+                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
+                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
+                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
+                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
+                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
+                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
+                ]
+            },
+            {
+                id: 8, title: "LEGO Ninjago", sold: "310", category: "Ninjago",
+                thumbnail: "static/images/lego-ninjago-71808.jpg",
+                variants: [
+                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
+                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
+                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
+                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
+                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
+                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
+                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
+                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
+                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
+                ]
+
+            
+                        
+                },
         ];
 
         let currentProduct = null, selectedVariant = null, qty = 1;
@@ -550,7 +603,7 @@
             updateModalUI();
             const modal = document.getElementById('detail-modal');
             modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.add('opacity-100'); document.querySelector('#detail-modal > div').classList.remove('translate-y-full'); }, 10);
+            setTimeout(() => { modal.classList.add('opacity-100'); }, 10);
         }
 
         function selectVariant(id) {
@@ -585,7 +638,6 @@
         }
 
         function closeModal() {
-            document.querySelector('#detail-modal > div').classList.add('translate-y-full');
             document.getElementById('detail-modal').classList.remove('opacity-100');
             setTimeout(() => { document.getElementById('detail-modal').classList.add('hidden'); }, 300);
         }
@@ -728,7 +780,7 @@
             gallery.innerHTML = currentProduct.variants.map((v, i) => `
                 <div class="w-full h-full flex-shrink-0 snap-center flex items-center justify-center p-2 relative" id="zoom-slide-${v.id}">
                     <img src="${v.image}" class="max-w-full max-h-full object-contain shadow-2xl rounded-lg">
-                     <div class="absolute bottom-20 bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md">
+                     <div class="absolute bottom-20 bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md pointer-events-none">
                         ${v.name}
                     </div>
                 </div>
@@ -736,8 +788,22 @@
 
             // Indicators
             indicators.innerHTML = currentProduct.variants.map((v, i) => `
-                <div class="w-2 h-2 rounded-full transition-colors ${selectedVariant.id === v.id ? 'bg-white' : 'bg-white/30'}"></div>
+                <div id="dot-${i}" class="w-2 h-2 rounded-full transition-colors ${selectedVariant.id === v.id ? 'bg-white' : 'bg-white/30'}"></div>
             `).join('');
+
+            // Add scroll listener for active dot
+            gallery.onscroll = () => {
+                const index = Math.round(gallery.scrollLeft / gallery.clientWidth);
+                updateDots(index);
+
+                // Sync selection with swipe
+                if (currentProduct && currentProduct.variants[index]) {
+                    const variantId = currentProduct.variants[index].id;
+                    if (selectedVariant.id !== variantId) {
+                        selectVariant(variantId);
+                    }
+                }
+            };
 
             const overlay = document.getElementById('zoom-overlay');
             overlay.classList.remove('hidden');
@@ -750,6 +816,22 @@
                 const targetSlide = document.getElementById(`zoom-slide-${selectedVariant.id}`);
                 if(targetSlide) {
                     targetSlide.scrollIntoView({ behavior: 'auto' });
+                    // Manual update of dots in case scroll event doesn't fire on initial view
+                    const index = currentProduct.variants.findIndex(v => v.id === selectedVariant.id);
+                    updateDots(index);
+                }
+            });
+        }
+
+        function updateDots(activeIndex) {
+            const indicators = document.getElementById('zoom-indicators');
+            Array.from(indicators.children).forEach((dot, idx) => {
+                if(idx === activeIndex) {
+                    dot.classList.remove('bg-white/30');
+                    dot.classList.add('bg-white');
+                } else {
+                    dot.classList.remove('bg-white');
+                    dot.classList.add('bg-white/30');
                 }
             });
         }
@@ -959,5 +1041,3 @@
     </script>
 </body>
 </html>
-
-
