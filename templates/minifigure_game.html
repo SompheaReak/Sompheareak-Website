@@ -69,6 +69,7 @@
 
     <!-- TOP BAR -->
     <div class="w-full max-w-md p-4 flex justify-between items-center z-20 bg-opacity-90 backdrop-blur-sm fixed top-0 left-1/2 -translate-x-1/2">
+        <!-- Back Button Links to index.html -->
         <a href="index.html" class="flex items-center gap-1 text-gray-400 hover:text-white text-xs font-bold uppercase tracking-widest">
              <i class="fa-solid fa-chevron-left"></i> Home
         </a>
@@ -96,6 +97,7 @@
                 <div class="flex items-baseline"><span id="draw-balance" class="text-3xl font-black text-white">0</span><span class="text-sm ml-1">🎟️</span></div>
             </div>
             <div class="text-right">
+                <p id="clock" class="text-[9px] font-mono text-gray-500 mb-1">00:00:00</p>
                 <button onclick="openRedeem()" class="px-3 py-1 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold uppercase rounded shadow-md transition">Redeem Code</button>
             </div>
         </div>
@@ -172,6 +174,7 @@
         const saved = localStorage.getItem(`mmd3_data_${uid}`);
         if (saved) { STATE = { ...STATE, ...JSON.parse(saved) }; } else { INITIAL_NINJAGO.forEach(i => STATE.stock.ninjago[i.id] = i.stock); INITIAL_LEGO.forEach(i => STATE.stock.lego[i.id] = i.stock); }
         switchCategory('ninjago');
+        setInterval(() => { const now = new Date(); document.getElementById('clock').innerText = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Phnom_Penh', hour12: false }); }, 1000);
     }
     function save() { localStorage.setItem(`mmd3_data_${STATE.userId}`, JSON.stringify({ balances: STATE.balances, inventory: STATE.inventory, stock: STATE.stock, usedCodes: STATE.usedCodes })); renderUI(); }
     
@@ -254,4 +257,5 @@
 </script>
 </body>
 </html>
+
 
