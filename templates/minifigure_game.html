@@ -1,488 +1,747 @@
-import os
-import logging
-from flask import Flask, render_template_string
-
-# --- CONFIGURATION ---
-logging.basicConfig(level=logging.INFO)
-app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_secure_123')
-
-# ==========================================
-# 1. LANDING PAGE (The Gateway)
-# ==========================================
-LANDING_PAGE_HTML = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Somphea Reak | Welcome</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .category-card { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
-        .category-card:active { transform: scale(0.95); }
-        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; opacity: 0; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
-
-    <!-- Background Decor -->
-    <div class="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-orange-100 to-transparent -z-10"></div>
-    <div class="absolute -top-20 -right-20 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl -z-10"></div>
-    <div class="absolute bottom-0 left-0 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl -z-10"></div>
-
-    <!-- Header -->
-    <div class="text-center mb-10 animate-fade-in" style="animation-delay: 0.1s;">
-        <div class="inline-flex items-center gap-2 mb-3 bg-white px-4 py-1.5 rounded-full shadow-sm border border-slate-100">
-            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Store Open</span>
-        </div>
-        <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-2">SOMPHEA REAK</h1>
-        <p class="text-slate-500 font-medium">Choose your experience</p>
-    </div>
-
-    <!-- Main Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl animate-fade-in" style="animation-delay: 0.2s;">
-        
-        <!-- 1. CUSTOM BRACELET -->
-        <a href="/bracelet" class="category-card group relative overflow-hidden bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-emerald-200">
-            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <i data-lucide="gem" class="w-24 h-24 text-emerald-600 transform rotate-12"></i>
-            </div>
-            <div class="relative z-10 flex flex-col h-full justify-between min-h-[140px]">
-                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-4">
-                    <i data-lucide="sparkles" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold text-slate-900 leading-tight mb-1">Custom<br>Bracelet</h2>
-                    <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
-                        Design Now <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                    </p>
-                </div>
-            </div>
-        </a>
-
-        <!-- 2. LEGO WORLD -->
-        <a href="/lego" class="category-card group relative overflow-hidden bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-yellow-200">
-            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <i data-lucide="blocks" class="w-24 h-24 text-yellow-600 transform -rotate-12"></i>
-            </div>
-            <div class="relative z-10 flex flex-col h-full justify-between min-h-[140px]">
-                <div class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-2xl flex items-center justify-center mb-4">
-                    <i data-lucide="cuboid" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold text-slate-900 leading-tight mb-1">LEGO<br>Universe</h2>
-                    <p class="text-xs font-bold text-yellow-600 uppercase tracking-wider flex items-center gap-1">
-                        Start Building <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                    </p>
-                </div>
-            </div>
-        </a>
-
-        <!-- 3. LUCKY DRAW -->
-        <a href="/lucky-draw" class="category-card group relative overflow-hidden bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-purple-200">
-            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <i data-lucide="gift" class="w-24 h-24 text-purple-600 transform rotate-6"></i>
-            </div>
-            <div class="relative z-10 flex flex-col h-full justify-between min-h-[140px]">
-                <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mb-4">
-                    <i data-lucide="party-popper" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold text-slate-900 leading-tight mb-1">Lucky<br>Draw</h2>
-                    <p class="text-xs font-bold text-purple-600 uppercase tracking-wider flex items-center gap-1">
-                        Try Your Luck <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                    </p>
-                </div>
-            </div>
-        </a>
-
-        <!-- 4. TOYS -->
-        <a href="/toys" class="category-card group relative overflow-hidden bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100 hover:border-blue-200">
-            <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <i data-lucide="gamepad-2" class="w-24 h-24 text-blue-600 transform -rotate-6"></i>
-            </div>
-            <div class="relative z-10 flex flex-col h-full justify-between min-h-[140px]">
-                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-4">
-                    <i data-lucide="rocket" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold text-slate-900 leading-tight mb-1">General<br>Toys</h2>
-                    <p class="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center gap-1">
-                        Browse All <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                    </p>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <!-- Footer -->
-    <div class="mt-12 text-center animate-fade-in" style="animation-delay: 0.3s;">
-        <p class="text-xs font-bold text-slate-300 uppercase tracking-widest">© 2024 Somphea Reak</p>
-    </div>
-
-    <script>
-        lucide.createIcons();
-    </script>
-</body>
-</html>
-"""
-
-# ==========================================
-# 2. CUSTOM BRACELET PAGE
-# ==========================================
-BRACELET_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Bracelet Studio</title>
+    <title>Minifigure Mystery Draw 3.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Bungee+Inline&family=Inter:wght@300;400;600;800;900&display=swap');
+        
+        /* --- DYNAMIC THEMES --- */
+        :root {
+            --theme-primary: #C80815;
+            --theme-secondary: #FFC300;
+            --theme-bg: #111827;
+            --theme-panel: #1f2937;
+            --card-back: linear-gradient(135deg, #4b0005, #8a000a);
+        }
+
+        body[data-theme="ninjago"] {
+            --theme-primary: #C80815; 
+            --theme-secondary: #FFC300; 
+            --theme-bg: #0f0505; 
+            --theme-panel: #1f0f0f;
+            --card-back: linear-gradient(135deg, #4b0005, #8a000a);
+        }
+
+        body[data-theme="lego"] {
+            --theme-primary: #0055BF; 
+            --theme-secondary: #FFCF00; 
+            --theme-bg: #050b14; 
+            --theme-panel: #0f172a;
+            --card-back: linear-gradient(135deg, #003785, #0055BF);
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--theme-bg); color: white; transition: background-color 0.5s ease; }
+
+        /* --- RARITY COLORS --- */
+        .rarity-common { color: #d1d5db; border-color: #d1d5db; background: linear-gradient(135deg, #9ca3af, #6b7280); }
+        .rarity-uncommon { color: #4ade80; border-color: #4ade80; background: linear-gradient(135deg, #22c55e, #166534); }
+        .rarity-rare { color: #60a5fa; border-color: #60a5fa; background: linear-gradient(135deg, #3b82f6, #1e40af); }
+        .rarity-epic { color: #c084fc; border-color: #c084fc; background: linear-gradient(135deg, #a855f7, #6b21a8); }
+        .rarity-legendary { color: #facc15; border-color: #facc15; background: linear-gradient(135deg, #eab308, #854d0e); box-shadow: 0 0 15px rgba(234, 179, 8, 0.5); }
+
+        /* --- ANIMATIONS --- */
+        .perspective-1000 { perspective: 1000px; }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 0.75rem;
+        }
+        .card-front { background: var(--card-back); display: flex; align-items: center; justify-content: center; border: 2px solid var(--theme-secondary); }
+        .card-back { transform: rotateY(180deg); background-color: #374151; }
+        .flipped .card-inner { transform: rotateY(180deg); }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px) rotate(-5deg); }
+            75% { transform: translateX(5px) rotate(5deg); }
+        }
+        .animate-shake { animation: shake 0.3s ease-in-out infinite; }
+
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* --- UI UTILS --- */
+        .theme-text { color: var(--theme-secondary); }
+        .theme-bg-panel { background-color: var(--theme-panel); }
+        .theme-btn {
+            background-color: var(--theme-primary);
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+        }
+        .theme-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: none; }
+        .theme-btn:disabled { background-color: #4b5563; box-shadow: none; cursor: not-allowed; opacity: 0.6; }
+
+        .sold-out-overlay {
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(2px);
+        }
+        .sold-out-stamp {
+            border: 2px solid #ef4444;
+            color: #ef4444;
+            transform: rotate(-15deg);
+            text-transform: uppercase;
+            font-weight: 900;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+        }
+
+        /* Scrollbar hide */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900">
-    <!-- Navigation Back -->
-    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-100 px-4 py-3 flex items-center gap-3">
-        <a href="/" class="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors">
-            <i data-lucide="arrow-left" class="w-5 h-5 text-slate-600"></i>
-        </a>
-        <h1 class="font-bold text-sm uppercase tracking-wider">Bracelet Studio</h1>
-    </nav>
+<body data-theme="ninjago" class="h-screen overflow-hidden flex flex-col items-center">
 
-    <div class="p-4 max-w-lg mx-auto">
-        <!-- Visualizer -->
-        <div class="bg-white rounded-3xl shadow-xl shadow-slate-200 border border-slate-100 p-8 mb-6 flex items-center justify-center min-h-[300px] relative overflow-hidden">
-            <div class="absolute inset-0 opacity-5" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"></div>
-            <div class="relative z-10 flex items-center gap-1" id="bracelet-chain">
-                <div class="w-8 h-8 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center text-[10px] text-slate-400 font-bold">L</div>
-                <div class="text-xs font-bold text-slate-400 px-4 uppercase tracking-widest" id="empty-state">Add Charms</div>
-                <div class="w-8 h-8 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center text-[10px] text-slate-400 font-bold">R</div>
-            </div>
+    <!-- TOP BAR -->
+    <div class="w-full max-w-md p-4 flex justify-between items-center z-20 bg-opacity-90 backdrop-blur-sm fixed top-0 left-1/2 -translate-x-1/2">
+        <div class="flex space-x-1 bg-gray-900/80 p-1 rounded-full border border-gray-700">
+            <button onclick="switchCategory('ninjago')" id="nav-ninjago" class="px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all bg-red-700 text-white">Ninjago</button>
+            <button onclick="switchCategory('lego')" id="nav-lego" class="px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all text-gray-400">LEGO City</button>
         </div>
-
-        <!-- Controls -->
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-            <h3 class="font-bold text-xs uppercase text-slate-400 mb-3 tracking-wider">Select Charms</h3>
-            <div class="grid grid-cols-4 gap-3">
-                <!-- Using placeholder images to represent your catalog -->
-                <div onclick="addCharm('Flag')" class="aspect-square rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 transition-all active:scale-95">
-                    <span class="text-xl">🏳️</span>
-                    <span class="text-[10px] font-bold mt-1 text-slate-500">Flag</span>
-                </div>
-                <div onclick="addCharm('Gem')" class="aspect-square rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 transition-all active:scale-95">
-                    <span class="text-xl">💎</span>
-                    <span class="text-[10px] font-bold mt-1 text-slate-500">Gem</span>
-                </div>
-                <div onclick="addCharm('Letter')" class="aspect-square rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 transition-all active:scale-95">
-                    <span class="text-xl">A</span>
-                    <span class="text-[10px] font-bold mt-1 text-slate-500">Letter</span>
-                </div>
-                <div onclick="addCharm('Heart')" class="aspect-square rounded-xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-500 transition-all active:scale-95">
-                    <span class="text-xl">❤️</span>
-                    <span class="text-[10px] font-bold mt-1 text-slate-500">Heart</span>
-                </div>
-            </div>
-            
-            <button onclick="reset()" class="w-full mt-4 py-3 rounded-xl bg-slate-100 text-slate-500 font-bold text-xs uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-colors">Reset Design</button>
+        <div class="flex items-center space-x-3">
+             <div class="text-right leading-none">
+                 <div class="text-[8px] text-gray-500 uppercase font-bold">Player ID</div>
+                 <div id="player-id" class="font-mono text-xs font-bold theme-text">----</div>
+             </div>
+             <button onclick="toggleInfo()" class="w-8 h-8 rounded-full bg-gray-800 border border-gray-600 flex items-center justify-center hover:bg-gray-700 transition">
+                ℹ️
+             </button>
         </div>
     </div>
 
-    <script>
-        lucide.createIcons();
-        function addCharm(type) {
-            document.getElementById('empty-state').style.display = 'none';
-            const chain = document.getElementById('bracelet-chain');
-            const bead = document.createElement('div');
-            bead.className = 'w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 border-2 border-white shadow-md flex items-center justify-center text-white text-lg cursor-pointer hover:scale-110 transition-transform';
-            
-            let content = '';
-            if(type === 'Flag') content = '🏳️';
-            if(type === 'Gem') content = '💎';
-            if(type === 'Letter') content = 'A';
-            if(type === 'Heart') content = '❤️';
-            
-            bead.innerHTML = content;
-            bead.onclick = function() { this.remove(); if(chain.children.length <= 2) document.getElementById('empty-state').style.display = 'block'; };
-            
-            // Insert before the last element (Right Clasp)
-            chain.insertBefore(bead, chain.lastElementChild);
-        }
-        function reset() {
-            const chain = document.getElementById('bracelet-chain');
-            while(chain.children.length > 2) {
-                chain.removeChild(chain.children[1]);
-            }
-            document.getElementById('empty-state').style.display = 'block';
-        }
-    </script>
-</body>
-</html>
-"""
-
-# ==========================================
-# 3. LEGO PAGE
-# ==========================================
-LEGO_TEMPLATE = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEGO World</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }</style>
-</head>
-<body class="bg-yellow-50/50">
-    
-    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-yellow-100 px-4 py-3 flex items-center gap-3">
-        <a href="/" class="p-2 bg-yellow-100 rounded-full text-yellow-700 hover:bg-yellow-200 transition-colors">
-            <i data-lucide="arrow-left" class="w-5 h-5"></i>
-        </a>
-        <h1 class="font-black text-slate-900 text-lg uppercase tracking-tight">LEGO <span class="text-yellow-500">World</span></h1>
-    </nav>
-
-    <div class="p-4 max-w-2xl mx-auto space-y-8">
+    <!-- MAIN CONTENT AREA -->
+    <div class="w-full max-w-md h-full pt-20 pb-24 px-4 overflow-y-auto no-scrollbar relative" id="main-scroll">
         
-        <!-- Ninjago Season Swimlane -->
-        <div>
-            <div class="flex items-center gap-2 mb-3">
-                <div class="w-1 h-6 bg-red-600 rounded-full"></div>
-                <h2 class="font-bold text-slate-800 text-lg">Ninjago Seasons</h2>
+        <!-- HEADER -->
+        <div class="text-center mb-6">
+            <h1 id="theme-title" class="text-4xl font-['Bungee_Inline'] theme-text drop-shadow-lg tracking-wider">NINJAGO</h1>
+            <p class="text-[10px] text-gray-400 font-bold tracking-[0.4em] uppercase">Mystery Collection</p>
+        </div>
+
+        <!-- BALANCE CARD -->
+        <div class="theme-bg-panel rounded-2xl p-4 shadow-lg border border-gray-700/50 mb-6 flex justify-between items-center relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 w-20 h-20 bg-white opacity-5 rounded-full blur-xl"></div>
+            <div>
+                <p class="text-[10px] text-gray-400 uppercase font-bold mb-1">Your Draws</p>
+                <div class="flex items-baseline">
+                    <span id="draw-balance" class="text-3xl font-black text-white">0</span>
+                    <span class="text-sm ml-1">🎟️</span>
+                </div>
             </div>
-            <div class="flex gap-4 overflow-x-auto pb-4 hide-scrollbar">
-                <!-- Card 1 -->
-                <div class="min-w-[160px] bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-                    <div class="aspect-square bg-slate-100 rounded-xl mb-3 relative overflow-hidden">
-                        <img src="https://placehold.co/200?text=Season+1" class="w-full h-full object-cover">
-                    </div>
-                    <h3 class="font-bold text-sm text-slate-900">Season 1: Rise</h3>
-                    <p class="text-xs text-slate-500 font-medium">8 Sets</p>
-                </div>
-                 <!-- Card 2 -->
-                <div class="min-w-[160px] bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-                    <div class="aspect-square bg-slate-100 rounded-xl mb-3 relative overflow-hidden">
-                        <img src="https://placehold.co/200?text=Season+2" class="w-full h-full object-cover">
-                    </div>
-                    <h3 class="font-bold text-sm text-slate-900">Season 2: Legacy</h3>
-                    <p class="text-xs text-slate-500 font-medium">12 Sets</p>
-                </div>
-                 <!-- Card 3 -->
-                <div class="min-w-[160px] bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-                    <div class="aspect-square bg-slate-100 rounded-xl mb-3 relative overflow-hidden">
-                        <img src="https://placehold.co/200?text=Dragons" class="w-full h-full object-cover">
-                    </div>
-                    <h3 class="font-bold text-sm text-slate-900">Dragon Rising</h3>
-                    <p class="text-xs text-slate-500 font-medium">New Arrival</p>
-                </div>
+            <div class="text-right">
+                <p id="clock" class="text-[9px] font-mono text-gray-500 mb-1">00:00:00</p>
+                <button onclick="openRedeem()" class="px-3 py-1 bg-green-600 hover:bg-green-500 text-white text-[10px] font-bold uppercase rounded shadow-md transition">Redeem Code</button>
             </div>
         </div>
 
-        <!-- Formula 1 Swimlane -->
-        <div>
-            <div class="flex items-center gap-2 mb-3">
-                <div class="w-1 h-6 bg-blue-600 rounded-full"></div>
-                <h2 class="font-bold text-slate-800 text-lg">Speed Champions</h2>
+        <!-- TAB CONTENT: PLAY -->
+        <div id="view-play" class="transition-opacity duration-300">
+            <!-- STAGE -->
+            <div id="stage" class="w-full aspect-square theme-bg-panel rounded-xl border-2 border-dashed border-gray-700 mb-4 relative flex items-center justify-center overflow-hidden">
+                <!-- Idle -->
+                <div id="stage-idle" class="text-center">
+                    <div class="text-6xl mb-2 animate-bounce">📦</div>
+                    <p class="text-xs text-gray-400 font-bold uppercase">Ready to Open</p>
+                </div>
+                <!-- Loading -->
+                <div id="stage-loading" class="hidden absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-10">
+                    <div class="w-24 h-24 rounded-xl border-4 border-white shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center justify-center animate-shake bg-gray-800">
+                        <span class="text-4xl">❓</span>
+                    </div>
+                </div>
+                <!-- Result Grid (Dynamic) -->
+                <div id="stage-result" class="hidden absolute inset-0 p-4 grid gap-2 overflow-y-auto content-center"></div>
+                <!-- Empty/Complete Message -->
+                <div id="stage-empty" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                    <div class="text-5xl mb-3">🏆</div>
+                    <h3 class="text-xl font-black text-yellow-500 mb-1">COLLECTION COMPLETE!</h3>
+                    <p class="text-xs text-gray-400">You have found every figure in this series.</p>
+                </div>
             </div>
+
+            <!-- CONTROLS -->
             <div class="grid grid-cols-2 gap-3">
-                 <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-                    <img src="https://placehold.co/200?text=F1+Red" class="w-full aspect-video object-cover rounded-lg mb-2">
-                    <h3 class="font-bold text-sm">F1 Ferrari</h3>
-                    <span class="text-orange-600 font-bold text-xs">24,000៛</span>
-                 </div>
-                 <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-                    <img src="https://placehold.co/200?text=F1+Merc" class="w-full aspect-video object-cover rounded-lg mb-2">
-                    <h3 class="font-bold text-sm">F1 Mercedes</h3>
-                    <span class="text-orange-600 font-bold text-xs">24,000៛</span>
-                 </div>
+                <button onclick="draw(1)" id="btn-draw-1" class="theme-btn py-3 rounded-xl font-bold uppercase text-xs tracking-wider" disabled>
+                    Draw 1x
+                </button>
+                <button onclick="draw(5)" id="btn-draw-5" class="theme-btn py-3 rounded-xl font-bold uppercase text-xs tracking-wider" disabled>
+                    Draw 5x
+                </button>
+            </div>
+            <p id="draw-info-msg" class="text-center text-[10px] text-gray-500 mt-2 h-4"></p>
+        </div>
+
+        <!-- TAB CONTENT: CATALOG -->
+        <div id="view-catalog" class="hidden animate-pop">
+            <div class="flex justify-between items-end mb-3">
+                <h2 class="text-sm font-bold uppercase tracking-widest text-gray-300">Product Catalog</h2>
+                <span class="text-[10px] theme-text font-mono"><span id="cat-collected">0</span>/<span id="cat-total">0</span> Collected</span>
+            </div>
+            
+            <div id="catalog-grid" class="grid grid-cols-3 gap-2 pb-20">
+                <!-- Items injected via JS -->
             </div>
         </div>
 
     </div>
-    <script>lucide.createIcons();</script>
-</body>
-</html>
-"""
 
-# ==========================================
-# 4. LUCKY DRAW PAGE
-# ==========================================
-LUCKY_DRAW_TEMPLATE = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Draw</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @keyframes shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
-        .animate-shake { animation: shake 0.5s ease-in-out; }
-    </style>
-</head>
-<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center">
-    
-    <nav class="w-full p-4 flex items-center justify-between">
-        <a href="/" class="text-yellow-500 hover:text-white transition-colors flex items-center gap-1 font-bold text-sm">
-            <i data-lucide="arrow-left" class="w-4 h-4"></i> Home
-        </a>
-        <div class="bg-slate-800 px-3 py-1 rounded-full text-xs font-bold border border-slate-700">
-            Credits: <span class="text-yellow-400">99</span>
-        </div>
-    </nav>
-
-    <div class="flex-1 flex flex-col items-center justify-center w-full max-w-md p-6">
-        <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-orange-600 mb-2 uppercase italic tracking-tighter">Mystery Box</h1>
-        <p class="text-slate-400 text-sm mb-10">Win exclusive Minifigures!</p>
-
-        <div id="mystery-box" class="w-64 h-64 bg-slate-800 rounded-3xl border-4 border-slate-700 shadow-2xl flex items-center justify-center cursor-pointer active:scale-95 transition-transform relative group overflow-hidden" onclick="play()">
-            <div class="absolute inset-0 bg-gradient-to-t from-yellow-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <span class="text-8xl filter drop-shadow-lg group-hover:scale-110 transition-transform duration-300">📦</span>
-        </div>
-
-        <button onclick="play()" class="mt-10 w-full bg-orange-600 hover:bg-orange-500 text-white font-black py-4 rounded-xl shadow-lg shadow-orange-900/50 uppercase tracking-widest transition-all active:translate-y-1">
-            Draw 1x (Free)
+    <!-- BOTTOM NAVIGATION -->
+    <div class="fixed bottom-4 w-[90%] max-w-md bg-gray-900/90 backdrop-blur-md border border-gray-700 rounded-full p-2 flex justify-around shadow-2xl z-30">
+        <button onclick="switchView('play')" id="tab-play" class="flex-1 py-2 rounded-full text-xs font-bold uppercase text-white bg-gray-800 shadow-md transition-all">
+            Play
         </button>
-
-        <div id="result" class="mt-6 hidden animate-fade-in text-center">
-            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">You Won</p>
-            <div class="bg-white text-slate-900 font-bold px-6 py-3 rounded-lg shadow-lg inline-block">
-                Ninjago Kai (Common)
-            </div>
-        </div>
+        <button onclick="switchView('catalog')" id="tab-catalog" class="flex-1 py-2 rounded-full text-xs font-bold uppercase text-gray-500 hover:text-white transition-all">
+            Catalog
+        </button>
     </div>
 
-    <script>
-        lucide.createIcons();
-        function play() {
-            const box = document.getElementById('mystery-box');
-            const res = document.getElementById('result');
-            
-            res.classList.add('hidden');
-            box.classList.add('animate-shake');
-            
-            setTimeout(() => {
-                box.classList.remove('animate-shake');
-                res.classList.remove('hidden');
-            }, 500);
-        }
-    </script>
-</body>
-</html>
-"""
-
-# ==========================================
-# 5. TOY PAGE
-# ==========================================
-TOY_TEMPLATE = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>General Toys</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-</head>
-<body class="bg-blue-50 text-slate-900">
+    <!-- MODALS -->
     
-    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-blue-100 px-4 py-3 flex items-center gap-3">
-        <a href="/" class="p-2 bg-blue-100 rounded-full text-blue-700 hover:bg-blue-200 transition-colors">
-            <i data-lucide="arrow-left" class="w-5 h-5"></i>
-        </a>
-        <h1 class="font-bold text-lg uppercase tracking-tight">Toy <span class="text-blue-500">Shop</span></h1>
-    </nav>
-
-    <div class="p-4 max-w-2xl mx-auto">
-        <!-- Search -->
-        <div class="relative mb-6">
-            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
-            <input type="text" placeholder="Search toys..." class="w-full pl-10 pr-4 py-3 rounded-xl border-none shadow-sm text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-
-        <!-- Grid -->
-        <div class="grid grid-cols-2 gap-4">
-            <!-- Toy Item 1 -->
-            <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
-                <div class="aspect-square bg-slate-100 rounded-xl mb-3 relative">
-                    <img src="https://placehold.co/200?text=Bear" class="w-full h-full object-cover rounded-xl">
-                    <div class="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">New</div>
+    <!-- INFO / RATES MODAL -->
+    <div id="modal-info" class="fixed inset-0 z-50 bg-black/90 hidden flex items-center justify-center p-6 opacity-0 transition-opacity duration-300" onclick="toggleInfo()">
+        <div class="bg-gray-800 w-full max-w-sm rounded-2xl border border-gray-700 p-6 shadow-2xl transform scale-95 transition-transform" onclick="event.stopPropagation()">
+            <h3 class="text-xl font-black text-white mb-4 uppercase text-center">Remaining Rates</h3>
+            <div class="space-y-3 mb-6">
+                <!-- Dynamic Rates -->
+                <div class="flex items-center justify-between text-xs">
+                    <span class="px-2 py-0.5 rounded text-black font-bold rarity-common">COMMON</span>
+                    <span class="font-mono text-gray-400">High Stock / <span id="rate-common">0%</span></span>
                 </div>
-                <h3 class="font-bold text-sm text-slate-800 leading-tight mb-1">Cuddly Bear</h3>
-                <div class="mt-auto flex justify-between items-center">
-                    <span class="text-blue-600 font-bold">12,000៛</span>
-                    <button class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 hover:bg-blue-600 hover:text-white transition-colors">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                    </button>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="px-2 py-0.5 rounded text-black font-bold rarity-uncommon">UNCOMMON</span>
+                    <span class="font-mono text-gray-400">Med Stock / <span id="rate-uncommon">0%</span></span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="px-2 py-0.5 rounded text-white font-bold rarity-rare">RARE</span>
+                    <span class="font-mono text-gray-400">Low Stock / <span id="rate-rare">0%</span></span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="px-2 py-0.5 rounded text-white font-bold rarity-epic">EPIC</span>
+                    <span class="font-mono text-gray-400">Very Low / <span id="rate-epic">0%</span></span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="px-2 py-0.5 rounded text-black font-bold rarity-legendary">LEGENDARY</span>
+                    <span class="font-mono text-gray-400">Extremely Low / <span id="rate-legendary">0%</span></span>
                 </div>
             </div>
-             <!-- Toy Item 2 -->
-            <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
-                <div class="aspect-square bg-slate-100 rounded-xl mb-3 relative">
-                    <img src="https://placehold.co/200?text=Robot" class="w-full h-full object-cover rounded-xl">
-                </div>
-                <h3 class="font-bold text-sm text-slate-800 leading-tight mb-1">Mecha Robot</h3>
-                <div class="mt-auto flex justify-between items-center">
-                    <span class="text-blue-600 font-bold">25,000៛</span>
-                    <button class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 hover:bg-blue-600 hover:text-white transition-colors">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                    </button>
-                </div>
+            <div class="text-center text-[10px] text-gray-500">
+                Percentages are based on <strong>UNOWNED</strong> items only.<br>
+                Once you own an item, it is removed from the pool.
             </div>
+            <button onclick="resetAllData()" class="w-full mt-4 py-2 border border-red-900 text-red-500 text-xs hover:bg-red-900/20 rounded">Reset All Data (Demo)</button>
         </div>
     </div>
-    <script>lucide.createIcons();</script>
+
+    <!-- REDEEM MODAL -->
+    <div id="modal-redeem" class="fixed inset-0 z-50 bg-black/90 hidden flex items-center justify-center p-6 opacity-0 transition-opacity duration-300" onclick="closeRedeem()">
+        <div class="bg-gray-800 w-full max-w-sm rounded-2xl border border-gray-700 p-6 shadow-2xl" onclick="event.stopPropagation()">
+            <h3 class="text-lg font-bold text-white mb-2 uppercase text-center">Redeem Code</h3>
+            <input type="text" id="redeem-input" placeholder="Enter Code (e.g. NINJA1)" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-center text-white uppercase font-bold tracking-widest mb-3 focus:border-yellow-500 outline-none">
+            <button onclick="handleRedeem()" class="w-full theme-btn text-white font-bold py-3 rounded-xl uppercase text-sm">Submit</button>
+            <p id="redeem-msg" class="text-center text-xs mt-3 h-4 font-bold"></p>
+        </div>
+    </div>
+
+<script>
+    // --- 📦 DATA & CONFIG ---
+    
+    // Rarity Definitions
+    const RARITY = {
+        COMMON: { id: 'common', label: 'Common', weight: 100 },
+        UNCOMMON: { id: 'uncommon', label: 'Uncommon', weight: 60 },
+        RARE: { id: 'rare', label: 'Rare', weight: 30 },
+        EPIC: { id: 'epic', label: 'Epic', weight: 10 },
+        LEGENDARY: { id: 'legendary', label: 'Legendary', weight: 2 }
+    };
+
+    // Initial Data with Stock
+    // NOTE: Images are placeholders for this demo.
+    const INITIAL_NINJAGO = [
+        { id: 'n1', name: "Kai (Fire)", rarity: 'COMMON', stock: 50, color: 'red' },
+        { id: 'n2', name: "Jay (Lightning)", rarity: 'COMMON', stock: 50, color: 'blue' },
+        { id: 'n3', name: "Cole (Earth)", rarity: 'COMMON', stock: 50, color: 'gray' },
+        { id: 'n4', name: "Zane (Ice)", rarity: 'UNCOMMON', stock: 30, color: 'white' },
+        { id: 'n5', name: "Lloyd (Green)", rarity: 'RARE', stock: 15, color: 'green' },
+        { id: 'n6', name: "Lord Garmadon", rarity: 'EPIC', stock: 5, color: 'purple' },
+        { id: 'n7', name: "Golden Wu", rarity: 'LEGENDARY', stock: 1, color: 'yellow' }, // Extremely limited!
+        { id: 'n8', name: "Nya (Water)", rarity: 'UNCOMMON', stock: 30, color: 'blue' },
+        { id: 'n9', name: "Pythor", rarity: 'RARE', stock: 10, color: 'purple' },
+        { id: 'n10', name: "Samurai X", rarity: 'EPIC', stock: 5, color: 'red' }
+    ];
+
+    const INITIAL_LEGO = [
+        { id: 'l1', name: "Police Officer", rarity: 'COMMON', stock: 50, color: 'blue' },
+        { id: 'l2', name: "Firefighter", rarity: 'COMMON', stock: 50, color: 'red' },
+        { id: 'l3', name: "Robber", rarity: 'COMMON', stock: 50, color: 'gray' },
+        { id: 'l4', name: "Construction Worker", rarity: 'UNCOMMON', stock: 30, color: 'orange' },
+        { id: 'l5', name: "Doctor", rarity: 'UNCOMMON', stock: 30, color: 'white' },
+        { id: 'l6', name: "Spaceman", rarity: 'RARE', stock: 15, color: 'blue' },
+        { id: 'l7', name: "Deep Sea Diver", rarity: 'EPIC', stock: 5, color: 'red' },
+        { id: 'l8', name: "Mr. Gold", rarity: 'LEGENDARY', stock: 1, color: 'yellow' },
+        { id: 'l9', name: "Pizza Guy", rarity: 'RARE', stock: 10, color: 'white' }
+    ];
+
+    const CODES = {
+        'NINJA': [1,2,3,4,5].map(n=>`NINJA${n}`),
+        'LEGO': [1,2,3,4,5].map(n=>`LEGO${n}`)
+    };
+
+    // --- ⚙️ STATE ---
+    let STATE = {
+        userId: null,
+        category: 'ninjago', // ninjago | lego
+        view: 'play', // play | catalog
+        balances: { ninjago: 0, lego: 0 },
+        inventory: { ninjago: [], lego: [] }, // Array of IDs owned
+        stock: { ninjago: {}, lego: {} }, // Map ID -> Count
+        usedCodes: []
+    };
+
+    // --- 🛠️ CORE FUNCTIONS ---
+
+    function init() {
+        // Load User ID
+        let uid = localStorage.getItem('mmd3_uid');
+        if (!uid) { uid = Math.floor(Math.random()*90000+10000).toString(); localStorage.setItem('mmd3_uid', uid); }
+        STATE.userId = uid;
+        document.getElementById('player-id').innerText = uid;
+
+        // Load Game State
+        const saved = localStorage.getItem(`mmd3_data_${uid}`);
+        if (saved) {
+            STATE = { ...STATE, ...JSON.parse(saved) };
+        } else {
+            // Initialize Stock for first time
+            INITIAL_NINJAGO.forEach(i => STATE.stock.ninjago[i.id] = i.stock);
+            INITIAL_LEGO.forEach(i => STATE.stock.lego[i.id] = i.stock);
+        }
+
+        switchCategory('ninjago'); // Default
+        setInterval(updateClock, 1000);
+        updateClock();
+    }
+
+    function save() {
+        localStorage.setItem(`mmd3_data_${STATE.userId}`, JSON.stringify({
+            balances: STATE.balances,
+            inventory: STATE.inventory,
+            stock: STATE.stock,
+            usedCodes: STATE.usedCodes
+        }));
+        renderUI();
+    }
+
+    function switchCategory(cat) {
+        STATE.category = cat;
+        document.body.setAttribute('data-theme', cat);
+        
+        // Nav Styles
+        document.getElementById('nav-ninjago').className = cat === 'ninjago' 
+            ? "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all bg-red-700 text-white shadow"
+            : "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all text-gray-400";
+        document.getElementById('nav-lego').className = cat === 'lego'
+            ? "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all bg-blue-600 text-white shadow"
+            : "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all text-gray-400";
+
+        // Title
+        const title = document.getElementById('theme-title');
+        title.innerText = cat === 'ninjago' ? "NINJAGO" : "LEGO CITY";
+        
+        renderUI();
+    }
+
+    function switchView(viewName) {
+        STATE.view = viewName;
+        
+        // Tab Styles
+        const activeClass = "flex-1 py-2 rounded-full text-xs font-bold uppercase text-white bg-gray-800 shadow-md transition-all";
+        const inactiveClass = "flex-1 py-2 rounded-full text-xs font-bold uppercase text-gray-500 hover:text-white transition-all";
+        
+        document.getElementById('tab-play').className = viewName === 'play' ? activeClass : inactiveClass;
+        document.getElementById('tab-catalog').className = viewName === 'catalog' ? activeClass : inactiveClass;
+
+        // Content Visibility
+        if (viewName === 'play') {
+            document.getElementById('view-play').classList.remove('hidden');
+            document.getElementById('view-catalog').classList.add('hidden');
+        } else {
+            document.getElementById('view-play').classList.add('hidden');
+            document.getElementById('view-catalog').classList.remove('hidden');
+            renderCatalog(); // Refresh catalog
+        }
+    }
+
+    function renderUI() {
+        const bal = STATE.balances[STATE.category];
+        const pool = STATE.category === 'ninjago' ? INITIAL_NINJAGO : INITIAL_LEGO;
+        const owned = STATE.inventory[STATE.category];
+        const stock = STATE.stock[STATE.category];
+
+        // 1. Balance Counter
+        document.getElementById('draw-balance').innerText = bal;
+        
+        // 2. Determine if Draw is possible
+        // Filter pool for items that are (1) NOT in inventory AND (2) have Stock > 0
+        const availableItems = pool.filter(i => !owned.includes(i.id) && stock[i.id] > 0);
+        const isComplete = pool.length === owned.length;
+        const isSoldOut = !isComplete && availableItems.length === 0;
+
+        // Button State Logic
+        const btn1 = document.getElementById('btn-draw-1');
+        const btn5 = document.getElementById('btn-draw-5');
+        const infoMsg = document.getElementById('draw-info-msg');
+        const stageIdle = document.getElementById('stage-idle');
+        const stageEmpty = document.getElementById('stage-empty');
+
+        if (isComplete) {
+            btn1.disabled = true;
+            btn5.disabled = true;
+            btn1.innerText = "COMPLETE";
+            btn5.innerText = "COMPLETE";
+            infoMsg.innerText = "You own every figure in this set!";
+            stageIdle.classList.add('hidden');
+            stageEmpty.classList.remove('hidden');
+            stageEmpty.querySelector('h3').innerText = "COLLECTION COMPLETE!";
+            stageEmpty.querySelector('p').innerText = "You have found every figure in this series.";
+        } else if (isSoldOut) {
+            btn1.disabled = true;
+            btn5.disabled = true;
+            btn1.innerText = "SOLD OUT";
+            btn5.innerText = "SOLD OUT";
+            infoMsg.innerText = "All remaining figures are out of stock.";
+            stageIdle.classList.add('hidden');
+            stageEmpty.classList.remove('hidden');
+            stageEmpty.querySelector('h3').innerText = "SOLD OUT";
+            stageEmpty.querySelector('p').innerText = "No more mystery packs available.";
+        } else {
+            btn1.disabled = bal < 1;
+            btn5.disabled = bal < 5 && availableItems.length >= 5; // Only enable 5x if you have bal AND enough items exist
+            
+            // Text updates
+            btn1.innerText = "Draw 1x";
+            
+            if (availableItems.length < 5) {
+                // If fewer than 5 items remain, change text to show max possible
+                btn5.innerText = `Draw ${availableItems.length}x`;
+                // Logic: Enable if balance >= remaining items
+                btn5.disabled = bal < availableItems.length;
+            } else {
+                btn5.innerText = "Draw 5x";
+                btn5.disabled = bal < 5;
+            }
+            
+            infoMsg.innerText = "";
+            stageIdle.classList.remove('hidden');
+            stageEmpty.classList.add('hidden');
+        }
+
+        // Stats in Catalog Header
+        document.getElementById('cat-collected').innerText = owned.length;
+        document.getElementById('cat-total').innerText = pool.length;
+
+        // Calculate Rates for Modal
+        calculateRates(availableItems);
+    }
+
+    function calculateRates(availableItems) {
+        // Only calculate rates for items NOT yet owned
+        if (!availableItems) {
+             const pool = STATE.category === 'ninjago' ? INITIAL_NINJAGO : INITIAL_LEGO;
+             const owned = STATE.inventory[STATE.category];
+             const stock = STATE.stock[STATE.category];
+             availableItems = pool.filter(i => !owned.includes(i.id) && stock[i.id] > 0);
+        }
+
+        const totalWeight = availableItems.reduce((sum, item) => sum + RARITY[item.rarity].weight, 0);
+
+        const rates = { COMMON:0, UNCOMMON:0, RARE:0, EPIC:0, LEGENDARY:0 };
+
+        if (totalWeight > 0) {
+            availableItems.forEach(item => {
+                rates[item.rarity] += RARITY[item.rarity].weight;
+            });
+        }
+
+        // Update Modal UI
+        for (let r in rates) {
+            const pct = totalWeight === 0 ? 0 : ((rates[r] / totalWeight) * 100).toFixed(1);
+            const el = document.getElementById(`rate-${r.toLowerCase()}`);
+            if(el) el.innerText = `${pct}%`;
+        }
+    }
+
+    // --- 🎲 DRAW LOGIC (NO DUPLICATES) ---
+
+    async function draw(requestedAmount) {
+        // 1. Validate Balance
+        if (STATE.balances[STATE.category] < 1) return;
+
+        // 2. UI Animation (Loading)
+        const stage = document.getElementById('stage');
+        const idle = document.getElementById('stage-idle');
+        const loading = document.getElementById('stage-loading');
+        const result = document.getElementById('stage-result');
+        const empty = document.getElementById('stage-empty');
+
+        idle.classList.add('hidden');
+        result.classList.add('hidden');
+        empty.classList.add('hidden');
+        loading.classList.remove('hidden');
+
+        // Fake network delay / suspense
+        await new Promise(r => setTimeout(r, 1000));
+
+        // 3. Logic: Pick Items
+        const results = [];
+        const pool = STATE.category === 'ninjago' ? INITIAL_NINJAGO : INITIAL_LEGO;
+        
+        // Copy inventory/stock to simulate "atomic" transaction locally
+        let tempInventory = [...STATE.inventory[STATE.category]];
+        let tempStock = {...STATE.stock[STATE.category]};
+        let figuresDrawnCount = 0;
+
+        for(let i=0; i<requestedAmount; i++) {
+            // Recalculate available pool dynamically inside loop
+            // Conditions: Stock > 0 AND Not in tempInventory
+            const available = pool.filter(item => tempStock[item.id] > 0 && !tempInventory.includes(item.id));
+
+            if (available.length === 0) {
+                // No more items available to draw! Stop loop.
+                break;
+            }
+
+            // Weighted Random
+            const totalW = available.reduce((acc, item) => acc + RARITY[item.rarity].weight, 0);
+            let rnd = Math.random() * totalW;
+            let picked = available[0];
+            
+            for (let item of available) {
+                if (rnd < RARITY[item.rarity].weight) {
+                    picked = item;
+                    break;
+                }
+                rnd -= RARITY[item.rarity].weight;
+            }
+
+            // Execute Pick
+            tempStock[picked.id]--;
+            tempInventory.push(picked.id);
+            figuresDrawnCount++;
+
+            results.push({ item: picked, isNew: true }); // Always new now
+        }
+
+        // 4. Commit Transaction & Deduct Balance
+        // Only deduct balance for the number of figures actually drawn
+        if (figuresDrawnCount > 0) {
+            STATE.balances[STATE.category] -= figuresDrawnCount;
+            STATE.stock[STATE.category] = tempStock;
+            STATE.inventory[STATE.category] = tempInventory;
+            save(); // Updates UI as well
+        } else {
+            // Nothing drawn (likely clicked draw when complete, though button should be disabled)
+            renderUI(); // Reset UI
+        }
+
+        // 5. UI: Show Results
+        loading.classList.add('hidden');
+        result.classList.remove('hidden');
+        result.innerHTML = '';
+
+        // Configure Grid Layout based on actual count
+        if (results.length === 1) {
+            result.className = "absolute inset-0 flex items-center justify-center p-8";
+        } else {
+            result.className = "absolute inset-0 p-2 grid grid-cols-2 gap-2 content-center overflow-y-auto";
+        }
+
+        results.forEach((res, idx) => {
+            const card = createCard(res.item, res.isNew, results.length === 1);
+            card.style.opacity = '0';
+            card.style.animation = `pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards ${idx * 0.1}s`;
+            result.appendChild(card);
+            
+            // Trigger Flip
+            setTimeout(() => card.classList.add('flipped'), 100 + (idx * 100));
+        });
+    }
+
+    function createCard(item, isNew, isSingle) {
+        const rarityData = RARITY[item.rarity];
+        const rarityClass = `rarity-${item.rarity.toLowerCase()}`;
+        const imgUrl = `https://placehold.co/150x150/${item.color === 'white' ? 'eeeeee' : item.color}/${item.color === 'white' || item.color === 'yellow' ? '000' : 'fff'}?text=${item.name.charAt(0)}`;
+        
+        const div = document.createElement('div');
+        div.className = isSingle ? "perspective-1000 w-48 h-64" : "perspective-1000 w-full h-40";
+
+        div.innerHTML = `
+            <div class="card-inner w-full h-full relative shadow-xl">
+                <!-- FRONT (Cover) -->
+                <div class="card-face card-front z-10">
+                    <div class="text-4xl">❓</div>
+                </div>
+                <!-- BACK (Content) -->
+                <div class="card-face card-back theme-bg-panel border-2 ${isNew ? 'border-yellow-400 box-shadow-glow' : 'border-gray-600'} flex flex-col p-2 overflow-hidden rounded-xl">
+                    ${isNew ? '<div class="absolute top-0 right-0 bg-yellow-500 text-black text-[8px] font-bold px-2 py-0.5 rounded-bl z-20">NEW</div>' : ''}
+                    
+                    <div class="flex-1 bg-gray-900/50 rounded-lg flex items-center justify-center mb-2 overflow-hidden relative">
+                         <div class="absolute inset-0 opacity-20 ${rarityClass}"></div>
+                         <img src="${imgUrl}" class="w-full h-full object-contain z-10">
+                    </div>
+
+                    <div class="text-center">
+                        <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${rarityClass} text-white border mb-1 inline-block">
+                            ${rarityData.label}
+                        </span>
+                        <div class="text-xs font-bold truncate text-white leading-tight">${item.name}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        return div;
+    }
+
+    // --- 📖 CATALOG UI ---
+
+    function renderCatalog() {
+        const grid = document.getElementById('catalog-grid');
+        grid.innerHTML = '';
+        
+        const pool = STATE.category === 'ninjago' ? INITIAL_NINJAGO : INITIAL_LEGO;
+        const owned = STATE.inventory[STATE.category];
+        const stocks = STATE.stock[STATE.category];
+
+        pool.forEach(item => {
+            const isOwned = owned.includes(item.id);
+            const stockCount = stocks[item.id] || 0;
+            const isSoldOut = stockCount === 0;
+            const rarityClass = `rarity-${item.rarity.toLowerCase()}`;
+            
+            const imgUrl = `https://placehold.co/100x100/${item.color === 'white' ? 'eeeeee' : item.color}/${item.color === 'white' || item.color === 'yellow' ? '000' : 'fff'}?text=${item.name.charAt(0)}`;
+
+            const el = document.createElement('div');
+            el.className = `relative aspect-[3/4] theme-bg-panel rounded-lg border border-gray-700 overflow-hidden flex flex-col transition-transform ${isOwned ? 'border-' + item.color + '-500' : 'opacity-80 grayscale'}`;
+            
+            el.innerHTML = `
+                <!-- Stock Badge -->
+                <div class="absolute top-1 left-1 z-20 bg-black/60 px-1.5 py-0.5 rounded text-[8px] font-mono ${stockCount < 5 ? 'text-red-400' : 'text-gray-300'}">
+                    Stock: ${stockCount}
+                </div>
+
+                <!-- Image -->
+                <div class="flex-1 relative flex items-center justify-center bg-gray-800">
+                    <img src="${imgUrl}" class="w-full h-full object-cover opacity-80">
+                    ${isSoldOut && !isOwned ? '<div class="absolute inset-0 sold-out-overlay flex items-center justify-center"><div class="sold-out-stamp">SOLD OUT</div></div>' : ''}
+                </div>
+
+                <!-- Info -->
+                <div class="p-1.5 text-center bg-gray-900 border-t border-gray-800">
+                    <div class="w-2 h-2 rounded-full mx-auto mb-1 ${rarityClass}"></div>
+                    <div class="text-[9px] font-bold truncate leading-tight text-gray-300">${item.name}</div>
+                </div>
+                
+                ${isOwned ? '<div class="absolute bottom-1 right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900 z-20"></div>' : ''}
+            `;
+            
+            grid.appendChild(el);
+        });
+    }
+
+    // --- 🛠️ MODALS & HELPERS ---
+
+    function toggleInfo() {
+        const modal = document.getElementById('modal-info');
+        if (modal.classList.contains('hidden')) {
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modal.children[0].classList.remove('scale-95'); }, 10);
+            renderUI(); // To refresh rates
+        } else {
+            modal.classList.add('opacity-0');
+            modal.children[0].classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+    }
+
+    function openRedeem() {
+        const modal = document.getElementById('modal-redeem');
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        document.getElementById('redeem-input').focus();
+    }
+    
+    function closeRedeem() {
+        const modal = document.getElementById('modal-redeem');
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    function handleRedeem() {
+        const input = document.getElementById('redeem-input');
+        const msg = document.getElementById('redeem-msg');
+        const code = input.value.trim().toUpperCase();
+        
+        if (STATE.usedCodes.includes(code)) {
+            msg.innerText = "Code already used!";
+            msg.className = "text-center text-xs mt-3 h-4 font-bold text-red-500";
+            return;
+        }
+
+        if (CODES.NINJA.includes(code)) {
+            STATE.balances.ninjago += 5;
+            STATE.usedCodes.push(code);
+            msg.innerText = "Success! +5 Ninjago Draws";
+            msg.className = "text-center text-xs mt-3 h-4 font-bold text-green-500";
+            if(STATE.category !== 'ninjago') switchCategory('ninjago');
+        } else if (CODES.LEGO.includes(code)) {
+            STATE.balances.lego += 5;
+            STATE.usedCodes.push(code);
+            msg.innerText = "Success! +5 LEGO Draws";
+            msg.className = "text-center text-xs mt-3 h-4 font-bold text-green-500";
+            if(STATE.category !== 'lego') switchCategory('lego');
+        } else {
+            msg.innerText = "Invalid Code";
+            msg.className = "text-center text-xs mt-3 h-4 font-bold text-red-500";
+        }
+        
+        save();
+        setTimeout(() => { closeRedeem(); input.value = ''; msg.innerText=''; }, 1500);
+    }
+    
+    function resetAllData() {
+        if(confirm("Reset everything?")) {
+            localStorage.removeItem(`mmd3_data_${STATE.userId}`);
+            location.reload();
+        }
+    }
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('clock').innerText = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Phnom_Penh', hour12: false });
+    }
+
+    // --- START ---
+    window.onload = init;
+
+</script>
 </body>
 </html>
-"""
-
-# ==========================================
-# FLASK ROUTES
-# ==========================================
-
-@app.route('/')
-def home():
-    """Main Landing Page - The First Page User Sees"""
-    return render_template_string(LANDING_PAGE_HTML)
-
-@app.route('/bracelet')
-def bracelet():
-    """Renders your Custom Bracelet HTML"""
-    return render_template_string(BRACELET_TEMPLATE)
-
-@app.route('/lego')
-def lego():
-    """Renders your LEGO HTML"""
-    return render_template_string(LEGO_TEMPLATE)
-
-@app.route('/lucky-draw')
-def lucky_draw():
-    """Renders your Lucky Draw HTML"""
-    return render_template_string(LUCKY_DRAW_TEMPLATE)
-
-@app.route('/toys')
-def toys():
-    """Renders your Toy Page"""
-    return render_template_string(TOY_TEMPLATE)
-
-# API Endpoints (If your individual pages need them)
-@app.route('/api/products')
-def api_products():
-    # Mock data return since user said they have catalogs in files
-    return {"status": "ok", "message": "Catalog loaded locally in HTML"}
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
 
 
