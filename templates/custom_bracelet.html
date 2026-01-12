@@ -3,259 +3,247 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Somphea Reak - Italy Bracelet Studio Pro</title>
+  <title>Somphea Reak - Studio Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-    
+    /* --- CORE SETUP --- */
     body { 
         font-family: 'Plus Jakarta Sans', sans-serif; 
         -webkit-tap-highlight-color: transparent;
         user-select: none;
         background-color: #f8fafc;
-        overscroll-behavior-y: contain;
+        overscroll-behavior-y: none;
     }
 
+    /* Hide scrollbars but allow functionality */
     .scrollbar-hide::-webkit-scrollbar { display: none; }
-    
-    .link-pop {
-        animation: linkPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* --- ANIMATIONS --- */
+    @keyframes slideUp {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
     }
-    @keyframes linkPop {
-        0% { transform: scale(0.5); opacity: 0; }
+    
+    .animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    @keyframes popIn {
+        0% { transform: scale(0.9); opacity: 0; }
         100% { transform: scale(1); opacity: 1; }
     }
+    .pop-in { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
-    /* PREMIUM DRAG EFFECTS */
+    /* --- DRAG & DROP STYLES --- */
+    .bracelet-link-container {
+        transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+        cursor: grab;
+        position: relative;
+        touch-action: none;
+        z-index: 10;
+    }
+    
+    .bracelet-link-container:active { cursor: grabbing; }
+
     .dragging {
-        opacity: 0.5;
-        transform: scale(1.2) rotate(3deg) translateY(-10px);
-        filter: brightness(1.1) drop-shadow(0 20px 13px rgb(0 0 0 / 0.1));
-        z-index: 100;
-        transition: transform 0.2s ease;
+        transform: scale(1.15) translateY(-15px) rotate(2deg);
+        z-index: 50;
+        filter: drop-shadow(0 15px 25px rgba(0,0,0,0.15));
+        opacity: 0.9;
     }
 
     .drag-over {
-        position: relative;
-    }
-    .drag-over::after {
-        content: '';
-        position: absolute;
-        inset: -2px;
-        border: 2px solid #ea580c;
-        border-radius: 8px;
-        background-color: rgba(234, 88, 12, 0.05);
-        animation: pulse 1.5s infinite;
-        z-index: 5;
+        transform: translateX(10px); /* Visual nudge */
     }
 
-    @keyframes pulse {
-        0% { opacity: 0.4; }
-        50% { opacity: 0.8; }
-        100% { opacity: 0.4; }
+    /* --- UI POLISH --- */
+    .glass-nav {
+        background: rgba(255, 255, 255, 0.95);
+        border-bottom: 1px solid rgba(0,0,0,0.05);
     }
 
+    .jewelry-tray {
+        background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+        background-size: 20px 20px;
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.02);
+    }
+
+    /* --- DRAWER --- */
     #drawer {
         transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+        will-change: transform;
     }
 
-    .bracelet-link-container {
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        flex: 0 0 10%; 
-        aspect-ratio: 2 / 4.5;
-        position: relative;
-        margin: 0;
-        padding: 0;
-        cursor: grab;
-        touch-action: none;
-        transition: all 0.2s ease;
-    }
-
-    .bracelet-link-container img {
-        width: 100%;
-        height: 75%;
-        object-fit: cover;
-        display: block;
-        pointer-events: none;
-    }
-
-    .nav-indicator-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        margin-top: 10px;
-    }
-
-    .nav-arrow {
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        color: #64748b;
-        font-size: 10px;
-        transition: all 0.2s;
-    }
-
-    #scroll-track {
-        height: 4px;
-        background: #f1f5f9;
-        border-radius: 10px;
-        width: 80px;
-        position: relative;
-        overflow: hidden;
-    }
-    #scroll-thumb {
-        position: absolute;
-        height: 100%;
-        width: 30%;
-        background: #ea580c;
-        border-radius: 10px;
-        left: 0;
-        transition: left 0.1s linear;
-    }
-
+    /* --- SCREENSHOT HIDDEN --- */
     .screenshot-frame {
         background: #fff;
-        padding: 40px 20px;
-        display: inline-flex;
+        padding: 40px;
+        display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 20px;
+        width: 600px;
     }
   </style>
 </head>
-<body class="text-gray-900 overflow-x-hidden">
+<body class="text-slate-900 h-screen flex flex-col overflow-hidden">
 
-  <!-- LOADING OVERLAY -->
-  <div id="loadingOverlay" class="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center text-white">
-      <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p class="text-xs font-black uppercase tracking-[0.3em]">Processing Studio Design</p>
+  <!-- 1. HEADER (COVER) -->
+  <header class="glass-nav fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-3">
+        <!-- Logo Image -->
+        <div class="w-10 h-10 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
+            <img src="/static/images/logo.jpg" alt="Logo" class="w-full h-full object-cover">
+        </div>
+        <!-- Shop Name -->
+        <div class="flex flex-col">
+            <h1 class="text-sm font-extrabold text-slate-900 uppercase tracking-tight leading-tight">Somphea Reak</h1>
+            <span class="text-[9px] font-bold text-orange-600 uppercase tracking-widest">Bracelet Studio</span>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center gap-2">
+        <a href="/" class="w-9 h-9 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 transition active:scale-95">
+             <i class="fa-solid fa-house text-xs"></i>
+        </a>
+        <button onclick="clearBracelet()" class="w-9 h-9 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition active:scale-95">
+            <i class="fa-regular fa-trash-can text-xs"></i>
+        </button>
+    </div>
+  </header>
+
+  <!-- 2. MAIN WORKSPACE -->
+  <main class="flex-1 flex flex-col pt-16 pb-24 relative overflow-y-auto">
+      
+      <!-- Preview Section (The Tray) -->
+      <section class="flex-none relative z-20 bg-white shadow-sm border-b border-slate-100">
+          <!-- Info Bar -->
+          <div class="px-6 py-3 flex justify-between items-center">
+              <span id="link-count" class="bg-slate-900 text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">0 Links</span>
+              <div class="text-right">
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total</p>
+                  <p id="total-price" class="text-lg font-black text-slate-900 leading-none">0៛</p>
+              </div>
+          </div>
+
+          <!-- The Tray Area -->
+          <div class="jewelry-tray relative w-full h-56 bg-slate-50 overflow-hidden group">
+              
+              <!-- Center Guide -->
+              <div class="absolute top-1/2 left-0 w-full h-px border-t border-dashed border-slate-300 -translate-y-1/2 opacity-50 pointer-events-none"></div>
+
+              <!-- Scrollable Track -->
+              <div id="bracelet-preview" onscroll="handlePreviewScroll(this)" 
+                   class="absolute inset-0 flex items-center px-[50vw] overflow-x-auto no-scrollbar gap-0.5 snap-x snap-mandatory">
+                  
+                  <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40">
+                      <i class="fa-solid fa-gem text-3xl mb-2 text-slate-300"></i>
+                      <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Add charms below</p>
+                  </div>
+
+              </div>
+
+              <!-- Fade Edges -->
+              <div class="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-slate-50 to-transparent pointer-events-none"></div>
+              <div class="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none"></div>
+          </div>
+
+          <!-- Scroll Indicator -->
+          <div class="px-6 py-3 flex items-center gap-4">
+              <button onclick="scrollManual(-100)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-caret-left"></i></button>
+              <div class="flex-grow h-1 bg-slate-100 rounded-full overflow-hidden relative">
+                  <div id="scroll-thumb" class="absolute left-0 top-0 h-full w-1/3 bg-slate-300 rounded-full transition-all duration-100"></div>
+              </div>
+              <button onclick="scrollManual(100)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-caret-right"></i></button>
+          </div>
+      </section>
+
+      <!-- Category Gallery (Grid) -->
+      <section class="p-4">
+          <div class="flex items-center justify-between mb-4 px-2">
+              <h3 class="text-xs font-bold text-slate-900 uppercase tracking-widest">Collections</h3>
+          </div>
+          <!-- CHANGED: Grid columns to 6 per line, reduced gaps for tighter fit -->
+          <div id="categoryGallery" class="grid grid-cols-6 gap-2">
+              <!-- JS Injected -->
+          </div>
+      </section>
+
+  </main>
+
+  <!-- 3. DRAWER (Selection) -->
+  <div id="drawer" class="fixed inset-0 z-[100] translate-y-full pointer-events-none">
+      <!-- Backdrop (NO BLUR as requested) -->
+      <div class="absolute inset-0 bg-slate-900/60 pointer-events-auto opacity-0 transition-opacity duration-300" id="drawer-backdrop" onclick="closeDrawer()"></div>
+      
+      <!-- Panel -->
+      <div class="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pointer-events-auto flex flex-col">
+          <!-- Handle -->
+          <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mt-4 mb-2"></div>
+          
+          <!-- Drawer Header -->
+          <div class="px-6 pb-4 flex items-center justify-between border-b border-slate-50">
+              <div>
+                  <span class="text-[9px] font-bold text-orange-500 uppercase tracking-widest">Select Items</span>
+                  <h4 id="drawer-title" class="text-xl font-bold text-slate-900">Category</h4>
+              </div>
+              <button onclick="closeDrawer()" class="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200 transition">
+                  <i class="fa-solid fa-xmark"></i>
+              </button>
+          </div>
+
+          <!-- Items Grid -->
+          <div class="flex-1 overflow-y-auto px-4 py-6 scrollbar-hide">
+              <!-- CHANGED: Grid columns to 7 per row -->
+              <div id="charmGrid" class="grid grid-cols-7 gap-1 pb-12">
+                  <!-- JS Injected -->
+              </div>
+          </div>
+      </div>
   </div>
 
-  <!-- RESULT MODAL -->
-  <div id="resultModal" class="fixed inset-0 z-[1100] bg-black hidden flex-col items-center justify-center p-6">
-      <div class="absolute top-6 right-6">
-          <button onclick="closeResult()" class="w-10 h-10 bg-white/10 rounded-full text-white flex items-center justify-center text-xl">
-              <i class="fa-solid fa-xmark"></i>
+  <!-- 4. FOOTER ACTIONS -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-100 p-4 z-[90]">
+      <div class="max-w-md mx-auto flex gap-3">
+          <button onclick="addRandom()" class="w-14 h-14 flex-none bg-white border border-slate-200 rounded-2xl text-slate-400 shadow-sm flex items-center justify-center active:scale-90 transition">
+              <i class="fa-solid fa-dice text-xl"></i>
+          </button>
+          <button onclick="takeScreenshot()" id="screenshot-btn" disabled class="flex-1 bg-slate-900 text-white rounded-2xl shadow-lg flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-widest active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fa-solid fa-camera"></i>
+              <span>Save Design</span>
           </button>
       </div>
-      <div class="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-4">
-          <img id="screenshotPreview" class="w-full h-auto rounded-xl shadow-inner border border-gray-100" src="" alt="Your Design">
-          <div class="mt-4 text-center">
-              <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Design Saved</p>
-              <p class="text-xs text-gray-600 font-bold mt-1 mb-4">Long press the image to save to your photos</p>
-              <button id="downloadBtn" class="w-full bg-orange-600 text-white font-black py-4 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-transform">
+  </div>
+
+  <!-- 5. RESULT MODAL -->
+  <div id="resultModal" class="fixed inset-0 z-[200] bg-black/90 hidden flex-col items-center justify-center p-6 backdrop-blur-sm">
+      <div class="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-2 pop-in">
+          <div class="relative bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
+              <img id="screenshotPreview" class="w-full h-auto" src="" alt="Design">
+              <button onclick="closeResult()" class="absolute top-3 right-3 w-8 h-8 bg-black/10 hover:bg-black/20 text-slate-900 rounded-full flex items-center justify-center backdrop-blur-md transition">
+                  <i class="fa-solid fa-xmark"></i>
+              </button>
+          </div>
+          <div class="p-5 text-center">
+              <h3 class="font-bold text-slate-900 text-lg mb-1">Looking Good!</h3>
+              <p class="text-xs text-slate-500 mb-4">Press and hold the image to save it to your Photos.</p>
+              <button id="downloadBtn" class="w-full bg-orange-600 text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-orange-500/20 active:scale-95 transition">
                   Download Image
               </button>
           </div>
       </div>
   </div>
 
-  <!-- HEADER -->
-  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex items-center justify-between">
-    <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 active:scale-90 transition-transform">
-      <i class="fa-solid fa-arrow-left"></i>
-    </a>
-    <div class="text-center">
-        <h3 class="font-extrabold text-[9px] tracking-[0.2em] uppercase text-gray-400 leading-none">Custom Studio</h3>
-        <p class="font-black text-sm text-gray-900 tracking-tighter uppercase leading-tight">Italy Bracelet</p>
-    </div>
-    <div class="w-10"></div>
-  </header>
-
-  <!-- BANNER -->
-  <section class="w-full aspect-video bg-gray-200 overflow-hidden relative shadow-inner">
-      <img src="https://images.unsplash.com/photo-1611085583191-a3b1a308964b?auto=format&fit=crop&q=80&w=1200" alt="Banner" class="w-full h-full object-cover">
-      <div class="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent flex items-end p-6">
-          <div class="transform translate-y-2">
-              <h2 class="text-white text-2xl font-black uppercase italic tracking-tighter leading-none">Craft Your<br><span class="text-orange-500">Identity</span></h2>
-              <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-1">Professional Grade Customization</p>
-          </div>
-      </div>
-  </section>
-
-  <!-- PREVIEW BOX -->
-  <section class="sticky top-[58px] z-[90] bg-white border-b shadow-lg pb-4">
-    <div class="max-w-4xl mx-auto">
-        <div class="flex items-center justify-between px-4 py-3">
-            <div class="flex items-center gap-2">
-                <span id="link-count" class="bg-gray-900 text-[9px] font-black text-white px-2.5 py-1 rounded-full tracking-widest uppercase">0 LINKS</span>
-            </div>
-            <button onclick="clearBracelet()" class="text-[10px] font-black text-red-500 uppercase tracking-widest px-2 py-1">Reset</button>
-        </div>
-
-        <div id="bracelet-preview" onscroll="handlePreviewScroll(this)" class="flex overflow-x-auto py-4 scrollbar-hide min-h-[120px] items-end bg-gray-50 border-y border-gray-100 gap-0">
-            <div class="w-full text-center py-8 opacity-20">
-                <p class="text-[10px] font-black uppercase tracking-[0.4em]">Designer Workspace</p>
-            </div>
-        </div>
-
-        <div class="nav-indicator-container">
-            <button onclick="scrollManual(-60)" class="nav-arrow"><i class="fa-solid fa-chevron-left"></i></button>
-            <div id="scroll-track">
-                <div id="scroll-thumb"></div>
-            </div>
-            <button onclick="scrollManual(60)" class="nav-arrow"><i class="fa-solid fa-chevron-right"></i></button>
-        </div>
-
-        <div class="mt-3 flex justify-between items-center px-4">
-            <div class="flex flex-col">
-                <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest">Est. Total</span>
-                <span id="total-price" class="text-xl font-black text-gray-900 leading-none">0៛</span>
-            </div>
-            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-right leading-tight">Pick up & Slide<br>to reorder charms</p>
-        </div>
-    </div>
-  </section>
-
-  <!-- CATEGORY GALLERY -->
-  <section class="p-4 pb-48">
-    <div class="mb-4">
-        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Collections</h4>
-    </div>
-    <div id="categoryGallery" class="grid grid-cols-6 gap-3"></div>
-  </section>
-
-  <!-- SELECTION DRAWER -->
-  <div id="drawer" class="fixed inset-0 z-[200] translate-y-full pointer-events-none">
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" onclick="closeDrawer()"></div>
-    <div class="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-[3rem] shadow-2xl pointer-events-auto flex flex-col border-t border-gray-100">
-        <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto my-4"></div>
-        <div class="px-6 pb-4 flex items-center justify-between">
-            <h4 id="drawer-title" class="text-lg font-black uppercase tracking-tighter text-gray-900">Category</h4>
-            <button onclick="closeDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-400">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-        </div>
-        <div class="flex-grow overflow-y-auto px-2 pb-24">
-            <div id="charmGrid" class="grid grid-cols-8 gap-1.5"></div>
-        </div>
-    </div>
-  </div>
-
-  <!-- FIXED FOOTER -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-4 z-[110]">
-    <div class="max-w-md mx-auto flex gap-3">
-        <button onclick="addRandom()" class="w-14 h-14 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-xl text-gray-400 active:scale-90 transition-transform">
-            <i class="fa-solid fa-shuffle text-lg"></i>
-        </button>
-        <button onclick="takeScreenshot()" id="screenshot-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-xl shadow-xl active:scale-95 transition-all disabled:opacity-20 text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
-            <i class="fa-solid fa-camera text-sm"></i>
-            Save To Gallery
-        </button>
-    </div>
+  <!-- 6. LOADING -->
+  <div id="loadingOverlay" class="fixed inset-0 z-[210] bg-white/90 backdrop-blur-sm hidden flex-col items-center justify-center">
+      <div class="w-10 h-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
   </div>
 
   <script>
+    // --- DATA ---
     const allCharms = [
       // --- Charm
     {"id": 1, "name_kh": "Silver Charm", "price": 500, "image": "/static/images/c01.jpg", "categories": ["Charm"]},
@@ -641,126 +629,226 @@
     {"id": 2108, "name_kh": "Flower 🌹 08", "price": 3000, "image": "/static/images/charm-flower-08.jpg", "categories": ["Flower 🌹"]},
     {"id": 2109, "name_kh": "Flower 🌹 09", "price": 3000, "image": "/static/images/charm-flower-09.jpg", "categories": ["Flower 🌹"]},
        ];
-
     let selectedCharms = JSON.parse(localStorage.getItem('customCharms')) || [];
     let stockData = {};
     let masterSwitch = "off";
 
+    // --- INIT ---
     async function init() {
-        try {
-            await fetch('/api/sync', { 
-                method: 'POST', 
-                headers: {'Content-Type':'application/json'}, 
-                body: JSON.stringify({items: allCharms})
-            });
-            
-            const res = await fetch('/api/get-data');
-            const data = await res.json();
-            stockData = data.stock;
-            masterSwitch = data.master_switch || data.override || "off"; 
-        } catch(e) {
-            console.error("Init Error:", e);
-        }
         renderCategories();
         updateUI();
     }
 
+    // --- RENDER CATEGORIES ---
     function renderCategories() {
         const categories = Array.from(new Set(allCharms.flatMap(c => c.categories)));
-        document.getElementById('categoryGallery').innerHTML = categories.map(cat => {
+        const gallery = document.getElementById('categoryGallery');
+        
+        gallery.innerHTML = categories.map(cat => {
             const charm = allCharms.find(c => c.categories.includes(cat));
+            const displayCat = cat.length > 10 ? cat.split(' ')[0] : cat;
+            
+            // Layout adjusted for 6 items in a line
             return `
-                <div onclick="openDrawer('${cat}')" class="flex flex-col items-center gap-1 active:scale-95 transition-transform cursor-pointer">
-                    <div class="w-full aspect-[2/3] bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden p-1">
-                        <img src="${charm.image}" class="w-full h-full object-cover rounded-md">
+                <div onclick="openDrawer('${cat}')" class="group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition duration-200">
+                    <div class="w-full aspect-square rounded-xl bg-white border border-slate-200 shadow-sm p-1 flex items-center justify-center group-hover:border-orange-500 transition-colors">
+                        <img src="${charm.image}" class="w-full h-full object-contain rounded-lg">
                     </div>
-                    <span class="text-[6px] font-black text-gray-500 uppercase truncate w-full text-center">${cat}</span>
+                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-tight text-center group-hover:text-slate-900 truncate w-full">${displayCat}</span>
                 </div>
             `;
         }).join('');
     }
 
+    // --- DRAWER LOGIC ---
     function openDrawer(cat) {
         document.getElementById('drawer-title').innerText = cat;
         const grid = document.getElementById('charmGrid');
-        grid.innerHTML = allCharms.filter(c => c.categories.includes(cat)).map(c => {
-            const qty = stockData[c.id] || 0;
-            
-            // THE OPPOSITE LOGIC
+        
+        const items = allCharms.filter(c => c.categories.includes(cat));
+        
+        // Layout adjusted for 7 items per row - simplified content to fit
+        grid.innerHTML = items.map(c => {
+            const qty = stockData[c.id] !== undefined ? stockData[c.id] : 99;
             let isOut = false;
-            if (masterSwitch === "on" && qty <= 0) {
-                isOut = true; 
-            }
+            if (masterSwitch === "on" && qty <= 0) isOut = true;
 
             return `
-                <div onclick="${isOut ? '' : `addCharmById(${c.id})`}" class="relative flex flex-col items-center p-1 ${isOut ? 'opacity-40 grayscale pointer-events-none' : 'active:scale-95 transition-transform cursor-pointer'}">
-                    ${isOut ? '<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1 rounded shadow-sm z-10">SOLD</div>' : ''}
-                    <img src="${c.image}" class="w-full aspect-[2/3.5] object-cover rounded shadow-sm">
-                    <p class="text-[5px] font-black mt-1 text-gray-400">${c.price}៛</p>
-                </div>`;
+                <div onclick="${isOut ? '' : `addCharmById(${c.id})`}" 
+                     class="flex flex-col gap-1 ${isOut ? 'opacity-40 grayscale pointer-events-none' : 'cursor-pointer active:scale-95 transition-transform'}">
+                    <div class="relative w-full aspect-[3/4] bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-center overflow-hidden">
+                        <img src="${c.image}" class="w-full h-full object-contain p-0.5">
+                        ${isOut ? '<div class="absolute inset-0 bg-slate-900/10 flex items-center justify-center"><span class="bg-red-500 text-white text-[6px] font-bold px-1 rounded">SOLD</span></div>' : ''}
+                    </div>
+                    <div class="text-center">
+                        <p class="text-[8px] font-bold text-slate-900 leading-none">${c.price}៛</p>
+                    </div>
+                </div>
+            `;
         }).join('');
         
         const drawer = document.getElementById('drawer');
+        const backdrop = document.getElementById('drawer-backdrop');
+        
         drawer.classList.remove('translate-y-full');
+        backdrop.classList.remove('opacity-0');
         drawer.classList.add('pointer-events-auto');
     }
 
-    function closeDrawer() { 
+    function closeDrawer() {
         const drawer = document.getElementById('drawer');
-        drawer.classList.add('translate-y-full'); 
+        const backdrop = document.getElementById('drawer-backdrop');
+        
+        drawer.classList.add('translate-y-full');
+        backdrop.classList.add('opacity-0');
         drawer.classList.remove('pointer-events-auto');
     }
 
+    // --- WORKSPACE LOGIC ---
     function addCharmById(id) {
         const charm = allCharms.find(c => c.id === id);
-        selectedCharms.push({ ...charm, uid: Math.random().toString(36).substr(2, 9) });
+        const newCharm = { ...charm, uid: Math.random().toString(36).substr(2, 9) };
+        selectedCharms.push(newCharm);
+        
         updateUI();
+        
+        setTimeout(() => {
+            const preview = document.getElementById('bracelet-preview');
+            preview.scrollTo({ left: preview.scrollWidth, behavior: 'smooth' });
+        }, 50);
+        
+        if (navigator.vibrate) navigator.vibrate(10);
     }
 
     function removeCharm(uid) {
         selectedCharms = selectedCharms.filter(c => c.uid !== uid);
         updateUI();
+        if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    function clearBracelet() {
+        if(selectedCharms.length > 0 && confirm("Reset your design?")) {
+            selectedCharms = [];
+            updateUI();
+        }
+    }
+    
+    function addRandom() {
+        const rand = allCharms[Math.floor(Math.random() * allCharms.length)];
+        if(rand) addCharmById(rand.id);
     }
 
     function updateUI() {
         const preview = document.getElementById('bracelet-preview');
+        const emptyState = document.getElementById('empty-state');
         localStorage.setItem('customCharms', JSON.stringify(selectedCharms));
 
+        // Stats
+        let total = selectedCharms.reduce((sum, c) => sum + c.price, 0);
+        document.getElementById('total-price').innerText = total.toLocaleString() + "៛";
+        document.getElementById('link-count').innerText = `${selectedCharms.length} Links`;
+        
+        // Button State
+        document.getElementById('screenshot-btn').disabled = selectedCharms.length === 0;
+
         if (selectedCharms.length === 0) {
-            preview.innerHTML = `<div class="w-full text-center py-8 opacity-20 uppercase tracking-[0.4em] text-[10px] font-black">Designer Workspace</div>`;
-            document.getElementById('total-price').innerText = "0៛";
-            document.getElementById('link-count').innerText = "0 LINKS";
-            document.getElementById('screenshot-btn').disabled = true;
-            document.querySelector('.nav-indicator-container').style.opacity = '0';
+            emptyState.style.display = 'flex';
+            preview.innerHTML = `<div class="w-[50vw] flex-shrink-0"></div><div class="w-[50vw] flex-shrink-0"></div>`; 
+            handlePreviewScroll(preview);
             return;
+        } else {
+            emptyState.style.display = 'none';
         }
 
-        document.querySelector('.nav-indicator-container').style.opacity = '1';
-        let total = 0;
-        preview.innerHTML = selectedCharms.map((c, index) => {
-            total += c.price;
-            return `
-                <div class="bracelet-link-container link-pop" 
-                     draggable="true" 
-                     data-index="${index}"
-                     ontouchstart="handleTouchStart(event)"
-                     ontouchmove="handleTouchMove(event)"
-                     ontouchend="handleTouchEnd(event)">
-                    <button onclick="removeCharm('${c.uid}')" class="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[7px] shadow-lg z-10 active:scale-90">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                    <img src="${c.image}">
-                </div>
-            `;
-        }).join('');
+        // Render Bracelet
+        let html = `<div class="w-[50vw] flex-shrink-0"></div>`;
+        
+        html += selectedCharms.map((c, index) => `
+            <div class="bracelet-link-container flex-shrink-0 relative group pop-in snap-center w-14"
+                 style="animation-delay: ${index * 0.05}s"
+                 data-index="${index}"
+                 ontouchstart="handleTouchStart(event)"
+                 ontouchmove="handleTouchMove(event)"
+                 ontouchend="handleTouchEnd(event)">
+                
+                <button onclick="removeCharm('${c.uid}')" class="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-white border border-slate-200 text-red-500 rounded-full flex items-center justify-center text-[10px] shadow-md z-20 opacity-0 group-hover:opacity-100 transition-opacity active:scale-90">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
 
-        document.getElementById('total-price').innerText = total.toLocaleString() + "៛";
-        document.getElementById('link-count').innerText = `${selectedCharms.length} LINKS`;
-        document.getElementById('screenshot-btn').disabled = false;
+                <img src="${c.image}" class="w-full h-auto object-contain select-none pointer-events-none drop-shadow-md">
+            </div>
+        `).join('');
+
+        html += `<div class="w-[50vw] flex-shrink-0"></div>`;
+        preview.innerHTML = html;
         
         handlePreviewScroll(preview);
     }
 
+    // --- DRAG & DROP (Touch) ---
+    let touchStartIndex = null;
+    let currentHoverIndex = null;
+
+    function handleTouchStart(e) {
+        const container = e.target.closest('.bracelet-link-container');
+        if (!container) return;
+        touchStartIndex = parseInt(container.dataset.index);
+        container.classList.add('dragging');
+        if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    function handleTouchMove(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        const container = target?.closest('.bracelet-link-container');
+        
+        document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('drag-over'));
+        
+        if (container) {
+            currentHoverIndex = parseInt(container.dataset.index);
+            if (currentHoverIndex !== touchStartIndex) {
+                container.classList.add('drag-over');
+            }
+        }
+    }
+
+    function handleTouchEnd(e) {
+        document.querySelectorAll('.bracelet-link-container').forEach(el => {
+            el.classList.remove('dragging');
+            el.classList.remove('drag-over');
+        });
+
+        if (touchStartIndex !== null && currentHoverIndex !== null && touchStartIndex !== currentHoverIndex) {
+            const item = selectedCharms.splice(touchStartIndex, 1)[0];
+            selectedCharms.splice(currentHoverIndex, 0, item);
+            updateUI();
+            if (navigator.vibrate) navigator.vibrate(20);
+        }
+        
+        touchStartIndex = null;
+        currentHoverIndex = null;
+    }
+
+    // --- SCROLL HELPERS ---
+    function handlePreviewScroll(el) {
+        const thumb = document.getElementById('scroll-thumb');
+        const maxScroll = el.scrollWidth - el.clientWidth;
+        if (maxScroll <= 0) {
+            thumb.style.width = '100%';
+            thumb.style.left = '0';
+            return;
+        }
+        const pct = (el.scrollLeft / maxScroll);
+        const leftPos = Math.min(Math.max(pct * 66, 0), 66);
+        thumb.style.left = `${leftPos}%`;
+    }
+
+    function scrollManual(val) {
+        document.getElementById('bracelet-preview').scrollBy({ left: val, behavior: 'smooth' });
+    }
+
+    // --- SCREENSHOT ---
     async function takeScreenshot() {
         const overlay = document.getElementById('loadingOverlay');
         overlay.classList.remove('hidden');
@@ -768,85 +856,80 @@
 
         try {
             const tempDiv = document.createElement('div');
+            tempDiv.className = 'screenshot-frame';
             tempDiv.style.position = 'absolute';
             tempDiv.style.left = '-9999px';
-            tempDiv.className = 'screenshot-frame';
             
-            const title = document.createElement('h2');
-            title.innerText = "ITALY BRACELET STUDIO";
-            title.style.fontSize = "24px"; title.style.fontWeight = "900";
-            title.style.letterSpacing = "0.2em"; title.style.textAlign = "center";
+            tempDiv.innerHTML = `
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h2 style="font-size: 28px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: #0f172a; margin: 0;">Italy Studio</h2>
+                    <p style="font-size: 14px; font-weight: 500; color: #64748b; margin-top: 5px;">Custom Design by Somphea Reak</p>
+                </div>
+            `;
             
-            const braceletContainer = document.createElement('div');
-            braceletContainer.style.display = 'flex';
-            braceletContainer.style.background = '#f8fafc';
-            braceletContainer.style.padding = '40px';
-            braceletContainer.style.borderRadius = '20px';
-            braceletContainer.style.border = '1px solid #e2e8f0';
+            const grid = document.createElement('div');
+            grid.style.display = 'flex';
+            grid.style.flexWrap = 'wrap';
+            grid.style.justifyContent = 'center';
+            grid.style.gap = '2px';
+            grid.style.background = '#f1f5f9';
+            grid.style.padding = '40px 20px';
+            grid.style.borderRadius = '24px';
+            grid.style.width = '100%';
+            grid.style.border = '1px solid #e2e8f0';
 
             selectedCharms.forEach(c => {
                 const img = document.createElement('img');
                 img.src = c.image;
-                img.style.width = '60px'; img.style.height = '100px'; img.style.objectFit = 'cover';
-                braceletContainer.appendChild(img);
+                img.style.width = '50px';
+                img.style.height = 'auto';
+                img.style.filter = 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))';
+                grid.appendChild(img);
             });
+            tempDiv.appendChild(grid);
 
-            const footer = document.createElement('p');
-            footer.innerText = `Total: ${document.getElementById('total-price').innerText} • ${selectedCharms.length} Pieces`;
-            footer.style.fontSize = "12px"; footer.style.fontWeight = "bold"; footer.style.color = "#94a3b8";
+            const footer = document.createElement('div');
+            footer.style.marginTop = '20px';
+            footer.style.textAlign = 'center';
+            footer.innerHTML = `<p style="font-size: 16px; font-weight: 700; color: #334155;">Total: ${document.getElementById('total-price').innerText} • ${selectedCharms.length} Links</p>`;
+            tempDiv.appendChild(footer);
 
-            tempDiv.appendChild(title); tempDiv.appendChild(braceletContainer); tempDiv.appendChild(footer);
             document.body.appendChild(tempDiv);
 
-            const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 3, backgroundColor: "#ffffff" });
+            const canvas = await html2canvas(tempDiv, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
             const dataUrl = canvas.toDataURL("image/png");
             
             document.getElementById('screenshotPreview').src = dataUrl;
             document.getElementById('downloadBtn').onclick = () => {
                 const link = document.createElement('a');
-                link.download = `bracelet-design-${Date.now()}.png`;
+                link.download = `bracelet-${Date.now()}.png`;
                 link.href = dataUrl;
                 link.click();
             };
 
             document.body.removeChild(tempDiv);
-            document.getElementById('resultModal').classList.remove('hidden');
-            document.getElementById('resultModal').classList.add('flex');
+            
+            const modal = document.getElementById('resultModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
         } catch (err) {
             console.error(err);
+            alert("Error generating image.");
         } finally {
             overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
         }
     }
 
-    function closeResult() { document.getElementById('resultModal').classList.add('hidden'); }
-
-    function handlePreviewScroll(el) {
-        const thumb = document.getElementById('scroll-thumb');
-        const scrollWidth = el.scrollWidth - el.clientWidth;
-        if (scrollWidth <= 0) {
-            thumb.style.width = '100%'; thumb.style.left = '0%';
-            return;
-        }
-        const percentage = (el.scrollLeft / scrollWidth) * 100;
-        thumb.style.width = '30%'; thumb.style.left = `${percentage * 0.7}%`;
+    function closeResult() {
+        document.getElementById('resultModal').classList.add('hidden');
+        document.getElementById('resultModal').classList.remove('flex');
     }
-
-    function scrollManual(val) { document.getElementById('bracelet-preview').scrollBy({ left: val, behavior: 'smooth' }); }
-
-    let touchStartIndex = null;
-    let currentHoverIndex = null;
-
-    function handleTouchStart(e) { const container = e.target.closest('.bracelet-link-container'); if (!container) return; touchStartIndex = parseInt(container.dataset.index); container.classList.add('dragging'); }
-    function handleTouchMove(e) { e.preventDefault(); const touch = e.touches[0]; const target = document.elementFromPoint(touch.clientX, touch.clientY); const container = target?.closest('.bracelet-link-container'); document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('drag-over')); if (container) { currentHoverIndex = parseInt(container.dataset.index); container.classList.add('drag-over'); } }
-    function handleTouchEnd(e) { document.querySelectorAll('.bracelet-link-container').forEach(el => { el.classList.remove('dragging'); el.classList.remove('drag-over'); }); if (touchStartIndex !== null && currentHoverIndex !== null && touchStartIndex !== currentHoverIndex) reorderArray(touchStartIndex, currentHoverIndex); touchStartIndex = null; currentHoverIndex = null; }
-
-    function reorderArray(from, to) { const item = selectedCharms.splice(from, 1)[0]; selectedCharms.splice(to, 0, item); updateUI(); }
-    function clearBracelet() { if (confirm("Reset current design?")) { selectedCharms = []; updateUI(); } }
-    function addRandom() { const rand = allCharms[Math.floor(Math.random() * allCharms.length)]; if(rand) addCharmById(rand.id); }
 
     init();
   </script>
 </body>
 </html>
+
 
