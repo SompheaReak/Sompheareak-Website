@@ -19,44 +19,47 @@
         overscroll-behavior-y: none;
     }
 
-    /* Hide scrollbars but allow functionality */
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
     /* --- ANIMATIONS --- */
-    @keyframes slideUp {
-        from { transform: translateY(100%); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-    
-    .animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
     @keyframes popIn {
-        0% { transform: scale(0.9); opacity: 0; }
+        0% { transform: scale(0.5); opacity: 0; }
         100% { transform: scale(1); opacity: 1; }
     }
-    .pop-in { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    /* Only apply animation to elements with this class */
+    .animate-pop-new { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
-    /* --- DRAG & DROP STYLES --- */
+    /* --- CHARM STYLES --- */
     .bracelet-link-container {
         transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
-        cursor: grab;
+        cursor: pointer;
         position: relative;
         touch-action: none;
         z-index: 10;
+        
+        /* UPDATED DIMENSIONS FOR 900x1500px IMAGES */
+        height: 75%; /* Occupy 75% of the tray height */
+        width: auto; /* Width scales automatically */
+        aspect-ratio: 2 / 3.5; /* Matches ~900x1500 ratio */
+        
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
-    .bracelet-link-container:active { cursor: grabbing; }
+    .bracelet-link-container:active { transform: scale(0.95); }
 
     .dragging {
-        transform: scale(1.15) translateY(-15px) rotate(2deg);
+        transform: scale(1.15) translateY(-20px) rotate(2deg) !important;
         z-index: 50;
-        filter: drop-shadow(0 15px 25px rgba(0,0,0,0.15));
+        filter: drop-shadow(0 20px 30px rgba(0,0,0,0.2));
         opacity: 0.9;
     }
 
     .drag-over {
-        transform: translateX(10px); /* Visual nudge */
+        transform: translateX(15px);
     }
 
     /* --- UI POLISH --- */
@@ -68,12 +71,12 @@
     .jewelry-tray {
         background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
         background-size: 20px 20px;
-        box-shadow: inset 0 2px 10px rgba(0,0,0,0.02);
+        box-shadow: inset 0 2px 15px rgba(0,0,0,0.03);
     }
 
     /* --- DRAWER --- */
     #drawer {
-        transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+        transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
         will-change: transform;
     }
 
@@ -84,27 +87,43 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 600px;
+        width: 1200px;
+    }
+
+    /* DELETE BUTTON */
+    .delete-btn {
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .delete-btn.show {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+        pointer-events: auto;
+    }
+    .delete-btn.hide {
+        opacity: 0;
+        transform: translate(-50%, -20%) scale(0.5);
+        pointer-events: none;
+    }
+
+    .is-selected img {
+        filter: brightness(1.1) drop-shadow(0 0 8px rgba(234, 88, 12, 0.5));
     }
   </style>
 </head>
-<body class="text-slate-900 h-screen flex flex-col overflow-hidden">
+<body class="text-slate-900 h-screen flex flex-col overflow-hidden" onclick="handleGlobalClick(event)">
 
-  <!-- 1. HEADER (COVER) -->
+  <!-- 1. HEADER -->
   <header class="glass-nav fixed top-0 left-0 right-0 z-50 px-4 h-16 flex items-center justify-between shadow-sm">
     <div class="flex items-center gap-3">
-        <!-- Logo Image -->
         <div class="w-10 h-10 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
             <img src="/static/images/logo.jpg" alt="Logo" class="w-full h-full object-cover">
         </div>
-        <!-- Shop Name -->
         <div class="flex flex-col">
             <h1 class="text-sm font-extrabold text-slate-900 uppercase tracking-tight leading-tight">Somphea Reak</h1>
             <span class="text-[9px] font-bold text-orange-600 uppercase tracking-widest">Bracelet Studio</span>
         </div>
     </div>
 
-    <!-- Action Buttons -->
     <div class="flex items-center gap-2">
         <a href="/" class="w-9 h-9 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 transition active:scale-95">
              <i class="fa-solid fa-house text-xs"></i>
@@ -115,12 +134,11 @@
     </div>
   </header>
 
-  <!-- 2. MAIN WORKSPACE -->
+  <!-- 2. WORKSPACE -->
   <main class="flex-1 flex flex-col pt-16 pb-24 relative overflow-y-auto">
       
-      <!-- Preview Section (The Tray) -->
+      <!-- Preview Tray -->
       <section class="flex-none relative z-20 bg-white shadow-sm border-b border-slate-100">
-          <!-- Info Bar -->
           <div class="px-6 py-3 flex justify-between items-center">
               <span id="link-count" class="bg-slate-900 text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">0 Links</span>
               <div class="text-right">
@@ -129,15 +147,13 @@
               </div>
           </div>
 
-          <!-- The Tray Area -->
-          <div class="jewelry-tray relative w-full h-56 bg-slate-50 overflow-hidden group">
-              
-              <!-- Center Guide -->
+          <!-- Tray Area: Height increased -->
+          <div class="jewelry-tray relative w-full h-80 bg-slate-50 overflow-hidden group">
               <div class="absolute top-1/2 left-0 w-full h-px border-t border-dashed border-slate-300 -translate-y-1/2 opacity-50 pointer-events-none"></div>
 
               <!-- Scrollable Track -->
               <div id="bracelet-preview" onscroll="handlePreviewScroll(this)" 
-                   class="absolute inset-0 flex items-center px-[50vw] overflow-x-auto no-scrollbar gap-0.5 snap-x snap-mandatory">
+                   class="absolute inset-0 flex items-center px-[50vw] overflow-x-auto no-scrollbar gap-1 snap-x snap-mandatory">
                   
                   <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40">
                       <i class="fa-solid fa-gem text-3xl mb-2 text-slate-300"></i>
@@ -161,30 +177,23 @@
           </div>
       </section>
 
-      <!-- Category Gallery (Grid) -->
+      <!-- Category Gallery -->
       <section class="p-4">
           <div class="flex items-center justify-between mb-4 px-2">
               <h3 class="text-xs font-bold text-slate-900 uppercase tracking-widest">Collections</h3>
           </div>
-          <!-- CHANGED: Grid columns to 6 per line, reduced gaps for tighter fit -->
-          <div id="categoryGallery" class="grid grid-cols-6 gap-2">
-              <!-- JS Injected -->
-          </div>
+          <div id="categoryGallery" class="grid grid-cols-6 gap-2"></div>
       </section>
 
   </main>
 
-  <!-- 3. DRAWER (Selection) -->
+  <!-- 3. DRAWER -->
   <div id="drawer" class="fixed inset-0 z-[100] translate-y-full pointer-events-none">
-      <!-- Backdrop (NO BLUR as requested) -->
       <div class="absolute inset-0 bg-slate-900/60 pointer-events-auto opacity-0 transition-opacity duration-300" id="drawer-backdrop" onclick="closeDrawer()"></div>
       
-      <!-- Panel -->
       <div class="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pointer-events-auto flex flex-col">
-          <!-- Handle -->
           <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mt-4 mb-2"></div>
           
-          <!-- Drawer Header -->
           <div class="px-6 pb-4 flex items-center justify-between border-b border-slate-50">
               <div>
                   <span class="text-[9px] font-bold text-orange-500 uppercase tracking-widest">Select Items</span>
@@ -195,17 +204,13 @@
               </button>
           </div>
 
-          <!-- Items Grid -->
           <div class="flex-1 overflow-y-auto px-4 py-6 scrollbar-hide">
-              <!-- CHANGED: Grid columns to 7 per row -->
-              <div id="charmGrid" class="grid grid-cols-7 gap-1 pb-12">
-                  <!-- JS Injected -->
-              </div>
+              <div id="charmGrid" class="grid grid-cols-7 gap-1 pb-12"></div>
           </div>
       </div>
   </div>
 
-  <!-- 4. FOOTER ACTIONS -->
+  <!-- 4. FOOTER -->
   <div class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-100 p-4 z-[90]">
       <div class="max-w-md mx-auto flex gap-3">
           <button onclick="addRandom()" class="w-14 h-14 flex-none bg-white border border-slate-200 rounded-2xl text-slate-400 shadow-sm flex items-center justify-center active:scale-90 transition">
@@ -245,202 +250,6 @@
   <script>
     // --- DATA ---
     const allCharms = [
-      // --- Charm
-    {"id": 1, "name_kh": "Silver Charm", "price": 500, "image": "/static/images/c01.jpg", "categories": ["Charm"]},
-    {"id": 2, "name_kh": "Gold Charm", "price": 600, "image": "/static/images/c01.jpg", "categories": ["Charm"]},
-    {"id": 3, "name_kh": "Black Charm", "price": 800, "image": "/static/images/c01.jpg", "categories": ["Charm"]},
-
-     // --- F1 LOGOS (1001 - 1015) ---
-    {"id": 1100, "name_kh": "Classic F1 Logo", "price": 3000, "image": "/static/images/charm-f1–101.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1191, "name_kh": "Classic F1", "price": 3000, "image": "/static/images/charm-chain-03.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1192, "name_kh": "Classic F1 - Ferri", "price": 3000, "image": "/static/images/charm-f1-301.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1193, "name_kh": "Classic F1 - Porsche", "price": 3000, "image": "/static/images/charm-f1-302.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1194, "name_kh": "Classic F1 - BMW", "price": 3000, "image": "/static/images/charm-f1-303.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1195, "name_kh": "Classic F1 - BMW", "price": 3000, "image": "/static/images/charm-f1-304.jpg", "categories": ["Class F1🏎️"]},
-    
-    {"id": 1301, "name_kh": "Classic F1 - Mercedes", "price": 3000, "image": "/static/images/cc15.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1302, "name_kh": "Classic F1 - Ferrari", "price": 3000, "image": "/static/images/cc04.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1303, "name_kh": "Classic F1 - Porsche", "price": 3000, "image": "/static/images/cc12.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1304, "name_kh": "Classic F1 - BMW", "price": 3000, "image": "/static/images/cc06.jpg", "categories": ["Class F1🏎️"]},
-
-     // --- Pink F1 
-    {"id": 1200, "name_kh": "Pink F1 Logo", "price": 3000, "image": "/static/images/charm-f1-201.jpg", "categories": ["Pink F1🏎️"]},
-    {"id": 1291, "name_kh": "Classic F1 - Mercedes", "price": 3000, "image": "/static/images/charm-chain-03.jpg", "categories": ["pink F1🏎️"]},
-    {"id": 1292, "name_kh": "Classic F1 - Ferri", "price": 3000, "image": "/static/images/charm-f1-301.jpg", "categories": ["Pink F1🏎️"]},
-    {"id": 1293, "name_kh": "Classic F1 - Porsche", "price": 3000, "image": "/static/images/charm-f1-302.jpg", "categories": ["Pink F1🏎️"]},
-    {"id": 1294, "name_kh": "Classic F1 - BMW", "price": 3000, "image": "/static/images/charm-f1-303.jpg", "categories": ["Pink F1🏎️"]},
-    {"id": 1295, "name_kh": "Classic F1 - BMW", "price": 3000, "image": "/static/images/charm-f1-304.jpg", "categories": ["Pink F1🏎️"]},
-
-    {"id": 11201, "name_kh": "Pink F1 - Mercedes", "price": 3000, "image": "/static/images/charm-f1-202.jpg", "categories": ["Pink F1🏎️"]},
-    {"id": 11202, "name_kh": "Pink F1 - Ferrari", "price": 3000, "image": "/static/images/charm-f1-203.jpg", "categories": ["Pink F1🏎️"]},
-    {"id": 11203, "name_kh": "Pink F1 - Porsche", "price": 3000, "image": "/static/images/charm-f1-204.jpg", "categories": ["Pink F1🏎️"]},
-    {"id": 11204, "name_kh": "Pink F1 - BMW", "price": 3000, "image": "/static/images/charm-f1-205.jpg", "categories": ["Pink F1🏎️"]},
-
-     // --- CAR LOGOS (1001 - 1015) ---
-    {"id": 1001, "name_kh": "Car Charm 01", "price": 3000, "image": "/static/images/cc01.jpg", "categories": ["Car Logo"]},
-    {"id": 1002, "name_kh": "Car Charm 02", "price": 3000, "image": "/static/images/cc02.jpg", "categories": ["Car Logo"]},
-    {"id": 1003, "name_kh": "Car Charm 03", "price": 3000, "image": "/static/images/cc03.jpg", "categories": ["Car Logo"]},
-    {"id": 1004, "name_kh": "Car Charm 04", "price": 3000, "image": "/static/images/cc04.jpg", "categories": ["Car Logo"]},
-    {"id": 1005, "name_kh": "Car Charm 05", "price": 3000, "image": "/static/images/cc05.jpg", "categories": ["Car Logo"]},
-    {"id": 1006, "name_kh": "Car Charm 06", "price": 3000, "image": "/static/images/cc06.jpg", "categories": ["Car Logo"]},
-    {"id": 1007, "name_kh": "Car Charm 07", "price": 3000, "image": "/static/images/cc07.jpg", "categories": ["Car Logo"]}, 
-    {"id": 1008, "name_kh": "Car Charm 08", "price": 3000, "image": "/static/images/cc08.jpg", "categories": ["Car Logo"]},
-    {"id": 1009, "name_kh": "Car Charm 09", "price": 3000, "image": "/static/images/cc09.jpg", "categories": ["Car Logo"]},
-    {"id": 1010, "name_kh": "Car Charm 10", "price": 3000, "image": "/static/images/cc10.jpg", "categories": ["Car Logo"]},
-    {"id": 1011, "name_kh": "Car Charm 11", "price": 3000, "image": "/static/images/cc11.jpg", "categories": ["Car Logo"]},
-    {"id": 1012, "name_kh": "Car Charm 12", "price": 3000, "image": "/static/images/cc12.jpg", "categories": ["Car Logo"]},
-    {"id": 1013, "name_kh": "Car Charm 13", "price": 3000, "image": "/static/images/cc13.jpg", "categories": ["Car Logo"]},
-    {"id": 1014, "name_kh": "Car Charm 14", "price": 3000, "image": "/static/images/cc14.jpg", "categories": ["Car Logo"]},
-    {"id": 1015, "name_kh": "Car Charm 15", "price": 3000, "image": "/static/images/cc15.jpg", "categories": ["Car Logo"]},
-    // --- FLAGS (2001 - 2019) ---
-    {"id": 2001, "name_kh": "Flag Charm 01", "price": 3000, "image": "/static/images/cf01.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 2002, "name_kh": "Flag Charm 02", "price": 3000, "image": "/static/images/cf02.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 2003, "name_kh": "Flag Charm 03", "price": 3000, "image": "/static/images/cf03.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 2004, "name_kh": "Flag Charm 04", "price": 3000, "image": "/static/images/cf04.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 2005, "name_kh": "Flag Charm 05", "price": 3000, "image": "/static/images/cf05.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 2006, "name_kh": "Flag Charm 06", "price": 3000, "image": "/static/images/cf06.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 2007, "name_kh": "Flag Charm 07", "price": 3000, "image": "/static/images/cf07.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 2008, "name_kh": "Flag Charm 08", "price": 3000, "image": "/static/images/cf08.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 2009, "name_kh": "Flag Charm 09", "price": 3000, "image": "/static/images/cf09.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 2010, "name_kh": "Flag Charm 10", "price": 3000, "image": "/static/images/cf10.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 2011, "name_kh": "Flag Charm 11", "price": 3000, "image": "/static/images/cf11.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 2012, "name_kh": "Flag Charm 12", "price": 3000, "image": "/static/images/cf12.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 2013, "name_kh": "Flag Charm 13", "price": 3000, "image": "/static/images/cf13.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 2014, "name_kh": "Flag Charm 14", "price": 3000, "image": "/static/images/cf14.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 2015, "name_kh": "Flag Charm 15", "price": 3000, "image": "/static/images/cf15.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 2016, "name_kh": "Flag Charm 16", "price": 3000, "image": "/static/images/cf16.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 2017, "name_kh": "Flag Charm 17", "price": 3000, "image": "/static/images/cf17.jpg", "categories": ["Flag"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 2018, "name_kh": "Flag Charm 18", "price": 3000, "image": "/static/images/cf18.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 2019, "name_kh": "Flag Charm 19", "price": 3000, "image": "/static/images/cf19.jpg", "categories": ["Flag"], "subcategory": ["All","Football"], "discount": 20},
-
-    // --- GEMSTONES (3001 - 3024) ---
-    {"id": 3001, "name_kh": "Gemstone Charm 01", "price": 3500, "image": "/static/images/cg01.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
-    {"id": 3002, "name_kh": "Gemstone Charm 02", "price": 3500, "image": "/static/images/cg02.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3003, "name_kh": "Gemstone Charm 03", "price": 3500, "image": "/static/images/cg03.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3004, "name_kh": "Gemstone Charm 04", "price": 3500, "image": "/static/images/cg04.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3005, "name_kh": "Gemstone Charm 05", "price": 3500, "image": "/static/images/cg05.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3006, "name_kh": "Gemstone Charm 06", "price": 3500, "image": "/static/images/cg06.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
-    {"id": 3007, "name_kh": "Gemstone Charm 07", "price": 3500, "image": "/static/images/cg07.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
-    {"id": 3008, "name_kh": "Gemstone Charm 08", "price": 3500, "image": "/static/images/cg08.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3009, "name_kh": "Gemstone Charm 09", "price": 3500, "image": "/static/images/cg09.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3010, "name_kh": "Gemstone Charm 10", "price": 3500, "image": "/static/images/cg10.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3011, "name_kh": "Gemstone Charm 11", "price": 3500, "image": "/static/images/cg11.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3012, "name_kh": "Gemstone Charm 12", "price": 3500, "image": "/static/images/cg12.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3013, "name_kh": "Gemstone Charm 13", "price": 3500, "image": "/static/images/cg13.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3014, "name_kh": "Gemstone Charm 14", "price": 3500, "image": "/static/images/cg14.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3015, "name_kh": "Gemstone Charm 15", "price": 3500, "image": "/static/images/cg15.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3016, "name_kh": "Gemstone Charm 16", "price": 3500, "image": "/static/images/cg16.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
-    {"id": 3017, "name_kh": "Gemstone Charm 17", "price": 3500, "image": "/static/images/cg17.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
-    {"id": 3018, "name_kh": "Gemstone Charm 18", "price": 3500, "image": "/static/images/cg18.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3019, "name_kh": "Gemstone Charm 19", "price": 3500, "image": "/static/images/cg19.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3020, "name_kh": "Gemstone Charm 20", "price": 3500, "image": "/static/images/cg20.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3021, "name_kh": "Gemstone Charm 21", "price": 5000, "image": "/static/images/cg21.jpg", "categories": ["Gemstone"], "subcategory": ["Car Logo"], "discount": 20},
-    {"id": 3022, "name_kh": "Gemstone Charm 22", "price": 5000, "image": "/static/images/cg22.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3023, "name_kh": "Gemstone Charm 23", "price": 5000, "image": "/static/images/cg23.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 3024, "name_kh": "Gemstone Charm 24", "price": 5000, "image": "/static/images/cg24.jpg", "categories": ["Gemstone"], "subcategory": ["All","Football"], "discount": 20},
-
-    // --- Chain (4001 - 4016) ---
-    {"id": 4001, "name_kh": "Chain Charm 01", "price": 3000, "image": "/static/images/charm-chain-01.jpg", "categories": ["Chain"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 4002, "name_kh": "Chain Charm 02", "price": 3000, "image": "/static/images/charm-chain-02.jpg", "categories": ["Chain"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 4003, "name_kh": "Chain Charm 03", "price": 3000, "image": "/static/images/charm-chain-03.jpg", "categories": ["Chain"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 4004, "name_kh": "Chain Charm 04", "price": 3000, "image": "/static/images/charm-chain-04.jpg", "categories": ["Chain"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 4005, "name_kh": "Chain Charm 05", "price": 3000, "image": "/static/images/charm-chain-05.jpg", "categories": ["Chain"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 4006, "name_kh": "Chain Charm 06", "price": 3000, "image": "/static/images/charm-chain-06.jpg", "categories": ["Chain"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 4007, "name_kh": "Chain Charm 07", "price": 3000, "image": "/static/images/charm-chain-07.jpg", "categories": ["Chain"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 4008, "name_kh": "Chain Charm 08", "price": 3000, "image": "/static/images/charm-chain-08.jpg", "categories": ["Chain"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 4009, "name_kh": "Chain Charm 09", "price": 3000, "image": "/static/images/charm-chain-09.jpg", "categories": ["Chain"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 4010, "name_kh": "Chain Charm 10", "price": 3000, "image": "/static/images/charm-chain-10.jpg", "categories": ["Chain"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 4011, "name_kh": "Chain Charm 11", "price": 3000, "image": "/static/images/charm-chain-11.jpg", "categories": ["Chain"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 4012, "name_kh": "Chain Charm 12", "price": 3000, "image": "/static/images/charm-chain-12.jpg", "categories": ["Chain"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 4013, "name_kh": "Chain Charm 13", "price": 3000, "image": "/static/images/charm-chain-13.jpg", "categories": ["Chain"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 4014, "name_kh": "Chain Charm 14", "price": 3000, "image": "/static/images/charm-chain-14.jpg", "categories": ["Chain"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 4015, "name_kh": "Chain Charm 15", "price": 3000, "image": "/static/images/charm-chain-15.jpg", "categories": ["Chain"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 4016, "name_kh": "Chain Charm 16", "price": 3000, "image": "/static/images/charm-chain-16.jpg", "categories": ["Chain"], "subcategory": ["Flag","Football"], "discount": 20},
-
-    // --- Football Club (5001 - 5015) ---
-    {"id": 5001, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-01.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5002, "name_kh": "Real Madrid", "price": 3000, "image": "/static/images/charm-footballclub-02.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5003, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-03.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5004, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-04.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5005, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-05.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5006, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-06.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5007, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-07.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5008, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-08.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5009, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-09.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5010, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-10.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5011, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-11.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5012, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-12.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5013, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-13.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5014, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-14.jpg", "categories": ["Football Club Logo"]},
-    {"id": 5015, "name_kh": "Barcelona", "price": 3000, "image": "/static/images/charm-footballclub-15.jpg", "categories": ["Football Club Logo"]},
-
-    // --- Black Lover (6001 - 6007) ---
-    {"id": 6001, "name_kh": "Black Charm 01", "price": 3000, "image": "/static/images/cb01.jpg", "categories": ["Black Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 6002, "name_kh": "Black Charm 02", "price": 3000, "image": "/static/images/cb02.jpg", "categories": ["Black Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 6003, "name_kh": "Black Charm 03", "price": 3000, "image": "/static/images/cb03.jpg", "categories": ["Black Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 6004, "name_kh": "Black Charm 04", "price": 3000, "image": "/static/images/cb04.jpg", "categories": ["Black Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 6005, "name_kh": "Black Charm 05", "price": 3000, "image": "/static/images/cb05.jpg", "categories": ["Black Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 6006, "name_kh": "Black Charm 06", "price": 3000, "image": "/static/images/cb06.jpg", "categories": ["Black Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 6007, "name_kh": "Black Charm 07", "price": 3000, "image": "/static/images/cb07.jpg", "categories": ["Black Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-
-    // --- Dog&Cat Lover (7001 - 7007) ---
-    {"id": 7001, "name_kh": "Cat&Dog Charm 01", "price": 3000, "image": "/static/images/charm-animal-01.jpg", "categories": ["Dog&Cat Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 7002, "name_kh": "Cat&Dog Charm 02", "price": 3000, "image": "/static/images/charm-animal-02.jpg", "categories": ["Dog&Cat Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7003, "name_kh": "Cat&Dog Charm 03", "price": 3000, "image": "/static/images/charm-animal-03.jpg", "categories": ["Dog&Cat Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 7004, "name_kh": "Cat&Dog Charm 04", "price": 3000, "image": "/static/images/charm-animal-04.jpg", "categories": ["Dog&Cat Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7005, "name_kh": "Cat&Dog Charm 05", "price": 3000, "image": "/static/images/charm-animal-05.jpg", "categories": ["Dog&Cat Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7006, "name_kh": "Cat&Dog Charm 06", "price": 3000, "image": "/static/images/charm-animal-06.jpg", "categories": ["Dog&Cat Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7007, "name_kh": "Cat&Dog Charm 07", "price": 3000, "image": "/static/images/charm-animal-07.jpg", "categories": ["Dog&Cat Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    // --- Blue Sea Lover (7011-7025) ---
-    {"id": 7011, "name_kh": "Blue Sea Lover 01", "price": 3000, "image": "/static/images/charm-bluesealover-01.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 7012, "name_kh": "Blue Sea Lover 02", "price": 3000, "image": "/static/images/charm-bluesealover-02.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7013, "name_kh": "Blue Sea Lover 03", "price": 3000, "image": "/static/images/charm-bluesealover-03.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 7014, "name_kh": "Blue Sea Lover 04", "price": 3000, "image": "/static/images/charm-bluesealover-04.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7015, "name_kh": "Blue Sea Lover 05", "price": 3000, "image": "/static/images/charm-bluesealover-05.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7016, "name_kh": "Blue Sea Lover 06", "price": 3000, "image": "/static/images/charm-bluesealover-06.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7017, "name_kh": "Blue Sea Lover 07", "price": 3000, "image": "/static/images/charm-bluesealover-07.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7018, "name_kh": "Blue Sea Lover 08", "price": 3000, "image": "/static/images/charm-bluesealover-08.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 7019, "name_kh": "Blue Sea Lover 09", "price": 3000, "image": "/static/images/charm-bluesealover-09.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7020, "name_kh": "Blue Sea Lover 10", "price": 3000, "image": "/static/images/charm-bluesealover-10.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 7021, "name_kh": "Blue Sea Lover 11", "price": 3000, "image": "/static/images/charm-bluesealover-11.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7022, "name_kh": "Blue Sea Lover 12", "price": 3000, "image": "/static/images/charm-bluesealover-12.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7023, "name_kh": "Blue Sea Lover 13", "price": 3000, "image": "/static/images/charm-bluesealover-13.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7024, "name_kh": "Blue Sea Lover 14", "price": 3000, "image": "/static/images/charm-bluesealover-14.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 7025, "name_kh": "Blue Sea Lover 15", "price": 3000, "image": "/static/images/charm-bluesealover-15.jpg", "categories": ["Blue Sea Lover🌊"], "subcategory": ["Flag","Football"], "discount": 20},
-
-    // --- Pink Lover (8001 - 8009) ---
-    {"id": 8001, "name_kh": "Pink Charm 01", "price": 3000, "image": "/static/images/cp01.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 8002, "name_kh": "Pink Charm 02", "price": 3000, "image": "/static/images/cp02.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8003, "name_kh": "Pink Charm 03", "price": 3000, "image": "/static/images/cp03.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 8004, "name_kh": "Pink Charm 04", "price": 3000, "image": "/static/images/cp04.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8005, "name_kh": "Pink Charm 05", "price": 3000, "image": "/static/images/cp05.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8006, "name_kh": "Pink Charm 06", "price": 3000, "image": "/static/images/cp06.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8007, "name_kh": "Pink Charm 07", "price": 3000, "image": "/static/images/cp07.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8008, "name_kh": "Pink Charm 08", "price": 3000, "image": "/static/images/cp08.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8009, "name_kh": "Pink Charm 09", "price": 3000, "image": "/static/images/cp09.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20 },
-    {"id": 8101, "name_kh": "Pink 01", "price": 3000, "image": "/static/images/charm-pinklover-01.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 8102, "name_kh": "Black Charm 02", "price": 3000, "image": "/static/images/charm-pinklover-02.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8103, "name_kh": "Black Charm 03", "price": 3000, "image": "/static/images/charm-pinklover-03.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 8104, "name_kh": "Black Charm 04", "price": 3000, "image": "/static/images/charm-pinklover-04.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8105, "name_kh": "Black Charm 05", "price": 3000, "image": "/static/images/charm-pinklover-05.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8106, "name_kh": "Black Charm 06", "price": 3000, "image": "/static/images/charm-pinklover-06.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8107, "name_kh": "Black Charm 07", "price": 3000, "image": "/static/images/charm-pinklover-07.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8108, "name_kh": "Pink 01", "price": 3000, "image": "/static/images/charm-pinklover-08.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 8109, "name_kh": "Black Charm 02", "price": 3000, "image": "/static/images/charm-pinklover-09.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8110, "name_kh": "Black Charm 03", "price": 3000, "image": "/static/images/charm-pinklover-10.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 8111, "name_kh": "Pink 01", "price": 3000, "image": "/static/images/charm-pinklover-11.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 8112, "name_kh": "Black Charm 02", "price": 3000, "image": "/static/images/charm-pinklover-12.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8113, "name_kh": "Black Charm 03", "price": 3000, "image": "/static/images/charm-pinklover-13.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 8114, "name_kh": "Black Charm 04", "price": 3000, "image": "/static/images/charm-pinklover-14.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8115, "name_kh": "Black Charm 05", "price": 3000, "image": "/static/images/charm-pinklover-15.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8116, "name_kh": "Black Charm 06", "price": 3000, "image": "/static/images/charm-pinklover-16.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8117, "name_kh": "Black Charm 07", "price": 3000, "image": "/static/images/charm-pinklover-17.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8118, "name_kh": "Pink 01", "price": 3000, "image": "/static/images/charm-pinklover-18.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 8119, "name_kh": "Black Charm 02", "price": 3000, "image": "/static/images/charm-pinklover-19.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8120, "name_kh": "Black Charm 03", "price": 3000, "image": "/static/images/charm-pinklover-20.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-    {"id": 8121, "name_kh": "Black Charm 02", "price": 3000, "image": "/static/images/charm-pinklover-21.jpg", "categories": ["Pink Lover"], "subcategory": ["Flag","Football"], "discount": 20},
-    {"id": 8122, "name_kh": "Black Charm 03", "price": 3000, "image": "/static/images/charm-pinklover-22.jpg", "categories": ["Pink Lover"], "subcategory": ["All","Football"], "discount": 20},
-
     // --- PINK LETTERS (9001 - 9026) ---
     {"id": 9001, "name_kh": "Pink Letter Charm A", "price": 1200, "image": "/static/images/ap.jpg", "categories": ["Pink Letter"], "subcategory": ["All","Football"], "discount": 20},
     {"id": 9002, "name_kh": "Pink Letter Charm B", "price": 1200, "image": "/static/images/bp.jpg", "categories": ["Pink Letter"], "subcategory": ["Flag","Football"], "discount": 20},
@@ -629,14 +438,16 @@
     {"id": 2108, "name_kh": "Flower 🌹 08", "price": 3000, "image": "/static/images/charm-flower-08.jpg", "categories": ["Flower 🌹"]},
     {"id": 2109, "name_kh": "Flower 🌹 09", "price": 3000, "image": "/static/images/charm-flower-09.jpg", "categories": ["Flower 🌹"]},
        ];
+
     let selectedCharms = JSON.parse(localStorage.getItem('customCharms')) || [];
     let stockData = {};
     let masterSwitch = "off";
+    let activeLinkIndex = null; 
+    let recentlyAddedUid = null; // Track newest item for animation
 
-    // --- INIT ---
     async function init() {
         renderCategories();
-        updateUI();
+        updateUI(false); // Initial load, no animation
     }
 
     // --- RENDER CATEGORIES ---
@@ -648,7 +459,6 @@
             const charm = allCharms.find(c => c.categories.includes(cat));
             const displayCat = cat.length > 10 ? cat.split(' ')[0] : cat;
             
-            // Layout adjusted for 6 items in a line
             return `
                 <div onclick="openDrawer('${cat}')" class="group flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition duration-200">
                     <div class="w-full aspect-square rounded-xl bg-white border border-slate-200 shadow-sm p-1 flex items-center justify-center group-hover:border-orange-500 transition-colors">
@@ -660,14 +470,12 @@
         }).join('');
     }
 
-    // --- DRAWER LOGIC ---
+    // --- DRAWER ---
     function openDrawer(cat) {
         document.getElementById('drawer-title').innerText = cat;
         const grid = document.getElementById('charmGrid');
-        
         const items = allCharms.filter(c => c.categories.includes(cat));
         
-        // Layout adjusted for 7 items per row - simplified content to fit
         grid.innerHTML = items.map(c => {
             const qty = stockData[c.id] !== undefined ? stockData[c.id] : 99;
             let isOut = false;
@@ -677,7 +485,7 @@
                 <div onclick="${isOut ? '' : `addCharmById(${c.id})`}" 
                      class="flex flex-col gap-1 ${isOut ? 'opacity-40 grayscale pointer-events-none' : 'cursor-pointer active:scale-95 transition-transform'}">
                     <div class="relative w-full aspect-[3/4] bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-center overflow-hidden">
-                        <img src="${c.image}" class="w-full h-full object-contain p-0.5">
+                        <img src="${c.image}" class="w-full h-full object-contain p-0.5 pointer-events-none">
                         ${isOut ? '<div class="absolute inset-0 bg-slate-900/10 flex items-center justify-center"><span class="bg-red-500 text-white text-[6px] font-bold px-1 rounded">SOLD</span></div>' : ''}
                     </div>
                     <div class="text-center">
@@ -689,7 +497,6 @@
         
         const drawer = document.getElementById('drawer');
         const backdrop = document.getElementById('drawer-backdrop');
-        
         drawer.classList.remove('translate-y-full');
         backdrop.classList.remove('opacity-0');
         drawer.classList.add('pointer-events-auto');
@@ -698,20 +505,26 @@
     function closeDrawer() {
         const drawer = document.getElementById('drawer');
         const backdrop = document.getElementById('drawer-backdrop');
-        
         drawer.classList.add('translate-y-full');
         backdrop.classList.add('opacity-0');
         drawer.classList.remove('pointer-events-auto');
     }
 
-    // --- WORKSPACE LOGIC ---
+    // --- LOGIC ---
     function addCharmById(id) {
-        const charm = allCharms.find(c => c.id === id);
-        const newCharm = { ...charm, uid: Math.random().toString(36).substr(2, 9) };
+        // Use loose equality (==) for string/number id mismatch safety
+        const charm = allCharms.find(c => c.id == id);
+        if(!charm) return;
+
+        const uid = Math.random().toString(36).substr(2, 9);
+        const newCharm = { ...charm, uid: uid };
+        
         selectedCharms.push(newCharm);
+        recentlyAddedUid = uid; // Mark for animation
         
-        updateUI();
+        updateUI(true); // Trigger UI update with animation check
         
+        // Scroll to end
         setTimeout(() => {
             const preview = document.getElementById('bracelet-preview');
             preview.scrollTo({ left: preview.scrollWidth, behavior: 'smooth' });
@@ -720,16 +533,36 @@
         if (navigator.vibrate) navigator.vibrate(10);
     }
 
-    function removeCharm(uid) {
+    function toggleCharmSelection(uid, event) {
+        event.stopPropagation();
+        if (activeLinkIndex === uid) {
+            activeLinkIndex = null;
+        } else {
+            activeLinkIndex = uid;
+        }
+        updateUI(false);
+    }
+
+    function handleGlobalClick(event) {
+        if (!event.target.closest('.bracelet-link-container') && activeLinkIndex !== null) {
+            activeLinkIndex = null;
+            updateUI(false);
+        }
+    }
+
+    function removeCharm(uid, event) {
+        event.stopPropagation();
         selectedCharms = selectedCharms.filter(c => c.uid !== uid);
-        updateUI();
+        activeLinkIndex = null;
+        updateUI(false);
         if (navigator.vibrate) navigator.vibrate(10);
     }
 
     function clearBracelet() {
         if(selectedCharms.length > 0 && confirm("Reset your design?")) {
             selectedCharms = [];
-            updateUI();
+            activeLinkIndex = null;
+            updateUI(false);
         }
     }
     
@@ -738,7 +571,7 @@
         if(rand) addCharmById(rand.id);
     }
 
-    function updateUI() {
+    function updateUI(shouldAnimate) {
         const preview = document.getElementById('bracelet-preview');
         const emptyState = document.getElementById('empty-state');
         localStorage.setItem('customCharms', JSON.stringify(selectedCharms));
@@ -747,8 +580,6 @@
         let total = selectedCharms.reduce((sum, c) => sum + c.price, 0);
         document.getElementById('total-price').innerText = total.toLocaleString() + "៛";
         document.getElementById('link-count').innerText = `${selectedCharms.length} Links`;
-        
-        // Button State
         document.getElementById('screenshot-btn').disabled = selectedCharms.length === 0;
 
         if (selectedCharms.length === 0) {
@@ -760,44 +591,57 @@
             emptyState.style.display = 'none';
         }
 
-        // Render Bracelet
         let html = `<div class="w-[50vw] flex-shrink-0"></div>`;
         
-        html += selectedCharms.map((c, index) => `
-            <div class="bracelet-link-container flex-shrink-0 relative group pop-in snap-center w-14"
-                 style="animation-delay: ${index * 0.05}s"
+        html += selectedCharms.map((c, index) => {
+            const isSelected = activeLinkIndex === c.uid;
+            // Only animate if it's the recently added one and shouldAnimate is true
+            const isNew = shouldAnimate && c.uid === recentlyAddedUid;
+            
+            return `
+            <div class="bracelet-link-container flex-shrink-0 relative group snap-center ${isNew ? 'animate-pop-new' : ''} ${isSelected ? 'is-selected' : ''}"
+                 data-uid="${c.uid}"
                  data-index="${index}"
+                 onclick="toggleCharmSelection('${c.uid}', event)"
                  ontouchstart="handleTouchStart(event)"
                  ontouchmove="handleTouchMove(event)"
                  ontouchend="handleTouchEnd(event)">
                 
-                <button onclick="removeCharm('${c.uid}')" class="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-white border border-slate-200 text-red-500 rounded-full flex items-center justify-center text-[10px] shadow-md z-20 opacity-0 group-hover:opacity-100 transition-opacity active:scale-90">
+                <!-- X Button -->
+                <button onclick="removeCharm('${c.uid}', event)" 
+                        class="delete-btn absolute -top-8 left-1/2 w-8 h-8 bg-white border-2 border-slate-100 text-red-500 rounded-full flex items-center justify-center text-xs shadow-xl z-30 active:scale-90 ${isSelected ? 'show' : 'hide'}">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
 
-                <img src="${c.image}" class="w-full h-auto object-contain select-none pointer-events-none drop-shadow-md">
+                <img src="${c.image}" class="w-full h-full object-contain select-none pointer-events-none drop-shadow-md transition-all duration-200">
             </div>
-        `).join('');
+            `;
+        }).join('');
 
         html += `<div class="w-[50vw] flex-shrink-0"></div>`;
         preview.innerHTML = html;
-        
         handlePreviewScroll(preview);
+        
+        // Reset recently added so it doesn't animate again on next selection/removal
+        if(shouldAnimate) setTimeout(() => { recentlyAddedUid = null; }, 500);
     }
 
-    // --- DRAG & DROP (Touch) ---
+    // --- TOUCH EVENTS ---
     let touchStartIndex = null;
     let currentHoverIndex = null;
 
     function handleTouchStart(e) {
+        if(e.target.closest('.delete-btn')) return;
         const container = e.target.closest('.bracelet-link-container');
         if (!container) return;
         touchStartIndex = parseInt(container.dataset.index);
-        container.classList.add('dragging');
-        if (navigator.vibrate) navigator.vibrate(10);
+        setTimeout(() => {
+            if(touchStartIndex !== null) container.classList.add('dragging');
+        }, 150);
     }
 
     function handleTouchMove(e) {
+        if(touchStartIndex === null) return;
         e.preventDefault();
         const touch = e.touches[0];
         const target = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -807,9 +651,7 @@
         
         if (container) {
             currentHoverIndex = parseInt(container.dataset.index);
-            if (currentHoverIndex !== touchStartIndex) {
-                container.classList.add('drag-over');
-            }
+            if (currentHoverIndex !== touchStartIndex) container.classList.add('drag-over');
         }
     }
 
@@ -822,33 +664,26 @@
         if (touchStartIndex !== null && currentHoverIndex !== null && touchStartIndex !== currentHoverIndex) {
             const item = selectedCharms.splice(touchStartIndex, 1)[0];
             selectedCharms.splice(currentHoverIndex, 0, item);
-            updateUI();
+            updateUI(false); // Don't animate pops on reorder
             if (navigator.vibrate) navigator.vibrate(20);
         }
-        
         touchStartIndex = null;
         currentHoverIndex = null;
     }
 
-    // --- SCROLL HELPERS ---
+    // --- SCROLL & SCREENSHOT ---
     function handlePreviewScroll(el) {
         const thumb = document.getElementById('scroll-thumb');
         const maxScroll = el.scrollWidth - el.clientWidth;
-        if (maxScroll <= 0) {
-            thumb.style.width = '100%';
-            thumb.style.left = '0';
-            return;
-        }
+        if (maxScroll <= 0) { thumb.style.width = '100%'; thumb.style.left = '0'; return; }
         const pct = (el.scrollLeft / maxScroll);
-        const leftPos = Math.min(Math.max(pct * 66, 0), 66);
-        thumb.style.left = `${leftPos}%`;
+        thumb.style.left = `${Math.min(Math.max(pct * 66, 0), 66)}%`;
     }
 
     function scrollManual(val) {
         document.getElementById('bracelet-preview').scrollBy({ left: val, behavior: 'smooth' });
     }
 
-    // --- SCREENSHOT ---
     async function takeScreenshot() {
         const overlay = document.getElementById('loadingOverlay');
         overlay.classList.remove('hidden');
@@ -860,38 +695,50 @@
             tempDiv.style.position = 'absolute';
             tempDiv.style.left = '-9999px';
             
+            // Header
             tempDiv.innerHTML = `
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <h2 style="font-size: 28px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: #0f172a; margin: 0;">Italy Studio</h2>
-                    <p style="font-size: 14px; font-weight: 500; color: #64748b; margin-top: 5px;">Custom Design by Somphea Reak</p>
+                <div style="text-align: center; margin-bottom: 40px; width: 100%;">
+                    <h2 style="font-size: 32px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: #0f172a; margin: 0;">Italy Studio</h2>
+                    <p style="font-size: 16px; font-weight: 500; color: #64748b; margin-top: 5px;">Custom Design by Somphea Reak</p>
                 </div>
             `;
             
+            // Grid
             const grid = document.createElement('div');
-            grid.style.display = 'flex';
-            grid.style.flexWrap = 'wrap';
-            grid.style.justifyContent = 'center';
-            grid.style.gap = '2px';
-            grid.style.background = '#f1f5f9';
-            grid.style.padding = '40px 20px';
-            grid.style.borderRadius = '24px';
+            grid.style.display = 'grid';
+            grid.style.gridTemplateColumns = 'repeat(10, 1fr)'; // 10 Columns
+            grid.style.gap = '15px';
+            grid.style.background = '#f8fafc';
+            grid.style.padding = '50px';
+            grid.style.borderRadius = '30px';
             grid.style.width = '100%';
-            grid.style.border = '1px solid #e2e8f0';
+            grid.style.border = '2px solid #e2e8f0';
 
             selectedCharms.forEach(c => {
+                const itemDiv = document.createElement('div');
+                itemDiv.style.display = 'flex';
+                itemDiv.style.alignItems = 'center';
+                itemDiv.style.justifyContent = 'center';
+                itemDiv.style.aspectRatio = '2/3.5'; // Match screen aspect
+                
                 const img = document.createElement('img');
                 img.src = c.image;
-                img.style.width = '50px';
-                img.style.height = 'auto';
-                img.style.filter = 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))';
-                grid.appendChild(img);
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'contain';
+                img.style.filter = 'drop-shadow(0 5px 10px rgba(0,0,0,0.15))';
+                
+                itemDiv.appendChild(img);
+                grid.appendChild(itemDiv);
             });
             tempDiv.appendChild(grid);
 
+            // Footer
             const footer = document.createElement('div');
-            footer.style.marginTop = '20px';
+            footer.style.marginTop = '30px';
             footer.style.textAlign = 'center';
-            footer.innerHTML = `<p style="font-size: 16px; font-weight: 700; color: #334155;">Total: ${document.getElementById('total-price').innerText} • ${selectedCharms.length} Links</p>`;
+            footer.style.width = '100%';
+            footer.innerHTML = `<p style="font-size: 20px; font-weight: 800; color: #334155;">Total: ${document.getElementById('total-price').innerText} • ${selectedCharms.length} Links</p>`;
             tempDiv.appendChild(footer);
 
             document.body.appendChild(tempDiv);
