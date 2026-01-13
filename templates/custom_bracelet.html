@@ -3,344 +3,272 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Somphea Reak - Studio Pro</title>
+  <title>Somphea Reak - Italy Bracelet Studio Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#fff7ed',
-              100: '#ffedd5',
-              500: '#f97316',
-              600: '#ea580c',
-              900: '#431407',
-            }
-          }
-        }
-      }
-    }
-  </script>
-
   <style>
-    /* --- CORE SETUP --- */
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    
     body { 
+        font-family: 'Plus Jakarta Sans', sans-serif; 
         -webkit-tap-highlight-color: transparent;
         user-select: none;
         background-color: #f8fafc;
-        overscroll-behavior-y: none;
+        overscroll-behavior-y: contain;
     }
 
     .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-
-    /* --- ANIMATIONS --- */
-    @keyframes popIn {
+    
+    .link-pop {
+        animation: linkPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes linkPop {
         0% { transform: scale(0.5); opacity: 0; }
-        60% { transform: scale(1.1); }
         100% { transform: scale(1); opacity: 1; }
     }
-    
-    @keyframes slideUp {
-        from { transform: translateY(100%); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
 
-    .animate-pop-new { animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-    .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
-
-    /* --- TRAY & ITEMS --- */
-    .bracelet-link-container {
-        transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
-        cursor: grab;
-        position: relative;
-        touch-action: none;
-        z-index: 10;
-        
-        /* UPDATED FOR 10 ITEMS PER SCREEN */
-        width: 9.5vw; /* Fits ~10 items on 100vw width */
-        height: auto;
-        aspect-ratio: 2 / 3.5;
-        
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .bracelet-link-container:active { cursor: grabbing; }
-
+    /* PREMIUM DRAG EFFECTS */
     .dragging {
-        transform: scale(1.2) translateY(-15px) rotate(3deg) !important;
-        z-index: 50;
-        filter: drop-shadow(0 15px 20px rgba(0,0,0,0.15));
-        opacity: 0.95;
-    }
-
-    .drag-over {
-        transform: translateX(10px);
+        opacity: 0.5;
+        transform: scale(1.2) rotate(3deg) translateY(-10px);
+        filter: brightness(1.1) drop-shadow(0 20px 13px rgb(0 0 0 / 0.1));
+        z-index: 100;
         transition: transform 0.2s ease;
     }
 
-    /* --- UI ELEMENTS --- */
-    .glass-nav {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(0,0,0,0.05);
+    .drag-over {
+        position: relative;
+    }
+    .drag-over::after {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border: 2px solid #ea580c;
+        border-radius: 8px;
+        background-color: rgba(234, 88, 12, 0.05);
+        animation: pulse 1.5s infinite;
+        z-index: 5;
     }
 
-    .jewelry-tray {
-        background-color: #f1f5f9;
-        background-image: 
-            radial-gradient(at 0% 0%, hsla(253,16%,7%,0.03) 0, transparent 50%), 
-            radial-gradient(at 50% 100%, hsla(225,39%,30%,0.03) 0, transparent 50%);
-        box-shadow: inset 0 2px 10px rgba(0,0,0,0.03);
+    @keyframes pulse {
+        0% { opacity: 0.4; }
+        50% { opacity: 0.8; }
+        100% { opacity: 0.4; }
     }
 
-    .tray-track-line {
-        background: repeating-linear-gradient(90deg, #cbd5e1 0 8px, transparent 8px 16px);
-        height: 1px;
-        opacity: 0.5;
-    }
-
-    /* --- DRAWER & MODALS --- */
     #drawer {
-        transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
-        will-change: transform;
+        transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
     }
 
-    /* --- SCREENSHOT HIDDEN FRAME --- */
+    .bracelet-link-container {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        flex: 0 0 10%; 
+        aspect-ratio: 2 / 4.5;
+        position: relative;
+        margin: 0;
+        padding: 0;
+        cursor: grab;
+        touch-action: none;
+        transition: all 0.2s ease;
+    }
+
+    .bracelet-link-container img {
+        width: 100%;
+        height: 75%;
+        object-fit: cover;
+        display: block;
+        pointer-events: none;
+        filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.07));
+    }
+
+    .nav-indicator-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 10px;
+    }
+
+    .nav-arrow {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        color: #64748b;
+        font-size: 10px;
+        transition: all 0.2s;
+    }
+
+    #scroll-track {
+        height: 4px;
+        background: #f1f5f9;
+        border-radius: 10px;
+        width: 80px;
+        position: relative;
+        overflow: hidden;
+    }
+    #scroll-thumb {
+        position: absolute;
+        height: 100%;
+        width: 30%;
+        background: #ea580c;
+        border-radius: 10px;
+        left: 0;
+        transition: left 0.1s linear;
+    }
+
     .screenshot-frame {
         background: #fff;
         padding: 0;
-        width: 1000px;
-        display: flex;
+        display: inline-flex;
         flex-direction: column;
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-
-    .is-selected img {
-        filter: brightness(1.1) drop-shadow(0 0 8px rgba(249, 115, 22, 0.5));
-        transform: scale(1.1);
-    }
-
-    /* --- TOAST --- */
-    #toast-container {
-        position: fixed;
-        top: 220px; /* Moved down below the sticky tray */
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 100;
-        pointer-events: none;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-    .toast {
-        background: rgba(15, 23, 42, 0.9);
-        color: white;
-        padding: 6px 14px;
-        border-radius: 99px;
-        font-size: 11px;
-        font-weight: 600;
-        backdrop-filter: blur(4px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        animation: fadeOut 2s forwards;
-        display: flex;
         align-items: center;
-        gap: 6px;
-    }
-    @keyframes fadeOut {
-        0% { opacity: 0; transform: translateY(-5px); }
-        15% { opacity: 1; transform: translateY(0); }
-        85% { opacity: 1; transform: translateY(0); }
-        100% { opacity: 0; transform: translateY(-5px); }
+        width: 600px; /* Fixed width for consistency */
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
   </style>
 </head>
-<body class="text-slate-900 h-screen flex flex-col overflow-hidden" onclick="handleGlobalClick(event)">
+<body class="text-gray-900 overflow-x-hidden">
 
-  <!-- TOAST NOTIFICATIONS -->
-  <div id="toast-container"></div>
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay" class="fixed inset-0 z-[1000] bg-black/90 backdrop-blur-md hidden flex-col items-center justify-center text-white transition-opacity duration-300">
+      <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p class="text-xs font-black uppercase tracking-[0.3em] text-orange-500">Generating Card</p>
+      <p class="text-[10px] text-gray-400 mt-2">Preparing high-res invoice...</p>
+  </div>
 
-  <!-- 1. HEADER (Fixed) -->
-  <header class="glass-nav fixed top-0 left-0 right-0 z-50 px-5 h-14 flex items-center justify-between shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)]">
-    <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center overflow-hidden border-2 border-slate-100 shadow-sm">
-            <i class="fa-solid fa-gem text-xs"></i>
-        </div>
-        <div class="flex flex-col">
-            <h1 class="text-xs font-extrabold text-slate-900 uppercase tracking-tight leading-tight">Somphea Reak</h1>
-            <span class="text-[8px] font-bold text-brand-600 uppercase tracking-[0.2em]">Studio Pro</span>
-        </div>
-    </div>
-
-    <div class="flex items-center gap-2">
-        <a href="/" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 transition active:scale-95 border border-slate-100">
-             <i class="fa-solid fa-house text-[10px]"></i>
-        </a>
-        <button onclick="clearBracelet()" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 transition active:scale-95 border border-slate-100">
-            <i class="fa-regular fa-trash-can text-[10px]"></i>
-        </button>
-    </div>
-  </header>
-
-  <!-- 2. MAIN CONTAINER -->
-  <!-- pt-14 pushes content below fixed header. overflow-hidden prevents body scroll -->
-  <main class="flex-1 flex flex-col pt-14 relative overflow-hidden bg-white">
+  <!-- RESULT MODAL -->
+  <div id="resultModal" class="fixed inset-0 z-[1100] bg-black/95 hidden flex-col items-center justify-center p-6 backdrop-blur-sm">
+      <div class="absolute top-6 right-6 z-20">
+          <button onclick="closeResult()" class="w-10 h-10 bg-white/10 rounded-full text-white flex items-center justify-center text-xl hover:bg-white/20 transition-colors">
+              <i class="fa-solid fa-xmark"></i>
+          </button>
+      </div>
       
-      <!-- PREVIEW SECTION (Fixed/Sticky at Top) -->
-      <!-- shrink-0 ensures it doesn't compress. z-40 keeps it above scrolling content -->
-      <section class="shrink-0 relative z-40 bg-white shadow-md border-b border-slate-100">
-          <!-- Stats Bar -->
-          <div class="px-4 py-2 flex justify-between items-center bg-white relative z-30">
-              <div class="flex items-center gap-2">
-                  <span id="link-count" class="bg-slate-100 text-slate-600 border border-slate-200 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">0 Links</span>
-              </div>
-              <div class="text-right">
-                  <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Total</p>
-                  <p id="total-price" class="text-base font-black text-slate-900 leading-none tracking-tight">0៛</p>
-              </div>
-          </div>
-
-          <!-- Tray Area: Height reduced significantly to h-32 (128px) -->
-          <div class="jewelry-tray relative w-full h-32 overflow-hidden group">
-              <!-- Center Line Guide -->
-              <div class="absolute top-1/2 left-0 w-full tray-track-line -translate-y-1/2 pointer-events-none"></div>
-              
-              <!-- Center Highlight Box -->
-              <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-16 border-2 border-slate-300/30 rounded-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-              <!-- Scrollable Track -->
-              <div id="bracelet-preview" onscroll="handlePreviewScroll(this)" 
-                   class="absolute inset-0 flex items-center px-[50vw] overflow-x-auto no-scrollbar gap-[2px] snap-x snap-mandatory">
-                  
-                  <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40">
-                      <div class="w-10 h-10 rounded-full bg-white border-2 border-dashed border-slate-300 flex items-center justify-center mb-1">
-                          <i class="fa-solid fa-plus text-slate-300 text-xs"></i>
-                      </div>
-                      <p class="text-[8px] font-bold uppercase tracking-[0.2em] text-slate-400">Add Charms</p>
-                  </div>
-              </div>
-
-              <!-- Fade Edges -->
-              <div class="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-[#f1f5f9] to-transparent pointer-events-none z-10"></div>
-              <div class="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[#f1f5f9] to-transparent pointer-events-none z-10"></div>
-          </div>
-
-          <!-- Mini Scroll Indicator -->
-          <div class="h-1 w-full bg-slate-50 relative overflow-hidden">
-               <div id="scroll-thumb" class="absolute left-0 top-0 h-full w-1/3 bg-brand-500/50 rounded-full transition-all duration-100"></div>
-          </div>
-      </section>
-
-      <!-- SCROLLING CONTENT (Categories) -->
-      <!-- flex-1 and overflow-y-auto make ONLY this part scroll -->
-      <section class="flex-1 overflow-y-auto p-4 bg-white pb-28">
-          <div class="flex items-center justify-between mb-3 px-1">
-              <h3 class="text-[10px] font-bold text-slate-900 uppercase tracking-widest flex items-center gap-1.5">
-                <i class="fa-solid fa-layer-group text-brand-500"></i> Collections
-              </h3>
-          </div>
-          <!-- Category Gallery: 6 cols per row -->
-          <div id="categoryGallery" class="grid grid-cols-6 gap-2"></div>
-      </section>
-
-  </main>
-
-  <!-- 3. DRAWER (Updated for 7 items per row) -->
-  <div id="drawer" class="fixed inset-0 z-[100] translate-y-full pointer-events-none flex flex-col justify-end">
-      <div class="absolute inset-0 bg-slate-900/40 pointer-events-auto opacity-0 transition-opacity duration-300 backdrop-blur-sm" id="drawer-backdrop" onclick="closeDrawer()"></div>
-      
-      <div class="relative bg-white rounded-t-[1.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] pointer-events-auto flex flex-col h-[65vh] w-full max-w-2xl mx-auto">
-          <!-- Handle -->
-          <div class="w-full flex justify-center pt-2 pb-1" onclick="closeDrawer()">
-            <div class="w-10 h-1 bg-slate-200 rounded-full cursor-pointer hover:bg-slate-300 transition"></div>
+      <div class="w-full max-w-sm flex flex-col items-center animate-[linkPop_0.4s_ease-out]">
+          <!-- Preview Image Container -->
+          <div class="relative w-full rounded-2xl overflow-hidden shadow-2xl border border-gray-800 mb-6 bg-gray-900">
+              <img id="screenshotPreview" class="w-full h-auto object-contain block" src="" alt="Your Design">
           </div>
           
-          <!-- Header -->
-          <div class="px-4 pb-3 flex flex-col gap-2 border-b border-slate-50">
-              <div class="flex items-center justify-between">
-                  <div>
-                      <span class="text-[8px] font-bold text-brand-500 uppercase tracking-widest">Add Item</span>
-                      <h4 id="drawer-title" class="text-base font-bold text-slate-900">Category</h4>
-                  </div>
-                  <button onclick="closeDrawer()" class="w-7 h-7 flex items-center justify-center bg-slate-50 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition">
-                      <i class="fa-solid fa-xmark text-xs"></i>
-                  </button>
-              </div>
-              <!-- Search Bar -->
-              <div class="relative">
-                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
-                  <input type="text" id="charm-search" onkeyup="filterDrawer()" placeholder="Search..." class="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 pl-8 pr-3 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-100 focus:border-brand-500 transition-all placeholder:text-slate-400">
-              </div>
-          </div>
-
-          <!-- Grid: Updated to grid-cols-7 for 7 items per row -->
-          <div class="flex-1 overflow-y-auto px-2 py-4 scrollbar-hide">
-              <div id="charmGrid" class="grid grid-cols-7 gap-1.5 pb-20"></div>
-          </div>
-      </div>
-  </div>
-
-  <!-- 4. FOOTER -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 p-3 z-[90]">
-      <div class="max-w-md mx-auto flex gap-2">
-          <button onclick="addRandom()" class="w-12 h-12 flex-none bg-white border border-slate-200 rounded-xl text-slate-400 shadow-sm flex items-center justify-center active:scale-95 hover:bg-slate-50 transition group">
-              <i class="fa-solid fa-dice text-lg group-hover:rotate-180 transition-transform duration-500"></i>
-          </button>
-          <button onclick="takeScreenshot()" id="screenshot-btn" disabled class="flex-1 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-lg shadow-slate-900/20 flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-widest active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
-              <i class="fa-solid fa-camera"></i>
-              <span>Save & Order</span>
-          </button>
-      </div>
-  </div>
-
-  <!-- 5. RESULT MODAL -->
-  <div id="resultModal" class="fixed inset-0 z-[200] bg-slate-900/95 hidden flex-col items-center justify-center p-6 backdrop-blur-md opacity-0 transition-opacity duration-300">
-      <div class="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl pop-in transform transition-transform">
-          <div class="relative bg-slate-100 overflow-hidden border-b border-slate-100 group">
-              <img id="screenshotPreview" class="w-full h-auto" src="" alt="Design">
-              <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-              <button onclick="closeResult()" class="absolute top-3 right-3 w-8 h-8 bg-black/20 hover:bg-black/40 text-white rounded-full flex items-center justify-center backdrop-blur-md transition">
-                  <i class="fa-solid fa-xmark"></i>
+          <!-- Action Buttons -->
+          <div class="w-full grid grid-cols-2 gap-3">
+              <button id="shareBtn" onclick="shareImage()" class="col-span-1 bg-gray-800 text-white font-bold py-3.5 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-transform flex items-center justify-center gap-2 border border-gray-700">
+                  <i class="fa-solid fa-share-nodes text-orange-500 text-sm"></i> Share
+              </button>
+              <button id="downloadBtn" class="col-span-1 bg-white text-gray-900 font-black py-3.5 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-transform flex items-center justify-center gap-2">
+                  <i class="fa-solid fa-download text-orange-600 text-sm"></i> Save
               </button>
           </div>
-          <div class="p-6 text-center">
-              <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                <i class="fa-solid fa-check text-xl"></i>
-              </div>
-              <h3 class="font-bold text-slate-900 text-lg mb-1">Design Ready!</h3>
-              <p class="text-sm text-slate-500 mb-6 leading-relaxed">Save this image to share with us for your order.</p>
-              <button id="downloadBtn" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-4 rounded-xl text-sm uppercase tracking-widest shadow-lg shadow-brand-500/30 active:scale-95 transition flex items-center justify-center gap-2">
-                  <i class="fa-solid fa-download"></i> Download Image
-              </button>
-          </div>
+          <p class="text-[9px] text-gray-500 mt-4 text-center">Image saved to temporary memory. Click Save to download.</p>
       </div>
   </div>
 
-  <!-- 6. LOADING -->
-  <div id="loadingOverlay" class="fixed inset-0 z-[210] bg-white/80 backdrop-blur-sm hidden flex-col items-center justify-center">
-      <div class="relative">
-        <div class="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
-        <div class="absolute inset-0 flex items-center justify-center">
-            <i class="fa-solid fa-gem text-[10px] text-slate-400"></i>
+  <!-- HEADER -->
+  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-2 flex items-center justify-between">
+    <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 active:scale-90 transition-transform">
+      <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <div class="flex flex-col items-center">
+        <!-- SHOP LOGO IN HEADER -->
+        <img src="static/image/logo.jpg" onerror="this.src='https://placehold.co/40x40/orange/white?text=SR'" alt="SR Logo" class="w-10 h-10 object-contain mb-1 rounded-full border border-gray-100 shadow-sm bg-white">
+        <h3 class="font-extrabold text-[10px] tracking-[0.2em] uppercase text-gray-900 leading-none">Somphea Reak</h3>
+        <p class="font-bold text-[8px] text-gray-400 tracking-widest uppercase leading-tight mt-0.5">Italy Bracelet Studio</p>
+    </div>
+    <div class="w-10"></div>
+  </header>
+
+  <!-- BANNER -->
+  <section class="w-full aspect-video bg-gray-200 overflow-hidden relative shadow-inner">
+      <img src="https://images.unsplash.com/photo-1611085583191-a3b1a308964b?auto=format&fit=crop&q=80&w=1200" alt="Banner" class="w-full h-full object-cover">
+      <div class="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent flex items-end p-6">
+          <div class="transform translate-y-2">
+              <h2 class="text-white text-2xl font-black uppercase italic tracking-tighter leading-none">Craft Your<br><span class="text-orange-500">Identity</span></h2>
+              <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-1">Professional Grade Customization</p>
+          </div>
+      </div>
+  </section>
+
+  <!-- PREVIEW BOX -->
+  <section class="sticky top-[70px] z-[90] bg-white border-b shadow-lg pb-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex items-center justify-between px-4 py-3">
+            <div class="flex items-center gap-2">
+                <span id="link-count" class="bg-gray-900 text-[9px] font-black text-white px-2.5 py-1 rounded-full tracking-widest uppercase">0 LINKS</span>
+            </div>
+            <button onclick="clearBracelet()" class="text-[10px] font-black text-red-500 uppercase tracking-widest px-2 py-1">Reset</button>
         </div>
-      </div>
-      <p class="mt-4 text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">Generating...</p>
+
+        <div id="bracelet-preview" onscroll="handlePreviewScroll(this)" class="flex overflow-x-auto py-4 scrollbar-hide min-h-[120px] items-end bg-gray-50 border-y border-gray-100 gap-0">
+            <div class="w-full text-center py-8 opacity-20">
+                <p class="text-[10px] font-black uppercase tracking-[0.4em]">Designer Workspace</p>
+            </div>
+        </div>
+
+        <div class="nav-indicator-container">
+            <button onclick="scrollManual(-60)" class="nav-arrow"><i class="fa-solid fa-chevron-left"></i></button>
+            <div id="scroll-track">
+                <div id="scroll-thumb"></div>
+            </div>
+            <button onclick="scrollManual(60)" class="nav-arrow"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+
+        <div class="mt-3 flex justify-between items-center px-4">
+            <div class="flex flex-col">
+                <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest">Est. Total</span>
+                <span id="total-price" class="text-xl font-black text-gray-900 leading-none">0៛</span>
+            </div>
+            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-right leading-tight">Pick up & Slide<br>to reorder charms</p>
+        </div>
+    </div>
+  </section>
+
+  <!-- CATEGORY GALLERY -->
+  <section class="p-4 pb-48">
+    <div class="mb-4">
+        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Collections</h4>
+    </div>
+    <div id="categoryGallery" class="grid grid-cols-6 gap-3"></div>
+  </section>
+
+  <!-- SELECTION DRAWER -->
+  <div id="drawer" class="fixed inset-0 z-[200] translate-y-full pointer-events-none">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" onclick="closeDrawer()"></div>
+    <div class="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-[3rem] shadow-2xl pointer-events-auto flex flex-col border-t border-gray-100">
+        <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto my-4"></div>
+        <div class="px-6 pb-4 flex items-center justify-between">
+            <h4 id="drawer-title" class="text-lg font-black uppercase tracking-tighter text-gray-900">Category</h4>
+            <button onclick="closeDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-400">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        <div class="flex-grow overflow-y-auto px-2 pb-24">
+            <div id="charmGrid" class="grid grid-cols-8 gap-1.5"></div>
+        </div>
+    </div>
+  </div>
+
+  <!-- FIXED FOOTER -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-4 z-[110]">
+    <div class="max-w-md mx-auto flex gap-3">
+        <button onclick="addRandom()" class="w-14 h-14 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-xl text-gray-400 active:scale-90 transition-transform">
+            <i class="fa-solid fa-shuffle text-lg"></i>
+        </button>
+        <button onclick="takeScreenshot()" id="screenshot-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-xl shadow-xl active:scale-95 transition-all disabled:opacity-20 text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+            <i class="fa-solid fa-camera text-sm"></i>
+            Save To Gallery
+        </button>
+    </div>
   </div>
 
   <script>
-    // --- DATA ---
     const allCharms = [
       // --- Charm
     {"id": 1, "name_kh": "Silver Charm", "price": 500, "image": "/static/images/c01.jpg", "categories": ["Charm"]},
@@ -726,332 +654,123 @@
     {"id": 2108, "name_kh": "Flower 🌹 08", "price": 3000, "image": "/static/images/charm-flower-08.jpg", "categories": ["Flower 🌹"]},
     {"id": 2109, "name_kh": "Flower 🌹 09", "price": 3000, "image": "/static/images/charm-flower-09.jpg", "categories": ["Flower 🌹"]},
        ];
-
     let selectedCharms = JSON.parse(localStorage.getItem('customCharms')) || [];
     let stockData = {};
     let masterSwitch = "off";
-    let activeLinkIndex = null; 
-    let recentlyAddedUid = null;
-    let currentCategory = "";
 
     async function init() {
+        try {
+            await fetch('/api/sync', { 
+                method: 'POST', 
+                headers: {'Content-Type':'application/json'}, 
+                body: JSON.stringify({items: allCharms})
+            });
+            
+            const res = await fetch('/api/get-data');
+            const data = await res.json();
+            stockData = data.stock;
+            masterSwitch = data.master_switch || data.override || "off"; 
+        } catch(e) {
+            console.error("Init Error:", e);
+        }
         renderCategories();
-        updateUI(false); 
-        
-        // Add global mouse listeners for drag
-        document.addEventListener('mousemove', handleTouchMove);
-        document.addEventListener('mouseup', handleTouchEnd);
+        updateUI();
     }
 
-    // --- RENDER CATEGORIES ---
     function renderCategories() {
         const categories = Array.from(new Set(allCharms.flatMap(c => c.categories)));
-        const gallery = document.getElementById('categoryGallery');
-        
-        gallery.innerHTML = categories.map(cat => {
+        document.getElementById('categoryGallery').innerHTML = categories.map(cat => {
             const charm = allCharms.find(c => c.categories.includes(cat));
-            const displayCat = cat.length > 12 ? cat.split(' ')[0] : cat;
-            
             return `
-                <div onclick="openDrawer('${cat}')" class="group flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition duration-200">
-                    <div class="w-full aspect-square rounded-2xl bg-slate-50 border border-slate-200 shadow-sm p-1.5 flex items-center justify-center group-hover:border-brand-500 group-hover:shadow-md transition-all overflow-hidden relative">
-                        <div class="absolute inset-0 bg-white/50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <img src="${charm.image}" onerror="this.src='https://placehold.co/100x100?text=${displayCat.charAt(0)}'" class="w-full h-full object-contain drop-shadow-sm transition-transform group-hover:scale-110">
+                <div onclick="openDrawer('${cat}')" class="flex flex-col items-center gap-1 active:scale-95 transition-transform cursor-pointer">
+                    <div class="w-full aspect-[2/3] bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden p-1">
+                        <img src="${charm.image}" class="w-full h-full object-cover rounded-md">
                     </div>
-                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-tight text-center group-hover:text-slate-900 truncate w-full transition-colors">${displayCat}</span>
+                    <span class="text-[6px] font-black text-gray-500 uppercase truncate w-full text-center">${cat}</span>
                 </div>
             `;
         }).join('');
     }
 
-    // --- DRAWER ---
     function openDrawer(cat) {
-        currentCategory = cat;
         document.getElementById('drawer-title').innerText = cat;
-        document.getElementById('charm-search').value = ''; // Clear search
-        renderDrawerItems(allCharms.filter(c => c.categories.includes(cat)));
+        const grid = document.getElementById('charmGrid');
+        grid.innerHTML = allCharms.filter(c => c.categories.includes(cat)).map(c => {
+            const qty = stockData[c.id] || 0;
+            
+            // THE OPPOSITE LOGIC
+            let isOut = false;
+            if (masterSwitch === "on" && qty <= 0) {
+                isOut = true; 
+            }
+
+            return `
+                <div onclick="${isOut ? '' : `addCharmById(${c.id})`}" class="relative flex flex-col items-center p-1 ${isOut ? 'opacity-40 grayscale pointer-events-none' : 'active:scale-95 transition-transform cursor-pointer'}">
+                    ${isOut ? '<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1 rounded shadow-sm z-10">SOLD</div>' : ''}
+                    <img src="${c.image}" class="w-full aspect-[2/3.5] object-cover rounded shadow-sm">
+                    <p class="text-[5px] font-black mt-1 text-gray-400">${c.price}៛</p>
+                </div>`;
+        }).join('');
         
         const drawer = document.getElementById('drawer');
-        const backdrop = document.getElementById('drawer-backdrop');
         drawer.classList.remove('translate-y-full');
-        backdrop.classList.remove('opacity-0');
         drawer.classList.add('pointer-events-auto');
     }
 
-    function renderDrawerItems(items) {
-        const grid = document.getElementById('charmGrid');
-        if(items.length === 0) {
-            grid.innerHTML = '<div class="col-span-full text-center text-slate-400 py-10 text-xs font-bold uppercase tracking-widest">No items found</div>';
+    function closeDrawer() { 
+        const drawer = document.getElementById('drawer');
+        drawer.classList.add('translate-y-full'); 
+        drawer.classList.remove('pointer-events-auto');
+    }
+
+    function addCharmById(id) {
+        const charm = allCharms.find(c => c.id === id);
+        selectedCharms.push({ ...charm, uid: Math.random().toString(36).substr(2, 9) });
+        updateUI();
+    }
+
+    function removeCharm(uid) {
+        selectedCharms = selectedCharms.filter(c => c.uid !== uid);
+        updateUI();
+    }
+
+    function updateUI() {
+        const preview = document.getElementById('bracelet-preview');
+        localStorage.setItem('customCharms', JSON.stringify(selectedCharms));
+
+        if (selectedCharms.length === 0) {
+            preview.innerHTML = `<div class="w-full text-center py-8 opacity-20 uppercase tracking-[0.4em] text-[10px] font-black">Designer Workspace</div>`;
+            document.getElementById('total-price').innerText = "0៛";
+            document.getElementById('link-count').innerText = "0 LINKS";
+            document.getElementById('screenshot-btn').disabled = true;
+            document.querySelector('.nav-indicator-container').style.opacity = '0';
             return;
         }
 
-        grid.innerHTML = items.map(c => {
-            const qty = stockData[c.id] !== undefined ? stockData[c.id] : 99;
-            let isOut = false;
-            if (masterSwitch === "on" && qty <= 0) isOut = true;
-
+        document.querySelector('.nav-indicator-container').style.opacity = '1';
+        let total = 0;
+        preview.innerHTML = selectedCharms.map((c, index) => {
+            total += c.price;
             return `
-                <div onclick="${isOut ? '' : `addCharmById(${c.id})`}" 
-                     class="flex flex-col gap-1 group ${isOut ? 'opacity-40 grayscale pointer-events-none' : 'cursor-pointer active:scale-90 transition-transform'}">
-                    <div class="relative w-full aspect-[3/4] bg-white rounded-lg border border-slate-100 shadow-sm flex items-center justify-center overflow-hidden group-hover:border-brand-200 transition-colors">
-                        <img src="${c.image}" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-gem text-slate-200 text-lg\'></i>'" class="w-full h-full object-contain p-1 pointer-events-none">
-                        ${isOut ? '<div class="absolute inset-0 bg-slate-900/10 flex items-center justify-center"><span class="bg-red-500 text-white text-[6px] font-bold px-1 rounded">SOLD</span></div>' : ''}
-                    </div>
-                    <div class="text-center">
-                        <p class="text-[8px] font-bold text-slate-900 leading-none group-hover:text-brand-600 transition-colors">${c.price}៛</p>
-                    </div>
+                <div class="bracelet-link-container link-pop" 
+                     draggable="true" 
+                     data-index="${index}"
+                     ontouchstart="handleTouchStart(event)"
+                     ontouchmove="handleTouchMove(event)"
+                     ontouchend="handleTouchEnd(event)">
+                    <button onclick="removeCharm('${c.uid}')" class="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[7px] shadow-lg z-10 active:scale-90">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <img src="${c.image}">
                 </div>
             `;
         }).join('');
-    }
 
-    function filterDrawer() {
-        const query = document.getElementById('charm-search').value.toLowerCase();
-        const catItems = allCharms.filter(c => c.categories.includes(currentCategory));
-        
-        if(!query) {
-            renderDrawerItems(catItems);
-            return;
-        }
-
-        const filtered = catItems.filter(c => 
-            c.name_kh.toLowerCase().includes(query) || 
-            (c.subcategory && c.subcategory.some(s => s.toLowerCase().includes(query)))
-        );
-        renderDrawerItems(filtered);
-    }
-
-    function closeDrawer() {
-        const drawer = document.getElementById('drawer');
-        const backdrop = document.getElementById('drawer-backdrop');
-        drawer.classList.add('translate-y-full');
-        backdrop.classList.add('opacity-0');
-        drawer.classList.remove('pointer-events-auto');
-        document.getElementById('charm-search').blur();
-    }
-
-    // --- LOGIC ---
-    function addCharmById(id) {
-        const charm = allCharms.find(c => c.id == id);
-        if(!charm) return;
-
-        const uid = Math.random().toString(36).substr(2, 9);
-        const newCharm = { ...charm, uid: uid };
-        
-        selectedCharms.push(newCharm);
-        recentlyAddedUid = uid; 
-        
-        updateUI(true); 
-        showToast(`Added ${charm.name_kh || 'Charm'}`);
-
-        setTimeout(() => {
-            const preview = document.getElementById('bracelet-preview');
-            preview.scrollTo({ left: preview.scrollWidth, behavior: 'smooth' });
-        }, 50);
-        
-        if (navigator.vibrate) navigator.vibrate(10);
-    }
-
-    function showToast(msg) {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.innerHTML = `<i class="fa-solid fa-check-circle text-brand-500"></i> ${msg}`;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 2000);
-    }
-
-    function toggleCharmSelection(uid, event) {
-        event.stopPropagation();
-        if (activeLinkIndex === uid) {
-            activeLinkIndex = null;
-        } else {
-            activeLinkIndex = uid;
-            if (navigator.vibrate) navigator.vibrate(5);
-        }
-        updateUI(false);
-    }
-
-    function handleGlobalClick(event) {
-        if (!event.target.closest('.bracelet-link-container') && activeLinkIndex !== null) {
-            activeLinkIndex = null;
-            updateUI(false);
-        }
-    }
-
-    function removeCharm(uid, event) {
-        event.stopPropagation();
-        const removed = selectedCharms.find(c => c.uid === uid);
-        selectedCharms = selectedCharms.filter(c => c.uid !== uid);
-        activeLinkIndex = null;
-        updateUI(false);
-        if(removed) showToast("Removed charm");
-        if (navigator.vibrate) navigator.vibrate(10);
-    }
-
-    function clearBracelet() {
-        if(selectedCharms.length > 0 && confirm("Are you sure you want to start over?")) {
-            selectedCharms = [];
-            activeLinkIndex = null;
-            updateUI(false);
-            showToast("Design cleared");
-        }
-    }
-    
-    function addRandom() {
-        const rand = allCharms[Math.floor(Math.random() * allCharms.length)];
-        if(rand) addCharmById(rand.id);
-    }
-
-    function updateUI(shouldAnimate) {
-        const preview = document.getElementById('bracelet-preview');
-        const emptyState = document.getElementById('empty-state');
-        localStorage.setItem('customCharms', JSON.stringify(selectedCharms));
-
-        // Stats
-        let total = selectedCharms.reduce((sum, c) => sum + c.price, 0);
         document.getElementById('total-price').innerText = total.toLocaleString() + "៛";
-        document.getElementById('link-count').innerText = `${selectedCharms.length} Links`;
+        document.getElementById('link-count').innerText = `${selectedCharms.length} LINKS`;
+        document.getElementById('screenshot-btn').disabled = false;
         
-        const screenshotBtn = document.getElementById('screenshot-btn');
-        screenshotBtn.disabled = selectedCharms.length === 0;
-        
-        if (selectedCharms.length === 0) {
-            emptyState.style.display = 'flex';
-            preview.innerHTML = `<div class="w-[50vw] flex-shrink-0"></div><div class="w-[50vw] flex-shrink-0"></div>`; 
-            handlePreviewScroll(preview);
-            return;
-        } else {
-            emptyState.style.display = 'none';
-        }
-
-        let html = `<div class="w-[50vw] flex-shrink-0"></div>`;
-        
-        html += selectedCharms.map((c, index) => {
-            const isSelected = activeLinkIndex === c.uid;
-            const isNew = shouldAnimate && c.uid === recentlyAddedUid;
-            
-            return `
-            <div class="bracelet-link-container flex-shrink-0 relative group snap-center ${isNew ? 'animate-pop-new' : ''} ${isSelected ? 'is-selected' : ''}"
-                 data-uid="${c.uid}"
-                 data-index="${index}"
-                 onclick="toggleCharmSelection('${c.uid}', event)"
-                 onmousedown="handleTouchStart(event)"
-                 ontouchstart="handleTouchStart(event)">
-                
-                <!-- Remove Button (Top) -->
-                <button onclick="removeCharm('${c.uid}', event)" 
-                        class="absolute -top-5 left-1/2 -translate-x-1/2 w-5 h-5 bg-white border border-slate-200 text-red-500 rounded-full flex items-center justify-center text-[8px] shadow-lg z-30 active:scale-90 transition-all duration-200 ${isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none'}">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-
-                <!-- Indicator Line -->
-                <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-0.5 h-0.5 bg-brand-500 rounded-full transition-all duration-200 ${isSelected ? 'opacity-100' : 'opacity-0'}"></div>
-
-                <img src="${c.image}" 
-                     onerror="this.onerror=null; this.parentElement.classList.add('bg-white','rounded-full','shadow-sm','border','border-slate-100'); this.style.display='none'; this.parentElement.innerHTML+='<i class=\\'fa-solid fa-gem text-slate-300 text-base\\'></i>'"
-                     class="w-full h-full object-contain select-none pointer-events-none drop-shadow-sm transition-all duration-200">
-            </div>
-            `;
-        }).join('');
-
-        html += `<div class="w-[50vw] flex-shrink-0"></div>`;
-        preview.innerHTML = html;
         handlePreviewScroll(preview);
-        
-        if(shouldAnimate) setTimeout(() => { recentlyAddedUid = null; }, 500);
-    }
-
-    // --- DRAG & DROP LOGIC (Mouse + Touch) ---
-    let touchStartIndex = null;
-    let currentHoverIndex = null;
-    let isDragging = false;
-    let dragTimeout;
-
-    function handleTouchStart(e) {
-        if(e.target.closest('button')) return; // Ignore buttons
-        
-        const container = e.target.closest('.bracelet-link-container');
-        if (!container) return;
-
-        // Mouse specific: check left click
-        if (e.type === 'mousedown' && e.button !== 0) return;
-
-        touchStartIndex = parseInt(container.dataset.index);
-        
-        // Long press logic
-        dragTimeout = setTimeout(() => {
-            if(touchStartIndex !== null) {
-                isDragging = true;
-                container.classList.add('dragging');
-                if(navigator.vibrate) navigator.vibrate(20);
-            }
-        }, 200);
-    }
-
-    function handleTouchMove(e) {
-        if(touchStartIndex === null) {
-            clearTimeout(dragTimeout);
-            return;
-        }
-
-        if(!isDragging) return;
-
-        e.preventDefault();
-        
-        let clientX, clientY;
-        if(e.type === 'touchmove') {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-        } else {
-            clientX = e.clientX;
-            clientY = e.clientY;
-        }
-
-        const target = document.elementFromPoint(clientX, clientY);
-        const container = target?.closest('.bracelet-link-container');
-        
-        document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('drag-over'));
-        
-        if (container) {
-            currentHoverIndex = parseInt(container.dataset.index);
-            if (currentHoverIndex !== touchStartIndex) {
-                container.classList.add('drag-over');
-            }
-        }
-    }
-
-    function handleTouchEnd(e) {
-        clearTimeout(dragTimeout);
-        
-        document.querySelectorAll('.bracelet-link-container').forEach(el => {
-            el.classList.remove('dragging');
-            el.classList.remove('drag-over');
-        });
-
-        if (isDragging && touchStartIndex !== null && currentHoverIndex !== null && touchStartIndex !== currentHoverIndex) {
-            const item = selectedCharms.splice(touchStartIndex, 1)[0];
-            selectedCharms.splice(currentHoverIndex, 0, item);
-            updateUI(false);
-            showToast("Moved");
-        }
-
-        isDragging = false;
-        touchStartIndex = null;
-        currentHoverIndex = null;
-    }
-
-    // --- SCROLL & SCREENSHOT ---
-    function handlePreviewScroll(el) {
-        const thumb = document.getElementById('scroll-thumb');
-        const maxScroll = el.scrollWidth - el.clientWidth;
-        if (maxScroll <= 0) { thumb.style.width = '100%'; thumb.style.left = '0'; return; }
-        const pct = (el.scrollLeft / maxScroll);
-        thumb.style.left = `${Math.min(Math.max(pct * 66, 0), 66)}%`;
-    }
-
-    function scrollManual(val) {
-        document.getElementById('bracelet-preview').scrollBy({ left: val, behavior: 'smooth' });
     }
 
     async function takeScreenshot() {
@@ -1061,102 +780,224 @@
 
         try {
             const tempDiv = document.createElement('div');
-            tempDiv.className = 'screenshot-frame';
             tempDiv.style.position = 'absolute';
             tempDiv.style.left = '-9999px';
-            tempDiv.style.zIndex = '-1';
+            tempDiv.className = 'screenshot-frame';
             
-            // Professional Order Layout
-            tempDiv.innerHTML = `
-                <div style="background: white; padding: 40px; width: 100%; border-radius: 0;">
-                    <!-- Header -->
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
-                        <div>
-                            <h2 style="font-size: 28px; font-weight: 800; text-transform: uppercase; color: #0f172a; margin: 0; line-height: 1.2;">Somphea Reak</h2>
-                            <span style="font-size: 12px; font-weight: 700; color: #ea580c; text-transform: uppercase; letter-spacing: 2px;">Studio Pro Order</span>
-                        </div>
-                        <div style="text-align: right;">
-                            <p style="font-size: 12px; color: #64748b; margin: 0; font-weight: 600;">DATE</p>
-                            <p style="font-size: 14px; color: #0f172a; margin: 0; font-weight: 700;">${new Date().toLocaleDateString()}</p>
-                        </div>
-                    </div>
+            // --- 1. HEADER (Orange Top) ---
+            const topBar = document.createElement('div');
+            topBar.style.width = '100%';
+            topBar.style.height = '12px';
+            topBar.style.background = '#ea580c';
+            tempDiv.appendChild(topBar);
 
-                    <!-- Grid Layout -->
-                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; justify-content: flex-start;">
-                        ${selectedCharms.map((c, i) => `
-                            <div style="width: 80px; height: 100px; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; overflow: hidden; position: relative;">
-                                <div style="position: absolute; top: 4px; left: 4px; font-size: 8px; font-weight: bold; color: #cbd5e1;">${i+1}</div>
-                                <img src="${c.image}" onerror="this.style.display='none'" style="width: 80%; height: 60%; object-fit: contain; margin-bottom: 4px;">
-                                <div style="font-size: 9px; font-weight: 700; color: #0f172a;">${c.price}៛</div>
-                            </div>
-                        `).join('')}
-                    </div>
+            // --- 2. LOGO AREA ---
+            const header = document.createElement('div');
+            header.style.padding = '30px 40px 10px 40px';
+            header.style.display = 'flex';
+            header.style.flexDirection = 'column';
+            header.style.alignItems = 'center';
+            header.style.borderBottom = '1px dashed #e2e8f0';
 
-                    <!-- Summary -->
-                    <div style="background: #0f172a; color: white; border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin: 0; opacity: 0.7;">Total Items</p>
-                            <p style="font-size: 16px; font-weight: 700; margin: 0;">${selectedCharms.length} Charms</p>
-                        </div>
-                        <div style="text-align: right;">
-                            <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin: 0; opacity: 0.7;">Grand Total</p>
-                            <p style="font-size: 24px; font-weight: 900; margin: 0; color: #fdba74;">${document.getElementById('total-price').innerText}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
+            const logo = document.createElement('img');
+            logo.src = 'static/image/logo.jpg';
+            logo.onerror = function() { this.src = 'https://placehold.co/100x100/orange/white?text=SR'; }; 
+            logo.style.width = '80px';
+            logo.style.height = '80px';
+            logo.style.objectFit = 'contain';
+            logo.style.borderRadius = '50%';
+            logo.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+            logo.style.marginBottom = '15px';
             
+            const title = document.createElement('h1');
+            title.innerText = "SOMPHEA REAK";
+            title.style.fontSize = "32px"; 
+            title.style.fontWeight = "900";
+            title.style.letterSpacing = "0.1em"; 
+            title.style.color = "#0f172a";
+            title.style.margin = "0";
+
+            const subTitle = document.createElement('p');
+            subTitle.innerText = "ITALY BRACELET STUDIO";
+            subTitle.style.fontSize = "12px";
+            subTitle.style.color = "#94a3b8";
+            subTitle.style.fontWeight = "bold";
+            subTitle.style.letterSpacing = "0.3em";
+            subTitle.style.textTransform = "uppercase";
+            subTitle.style.margin = "5px 0 0 0";
+
+            header.appendChild(logo);
+            header.appendChild(title);
+            header.appendChild(subTitle);
+            tempDiv.appendChild(header);
+
+            // --- 3. BRACELET DISPLAY (The "Track") ---
+            const braceletWrapper = document.createElement('div');
+            braceletWrapper.style.padding = '60px 40px';
+            braceletWrapper.style.backgroundColor = '#f8fafc';
+            braceletWrapper.style.display = 'flex';
+            braceletWrapper.style.justifyContent = 'center';
+            braceletWrapper.style.position = 'relative';
+
+            // The Chain Line
+            const chainLine = document.createElement('div');
+            chainLine.style.position = 'absolute';
+            chainLine.style.top = '50%';
+            chainLine.style.left = '40px';
+            chainLine.style.right = '40px';
+            chainLine.style.height = '4px';
+            chainLine.style.background = '#cbd5e1';
+            chainLine.style.borderRadius = '4px';
+            chainLine.style.zIndex = '0';
+            braceletWrapper.appendChild(chainLine);
+
+            const charmsContainer = document.createElement('div');
+            charmsContainer.style.display = 'flex';
+            charmsContainer.style.alignItems = 'center';
+            charmsContainer.style.gap = '2px';
+            charmsContainer.style.zIndex = '1';
+
+            selectedCharms.forEach(c => {
+                const img = document.createElement('img');
+                img.src = c.image;
+                img.style.width = '60px'; 
+                img.style.height = '100px'; 
+                img.style.objectFit = 'cover';
+                img.style.filter = 'drop-shadow(0 4px 4px rgba(0,0,0,0.15))';
+                charmsContainer.appendChild(img);
+            });
+            braceletWrapper.appendChild(charmsContainer);
+            tempDiv.appendChild(braceletWrapper);
+
+            // --- 4. RECEIPT FOOTER ---
+            const footer = document.createElement('div');
+            footer.style.padding = '30px 40px';
+            footer.style.background = '#fff';
+            footer.style.borderTop = '2px dashed #cbd5e1';
+            footer.style.display = 'flex';
+            footer.style.flexDirection = 'column';
+            footer.style.gap = '15px';
+
+            // Price Row
+            const row1 = document.createElement('div');
+            row1.style.display = 'flex'; row1.style.justifyContent = 'space-between'; row1.style.alignItems = 'center';
+            row1.innerHTML = `<span style="font-size:14px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.1em;">Total Amount</span>
+                              <span style="font-size:28px; font-weight:900; color:#0f172a;">${document.getElementById('total-price').innerText}</span>`;
+            
+            // Count Row
+            const row2 = document.createElement('div');
+            row2.style.display = 'flex'; row2.style.justifyContent = 'space-between'; row2.style.alignItems = 'center';
+            row2.innerHTML = `<span style="font-size:12px; font-weight:600; color:#94a3b8; text-transform:uppercase;">Items Count</span>
+                              <span style="font-size:14px; font-weight:700; color:#475569;">${selectedCharms.length} Charms</span>`;
+
+            // Date Row
+            const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const row3 = document.createElement('div');
+            row3.style.display = 'flex'; row3.style.justifyContent = 'space-between'; row3.style.alignItems = 'center';
+            row3.innerHTML = `<span style="font-size:12px; font-weight:600; color:#94a3b8; text-transform:uppercase;">Date</span>
+                              <span style="font-size:14px; font-weight:700; color:#475569;">${date}</span>`;
+
+            footer.appendChild(row1);
+            footer.appendChild(row2);
+            footer.appendChild(row3);
+            tempDiv.appendChild(footer);
+
+            // --- 5. BOTTOM BAR ---
+            const bottomBar = document.createElement('div');
+            bottomBar.style.width = '100%';
+            bottomBar.style.height = '12px';
+            bottomBar.style.background = '#0f172a';
+            tempDiv.appendChild(bottomBar);
+
             document.body.appendChild(tempDiv);
-            
-            // Allow images to load (if real)
-            await new Promise(r => setTimeout(r, 500));
+
+            // Allow time for images to settle in DOM
+            await new Promise(r => setTimeout(r, 300));
 
             const canvas = await html2canvas(tempDiv, { 
-                scale: 2, 
                 useCORS: true, 
+                scale: 2, // High resolution
                 backgroundColor: "#ffffff",
                 logging: false
             });
             const dataUrl = canvas.toDataURL("image/png");
             
             document.getElementById('screenshotPreview').src = dataUrl;
+            
+            // Setup Share Button logic
+            const shareBtn = document.getElementById('shareBtn');
+            if (navigator.share) {
+                shareBtn.style.display = 'flex';
+                // Store blob for sharing
+                canvas.toBlob(blob => {
+                    window.currentScreenshotBlob = blob;
+                });
+            } else {
+                shareBtn.style.display = 'none'; // Hide if not supported
+                document.getElementById('downloadBtn').classList.remove('col-span-1');
+                document.getElementById('downloadBtn').classList.add('col-span-2');
+            }
+
+            // Setup Download
             document.getElementById('downloadBtn').onclick = () => {
                 const link = document.createElement('a');
-                link.download = `SompheaReak-Order-${Date.now()}.png`;
+                link.download = `SompheaReak-Invoice-${Date.now()}.png`;
                 link.href = dataUrl;
                 link.click();
             };
 
             document.body.removeChild(tempDiv);
-            
-            const modal = document.getElementById('resultModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            
-            // Animation for modal
-            requestAnimationFrame(() => {
-                modal.classList.remove('opacity-0');
-            });
-
+            document.getElementById('resultModal').classList.remove('hidden');
+            document.getElementById('resultModal').classList.add('flex');
         } catch (err) {
             console.error(err);
-            alert("Oops! Could not generate image. Please try again.");
+            alert("Could not generate image. Please try again.");
         } finally {
             overlay.classList.add('hidden');
-            overlay.classList.remove('flex');
         }
     }
 
-    function closeResult() {
-        const modal = document.getElementById('resultModal');
-        modal.classList.add('opacity-0');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }, 300);
+    async function shareImage() {
+        if (window.currentScreenshotBlob && navigator.share) {
+            try {
+                const file = new File([window.currentScreenshotBlob], "bracelet-design.png", { type: "image/png" });
+                await navigator.share({
+                    title: 'My Custom Bracelet Design',
+                    text: 'Check out this bracelet I designed at Somphea Reak Studio!',
+                    files: [file]
+                });
+            } catch (err) {
+                console.log("Sharing failed", err);
+            }
+        }
     }
 
-    // Initialize
+    function closeResult() { document.getElementById('resultModal').classList.add('hidden'); }
+
+    function handlePreviewScroll(el) {
+        const thumb = document.getElementById('scroll-thumb');
+        const scrollWidth = el.scrollWidth - el.clientWidth;
+        if (scrollWidth <= 0) {
+            thumb.style.width = '100%'; thumb.style.left = '0%';
+            return;
+        }
+        const percentage = (el.scrollLeft / scrollWidth) * 100;
+        thumb.style.width = '30%'; thumb.style.left = `${percentage * 0.7}%`;
+    }
+
+    function scrollManual(val) { document.getElementById('bracelet-preview').scrollBy({ left: val, behavior: 'smooth' }); }
+
+    let touchStartIndex = null;
+    let currentHoverIndex = null;
+
+    function handleTouchStart(e) { const container = e.target.closest('.bracelet-link-container'); if (!container) return; touchStartIndex = parseInt(container.dataset.index); container.classList.add('dragging'); }
+    function handleTouchMove(e) { e.preventDefault(); const touch = e.touches[0]; const target = document.elementFromPoint(touch.clientX, touch.clientY); const container = target?.closest('.bracelet-link-container'); document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('drag-over')); if (container) { currentHoverIndex = parseInt(container.dataset.index); container.classList.add('drag-over'); } }
+    function handleTouchEnd(e) { document.querySelectorAll('.bracelet-link-container').forEach(el => { el.classList.remove('dragging'); el.classList.remove('drag-over'); }); if (touchStartIndex !== null && currentHoverIndex !== null && touchStartIndex !== currentHoverIndex) reorderArray(touchStartIndex, currentHoverIndex); touchStartIndex = null; currentHoverIndex = null; }
+
+    function reorderArray(from, to) { const item = selectedCharms.splice(from, 1)[0]; selectedCharms.splice(to, 0, item); updateUI(); }
+    function clearBracelet() { if (confirm("Reset current design?")) { selectedCharms = []; updateUI(); } }
+    function addRandom() { const rand = allCharms[Math.floor(Math.random() * allCharms.length)]; if(rand) addCharmById(rand.id); }
+
     init();
   </script>
 </body>
