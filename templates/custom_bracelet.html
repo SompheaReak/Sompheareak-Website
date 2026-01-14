@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Somphea Reak - Italy Bracelet Studio Pro</title>
+  <title>Somphea Reak - Italy Bracelet Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     
     body { 
         font-family: 'Plus Jakarta Sans', sans-serif; 
         -webkit-tap-highlight-color: transparent;
-        user-select: none;
+        /* Removed user-select: none to improve touch responsiveness */
         background-color: #f8fafc;
         overscroll-behavior-y: contain;
     }
@@ -57,16 +57,18 @@
         100% { opacity: 0.4; }
     }
 
+    /* DRAWER TRANSITION */
     #drawer {
-        transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+        transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+        will-change: transform;
     }
 
     .bracelet-link-container {
         display: flex;
         align-items: flex-end;
         justify-content: center;
-        flex: 0 0 10%; 
-        aspect-ratio: 2 / 4.5;
+        flex: 0 0 10%; /* 10 items per row */
+        aspect-ratio: 2 / 3.5;
         position: relative;
         margin: 0;
         padding: 0;
@@ -77,10 +79,11 @@
 
     .bracelet-link-container img {
         width: 100%;
-        height: 75%;
-        object-fit: cover;
+        height: 100%;
+        object-fit: contain; 
         display: block;
         pointer-events: none;
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
     }
 
     .nav-indicator-container {
@@ -131,60 +134,101 @@
         align-items: center;
         gap: 20px;
     }
+    
+    /* Logo Animation */
+    .logo-glow {
+        animation: glow 3s infinite ease-in-out;
+    }
+    @keyframes glow {
+        0%, 100% { box-shadow: 0 0 0 0px rgba(234, 88, 12, 0); }
+        50% { box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1); }
+    }
   </style>
 </head>
 <body class="text-gray-900 overflow-x-hidden">
 
-  <!-- LOADING OVERLAY -->
-  <div id="loadingOverlay" class="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center text-white">
-      <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p class="text-xs font-black uppercase tracking-[0.3em]">Processing Studio Design</p>
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" style="pointer-events: none;" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[300] bg-black/90 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl opacity-0 transition-opacity duration-200 scale-90">
+    <i class="fa-solid fa-circle-check text-green-400"></i>
+    <span class="text-xs font-bold uppercase tracking-widest">Added</span>
   </div>
 
-  <!-- RESULT MODAL -->
-  <div id="resultModal" class="fixed inset-0 z-[1100] bg-black hidden flex-col items-center justify-center p-6">
+  <!-- LOADING OVERLAY - Forced hidden initially -->
+  <div id="loadingOverlay" style="display: none;" class="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center text-white">
+      <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p class="text-xs font-black uppercase tracking-[0.3em]">Creating Your Card</p>
+  </div>
+
+  <!-- RESULT MODAL - Forced hidden initially -->
+  <div id="resultModal" style="display: none;" class="fixed inset-0 z-[1100] bg-black hidden flex-col items-center justify-center p-6">
       <div class="absolute top-6 right-6">
           <button onclick="closeResult()" class="w-10 h-10 bg-white/10 rounded-full text-white flex items-center justify-center text-xl">
               <i class="fa-solid fa-xmark"></i>
           </button>
       </div>
-      <div class="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-4 max-h-[90vh] overflow-y-auto">
           <img id="screenshotPreview" class="w-full h-auto rounded-xl shadow-inner border border-gray-100" src="" alt="Your Design">
+          
           <div class="mt-4 text-center">
-              <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest">Design Saved</p>
-              <p class="text-xs text-gray-600 font-bold mt-1 mb-4">Long press the image to save to your photos</p>
-              <button id="downloadBtn" class="w-full bg-orange-600 text-white font-black py-4 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-transform">
-                  Download Image
-              </button>
+              <div class="bg-gray-50 rounded-xl p-3 mb-4 border border-gray-100">
+                  <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Step 1: Save Design</p>
+                  <p class="text-xs text-gray-600 font-bold flex items-center justify-center gap-2">
+                      <i class="fa-regular fa-hand-pointer animate-pulse"></i> Long press image above to save
+                  </p>
+              </div>
+
+              <div class="w-full h-px bg-gray-100 mb-4"></div>
+
+              <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Step 2: Place Order</p>
+              <a href="https://t.me/Somphea_Reak" target="_blank" class="block w-full bg-[#0088cc] text-white font-black py-4 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-transform flex items-center justify-center shadow-lg shadow-blue-100">
+                  <i class="fa-brands fa-telegram text-xl mr-2"></i> Send to Telegram
+              </a>
+              <p class="text-[9px] text-gray-400 mt-2 italic">Tap button, then attach your saved image</p>
           </div>
       </div>
   </div>
 
   <!-- HEADER -->
-  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex items-center justify-between">
-    <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 active:scale-90 transition-transform">
-      <i class="fa-solid fa-arrow-left"></i>
+  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-2 flex items-center justify-between shadow-sm">
+    <a href="/" class="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-400 border border-gray-100 active:scale-90 transition-transform">
+      <i class="fa-solid fa-arrow-left text-sm"></i>
     </a>
-    <div class="text-center">
-        <h3 class="font-extrabold text-[9px] tracking-[0.2em] uppercase text-gray-400 leading-none">Custom Studio</h3>
-        <p class="font-black text-sm text-gray-900 tracking-tighter uppercase leading-tight">Italy Bracelet</p>
+
+    <div class="flex flex-col items-center justify-center">
+        <div class="flex items-center gap-2.5 mb-0.5">
+            <div class="relative">
+                <img src="static/image/logo.jpg" 
+                     onerror="this.style.opacity='0'; this.nextElementSibling.style.opacity='1'" 
+                     alt="SR Logo" 
+                     class="w-7 h-7 rounded-full object-cover border border-gray-200 shadow-sm logo-glow bg-white relative z-10">
+                <div class="absolute inset-0 w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 text-[10px] opacity-0 transition-opacity z-0">
+                    <i class="fa-solid fa-gem"></i>
+                </div>
+            </div>
+            <h1 class="font-extrabold text-sm text-gray-900 tracking-tight uppercase leading-none">Somphea Reak</h1>
+        </div>
+        <div class="flex items-center gap-1.5 opacity-60">
+            <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+            <p class="font-bold text-[8px] uppercase tracking-[0.2em] leading-none">Italy Bracelet Studio</p>
+            <span class="w-1 h-1 rounded-full bg-orange-500"></span>
+        </div>
     </div>
-    <div class="w-10"></div>
+    <div class="w-9"></div>
   </header>
 
   <!-- BANNER -->
-  <section class="w-full aspect-video bg-gray-200 overflow-hidden relative shadow-inner">
-      <img src="https://images.unsplash.com/photo-1611085583191-a3b1a308964b?auto=format&fit=crop&q=80&w=1200" alt="Banner" class="w-full h-full object-cover">
-      <div class="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent flex items-end p-6">
-          <div class="transform translate-y-2">
-              <h2 class="text-white text-2xl font-black uppercase italic tracking-tighter leading-none">Craft Your<br><span class="text-orange-500">Identity</span></h2>
-              <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-1">Professional Grade Customization</p>
+  <section class="w-full aspect-[21/9] bg-gray-200 overflow-hidden relative shadow-inner">
+      <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=1200" alt="Banner" class="w-full h-full object-cover">
+      <div class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent flex items-end p-5">
+          <div class="transform translate-y-1">
+              <span class="inline-block px-2 py-0.5 rounded-md bg-orange-600 text-white text-[8px] font-black uppercase tracking-widest mb-2">New Arrival</span>
+              <h2 class="text-white text-xl font-black uppercase italic tracking-tighter leading-none">Design Your<br><span class="text-orange-400">Masterpiece</span></h2>
           </div>
       </div>
   </section>
 
   <!-- PREVIEW BOX -->
-  <section class="sticky top-[58px] z-[90] bg-white border-b shadow-lg pb-4">
+  <section class="sticky top-[53px] z-[90] bg-white border-b shadow-lg pb-4">
     <div class="max-w-4xl mx-auto">
         <div class="flex items-center justify-between px-4 py-3">
             <div class="flex items-center gap-2">
@@ -193,9 +237,10 @@
             <button onclick="clearBracelet()" class="text-[10px] font-black text-red-500 uppercase tracking-widest px-2 py-1">Reset</button>
         </div>
 
-        <div id="bracelet-preview" onscroll="handlePreviewScroll(this)" class="flex overflow-x-auto py-4 scrollbar-hide min-h-[120px] items-end bg-gray-50 border-y border-gray-100 gap-0">
+        <div id="bracelet-preview" onscroll="handlePreviewScroll(this)" class="flex overflow-x-auto py-6 px-4 scrollbar-hide min-h-[140px] items-center bg-slate-50 border-y border-gray-100 gap-0">
             <div class="w-full text-center py-8 opacity-20">
-                <p class="text-[10px] font-black uppercase tracking-[0.4em]">Designer Workspace</p>
+                <i class="fa-solid fa-layer-group text-3xl mb-2"></i>
+                <p class="text-[10px] font-black uppercase tracking-[0.2em]">Start Designing</p>
             </div>
         </div>
 
@@ -212,50 +257,56 @@
                 <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest">Est. Total</span>
                 <span id="total-price" class="text-xl font-black text-gray-900 leading-none">0៛</span>
             </div>
-            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-right leading-tight">Pick up & Slide<br>to reorder charms</p>
+            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-right leading-tight">Tap to remove<br>Hold & drag to move</p>
         </div>
     </div>
   </section>
 
   <!-- CATEGORY GALLERY -->
   <section class="p-4 pb-48">
-    <div class="mb-4">
+    <div class="flex items-center justify-between mb-4">
         <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Collections</h4>
+        <span class="text-[8px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-full">Tap to view</span>
     </div>
-    <div id="categoryGallery" class="grid grid-cols-6 gap-3"></div>
+    <div id="categoryGallery" class="grid grid-cols-6 gap-2"></div>
   </section>
 
-  <!-- SELECTION DRAWER -->
-  <div id="drawer" class="fixed inset-0 z-[200] translate-y-full pointer-events-none">
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" onclick="closeDrawer()"></div>
-    <div class="absolute bottom-0 left-0 right-0 h-[65vh] bg-white rounded-t-[3rem] shadow-2xl pointer-events-auto flex flex-col border-t border-gray-100">
-        <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto my-4"></div>
-        <div class="px-6 pb-4 flex items-center justify-between">
-            <h4 id="drawer-title" class="text-lg font-black uppercase tracking-tighter text-gray-900">Category</h4>
-            <button onclick="closeDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-400">
-                <i class="fa-solid fa-xmark text-lg"></i>
+  <!-- SELECTION DRAWER - Forced transformed initially for safety -->
+  <div id="drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[200] translate-y-full pointer-events-none">
+    <!-- Backdrop has NO pointer events initially -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeDrawer()"></div>
+    
+    <div class="absolute bottom-0 left-0 right-0 h-[70vh] bg-white rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
+        <div class="bg-white border-b border-gray-100 sticky top-0 z-10 px-6 py-4 flex items-center justify-between">
+            <div>
+                <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Select Charm</p>
+                <h4 id="drawer-title" class="text-xl font-black uppercase tracking-tighter text-gray-900 leading-none">Category</h4>
+            </div>
+            <button onclick="closeDrawer()" class="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 active:scale-90 transition-transform">
+                <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        <div class="flex-grow overflow-y-auto px-2 pb-24">
-            <div id="charmGrid" class="grid grid-cols-8 gap-1.5"></div>
+        <div class="flex-grow overflow-y-auto p-4 bg-gray-50">
+            <div id="charmGrid" class="grid grid-cols-7 gap-1.5 pb-20"></div>
         </div>
     </div>
   </div>
 
   <!-- FIXED FOOTER -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-4 z-[110]">
+  <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-4 z-[110] safe-area-pb">
     <div class="max-w-md mx-auto flex gap-3">
-        <button onclick="addRandom()" class="w-14 h-14 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-xl text-gray-400 active:scale-90 transition-transform">
+        <button onclick="addRandom()" class="w-14 h-14 flex-shrink-0 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-2xl text-gray-400 active:scale-90 transition-transform hover:bg-gray-100">
             <i class="fa-solid fa-shuffle text-lg"></i>
         </button>
-        <button onclick="takeScreenshot()" id="screenshot-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-xl shadow-xl active:scale-95 transition-all disabled:opacity-20 text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+        <button onclick="takeScreenshot()" id="screenshot-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-2xl shadow-xl shadow-gray-200 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
             <i class="fa-solid fa-camera text-sm"></i>
-            Save To Gallery
+            <span>Save Image & Share</span>
         </button>
     </div>
   </div>
 
   <script>
+    // --- SAMPLE DATA ---
     const allCharms = [
       // --- Charm
     {"id": 1, "name_kh": "Silver Charm", "price": 500, "image": "/static/images/c01.jpg", "categories": ["Charm"]},
@@ -640,9 +691,18 @@
     {"id": 2107, "name_kh": "Flower 🌹 07", "price": 3000, "image": "/static/images/charm-flower-07.jpg", "categories": ["Flower 🌹"]}, 
     {"id": 2108, "name_kh": "Flower 🌹 08", "price": 3000, "image": "/static/images/charm-flower-08.jpg", "categories": ["Flower 🌹"]},
     {"id": 2109, "name_kh": "Flower 🌹 09", "price": 3000, "image": "/static/images/charm-flower-09.jpg", "categories": ["Flower 🌹"]},
-       ];
+      ];
 
-    let selectedCharms = JSON.parse(localStorage.getItem('customCharms')) || [];
+    // LocalStorage with error handling
+    let selectedCharms = [];
+    try {
+        const saved = localStorage.getItem('customCharms');
+        if (saved) selectedCharms = JSON.parse(saved);
+    } catch(e) {
+        console.error("Storage error", e);
+        localStorage.removeItem('customCharms');
+    }
+
     let stockData = {};
     let masterSwitch = "off";
 
@@ -653,14 +713,11 @@
                 headers: {'Content-Type':'application/json'}, 
                 body: JSON.stringify({items: allCharms})
             });
-            
             const res = await fetch('/api/get-data');
             const data = await res.json();
             stockData = data.stock;
             masterSwitch = data.master_switch || data.override || "off"; 
-        } catch(e) {
-            console.error("Init Error:", e);
-        }
+        } catch(e) { console.log("Preview Mode"); }
         renderCategories();
         updateUI();
     }
@@ -670,13 +727,13 @@
         document.getElementById('categoryGallery').innerHTML = categories.map(cat => {
             const charm = allCharms.find(c => c.categories.includes(cat));
             return `
-                <div onclick="openDrawer('${cat}')" class="flex flex-col items-center gap-1 active:scale-95 transition-transform cursor-pointer">
-                    <div class="w-full aspect-[2/3] bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden p-1">
-                        <img src="${charm.image}" class="w-full h-full object-cover rounded-md">
+                <div onclick="openDrawer('${cat}')" class="flex flex-col gap-1 active:scale-95 transition-transform cursor-pointer group">
+                    <div class="w-full aspect-square bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden p-1 flex items-center justify-center group-hover:shadow-md transition-shadow relative">
+                        <div class="absolute inset-0 bg-gradient-to-tr from-gray-50 to-transparent opacity-50"></div>
+                        <img src="${charm.image}" class="w-full h-full object-contain drop-shadow-sm relative z-10">
                     </div>
-                    <span class="text-[6px] font-black text-gray-500 uppercase truncate w-full text-center">${cat}</span>
-                </div>
-            `;
+                    <span class="text-[7px] font-bold text-gray-500 uppercase truncate w-full text-center tracking-wide">${cat}</span>
+                </div>`;
         }).join('');
     }
 
@@ -684,30 +741,35 @@
         document.getElementById('drawer-title').innerText = cat;
         const grid = document.getElementById('charmGrid');
         grid.innerHTML = allCharms.filter(c => c.categories.includes(cat)).map(c => {
-            const qty = stockData[c.id] || 0;
-            
-            // THE OPPOSITE LOGIC
-            let isOut = false;
-            if (masterSwitch === "on" && qty <= 0) {
-                isOut = true; 
-            }
-
+            const qty = stockData[c.id] || 99;
+            let isOut = (masterSwitch === "on" && qty <= 0);
             return `
-                <div onclick="${isOut ? '' : `addCharmById(${c.id})`}" class="relative flex flex-col items-center p-1 ${isOut ? 'opacity-40 grayscale pointer-events-none' : 'active:scale-95 transition-transform cursor-pointer'}">
-                    ${isOut ? '<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1 rounded shadow-sm z-10">SOLD</div>' : ''}
-                    <img src="${c.image}" class="w-full aspect-[2/3.5] object-cover rounded shadow-sm">
-                    <p class="text-[5px] font-black mt-1 text-gray-400">${c.price}៛</p>
+                <div onclick="${isOut ? '' : `addCharmById(${c.id})`}" class="relative flex flex-col items-center gap-1 p-1 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-40 grayscale pointer-events-none' : 'active:scale-90 transition-transform cursor-pointer'}">
+                    ${isOut ? '<div class="absolute top-0 right-0 bg-red-600 text-white text-[4px] px-1 rounded shadow-sm z-10 font-bold tracking-wider">SOLD</div>' : ''}
+                    <img src="${c.image}" class="w-full aspect-square object-contain drop-shadow-sm">
+                    <div class="w-full text-center border-t border-gray-50 pt-0.5 mt-0.5">
+                        <p class="text-[7px] font-black text-gray-900">${c.price.toLocaleString()}៛</p>
+                    </div>
                 </div>`;
         }).join('');
         
         const drawer = document.getElementById('drawer');
-        drawer.classList.remove('translate-y-full');
+        // Force style updates for safety
+        drawer.style.transform = 'translateY(0%)';
+        drawer.style.pointerEvents = 'auto'; 
+        
+        // Remove class restrictions
+        drawer.classList.remove('translate-y-full', 'pointer-events-none');
         drawer.classList.add('pointer-events-auto');
     }
 
     function closeDrawer() { 
         const drawer = document.getElementById('drawer');
-        drawer.classList.add('translate-y-full'); 
+        // Force style updates for safety
+        drawer.style.transform = 'translateY(100%)';
+        drawer.style.pointerEvents = 'none';
+
+        drawer.classList.add('translate-y-full', 'pointer-events-none'); 
         drawer.classList.remove('pointer-events-auto');
     }
 
@@ -715,6 +777,16 @@
         const charm = allCharms.find(c => c.id === id);
         selectedCharms.push({ ...charm, uid: Math.random().toString(36).substr(2, 9) });
         updateUI();
+        
+        // Show Toast
+        const toast = document.getElementById('toast');
+        toast.classList.remove('opacity-0', 'scale-90');
+        setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500);
+
+        setTimeout(() => {
+            const preview = document.getElementById('bracelet-preview');
+            preview.scrollTo({ left: preview.scrollWidth, behavior: 'smooth' });
+        }, 50);
     }
 
     function removeCharm(uid) {
@@ -724,10 +796,18 @@
 
     function updateUI() {
         const preview = document.getElementById('bracelet-preview');
-        localStorage.setItem('customCharms', JSON.stringify(selectedCharms));
+        try {
+            localStorage.setItem('customCharms', JSON.stringify(selectedCharms));
+        } catch(e) { console.error("Storage full"); }
 
         if (selectedCharms.length === 0) {
-            preview.innerHTML = `<div class="w-full text-center py-8 opacity-20 uppercase tracking-[0.4em] text-[10px] font-black">Designer Workspace</div>`;
+            preview.innerHTML = `
+                <div class="w-full text-center py-8 opacity-30 flex flex-col items-center">
+                    <div class="w-12 h-12 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center mb-2">
+                        <i class="fa-solid fa-plus text-gray-400"></i>
+                    </div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Empty Workspace</p>
+                </div>`;
             document.getElementById('total-price').innerText = "0៛";
             document.getElementById('link-count').innerText = "0 LINKS";
             document.getElementById('screenshot-btn').disabled = true;
@@ -740,94 +820,106 @@
         preview.innerHTML = selectedCharms.map((c, index) => {
             total += c.price;
             return `
-                <div class="bracelet-link-container link-pop" 
+                <div class="bracelet-link-container link-pop group" 
                      draggable="true" 
                      data-index="${index}"
                      ontouchstart="handleTouchStart(event)"
                      ontouchmove="handleTouchMove(event)"
                      ontouchend="handleTouchEnd(event)">
-                    <button onclick="removeCharm('${c.uid}')" class="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[7px] shadow-lg z-10 active:scale-90">
+                    <img src="${c.image}">
+                    <button onclick="removeCharm('${c.uid}')" class="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[8px] shadow-lg z-20 scale-0 group-hover:scale-100 transition-transform duration-200">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
-                    <img src="${c.image}">
-                </div>
-            `;
+                    <div class="absolute top-1/2 -right-[2px] w-1 h-3 bg-gray-300/50 rounded-full transform -translate-y-1/2 -z-10"></div>
+                </div>`;
         }).join('');
 
         document.getElementById('total-price').innerText = total.toLocaleString() + "៛";
         document.getElementById('link-count').innerText = `${selectedCharms.length} LINKS`;
         document.getElementById('screenshot-btn').disabled = false;
-        
         handlePreviewScroll(preview);
     }
 
     async function takeScreenshot() {
         const overlay = document.getElementById('loadingOverlay');
-        overlay.classList.remove('hidden');
-        overlay.classList.add('flex');
+        overlay.style.display = 'flex'; // Enable via style
+        overlay.classList.remove('hidden'); overlay.classList.add('flex');
 
         try {
             const tempDiv = document.createElement('div');
-            tempDiv.style.position = 'absolute';
-            tempDiv.style.left = '-9999px';
-            tempDiv.className = 'screenshot-frame';
+            tempDiv.style.position = 'absolute'; tempDiv.style.left = '-9999px';
+            tempDiv.className = 'screenshot-frame'; tempDiv.style.width = '600px';
             
-            const title = document.createElement('h2');
-            title.innerText = "ITALY BRACELET STUDIO";
-            title.style.fontSize = "24px"; title.style.fontWeight = "900";
-            title.style.letterSpacing = "0.2em"; title.style.textAlign = "center";
+            // Header with Logo
+            const headerDiv = document.createElement('div');
+            headerDiv.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:15px;">
+                    <div style="width:50px; height:50px; border-radius:50%; background:#fff; padding:2px; border:1px solid #eee; margin-bottom:10px;">
+                        <img src="static/image/logo.jpg" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" onerror="this.style.display='none'">
+                    </div>
+                    <h2 style="font-size:24px; font-weight:900; letter-spacing:0.05em; text-transform:uppercase; color:#1a1a1a; margin:0; line-height:1;">Somphea Reak</h2>
+                    <p style="font-size:10px; font-weight:700; letter-spacing:0.3em; text-transform:uppercase; color:#ea580c; margin-top:5px;">Italy Bracelet Studio</p>
+                </div>
+            `;
             
             const braceletContainer = document.createElement('div');
             braceletContainer.style.display = 'flex';
+            braceletContainer.style.justifyContent = 'center';
+            braceletContainer.style.alignItems = 'center';
             braceletContainer.style.background = '#f8fafc';
-            braceletContainer.style.padding = '40px';
-            braceletContainer.style.borderRadius = '20px';
-            braceletContainer.style.border = '1px solid #e2e8f0';
+            braceletContainer.style.padding = '60px 20px';
+            braceletContainer.style.borderRadius = '30px';
+            braceletContainer.style.border = '2px solid #e2e8f0';
+            braceletContainer.style.width = '100%';
+            braceletContainer.style.flexWrap = 'wrap';
+            braceletContainer.style.gap = '2px';
 
             selectedCharms.forEach(c => {
                 const img = document.createElement('img');
                 img.src = c.image;
-                img.style.width = '60px'; img.style.height = '100px'; img.style.objectFit = 'cover';
+                img.style.width = '50px'; img.style.height = '50px'; img.style.objectFit = 'contain';
                 braceletContainer.appendChild(img);
             });
 
-            const footer = document.createElement('p');
-            footer.innerText = `Total: ${document.getElementById('total-price').innerText} • ${selectedCharms.length} Pieces`;
-            footer.style.fontSize = "12px"; footer.style.fontWeight = "bold"; footer.style.color = "#94a3b8";
+            const footer = document.createElement('div');
+            footer.style.textAlign = 'center'; footer.style.width = '100%'; footer.style.marginTop = '20px';
+            footer.innerHTML = `
+                <div style="font-size:42px; font-weight:900; color:#ea580c; margin-bottom:5px;">${document.getElementById('total-price').innerText}</div>
+                <div style="font-size:12px; font-weight:bold; color:#94a3b8; text-transform:uppercase; letter-spacing:0.2em;">${selectedCharms.length} Charms Selected</div>
+            `;
 
-            tempDiv.appendChild(title); tempDiv.appendChild(braceletContainer); tempDiv.appendChild(footer);
+            tempDiv.appendChild(headerDiv); tempDiv.appendChild(braceletContainer); tempDiv.appendChild(footer);
             document.body.appendChild(tempDiv);
+            await new Promise(r => setTimeout(r, 500));
 
-            const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 3, backgroundColor: "#ffffff" });
+            const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 2, backgroundColor: "#ffffff" });
             const dataUrl = canvas.toDataURL("image/png");
             
             document.getElementById('screenshotPreview').src = dataUrl;
-            document.getElementById('downloadBtn').onclick = () => {
-                const link = document.createElement('a');
-                link.download = `bracelet-design-${Date.now()}.png`;
-                link.href = dataUrl;
-                link.click();
-            };
-
+            
             document.body.removeChild(tempDiv);
-            document.getElementById('resultModal').classList.remove('hidden');
-            document.getElementById('resultModal').classList.add('flex');
-        } catch (err) {
-            console.error(err);
-        } finally {
-            overlay.classList.add('hidden');
+            
+            const modal = document.getElementById('resultModal');
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        } catch (err) { console.error(err); alert("Error generating image."); } 
+        finally { 
+            overlay.style.display = 'none';
+            overlay.classList.add('hidden'); 
         }
     }
 
-    function closeResult() { document.getElementById('resultModal').classList.add('hidden'); }
+    function closeResult() { 
+        const modal = document.getElementById('resultModal');
+        modal.style.display = 'none';
+        modal.classList.add('hidden'); 
+    }
 
     function handlePreviewScroll(el) {
         const thumb = document.getElementById('scroll-thumb');
         const scrollWidth = el.scrollWidth - el.clientWidth;
-        if (scrollWidth <= 0) {
-            thumb.style.width = '100%'; thumb.style.left = '0%';
-            return;
-        }
+        if (scrollWidth <= 0) { thumb.style.width = '100%'; thumb.style.left = '0%'; return; }
         const percentage = (el.scrollLeft / scrollWidth) * 100;
         thumb.style.width = '30%'; thumb.style.left = `${percentage * 0.7}%`;
     }
@@ -836,7 +928,6 @@
 
     let touchStartIndex = null;
     let currentHoverIndex = null;
-
     function handleTouchStart(e) { const container = e.target.closest('.bracelet-link-container'); if (!container) return; touchStartIndex = parseInt(container.dataset.index); container.classList.add('dragging'); }
     function handleTouchMove(e) { e.preventDefault(); const touch = e.touches[0]; const target = document.elementFromPoint(touch.clientX, touch.clientY); const container = target?.closest('.bracelet-link-container'); document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('drag-over')); if (container) { currentHoverIndex = parseInt(container.dataset.index); container.classList.add('drag-over'); } }
     function handleTouchEnd(e) { document.querySelectorAll('.bracelet-link-container').forEach(el => { el.classList.remove('dragging'); el.classList.remove('drag-over'); }); if (touchStartIndex !== null && currentHoverIndex !== null && touchStartIndex !== currentHoverIndex) reorderArray(touchStartIndex, currentHoverIndex); touchStartIndex = null; currentHoverIndex = null; }
@@ -849,4 +940,5 @@
   </script>
 </body>
 </html>
+
 
