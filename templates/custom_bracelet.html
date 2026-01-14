@@ -13,7 +13,6 @@
     body { 
         font-family: 'Plus Jakarta Sans', sans-serif; 
         -webkit-tap-highlight-color: transparent;
-        /* Removed user-select: none to improve touch responsiveness */
         background-color: #f8fafc;
         overscroll-behavior-y: contain;
     }
@@ -28,35 +27,6 @@
         100% { transform: scale(1); opacity: 1; }
     }
 
-    /* PREMIUM DRAG EFFECTS */
-    .dragging {
-        opacity: 0.5;
-        transform: scale(1.2) rotate(3deg) translateY(-10px);
-        filter: brightness(1.1) drop-shadow(0 20px 13px rgb(0 0 0 / 0.1));
-        z-index: 100;
-        transition: transform 0.2s ease;
-    }
-
-    .drag-over {
-        position: relative;
-    }
-    .drag-over::after {
-        content: '';
-        position: absolute;
-        inset: -2px;
-        border: 2px solid #ea580c;
-        border-radius: 8px;
-        background-color: rgba(234, 88, 12, 0.05);
-        animation: pulse 1.5s infinite;
-        z-index: 5;
-    }
-
-    @keyframes pulse {
-        0% { opacity: 0.4; }
-        50% { opacity: 0.8; }
-        100% { opacity: 0.4; }
-    }
-
     /* DRAWER TRANSITION */
     #drawer {
         transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
@@ -67,7 +37,7 @@
         display: flex;
         align-items: flex-end;
         justify-content: center;
-        flex: 0 0 10%; /* 10 items per row */
+        flex: 0 0 10%; 
         aspect-ratio: 2 / 3.5;
         position: relative;
         margin: 0;
@@ -143,6 +113,13 @@
         0%, 100% { box-shadow: 0 0 0 0px rgba(234, 88, 12, 0); }
         50% { box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1); }
     }
+
+    /* Package Selection Hover Effects */
+    .package-card:active {
+        transform: scale(0.98);
+        background-color: #fff7ed;
+        border-color: #ea580c;
+    }
   </style>
 </head>
 <body class="text-gray-900 overflow-x-hidden">
@@ -153,38 +130,80 @@
     <span class="text-xs font-bold uppercase tracking-widest">Added</span>
   </div>
 
-  <!-- LOADING OVERLAY - Forced hidden initially -->
-  <div id="loadingOverlay" style="display: none;" class="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md hidden flex-col items-center justify-center text-white">
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay" style="display: none;" class="fixed inset-0 z-[1200] bg-black/90 backdrop-blur-md hidden flex-col items-center justify-center text-white">
       <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p class="text-xs font-black uppercase tracking-[0.3em]">Creating Your Card</p>
+      <p id="loadingText" class="text-xs font-black uppercase tracking-[0.3em]">Preparing Preview</p>
   </div>
 
-  <!-- RESULT MODAL - Forced hidden initially -->
-  <div id="resultModal" style="display: none;" class="fixed inset-0 z-[1100] bg-black hidden flex-col items-center justify-center p-6">
-      <div class="absolute top-6 right-6">
-          <button onclick="closeResult()" class="w-10 h-10 bg-white/10 rounded-full text-white flex items-center justify-center text-xl">
-              <i class="fa-solid fa-xmark"></i>
+  <!-- RESULT MODAL -->
+  <div id="resultModal" style="display: none;" class="fixed inset-0 z-[1100] bg-white hidden flex-col overflow-y-auto">
+      
+      <!-- HEADER -->
+      <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
+          <button onclick="closeResult()" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-900 border border-gray-100 active:scale-90 transition-transform">
+              <i class="fa-solid fa-arrow-left"></i>
           </button>
+          <span id="modalTitle" class="font-black text-xs uppercase tracking-widest text-gray-900">Select Packaging</span>
+          <div class="w-10"></div>
       </div>
-      <div class="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-4 max-h-[90vh] overflow-y-auto">
-          <img id="screenshotPreview" class="w-full h-auto rounded-xl shadow-inner border border-gray-100" src="" alt="Your Design">
+
+      <div class="p-5 pb-32 flex flex-col items-center w-full max-w-lg mx-auto">
           
-          <div class="mt-4 text-center">
-              <div class="bg-gray-50 rounded-xl p-3 mb-4 border border-gray-100">
-                  <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Step 1: Save Design</p>
-                  <p class="text-xs text-gray-600 font-bold flex items-center justify-center gap-2">
-                      <i class="fa-regular fa-hand-pointer animate-pulse"></i> Long press image above to save
-                  </p>
+          <!-- STEP 1: PREVIEW & SELECTION -->
+          <div id="step-selection" class="w-full flex flex-col gap-6">
+              <!-- Initial Bracelet Preview -->
+              <div class="w-full bg-slate-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center">
+                   <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Your Design</p>
+                   <!-- Added overflow-x-auto to allow scrolling if the single line image is very wide on small screens -->
+                   <div class="w-full overflow-x-auto flex justify-center">
+                        <img id="initialPreviewImg" class="h-auto object-contain max-h-[150px]" src="" alt="Bracelet Preview">
+                   </div>
               </div>
 
-              <div class="w-full h-px bg-gray-100 mb-4"></div>
+              <!-- Package Options -->
+              <div class="w-full">
+                  <h3 class="text-[12px] font-black uppercase text-gray-900 tracking-widest mb-4 text-center">Choose Your Package</h3>
+                  <div class="grid grid-cols-2 gap-4">
+                      <!-- Premium -->
+                      <div onclick="finalizeOrder('Premium', 'https://cdn-icons-png.flaticon.com/512/4599/4599148.png')" class="package-card border-2 border-gray-100 rounded-2xl p-4 flex flex-col items-center gap-3 cursor-pointer transition-all">
+                          <img src="https://cdn-icons-png.flaticon.com/512/4599/4599148.png" class="w-16 h-16 object-contain drop-shadow-md" alt="Premium">
+                          <div class="text-center">
+                              <p class="text-xs font-black uppercase text-gray-900">Premium Box</p>
+                              <p class="text-[9px] text-gray-500 font-medium mt-1">Luxury Gift Set</p>
+                          </div>
+                          <div class="w-full bg-orange-50 text-orange-600 text-[9px] font-bold py-1.5 rounded-lg text-center uppercase tracking-wide mt-1">Select</div>
+                      </div>
 
-              <p class="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Step 2: Place Order</p>
-              <a href="https://t.me/Somphea_Reak" target="_blank" class="block w-full bg-[#0088cc] text-white font-black py-4 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-transform flex items-center justify-center shadow-lg shadow-blue-100">
-                  <i class="fa-brands fa-telegram text-xl mr-2"></i> Send to Telegram
-              </a>
-              <p class="text-[9px] text-gray-400 mt-2 italic">Tap button, then attach your saved image</p>
+                      <!-- Normal -->
+                      <div onclick="finalizeOrder('Normal', 'https://cdn-icons-png.flaticon.com/512/679/679720.png')" class="package-card border-2 border-gray-100 rounded-2xl p-4 flex flex-col items-center gap-3 cursor-pointer transition-all">
+                          <img src="https://cdn-icons-png.flaticon.com/512/679/679720.png" class="w-16 h-16 object-contain drop-shadow-md opacity-80" alt="Normal">
+                          <div class="text-center">
+                              <p class="text-xs font-black uppercase text-gray-900">Normal Bag</p>
+                              <p class="text-[9px] text-gray-500 font-medium mt-1">Standard Pack</p>
+                          </div>
+                          <div class="w-full bg-gray-50 text-gray-600 text-[9px] font-bold py-1.5 rounded-lg text-center uppercase tracking-wide mt-1">Select</div>
+                      </div>
+                  </div>
+              </div>
           </div>
+
+          <!-- STEP 2: FINAL RECEIPT -->
+          <div id="step-result" class="w-full flex-col gap-6 hidden">
+              <div class="w-full relative shadow-2xl shadow-gray-200 rounded-2xl overflow-hidden border border-gray-100">
+                <img id="finalReceiptImg" class="w-full h-auto" src="" alt="Final Receipt">
+              </div>
+
+              <div class="w-full space-y-3">
+                  <!-- Share Button (Primary) -->
+                  <button id="nativeShareBtn" onclick="shareImageNative()" class="w-full bg-gray-900 text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-transform flex items-center justify-center gap-2 shadow-lg shadow-gray-200">
+                      <i class="fa-solid fa-share-nodes text-lg"></i> Share Order Image
+                  </button>
+                  
+                  <p class="text-[9px] text-gray-400 text-center italic mt-1">Use the button above to send the image to Telegram</p>
+              </div>
+          </div>
+
       </div>
   </div>
 
@@ -271,11 +290,9 @@
     <div id="categoryGallery" class="grid grid-cols-6 gap-2"></div>
   </section>
 
-  <!-- SELECTION DRAWER - Forced transformed initially for safety -->
+  <!-- SELECTION DRAWER -->
   <div id="drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[200] translate-y-full pointer-events-none">
-    <!-- Backdrop has NO pointer events initially -->
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeDrawer()"></div>
-    
+    <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeDrawer()"></div>
     <div class="absolute bottom-0 left-0 right-0 h-[70vh] bg-white rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
         <div class="bg-white border-b border-gray-100 sticky top-0 z-10 px-6 py-4 flex items-center justify-between">
             <div>
@@ -298,15 +315,14 @@
         <button onclick="addRandom()" class="w-14 h-14 flex-shrink-0 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-2xl text-gray-400 active:scale-90 transition-transform hover:bg-gray-100">
             <i class="fa-solid fa-shuffle text-lg"></i>
         </button>
-        <button onclick="takeScreenshot()" id="screenshot-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-2xl shadow-xl shadow-gray-200 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
-            <i class="fa-solid fa-camera text-sm"></i>
-            <span>Save Image & Share</span>
+        <button onclick="startPreviewFlow()" id="screenshot-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-2xl shadow-xl shadow-gray-200 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+            <span>Preview & Share</span>
         </button>
     </div>
   </div>
 
   <script>
-    // --- SAMPLE DATA ---
     const allCharms = [
       // --- Charm
     {"id": 1, "name_kh": "Silver Charm", "price": 500, "image": "/static/images/c01.jpg", "categories": ["Charm"]},
@@ -691,20 +707,19 @@
     {"id": 2107, "name_kh": "Flower 🌹 07", "price": 3000, "image": "/static/images/charm-flower-07.jpg", "categories": ["Flower 🌹"]}, 
     {"id": 2108, "name_kh": "Flower 🌹 08", "price": 3000, "image": "/static/images/charm-flower-08.jpg", "categories": ["Flower 🌹"]},
     {"id": 2109, "name_kh": "Flower 🌹 09", "price": 3000, "image": "/static/images/charm-flower-09.jpg", "categories": ["Flower 🌹"]},
-      ];
+       ];
 
-    // LocalStorage with error handling
     let selectedCharms = [];
     try {
         const saved = localStorage.getItem('customCharms');
         if (saved) selectedCharms = JSON.parse(saved);
     } catch(e) {
-        console.error("Storage error", e);
         localStorage.removeItem('customCharms');
     }
 
     let stockData = {};
     let masterSwitch = "off";
+    let currentBlob = null; 
 
     async function init() {
         try {
@@ -754,21 +769,16 @@
         }).join('');
         
         const drawer = document.getElementById('drawer');
-        // Force style updates for safety
         drawer.style.transform = 'translateY(0%)';
         drawer.style.pointerEvents = 'auto'; 
-        
-        // Remove class restrictions
         drawer.classList.remove('translate-y-full', 'pointer-events-none');
         drawer.classList.add('pointer-events-auto');
     }
 
     function closeDrawer() { 
         const drawer = document.getElementById('drawer');
-        // Force style updates for safety
         drawer.style.transform = 'translateY(100%)';
         drawer.style.pointerEvents = 'none';
-
         drawer.classList.add('translate-y-full', 'pointer-events-none'); 
         drawer.classList.remove('pointer-events-auto');
     }
@@ -777,12 +787,9 @@
         const charm = allCharms.find(c => c.id === id);
         selectedCharms.push({ ...charm, uid: Math.random().toString(36).substr(2, 9) });
         updateUI();
-        
-        // Show Toast
         const toast = document.getElementById('toast');
         toast.classList.remove('opacity-0', 'scale-90');
         setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500);
-
         setTimeout(() => {
             const preview = document.getElementById('bracelet-preview');
             preview.scrollTo({ left: preview.scrollWidth, behavior: 'smooth' });
@@ -796,18 +803,10 @@
 
     function updateUI() {
         const preview = document.getElementById('bracelet-preview');
-        try {
-            localStorage.setItem('customCharms', JSON.stringify(selectedCharms));
-        } catch(e) { console.error("Storage full"); }
+        try { localStorage.setItem('customCharms', JSON.stringify(selectedCharms)); } catch(e) {}
 
         if (selectedCharms.length === 0) {
-            preview.innerHTML = `
-                <div class="w-full text-center py-8 opacity-30 flex flex-col items-center">
-                    <div class="w-12 h-12 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center mb-2">
-                        <i class="fa-solid fa-plus text-gray-400"></i>
-                    </div>
-                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Empty Workspace</p>
-                </div>`;
+            preview.innerHTML = `<div class="w-full text-center py-8 opacity-30 flex flex-col items-center"><p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Empty Workspace</p></div>`;
             document.getElementById('total-price').innerText = "0៛";
             document.getElementById('link-count').innerText = "0 LINKS";
             document.getElementById('screenshot-btn').disabled = true;
@@ -840,52 +839,154 @@
         handlePreviewScroll(preview);
     }
 
-    async function takeScreenshot() {
+    // --- NEW FLOW LOGIC ---
+
+    // 1. Generate just the bracelet strip for preview
+    async function startPreviewFlow() {
         const overlay = document.getElementById('loadingOverlay');
-        overlay.style.display = 'flex'; // Enable via style
+        document.getElementById('loadingText').innerText = "Generating Preview";
+        overlay.style.display = 'flex';
         overlay.classList.remove('hidden'); overlay.classList.add('flex');
 
         try {
+            // Setup hidden div for pure bracelet strip (SINGLE LINE)
             const tempDiv = document.createElement('div');
             tempDiv.style.position = 'absolute'; tempDiv.style.left = '-9999px';
-            tempDiv.className = 'screenshot-frame'; tempDiv.style.width = '600px';
+            tempDiv.style.display = 'flex';
+            tempDiv.style.flexWrap = 'nowrap'; // force single line
+            tempDiv.style.justifyContent = 'center';
+            tempDiv.style.alignItems = 'center';
+            tempDiv.style.background = '#ffffff';
+            tempDiv.style.padding = '20px';
             
-            // Header with Logo
-            const headerDiv = document.createElement('div');
-            headerDiv.innerHTML = `
-                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:15px;">
-                    <div style="width:50px; height:50px; border-radius:50%; background:#fff; padding:2px; border:1px solid #eee; margin-bottom:10px;">
-                        <img src="static/image/logo.jpg" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" onerror="this.style.display='none'">
-                    </div>
-                    <h2 style="font-size:24px; font-weight:900; letter-spacing:0.05em; text-transform:uppercase; color:#1a1a1a; margin:0; line-height:1;">Somphea Reak</h2>
-                    <p style="font-size:10px; font-weight:700; letter-spacing:0.3em; text-transform:uppercase; color:#ea580c; margin-top:5px;">Italy Bracelet Studio</p>
-                </div>
-            `;
-            
-            const braceletContainer = document.createElement('div');
-            braceletContainer.style.display = 'flex';
-            braceletContainer.style.justifyContent = 'center';
-            braceletContainer.style.alignItems = 'center';
-            braceletContainer.style.background = '#f8fafc';
-            braceletContainer.style.padding = '60px 20px';
-            braceletContainer.style.borderRadius = '30px';
-            braceletContainer.style.border = '2px solid #e2e8f0';
-            braceletContainer.style.width = '100%';
-            braceletContainer.style.flexWrap = 'wrap';
-            braceletContainer.style.gap = '2px';
+            // Dynamic width to prevent squishing
+            const width = Math.max(600, (selectedCharms.length * 60) + 40); 
+            tempDiv.style.width = `${width}px`;
+            tempDiv.style.gap = '2px';
 
             selectedCharms.forEach(c => {
                 const img = document.createElement('img');
                 img.src = c.image;
-                img.style.width = '50px'; img.style.height = '50px'; img.style.objectFit = 'contain';
+                img.style.width = '55px'; 
+                img.style.height = '70px'; 
+                img.style.objectFit = 'contain';
+                tempDiv.appendChild(img);
+            });
+
+            document.body.appendChild(tempDiv);
+            await new Promise(r => setTimeout(r, 500)); 
+            const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 2, backgroundColor: null });
+            const dataUrl = canvas.toDataURL("image/png");
+            document.body.removeChild(tempDiv);
+
+            // Set to Step 1
+            document.getElementById('initialPreviewImg').src = dataUrl;
+            document.getElementById('step-selection').classList.remove('hidden');
+            document.getElementById('step-result').classList.add('hidden');
+            document.getElementById('modalTitle').innerText = "Select Packaging";
+            
+            // Show Modal
+            const modal = document.getElementById('resultModal');
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
+
+        } catch (err) { console.error(err); alert("Error generating preview."); } 
+        finally { overlay.classList.add('hidden'); overlay.style.display = 'none'; }
+    }
+
+    // 2. Finalize with Package Info included in image
+    async function finalizeOrder(pkgName, pkgImgUrl) {
+        const overlay = document.getElementById('loadingOverlay');
+        document.getElementById('loadingText').innerText = "Creating Final Order";
+        overlay.style.display = 'flex';
+        overlay.classList.remove('hidden'); overlay.classList.add('flex');
+
+        try {
+            const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'absolute'; tempDiv.style.left = '-9999px';
+            tempDiv.className = 'screenshot-frame'; 
+            
+            // Ensure width is wide enough for the single line of charms
+            const neededWidth = Math.max(550, (selectedCharms.length * 55) + 100);
+            tempDiv.style.width = `${neededWidth}px`;
+            
+            // Header
+            const headerDiv = document.createElement('div');
+            headerDiv.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:20px;">
+                    <div style="width:60px; height:60px; border-radius:50%; background:#fff; padding:2px; border:1px solid #eee; margin-bottom:10px;">
+                        <img src="static/image/logo.jpg" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" onerror="this.style.display='none'">
+                    </div>
+                    <h2 style="font-size:26px; font-weight:900; letter-spacing:0.05em; text-transform:uppercase; color:#1a1a1a; margin:0; line-height:1;">Somphea Reak</h2>
+                    <p style="font-size:11px; font-weight:700; letter-spacing:0.3em; text-transform:uppercase; color:#ea580c; margin-top:5px;">Italy Bracelet Studio</p>
+                </div>
+            `;
+            
+            // Bracelet Container (SINGLE LINE)
+            const braceletContainer = document.createElement('div');
+            braceletContainer.style.display = 'flex';
+            braceletContainer.style.flexWrap = 'nowrap'; // Force single line
+            braceletContainer.style.justifyContent = 'center';
+            braceletContainer.style.alignItems = 'center';
+            braceletContainer.style.background = '#f8fafc';
+            braceletContainer.style.padding = '40px 20px';
+            braceletContainer.style.borderRadius = '30px';
+            braceletContainer.style.border = '2px solid #e2e8f0';
+            braceletContainer.style.width = '100%';
+            braceletContainer.style.gap = '2px';
+            braceletContainer.style.marginBottom = '20px';
+
+            selectedCharms.forEach(c => {
+                const img = document.createElement('img');
+                img.src = c.image;
+                img.style.width = '50px'; 
+                img.style.height = '60px'; 
+                img.style.objectFit = 'contain';
                 braceletContainer.appendChild(img);
             });
 
+            // Package & Price Info (HORIZONTAL ROW)
             const footer = document.createElement('div');
-            footer.style.textAlign = 'center'; footer.style.width = '100%'; footer.style.marginTop = '20px';
+            footer.style.textAlign = 'center'; footer.style.width = '100%';
             footer.innerHTML = `
-                <div style="font-size:42px; font-weight:900; color:#ea580c; margin-bottom:5px;">${document.getElementById('total-price').innerText}</div>
-                <div style="font-size:12px; font-weight:bold; color:#94a3b8; text-transform:uppercase; letter-spacing:0.2em;">${selectedCharms.length} Charms Selected</div>
+                <!-- Package Box -->
+                <div style="display:flex; justify-content:center; gap:15px; align-items:center; margin-bottom:20px; padding:12px; background:#fff7ed; border-radius:12px; border:1px solid #ffedd5; width: fit-content; margin-left: auto; margin-right: auto;">
+                    <img src="${pkgImgUrl}" style="width:30px; height:30px; object-fit:contain;">
+                    <div style="text-align:left;">
+                        <div style="font-size:8px; font-weight:bold; color:#9a3412; text-transform:uppercase; letter-spacing:0.1em;">Packaging</div>
+                        <div style="font-size:12px; font-weight:900; color:#ea580c; text-transform:uppercase;">${pkgName}</div>
+                    </div>
+                </div>
+
+                <!-- Horizontal Info Row -->
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top: 2px dashed #e2e8f0; padding-top: 15px; padding-left: 10px; padding-right: 10px;">
+                    
+                    <!-- Price -->
+                    <div style="text-align:center; flex:1;">
+                        <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Total</div>
+                        <div style="font-size:24px; font-weight:900; color:#1a1a1a;">${document.getElementById('total-price').innerText}</div>
+                    </div>
+
+                    <!-- Divider -->
+                    <div style="width:1px; height:30px; background:#e2e8f0;"></div>
+
+                    <!-- Charms -->
+                    <div style="text-align:center; flex:1;">
+                        <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Charms</div>
+                        <div style="font-size:24px; font-weight:900; color:#1a1a1a;">${selectedCharms.length}</div>
+                    </div>
+
+                    <!-- Divider -->
+                    <div style="width:1px; height:30px; background:#e2e8f0;"></div>
+
+                    <!-- Date -->
+                    <div style="text-align:center; flex:1;">
+                        <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Date</div>
+                        <div style="font-size:14px; font-weight:800; color:#64748b;">${date}</div>
+                    </div>
+                </div>
             `;
 
             tempDiv.appendChild(headerDiv); tempDiv.appendChild(braceletContainer); tempDiv.appendChild(footer);
@@ -893,21 +994,36 @@
             await new Promise(r => setTimeout(r, 500));
 
             const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 2, backgroundColor: "#ffffff" });
+            
+            canvas.toBlob((blob) => { currentBlob = blob; }, 'image/png');
+
             const dataUrl = canvas.toDataURL("image/png");
-            
-            document.getElementById('screenshotPreview').src = dataUrl;
-            
+            document.getElementById('finalReceiptImg').src = dataUrl;
             document.body.removeChild(tempDiv);
-            
-            const modal = document.getElementById('resultModal');
-            modal.style.display = 'flex';
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        } catch (err) { console.error(err); alert("Error generating image."); } 
-        finally { 
-            overlay.style.display = 'none';
-            overlay.classList.add('hidden'); 
-        }
+
+            // Switch to Step 2
+            document.getElementById('step-selection').classList.add('hidden');
+            document.getElementById('step-result').classList.remove('hidden');
+            document.getElementById('modalTitle').innerText = "Order Ready";
+            document.getElementById('step-result').classList.add('flex');
+
+        } catch (err) { console.error(err); alert("Error finalizing order."); } 
+        finally { overlay.classList.add('hidden'); overlay.style.display = 'none'; }
+    }
+
+    async function shareImageNative() {
+        if (currentBlob && navigator.share) {
+            const file = new File([currentBlob], 'SompheaReak-Order.png', { type: 'image/png' });
+            if (navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'My Bracelet Order',
+                        text: `New Order: ${selectedCharms.length} charms. Total: ${document.getElementById('total-price').innerText}`
+                    });
+                } catch (error) { console.log('Sharing failed', error); }
+            } else { alert("Sharing not supported on this device."); }
+        } else { alert("Sharing not supported on this browser."); }
     }
 
     function closeResult() { 
