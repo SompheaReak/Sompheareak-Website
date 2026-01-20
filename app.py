@@ -39,6 +39,10 @@ def index():
 def custom_bracelet():
     """Custom Bracelet Studio"""
     return render_template('custom_bracelet.html')
+# Add this route to your app.py
+@app.route('/bracelet')
+def shop():
+    return render_template('bracelet.html')
 
 @app.route('/lego')
 def lego_shop():
