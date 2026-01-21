@@ -54,8 +54,8 @@ def toy_universe():
     """The New TaoBao Style Toy Shop"""
     return render_template('toy.html')
 
-@app.route('/lucky-draw')
-def lucky_draw():
+@app.route('/minifigure_game')
+def minifigure_game():
     """The Lucky Draw Game"""
     return render_template('minifigure_game.html')
 
