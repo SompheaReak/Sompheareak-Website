@@ -57,7 +57,7 @@ def toy_universe():
 @app.route('/lucky-draw')
 def lucky_draw():
     """The Lucky Draw Game"""
-    return render_template('lucky_draw.html')
+    return render_template('minifigure_game.html')
 
 @app.route('/hot-sale')
 def hot_sale():
