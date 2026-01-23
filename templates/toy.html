@@ -26,7 +26,22 @@
         .flying-img { position: fixed; z-index: 9999; border-radius: 50%; opacity: 0.8; pointer-events: none; transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
         .popup-enter { transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .popup-active { transform: translateY(0); }
-        .screenshot-frame { background: white; width: 400px; padding: 20px; box-sizing: border-box; font-family: 'Noto Sans Khmer', sans-serif; }
+        
+        /* Screenshot Frame */
+        .screenshot-frame { 
+            background: white; 
+            width: 100%; 
+            max-width: 400px; 
+            padding: 20px; 
+            box-sizing: border-box; 
+            font-family: 'Noto Sans Khmer', sans-serif; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            z-index: -50; 
+            visibility: hidden; 
+            visibility: visible;
+        }
 
         .custom-checkbox {
             appearance: none; width: 20px; height: 20px; border: 2px solid #ddd; border-radius: 50%;
@@ -36,7 +51,6 @@
         .custom-checkbox:checked { background-color: var(--brand-green); border-color: var(--brand-green); }
         .custom-checkbox:checked::before { transform: scale(1); }
 
-        /* Gallery Styles */
         .gallery-snap { scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
         .gallery-item { scroll-snap-align: center; flex-shrink: 0; width: 100vw; height: 100%; display: flex; align-items: center; justify-content: center; }
         .gallery-item img { max-width: 100%; max-height: 100%; object-fit: contain; }
@@ -71,7 +85,6 @@
             <button onclick="closeDetail()" class="pointer-events-auto w-9 h-9 bg-black/30 backdrop-blur rounded-full text-white flex items-center justify-center active:scale-90"><i class="fa-solid fa-chevron-left"></i></button>
             <button onclick="openCart()" class="pointer-events-auto w-9 h-9 bg-black/30 backdrop-blur rounded-full text-white flex items-center justify-center active:scale-90 relative"><i class="fa-solid fa-cart-shopping text-xs"></i><span id="detail-cart-badge" class="absolute -top-1 -right-1 bg-brand text-white text-[8px] w-3.5 h-3.5 flex items-center justify-center rounded-full hidden">0</span></button>
         </div>
-
         <div class="flex-1 overflow-y-auto hide-scrollbar pb-20">
             <img id="dt-img" onclick="openGallery()" class="w-full aspect-square object-cover bg-white active:opacity-90 transition-opacity" onerror="this.src='https://placehold.co/400?text=No+Image'">
             <div class="bg-white p-3 mb-2 rounded-b-2xl shadow-sm">
@@ -85,7 +98,6 @@
             </div>
             <div class="p-4 text-center text-gray-300 text-xs font-bold uppercase tracking-widest">Somphea Reak</div>
         </div>
-
         <div class="absolute bottom-0 left-0 right-0 bg-white border-t px-3 py-2 flex items-center gap-3 pb-safe">
             <div class="flex flex-col items-center justify-center text-gray-500 w-10" onclick="window.open('https://t.me/somphea_reak','_blank')"><i class="fa-regular fa-comment-dots text-xl"></i><span class="text-[9px]" data-key="chat">Chat</span></div>
             <div class="flex-1"><button onclick="openSku()" class="w-full h-11 bg-gradient-brand rounded-full text-white text-sm font-bold shadow-lg shadow-green-100 flex items-center justify-center gap-2 active:scale-95 transition-transform"><i class="fa-solid fa-cart-plus"></i><span data-key="add_cart">Add to Cart</span></button></div>
@@ -128,29 +140,42 @@
         <div id="cart-list" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
         <div class="bg-white p-3 border-t pb-safe"><div class="flex justify-between font-bold text-sm mb-3"><span>Total (Selected):</span><span class="text-brand" id="cart-total">៛0</span></div><button onclick="checkout()" class="w-full h-11 bg-gradient-brand rounded-full text-white font-bold text-sm shadow-lg" data-key="checkout">Checkout</button></div>
     </div>
-
-    <!-- 8. INVOICE MODAL -->
-    <div id="invoice-modal" class="fixed inset-0 z-[90] bg-white hidden flex-col"><div class="p-3 border-b flex items-center gap-3"><button onclick="closeInvoice()"><i class="fa-solid fa-arrow-left"></i></button><span class="font-bold" data-key="invoice">Invoice</span></div><div class="p-4 flex-1 overflow-y-auto"><input id="inv-name" placeholder="Name" class="w-full bg-gray-100 p-3 rounded-lg mb-3 text-sm font-bold"><input id="inv-phone" placeholder="Phone" type="tel" class="w-full bg-gray-100 p-3 rounded-lg mb-3 text-sm font-bold"><textarea id="inv-addr" placeholder="Address (Optional)" class="w-full bg-gray-100 p-3 rounded-lg mb-3 text-sm font-bold h-24 resize-none"></textarea><div id="invoice-preview" class="hidden flex justify-center mt-4"><img id="invoice-img" class="border shadow-lg rounded-lg w-full"></div></div><div class="p-4 border-t pb-safe flex gap-2"><button id="btn-share" class="flex-1 h-12 bg-[#0088cc] text-white rounded-full font-bold shadow-md hidden"><i class="fa-solid fa-share-nodes"></i> Share</button><button id="btn-tg" class="flex-1 h-12 bg-black text-white rounded-full font-bold shadow-md hidden"><i class="fa-brands fa-telegram"></i> Telegram</button><button id="gen-btn" onclick="doGenerate()" class="w-full h-12 bg-black text-white rounded-full font-bold" data-key="generate_invoice">Generate Invoice</button></div></div>
-
+    
+    <!-- INVOICE MODAL -->
+    <div id="invoice-modal" class="fixed inset-0 z-[90] bg-white hidden flex-col">
+        <div class="p-3 border-b flex items-center gap-3">
+            <button onclick="closeInvoice()"><i class="fa-solid fa-arrow-left"></i></button>
+            <span class="font-bold" data-key="invoice">Invoice</span>
+        </div>
+        <div class="p-4 flex-1 overflow-y-auto">
+            <input id="inv-name" placeholder="Name" class="w-full bg-gray-100 p-3 rounded-lg mb-3 text-sm font-bold">
+            <input id="inv-phone" placeholder="Phone" type="tel" class="w-full bg-gray-100 p-3 rounded-lg mb-3 text-sm font-bold">
+            <textarea id="inv-addr" placeholder="Address (Optional)" class="w-full bg-gray-100 p-3 rounded-lg mb-3 text-sm font-bold h-24 resize-none"></textarea>
+            <div id="invoice-preview" class="hidden flex justify-center mt-4">
+                <img id="invoice-img" class="border shadow-lg rounded-lg w-full">
+            </div>
+        </div>
+        <div class="p-4 border-t pb-safe flex flex-col gap-2">
+            <!-- Consolidated Share Button -->
+            <button id="btn-share" class="w-full h-12 bg-[#0088cc] text-white rounded-full font-bold shadow-md hidden flex items-center justify-center gap-2">
+                <i class="fa-brands fa-telegram text-xl"></i>
+                <span>Send to Telegram / Share</span>
+            </button>
+            
+            <button id="gen-btn" onclick="doGenerate()" class="w-full h-12 bg-black text-white rounded-full font-bold" data-key="generate_invoice">Generate Invoice</button>
+            
+            <p id="share-tip" class="text-[10px] text-gray-400 text-center hidden">Tip: Select "Telegram" from the share menu to attach image.</p>
+        </div>
+    </div>
+    
     <div id="toast" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 text-white px-5 py-3 rounded-xl z-[100] hidden flex-col items-center shadow-2xl backdrop-blur-md"><i class="fa-solid fa-circle-check text-3xl mb-2 text-brand"></i><span class="text-xs font-bold" data-key="added_to_bag">Added to Bag</span></div>
 
     <script>
+        // --- 1. CONFIG & STATE ---
         const CART_KEY = 'somphea_universal_cart';
         const EX_RATE = 4000;
         const TELEGRAM_USERNAME = "somphea_reak"; 
         
-        // Full Product List from your request
-        const PRODUCTS = [
-            { id: 1, title: "WWII អាវុធធន់ធ្ងន់", sold: "1.2k", cat: "WWII Soldier", vars: [{ id: "v1", name: "RPG", price: 0.125, img: "static/images/lego-wwii-02.jpg" }, { id: "v11", name: "កាណុង (ខ្មៅ)", price: 1.50, img: "static/images/lego-wwii-101.jpg" }, { id: "v12", name: "កាណុង M2", price: 1.25, img: "static/images/lego-wwii-102.jpg" }] },
-            { id: 2, title: "WWII កូនទាហាន", sold: "840", cat: "WWII Soldier", vars: [{ id: "a01", name: "ទាហានអាល្លឺម៉ង", price: 0.25, img: "static/images/lego-wwii-army-101.jpg" }, { id: "a11", name: "ទាហានអាមេរិក", price: 0.25, img: "static/images/lego-wwii-army-201.jpg" }] },
-            { id: 3, title: "ទាហាន អាល្លឺម៉ង", sold: "310", cat: "WWII Soldier", vars: [{ id: "German-01", name: "German 01", price: 1.25, img: "static/images/lego-wwii-german-01.jpg" }, { id: "German-02", name: "German 02", price: 1.25, img: "static/images/lego-wwii-german-02.jpg" }] },
-            { id: 9, title: "ទាហាន សូវៀត", sold: "310", cat: "WWII Soldier", vars: [{ id: "Soviet-01", name: "Soviet 01", price: 1.25, img: "static/images/lego-wwii-soviet-01.jpg" }, { id: "Soviet-02", name: "Soviet 02", price: 1.25, img: "static/images/lego-wwii-soviet-02.jpg" }] },
-            { id: 10, title: "Ninjago Season 1", sold: "310", cat: "Ninjago", vars: [{ id: "njo-01", name: "Kai", price: 1.25, img: "static/images/lucky-01.jpg" }, { id: "njo-02", name: "Zane", price: 1.25, img: "static/images/lucky-02.jpg" }] },
-            { id: 4, title: "Ninjago Pilot", sold: "310", cat: "Ninjago", vars: [{ id: "njo-11", name: "Kai Pilot", price: 1.25, img: "static/images/lucky-11.jpg" }] },
-            { id: 5, title: "Ninjago NRG", sold: "310", cat: "Ninjago", vars: [{ id: "njo-21", name: "Kai NRG", price: 1.25, img: "static/images/lucky-21.jpg" }] },
-            { id: 8, title: "LEGO Ninjago Sets", sold: "310", cat: "Ninjago", vars: [{ id: "LEGO 71808", name: "Mech 71808", price: 34.99, img: "static/images/lego-ninjago-71808.jpg" }, { id: "LEGO 30650", name: "Polybag", price: 9.99, img: "static/images/lego-ninjago-30650.jpg" }] }
-        ];
-
         const TEXTS = {
             en: { shop_name: "Toy Universe", nav_toys: "Toys", nav_jewelry: "Jewelry", nav_bag: "My Bag", express: "Express", sold: "Sold", chat: "Chat", add_cart: "Add to Cart", stock: "Stock", selected: "Selected", models: "Models", quantity: "Quantity", confirm: "Confirm", my_bag: "My Bag", checkout: "Checkout", invoice: "Invoice", generate_invoice: "Generate Invoice", added_to_bag: "Added to Bag", select_model: "Select Model" },
             kh: { shop_name: "ពិភពប្រដាប់ក្មេងលេង", nav_toys: "ប្រដាប់លេង", nav_jewelry: "គ្រឿងអលង្ការ", nav_bag: "កន្ត្រក", express: "ដឹករហ័ស", sold: "លក់បាន", chat: "ឆាត", add_cart: "ដាក់កន្ត្រក", stock: "ស្តុក", selected: "បានជ្រើសរើស", models: "ម៉ូដ", quantity: "ចំនួន", confirm: "យល់ព្រម", my_bag: "កន្ត្រកខ្ញុំ", checkout: "គិតលុយ", invoice: "វិក្កយបត្រ", generate_invoice: "បង្កើតវិក្កយបត្រ", added_to_bag: "បានដាក់ចូលកន្ត្រក", select_model: "ជ្រើសរើសម៉ូដ" }
@@ -162,43 +187,66 @@
         let galleryIndex = 0;
         let generatedBlob = null;
 
-        function init() { renderTabs(); renderGrid(PRODUCTS); updateBadges(); updateTexts(); }
+        // --- 2. INIT & RENDER ---
+        function init() { 
+            renderTabs(); 
+            renderGrid(PRODUCTS); 
+            updateBadges(); 
+            updateTexts(); 
+        }
 
-        // --- Core ---
         function toggleLang() { lang = lang === 'en' ? 'kh' : 'en'; document.getElementById('lang-btn').innerText = lang === 'en' ? 'KH' : 'EN'; updateTexts(); }
         function updateTexts() { document.querySelectorAll('[data-key]').forEach(el => { const k = el.getAttribute('data-key'); if(TEXTS[lang][k]) el.innerText = TEXTS[lang][k]; }); renderTabs(); }
-        function renderTabs() { const cats = ['All', 'WWII Soldier', 'Ninjago', 'City']; document.getElementById('category-tabs').innerHTML = cats.map(c => `<button onclick="filter('${c}')" class="px-4 py-1.5 bg-white rounded-full text-xs font-bold text-gray-600 border border-gray-100 shadow-sm whitespace-nowrap active:text-brand active:border-brand transition-colors">${c}</button>`).join(''); }
-        function filter(c) { renderGrid(c==='All'?PRODUCTS:PRODUCTS.filter(p=>p.cat===c)); }
-        function renderGrid(list) { document.getElementById('product-grid').innerHTML = list.map(p => `<div onclick="openDetail(${p.id})" class="bg-white rounded-xl overflow-hidden pb-2 shadow-sm"><img src="${p.vars[0].img}" class="w-full aspect-square object-cover bg-gray-50" onerror="this.src='https://placehold.co/400'"><div class="px-2 pt-2"><div class="text-xs text-gray-900 line-clamp-2 leading-tight h-8 mb-1 font-bold">${p.title}</div><div class="flex items-baseline gap-0.5"><span class="text-[10px] text-brand font-bold">៛</span><span class="text-base text-brand font-black">${(p.vars[0].price * EX_RATE).toLocaleString()}</span></div><div class="text-[10px] text-gray-400 mt-1">${p.sold} <span data-key="sold">${TEXTS[lang].sold}</span></div></div></div>`).join(''); }
+        function renderTabs() { const cats = ['All', 'WWII Soldier', 'Ninjago']; document.getElementById('category-tabs').innerHTML = cats.map(c => `<button onclick="filter('${c}')" class="px-4 py-1.5 bg-white rounded-full text-xs font-bold text-gray-600 border border-gray-100 shadow-sm whitespace-nowrap active:text-brand active:border-brand transition-colors">${c}</button>`).join(''); }
+        function filter(c) { renderGrid(c==='All'?PRODUCTS:PRODUCTS.filter(p=>p.category===c)); }
+        
+        function renderGrid(list) { 
+            document.getElementById('product-grid').innerHTML = list.map(p => {
+                if(!p.variants || p.variants.length === 0) return '';
+                const img = p.thumbnail || p.variants[0].image || 'https://placehold.co/400';
+                return `
+                <div onclick="openDetail(${p.id})" class="bg-white rounded-xl overflow-hidden pb-2 shadow-sm">
+                    <img src="${img}" class="w-full aspect-square object-cover bg-gray-50" onerror="this.src='https://placehold.co/400'">
+                    <div class="px-2 pt-2">
+                        <div class="text-xs text-gray-900 line-clamp-2 leading-tight h-8 mb-1 font-bold">${p.title}</div>
+                        <div class="flex items-baseline gap-0.5">
+                            <span class="text-[10px] text-brand font-bold">៛</span>
+                            <span class="text-base text-brand font-black">${(p.variants[0].price * EX_RATE).toLocaleString()}</span>
+                        </div>
+                        <div class="text-[10px] text-gray-400 mt-1">${p.sold} <span data-key="sold">${TEXTS[lang].sold}</span></div>
+                    </div>
+                </div>`;
+            }).join(''); 
+        }
 
-        // --- Detail View Logic ---
+        // --- 3. DETAIL VIEW ---
         function openDetail(id) {
             curProd = PRODUCTS.find(p=>p.id===id);
-            curVar = curProd.vars[0];
+            curVar = curProd.variants[0];
             updateDetailUI();
             document.getElementById('detail-view').classList.remove('hidden'); document.getElementById('detail-view').classList.add('flex');
         }
         function updateDetailUI() {
-            document.getElementById('dt-img').src = curVar.img;
-            document.getElementById('dt-price').innerText = (curProd.vars[0].price * EX_RATE).toLocaleString(); // Show base price
+            document.getElementById('dt-img').src = curVar.image;
+            document.getElementById('dt-price').innerText = (curProd.variants.find(v=>v.id===curVar.id).price * EX_RATE).toLocaleString(); 
             document.getElementById('dt-title').innerText = curProd.title;
             document.getElementById('dt-sold').innerText = curProd.sold;
-            document.getElementById('dt-vars').innerHTML = curProd.vars.map(v => 
-                `<img src="${v.img}" onclick="selectDetailVar('${v.id}')" class="w-full aspect-square rounded-md object-cover border-2 ${curVar.id===v.id ? 'border-brand' : 'border-gray-100'} bg-gray-50 transition-all active:scale-95" onerror="this.src='https://placehold.co/100'">`
+            document.getElementById('dt-vars').innerHTML = curProd.variants.map(v => 
+                `<img src="${v.image}" onclick="selectDetailVar('${v.id}')" class="w-full aspect-square rounded-md object-cover border-2 ${curVar.id===v.id ? 'border-brand' : 'border-gray-100'} bg-gray-50 transition-all active:scale-95 cursor-pointer" onerror="this.src='https://placehold.co/100'">`
             ).join('');
         }
-        function selectDetailVar(id) { curVar = curProd.vars.find(v => v.id === id); updateDetailUI(); }
+        function selectDetailVar(id) { curVar = curProd.variants.find(v => v.id === id); updateDetailUI(); }
         function closeDetail() { document.getElementById('detail-view').classList.add('hidden'); document.getElementById('detail-view').classList.remove('flex'); }
 
-        // --- Gallery Logic ---
+        // --- 4. GALLERY ---
         function openGallery() {
             const scroller = document.getElementById('gallery-scroll');
             scroller.onscroll = null;
-            scroller.innerHTML = curProd.vars.map(v => `<div class="gallery-item"><img src="${v.img}" onerror="this.src='https://placehold.co/800'"></div>`).join('');
-            document.getElementById('gallery-total').innerText = curProd.vars.length;
+            scroller.innerHTML = curProd.variants.map(v => `<div class="gallery-item"><img src="${v.image}" onerror="this.src='https://placehold.co/800'"></div>`).join('');
+            document.getElementById('gallery-total').innerText = curProd.variants.length;
             document.getElementById('gallery-view').classList.remove('hidden');
             document.getElementById('gallery-view').classList.add('flex');
-            const idx = curProd.vars.findIndex(v => v.id === curVar.id);
+            const idx = curProd.variants.findIndex(v => v.id === curVar.id);
             scroller.scrollLeft = idx * window.innerWidth;
             galleryIndex = idx;
             document.getElementById('gallery-idx').innerText = idx + 1;
@@ -212,26 +260,26 @@
             galleryIndex = idx;
         }
         function closeGallery() {
-            if(curProd.vars[galleryIndex]) { selectDetailVar(curProd.vars[galleryIndex].id); }
+            if(curProd.variants[galleryIndex]) { selectDetailVar(curProd.variants[galleryIndex].id); }
             document.getElementById('gallery-view').classList.add('opacity-0');
             setTimeout(() => { document.getElementById('gallery-view').classList.add('hidden'); document.getElementById('gallery-view').classList.remove('flex'); }, 300);
         }
 
-        // --- SKU/Add to Cart Logic ---
+        // --- 5. SKU & CART LOGIC ---
         function openSku() {
             curQty = 1; renderSkuInfo();
-            document.getElementById('sku-list').innerHTML = curProd.vars.map(v => `<button onclick="selVar('${v.id}')" id="btn-${v.id}" class="px-3 py-1.5 rounded-lg text-xs font-bold border bg-gray-50 border-gray-100 text-gray-600">${v.name}</button>`).join('');
+            document.getElementById('sku-list').innerHTML = curProd.variants.map(v => `<button onclick="selVar('${v.id}')" id="btn-${v.id}" class="px-3 py-1.5 rounded-lg text-xs font-bold border bg-gray-50 border-gray-100 text-gray-600">${v.name}</button>`).join('');
             selVar(curVar.id);
             document.getElementById('sku-backdrop').classList.remove('hidden'); requestAnimationFrame(()=>{ document.getElementById('sku-backdrop').classList.remove('opacity-0'); document.getElementById('sku-drawer').classList.add('popup-active'); });
         }
         function closeSku() { document.getElementById('sku-drawer').classList.remove('popup-active'); document.getElementById('sku-backdrop').classList.add('opacity-0'); setTimeout(()=> document.getElementById('sku-backdrop').classList.add('hidden'), 300); }
         function selVar(id) {
-            curVar = curProd.vars.find(v=>v.id===id);
+            curVar = curProd.variants.find(v=>v.id===id);
             document.querySelectorAll('#sku-list button').forEach(b => b.className = "px-3 py-1.5 rounded-lg text-xs font-bold border bg-gray-50 border-gray-100 text-gray-600");
             document.getElementById(`btn-${id}`).className = "px-3 py-1.5 rounded-lg text-xs font-bold border bg-green-50 border-brand text-brand";
             renderSkuInfo(); updateDetailUI();
         }
-        function renderSkuInfo() { document.getElementById('sku-img').src = curVar.img; document.getElementById('sku-price').innerText = (curProd.vars.find(v=>v.id===curVar.id).price * EX_RATE).toLocaleString(); document.getElementById('sku-text').innerText = curVar.name; document.getElementById('sku-qty').innerText = curQty; }
+        function renderSkuInfo() { document.getElementById('sku-img').src = curVar.image; document.getElementById('sku-price').innerText = (curProd.variants.find(v=>v.id===curVar.id).price * EX_RATE).toLocaleString(); document.getElementById('sku-text').innerText = curVar.name; document.getElementById('sku-qty').innerText = curQty; }
         function updQty(d) { curQty = Math.max(1, curQty+d); document.getElementById('sku-qty').innerText = curQty; }
 
         function confirmSku() {
@@ -242,14 +290,25 @@
             requestAnimationFrame(()=> { flyer.style.top = (window.innerHeight - 50) + 'px'; flyer.style.left = (window.innerWidth/2 + 20) + 'px'; flyer.style.transform = 'scale(0.1)'; flyer.style.opacity = '0.5'; });
             setTimeout(()=> {
                 flyer.remove();
+                // Map new structure to existing cart structure
+                // cart item: { pid, title, vid, vname, price, img, qty, chk }
                 const ex = cart.find(i => i.vid === curVar.id);
-                if(ex) ex.qty += curQty; else cart.push({pid: curProd.id, title: curProd.title, vid: curVar.id, vname: curVar.name, price: curVar.price, img: curVar.img, qty: curQty, chk: true});
+                if(ex) ex.qty += curQty; else cart.push({
+                    pid: curProd.id, 
+                    title: curProd.title, 
+                    vid: curVar.id, 
+                    vname: curVar.name, 
+                    price: curVar.price, 
+                    img: curVar.image, 
+                    qty: curQty, 
+                    chk: true
+                });
                 localStorage.setItem(CART_KEY, JSON.stringify(cart)); updateBadges(); closeSku();
                 const t = document.getElementById('toast'); t.classList.remove('hidden'); t.classList.add('flex'); setTimeout(()=> { t.classList.add('hidden'); t.classList.remove('flex'); }, 1500);
             }, 600);
         }
 
-        // --- Cart/Invoice ---
+        // --- 6. CART & INVOICE ---
         function updateBadges() { const c = cart.reduce((a,b)=>a+b.qty,0); ['nav-cart-badge', 'detail-cart-badge'].forEach(id => { const el = document.getElementById(id); el.innerText = c; el.classList.toggle('hidden', c===0); }); document.getElementById('cart-count').innerText = c; }
         function openCart() { renderCartList(); document.getElementById('cart-bg').classList.remove('hidden'); setTimeout(()=> document.getElementById('cart-drawer').classList.remove('translate-x-full'), 10); }
         function closeCart() { document.getElementById('cart-drawer').classList.add('translate-x-full'); setTimeout(()=> document.getElementById('cart-bg').classList.add('hidden'), 300); }
@@ -266,9 +325,9 @@
             closeCart(); 
             document.getElementById('invoice-modal').classList.remove('hidden'); 
             document.getElementById('invoice-modal').classList.add('flex'); 
-            // Reset state
+            
             document.getElementById('btn-share').classList.add('hidden');
-            document.getElementById('btn-tg').classList.add('hidden');
+            document.getElementById('share-tip').classList.add('hidden');
             document.getElementById('gen-btn').style.display = 'block';
             document.getElementById('invoice-preview').classList.add('hidden');
         }
@@ -280,68 +339,252 @@
         async function doGenerate() {
             const n=document.getElementById('inv-name').value, p=document.getElementById('inv-phone').value, a=document.getElementById('inv-addr').value; if(!n) return alert('Name required');
             
-            // 1. Create a hidden container off-screen
+            // 1. Hidden Invoice Element - FIXED positioning
             const div = document.createElement('div');
-            div.style.position = 'absolute'; div.style.left = '-9999px'; div.style.top = '0'; div.style.width = '400px'; 
-            div.className = 'screenshot-frame'; 
+            div.className = 'screenshot-frame';
+            div.style.position = 'absolute'; div.style.left = '-9999px'; div.style.top = '0';
             
-            const items = cart.filter(i => i.chk); const total = items.reduce((a,b)=> a+(b.price*b.qty), 0);
-            const ts = new Date().getTime(); // Cache buster
+            const items = cart.filter(i => i.chk); const total = items.reduce((a,b)=> a+((b.price||b.p)*b.qty), 0);
+            const ts = new Date().getTime(); 
 
-            div.innerHTML = `<div class="text-center font-black text-2xl text-green-500 mb-4">SOMPHEA REAK</div><div class="text-xs mb-4"><div><b>To:</b> ${n}</div><div><b>Tel:</b> ${p}</div><div><b>Addr:</b> ${a}</div></div><table class="w-full text-xs border-collapse"><thead><tr class="border-b"><th class="text-left py-2">Item</th><th class="text-right py-2">Price</th></tr></thead><tbody>${items.map(i=>`<tr class="border-b border-dashed border-gray-200"><td class="py-2 flex gap-2"><img src="${i.img}?t=${ts}" crossorigin="anonymous" class="w-10 h-10 rounded object-cover border border-gray-200" onerror="this.src='https://placehold.co/50'"><div><div class="font-bold text-gray-800 line-clamp-1 w-32">${i.title}</div><div class="text-gray-500 text-[10px]">${i.vname} x${i.qty}</div></div></td><td class="text-right align-top font-bold pt-2 text-gray-700">$${(i.price*i.qty).toFixed(2)}</td></tr>`).join('')}</tbody><tfoot><tr class="border-t"><td class="pt-3 font-bold text-right pr-2">Total Riel</td><td class="pt-3 text-right font-black text-lg text-green-500">៛${(total*EX_RATE).toLocaleString()}</td></tr></tfoot></table><div class="text-[9px] text-gray-400 text-center mt-6">Thank you for shopping!</div>`;
+            div.innerHTML = `<div class="text-center font-black text-2xl text-green-500 mb-4">SOMPHEA REAK</div><div class="text-xs mb-4"><div><b>To:</b> ${n}</div><div><b>Tel:</b> ${p}</div><div><b>Addr:</b> ${a}</div></div><table class="w-full text-xs border-collapse"><thead><tr class="border-b"><th class="text-left py-2">Item</th><th class="text-right py-2">Price</th></tr></thead><tbody>${items.map(i=>`<tr class="border-b border-dashed border-gray-200"><td class="py-2 flex gap-2"><img src="${i.img}?t=${ts}" crossorigin="anonymous" class="w-10 h-10 rounded object-cover border border-gray-200" onerror="this.src='https://placehold.co/50'"><div><div class="font-bold text-gray-800 line-clamp-1 w-32">${i.title}</div><div class="text-gray-500 text-[10px]">${i.vname} x${i.qty}</div></div></td><td class="text-right align-top font-bold pt-2 text-gray-700">$${((i.price||i.p)*i.qty).toFixed(2)}</td></tr>`).join('')}</tbody><tfoot><tr class="border-t"><td class="pt-3 font-bold text-right pr-2">Total Riel</td><td class="pt-3 text-right font-black text-lg text-green-500">៛${(total*EX_RATE).toLocaleString()}</td></tr></tfoot></table><div class="text-[9px] text-gray-400 text-center mt-6">Thank you for shopping!</div>`;
             document.body.appendChild(div); 
 
-            // Allow images to load
-            await new Promise(r => setTimeout(r, 500));
+            await Promise.all(Array.from(div.querySelectorAll('img')).map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => { img.onload = img.onerror = resolve; });
+            }));
+            
+            await new Promise(r => setTimeout(r, 100));
 
             try {
-                // BUG FIX: use scrollHeight for windowHeight to capture full long receipt
+                // FIXED: Use scrollHeight to capture full receipt length
                 const cvs = await html2canvas(div, {
                     scale: 2, 
                     useCORS: true, 
                     allowTaint: true,
-                    windowHeight: div.scrollHeight + 100, // Important fix
+                    scrollY: 0, // Force capture from top
+                    windowHeight: div.scrollHeight + 100,
                     height: div.scrollHeight + 50
                 }); 
-                
                 const url = cvs.toDataURL();
                 document.getElementById('invoice-img').src = url; 
                 document.getElementById('invoice-preview').classList.remove('hidden'); 
                 
-                // Switch Buttons
                 document.getElementById('gen-btn').style.display = 'none';
                 document.getElementById('btn-share').classList.remove('hidden');
-                document.getElementById('btn-tg').classList.remove('hidden');
+                document.getElementById('share-tip').classList.remove('hidden');
+                document.getElementById('btn-share').style.display = 'flex';
 
-                // Store Blob
                 cvs.toBlob(blob => { generatedBlob = blob; });
 
-                // Telegram Logic
-                document.getElementById('btn-tg').onclick = () => {
-                     let msg = `🧾 *INVOICE ATTACHED*\n👤 ${n}\n📞 ${p}\n`;
-                     if(a) msg += `📍 ${a}\n`;
-                     msg += `\n*Please see the attached image for details.*`;
-                     window.open(`https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(msg)}`, '_blank');
-                };
-                
-                // Share Logic
                 document.getElementById('btn-share').onclick = async () => {
                     if (!generatedBlob) return alert('Image not ready');
                     const file = new File([generatedBlob], "invoice.png", { type: "image/png" });
+                    
                     if (navigator.share && navigator.canShare({ files: [file] })) {
                         try {
-                            await navigator.share({ files: [file], title: 'Invoice', text: `Invoice for ${n}` });
-                        } catch (err) { console.log('Share failed', err); }
+                            // This opens the system drawer. User must pick Telegram here.
+                            await navigator.share({
+                                files: [file],
+                                title: 'Invoice',
+                                text: `Invoice for ${n}`
+                            });
+                        } catch (err) { console.log('Share closed/failed', err); }
                     } else {
-                        alert("Sharing not supported. Long-press image to save.");
+                        // Fallback for PC/Browsers without share API
+                        alert("To send to Telegram: \n1. Long-press the image to Save \n2. Open Telegram and send the photo.");
                     }
                 };
-            } catch (e) {
-                alert("Error generating image"); console.error(e);
-            } finally {
-                div.remove();
-            }
+            } catch (e) { alert("Error generating image"); console.error(e); } finally { div.remove(); }
         }
+
+        // ===========================================
+        // ============  PRODUCT DATA  ===============
+        // ===========================================
+        const PRODUCTS = [
+            {
+                id: 1, title: "WWII អាវុធធន់ធ្ងន់", sold: "1.2k", category: "WWII Soldier",
+                thumbnail: "static/images/lego-wwii-01.jpg",
+                variants: [
+                    { id: "v1", name: "RPG", price: 0.125, image: "static/images/lego-wwii-02.jpg" },
+                    { id: "v11", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.50, image: "static/images/lego-wwii-101.jpg" },
+                    { id: "v12", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-102.jpg" },
+                    { id: "v13", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 0.875, image: "static/images/lego-wwii-103.jpg" },
+                    { id: "v14", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 1.00, image: "static/images/lego-wwii-104.jpg" },
+                    { id: "v15", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-105.jpg" },
+                    { id: "v21", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.50, image: "static/images/lego-wwii-201.jpg" },
+                    { id: "v22", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-202.jpg" },
+                    { id: "v23", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 0.875, image: "static/images/lego-wwii-203.jpg" },
+                    { id: "v24", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 1.00, image: "static/images/lego-wwii-204.jpg" },
+                    { id: "v25", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-205.jpg" },
+                    { id: "v31", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.50, image: "static/images/lego-wwii-301.jpg" },
+                    { id: "v32", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-302.jpg" },
+                    { id: "v33", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 0.875, image: "static/images/lego-wwii-303.jpg" },
+                    { id: "v34", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 1.00, image: "static/images/lego-wwii-304.jpg" },
+                    { id: "v35", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-305.jpg" }
+               ]
+            },
+            {
+                id: 2, title: "WWII កូនទាហាន", sold: "840", category: "WWII Soldier",
+                thumbnail: "static/images/lego-wwii-army-thumbnail.jpg",
+                variants: [
+                    { id: "a01", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-101.jpg" },
+                    { id: "a02", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-102.jpg" },
+                    { id: "a03", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-103.jpg" },
+                    { id: "a04", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-104.jpg" },
+                    { id: "a05", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-105.jpg" },
+                    { id: "a06", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-106.jpg" },
+                    { id: "a11", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-201.jpg" },
+                    { id: "a12", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-202.jpg" },
+                    { id: "a13", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-203.jpg" },
+                    { id: "a14", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-204.jpg" },
+                    { id: "a15", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-205.jpg" },
+                    { id: "a21", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-301.jpg" },
+                    { id: "a22", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-302.jpg" },
+                    { id: "a23", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-303.jpg" },
+                    { id: "a24", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-304.jpg" },
+                    { id: "a25", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-305.jpg" },
+                    { id: "a26", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-306.jpg" }
+                ]
+            },
+            {
+                id: 3, title: "ទាហាន អាល្លឺម៉ង", sold: "310", category: "WWII Soldier",
+                thumbnail: "static/images/lego-wwii-german-thumbnail.jpg",
+                variants: [
+                    { id: "German-01", name: "Kai", price: 1.25, image: "static/images/lego-wwii-german-01.jpg" },
+                    { id: "German-02", name: "Zane", price: 1.25, image: "static/images/lego-wwii-german-02.jpg" },
+                    { id: "German-03", name: "Jay", price: 1.25, image: "static/images/lego-wwii-german-03.jpg" },
+                    { id: "German-04", name: "Cole", price: 1.25, image: "static/images/lego-wwii-german-04.jpg" },
+                    { id: "German-05", name: "Lloyd", price: 1.25, image: "static/images/lego-wwii-german-05.jpg" },
+                    { id: "German-06", name: "Nya", price: 1.25, image: "static/images/lego-wwii-german-06.jpg" }
+                ]
+                
+            },
+            {
+                id: 9, title: "ទាហាន សូវៀត", sold: "310", category: "WWII Soldier",
+                thumbnail: "static/images/lego-wwii-soviet-thumbnail.jpg",
+                variants: [
+                    { id: "Soviet-01", name: "Kai", price: 1.25, image: "static/images/lego-wwii-soviet-01.jpg" },
+                    { id: "Soviet-02", name: "Zane", price: 1.25, image: "static/images/lego-wwii-soviet-02.jpg" },
+                    { id: "Soviet-03", name: "Jay", price: 1.25, image: "static/images/lego-wwii-soviet-03.jpg" },
+                    { id: "Soviet-04", name: "Cole", price: 1.25, image: "static/images/lego-wwii-soviet-04.jpg" },
+                    { id: "Soviet-05", name: "Lloyd", price: 1.25, image: "static/images/lego-wwii-soviet-05.jpg" },
+                    { id: "Soviet-06", name: "Nya", price: 1.25, image: "static/images/lego-wwii-soviet-06.jpg" }
+                ]
+            },
+            {
+                id: 10, title: "Ninjago Season 1", sold: "310", category: "Ninjago",
+                thumbnail: "static/images/lego-ninjago-season1-dx-thumbnail.jpg",
+                variants: [
+                    { id: "njo-01", name: "Kai", price: 1.25, image: "static/images/lucky-01.jpg" },
+                    { id: "njo-02", name: "Zane", price: 1.25, image: "static/images/lucky-02.jpg" },
+                    { id: "njo-03", name: "Jay", price: 1.25, image: "static/images/lucky-03.jpg" },
+                    { id: "njo-04", name: "Cole", price: 1.25, image: "static/images/lucky-04.jpg" },
+                    { id: "njo-05", name: "Lloyd", price: 1.25, image: "static/images/lucky-05.jpg" },
+                    { id: "njo-06", name: "Nya", price: 1.25, image: "static/images/lucky-06.jpg" }
+                ]
+
+            },
+            {
+                id: 4, title: "Ninjago Season 1", sold: "310", category: "Ninjago",
+                thumbnail: "static/images/lego-ninjago-season1-pilot-thumbnail.jpg",
+                variants: [
+                    { id: "njo-11", name: "Kai", price: 1.25, image: "static/images/lucky-11.jpg" },
+                    { id: "njo-12", name: "Zane", price: 1.25, image: "static/images/lucky-12.jpg" },
+                    { id: "njo-13", name: "Jay", price: 1.25, image: "static/images/lucky-13.jpg" },
+                    { id: "njo-14", name: "Cole", price: 1.25, image: "static/images/lucky-14.jpg" },
+                    { id: "njo-15", name: "Lloyd", price: 1.25, image: "static/images/lucky-15.jpg" },
+                    { id: "njo-16", name: "Nya", price: 1.25, image: "static/images/lucky-16.jpg" }
+                ]
+            },
+            {
+                id: 5, title: "Ninjago Season 1", sold: "310", category: "Ninjago",
+                thumbnail: "static/images/lego-ninjago-season1-nrg-thumbnail.jpg",
+                variants: [
+                    { id: "njo-21", name: "Kai", price: 1.25, image: "static/images/lucky-21.jpg" },
+                    { id: "njo-22", name: "Zane", price: 1.25, image: "static/images/lucky-22.jpg" },
+                    { id: "njo-23", name: "Jay", price: 1.25, image: "static/images/lucky-23.jpg" },
+                    { id: "njo-24", name: "Cole", price: 1.25, image: "static/images/lucky-24.jpg" },
+                    { id: "njo-25", name: "Lloyd", price: 1.25, image: "static/images/lucky-25.jpg" },
+                    { id: "njo-26", name: "Nya", price: 1.25, image: "static/images/lucky-26.jpg" }
+                ]
+            },
+            {
+                id: 6, title: "Ninjago Season 1", sold: "310", category: "Ninjago",
+                thumbnail: "static/images/lego-ninjago-season1-zx-thumbnail.jpg",
+                variants: [
+                    { id: "njo-31", name: "Kai", price: 1.25, image: "static/images/lucky-31.jpg" },
+                    { id: "njo-32", name: "Zane", price: 1.25, image: "static/images/lucky-32.jpg" },
+                    { id: "njo-33", name: "Jay", price: 1.25, image: "static/images/lucky-33.jpg" },
+                    { id: "njo-34", name: "Cole", price: 1.25, image: "static/images/lucky-34.jpg" },
+                    { id: "njo-35", name: "Lloyd", price: 1.25, image: "static/images/lucky-35.jpg" },
+                    { id: "njo-36", name: "Nya", price: 1.25, image: "static/images/lucky-36.jpg" }
+                ]
+            },
+            {
+                id: 7, title: "Ninjago", sold: "310", category: "Ninjago",
+                thumbnail: "static/images/lego-ninjago-8000-01.jpg",
+                variants: [
+                    { id: "njo-A", name: "Ninjago A", price: 2.00, image: "static/images/lego-ninjago-8000-01.jpg" },
+                    { id: "njo-B", name: "Ninjago B", price: 2.00, image: "static/images/lego-ninjago-8000-02.jpg" },
+                    { id: "njo-C", name: "Ninjago C", price: 2.00, image: "static/images/lego-ninjago-8000-03.jpg" },
+                    { id: "njo-D", name: "Ninjago D", price: 2.00, image: "static/images/lego-ninjago-8000-04.jpg" },
+                    { id: "njo-E", name: "Ninjago E", price: 2.00, image: "static/images/lego-ninjago-8000-05.jpg" },
+                    { id: "njo-F", name: "Ninjago F", price: 2.00, image: "static/images/lego-ninjago-8000-06.jpg" }
+                ]
+            },
+            {
+                id: 8, title: "LEGO Ninjago", sold: "310", category: "Ninjago",
+                thumbnail: "static/images/lego-ninjago-71808.jpg",
+                variants: [
+                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
+                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
+                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
+                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
+                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
+                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
+                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
+                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
+                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
+                ]
+            },
+            {
+                id: 11, title: "LEGO Ninjago", sold: "310", category: "Ninjago",
+                thumbnail: "static/images/lego-ninjago-71808.jpg",
+                variants: [
+                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
+                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
+                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
+                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
+                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
+                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
+                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
+                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
+                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
+                ]
+            },
+            {
+                id: 12, title: "LEGO Ninjago", sold: "310", category: "Ninjago",
+                thumbnail: "static/images/lego-ninjago-71808.jpg",
+                variants: [
+                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
+                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
+                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
+                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
+                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
+                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
+                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
+                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
+                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
+                ]
+
+            
+                        
+                },
+        ];
+
+        // START APP
         init();
     </script>
 </body>
