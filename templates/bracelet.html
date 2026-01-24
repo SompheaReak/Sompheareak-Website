@@ -19,7 +19,7 @@
         html, body {
             height: 100%;
             overflow: hidden; 
-            touch-action: pan-x pan-y; 
+            touch-action: pan-x pan-y; /* Prevent pinch zoom but allow scrolling */
         }
 
         body { 
@@ -29,6 +29,11 @@
             padding-bottom: 0;
             overflow-y: auto; 
             overscroll-behavior-y: none;
+        }
+
+        /* IOS ZOOM FIX: Inputs must be 16px to prevent auto-zoom on focus */
+        input, textarea, select {
+            font-size: 16px !important;
         }
         
         .text-brand { color: var(--brand-green); }
@@ -45,6 +50,22 @@
         
         .drawer-panel { transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
         .drawer-panel.active { transform: translateY(0); }
+
+        /* Full Page Transitions (TaoBao Style Slide) */
+        .page-view {
+            position: fixed;
+            inset: 0;
+            background: #f7f7f7;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1); /* Authentic iOS/App ease */
+            will-change: transform;
+            z-index: 60;
+            display: flex; /* Changed from hidden logic to transform logic */
+            flex-direction: column;
+        }
+        .page-view.active {
+            transform: translateX(0);
+        }
         
         /* Screenshot Frame */
         .screenshot-frame { background: white; width: 400px; padding: 20px; position: fixed; top: 0; left: -2000px; z-index: 9999; visibility: visible; pointer-events: none; }
@@ -59,23 +80,10 @@
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
         
         /* TaoBao Selection Styles */
-        .tb-option {
-            transition: all 0.2s;
-            border: 1px solid transparent;
-        }
-        .tb-option.selected {
-            border-color: var(--brand-green);
-            background-color: #f0fdf4; /* Green-50 */
-            color: #1a1a1a;
-        }
-        .tb-option.selected .tb-name {
-            color: var(--brand-green);
-        }
-        .tb-option:not(.selected) {
-            border-color: #f3f4f6;
-            background-color: #f9fafb;
-            color: #4b5563;
-        }
+        .tb-option { transition: all 0.2s; border: 1px solid transparent; }
+        .tb-option.selected { border-color: var(--brand-green); background-color: #f0fdf4; color: #1a1a1a; }
+        .tb-option.selected .tb-name { color: var(--brand-green); }
+        .tb-option:not(.selected) { border-color: #f3f4f6; background-color: #f9fafb; color: #4b5563; }
     </style>
 </head>
 <body class="bg-[#f7f7f7]">
@@ -94,7 +102,8 @@
             </a>
             <div class="flex-1 h-10 bg-white/95 rounded-full flex items-center px-4 gap-2 shadow-inner border border-green-400/30">
                 <i class="fa-solid fa-magnifying-glass text-gray-400 text-sm"></i>
-                <input type="text" placeholder="Search..." class="flex-1 bg-transparent text-sm outline-none text-gray-700 placeholder-gray-400 font-medium" oninput="searchProduct(this.value)">
+                <!-- Font size class removed, handled by CSS !important to 16px -->
+                <input type="text" placeholder="Search..." class="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 font-medium h-full" oninput="searchProduct(this.value)">
             </div>
             <div class="flex items-center gap-3 text-white">
                 <button onclick="toggleLang()" class="font-bold text-xs border border-white/40 px-2 py-1 rounded-lg backdrop-blur-md active:bg-white/10"><span id="lang-btn">KH</span></button>
@@ -133,8 +142,8 @@
         </button>
     </div>
 
-    <!-- 4. DETAIL VIEW -->
-    <div id="detail-view" class="fixed inset-0 z-[60] bg-[#f7f7f7] hidden flex-col">
+    <!-- 4. DETAIL VIEW (Now using Slide Animation) -->
+    <div id="detail-view" class="page-view">
         <div class="absolute top-0 left-0 right-0 z-20 flex justify-between p-4 pointer-events-none transition-all duration-300" id="dt-header">
             <button onclick="closeDetail()" class="pointer-events-auto w-10 h-10 bg-white/80 backdrop-blur-md rounded-full text-gray-800 flex items-center justify-center active:scale-90 shadow-lg border border-white/50"><i class="fa-solid fa-chevron-left"></i></button>
             <div class="flex gap-2">
@@ -353,16 +362,56 @@
             const gallery = document.getElementById('dt-gallery'); 
             gallery.innerHTML = curProd.variants.map((v, idx) => `<div onclick="openFullScreenGallery(${idx})" class="flex-shrink-0 w-full h-full snap-center bg-white flex items-center justify-center relative"><img src="${v.image}" class="max-w-full max-h-full object-contain p-8" onerror="this.src='https://placehold.co/400?text=No+Image'"></div>`).join(''); 
             updateDetailUI(); 
-            document.getElementById('detail-view').classList.remove('hidden'); 
-            document.getElementById('detail-view').classList.add('flex'); 
-            document.getElementById('detail-view').scrollTop = 0; 
+            
+            // Slide Animation Logic
+            const view = document.getElementById('detail-view');
+            // Remove any hidden state (though we use transform now, hidden might interfere if used elsewhere)
+            requestAnimationFrame(() => {
+                view.classList.add('active'); 
+            });
+            view.scrollTop = 0; 
         }
         
-        function closeDetail() { document.getElementById('detail-view').classList.add('hidden'); document.getElementById('detail-view').classList.remove('flex'); }
+        function closeDetail() { 
+            document.getElementById('detail-view').classList.remove('active'); 
+        }
 
         function handleDetailScroll(el) { const h = document.getElementById('dt-header'); if(el.scrollTop > 50) { h.querySelector('button').classList.replace('bg-white/80','bg-white'); } else { h.querySelector('button').classList.replace('bg-white','bg-white/80'); } }
-        function onGalleryScroll(e) { const el = e.target; const idx = Math.round(el.scrollLeft / el.offsetWidth); if(curProd.variants[idx] && curProd.variants[idx].id !== curVar.id) { curVar = curProd.variants[idx]; updateDetailUI(false); } }
-        function updateDetailUI(scrollGallery = true) { document.getElementById('dt-price').innerText = (curProd.variants.find(v=>v.id===curVar.id).price * EX_RATE).toLocaleString(); document.getElementById('dt-price-orig').innerText = (curProd.variants.find(v=>v.id===curVar.id).price * EX_RATE * 1.2).toLocaleString(); document.getElementById('dt-title').innerText = curProd.title; document.getElementById('dt-sold').innerText = curProd.sold; document.getElementById('dt-sel-preview').innerText = curVar.name; const idx = curProd.variants.findIndex(v=>v.id===curVar.id); document.getElementById('gallery-counter').innerText = `${idx + 1}/${curProd.variants.length}`; if(scrollGallery) { const gallery = document.getElementById('dt-gallery'); gallery.scrollTo({ left: idx * gallery.offsetWidth, behavior: 'smooth' }); } }
+        
+        // --- SYNCHRONIZED SCROLL LOGIC ---
+        function onGalleryScroll(e) { 
+            const el = e.target; 
+            const idx = Math.round(el.scrollLeft / el.offsetWidth); 
+            if(curProd.variants[idx] && curProd.variants[idx].id !== curVar.id) { 
+                curVar = curProd.variants[idx]; 
+                updateDetailUI(false); 
+            } 
+        }
+
+        function updateDetailUI(scrollGallery = true) { 
+            document.getElementById('dt-price').innerText = (curProd.variants.find(v=>v.id===curVar.id).price * EX_RATE).toLocaleString(); 
+            document.getElementById('dt-price-orig').innerText = (curProd.variants.find(v=>v.id===curVar.id).price * EX_RATE * 1.2).toLocaleString(); 
+            document.getElementById('dt-title').innerText = curProd.title; 
+            document.getElementById('dt-sold').innerText = curProd.sold; 
+            document.getElementById('dt-sel-preview').innerText = curVar.name; 
+            
+            const idx = curProd.variants.findIndex(v=>v.id===curVar.id); 
+            document.getElementById('gallery-counter').innerText = `${idx + 1}/${curProd.variants.length}`; 
+            
+            // Sync the 100x100 SKU image if drawer is active
+            if(document.getElementById('sku-drawer').classList.contains('active')) {
+                document.getElementById('sku-img').src = curVar.image; 
+                document.getElementById('sku-price').innerText = (curVar.price * EX_RATE).toLocaleString(); 
+                document.getElementById('sku-text').innerText = curVar.name; 
+                document.querySelectorAll('.tb-option').forEach(el => el.classList.remove('selected'));
+                if(document.getElementById(`tb-btn-${curVar.id}`)) document.getElementById(`tb-btn-${curVar.id}`).classList.add('selected');
+            }
+
+            if(scrollGallery) { 
+                const gallery = document.getElementById('dt-gallery'); 
+                gallery.scrollTo({ left: idx * gallery.offsetWidth, behavior: 'smooth' }); 
+            } 
+        }
 
         function openFullScreenGallery(startIdx) { const fs = document.getElementById('fs-gallery'); const scroller = document.getElementById('fs-scroll'); scroller.innerHTML = curProd.variants.map(v => `<div class="flex-shrink-0 w-full h-full snap-center flex items-center justify-center p-2"><img src="${v.image}" class="max-w-full max-h-full object-contain" onerror="this.src='https://placehold.co/800'"></div>`).join(''); fs.classList.remove('hidden'); fs.classList.add('flex'); requestAnimationFrame(() => { fs.classList.remove('opacity-0'); scroller.scrollTo({left: startIdx * scroller.offsetWidth, behavior: 'auto'}); }); updateFsUI(startIdx); }
         function closeFullScreenGallery() { document.getElementById('fs-gallery').classList.add('opacity-0'); setTimeout(() => { document.getElementById('fs-gallery').classList.add('hidden'); document.getElementById('fs-gallery').classList.remove('flex'); }, 300); }
@@ -380,7 +429,7 @@
                 </button>
             `).join('');
             
-            selVar(curVar.id); 
+            selVar(curVar.id, false); 
             document.getElementById('sku-backdrop').classList.add('active'); 
             document.getElementById('sku-drawer').classList.add('active'); 
         }
@@ -390,20 +439,17 @@
             document.getElementById('sku-backdrop').classList.remove('active'); 
         }
 
-        function selVar(id) { 
+        function selVar(id, forceScroll = true) { 
             curVar = curProd.variants.find(v=>v.id===id); 
             
-            // Remove 'selected' class from all, add to current
             document.querySelectorAll('.tb-option').forEach(el => el.classList.remove('selected'));
             document.getElementById(`tb-btn-${id}`).classList.add('selected');
 
-            // Update Header Info
             document.getElementById('sku-img').src = curVar.image; 
             document.getElementById('sku-price').innerText = (curVar.price * EX_RATE).toLocaleString(); 
             document.getElementById('sku-text').innerText = curVar.name; 
             
-            // Sync with main detail view
-            updateDetailUI(false);
+            updateDetailUI(forceScroll);
         }
 
         function updQty(d) { curQty = Math.max(1, curQty+d); document.getElementById('sku-qty').innerText = curQty; }
@@ -513,68 +559,79 @@
             const total = items.reduce((a,b)=> a+((b.price||b.p)*b.qty), 0);
             const ts = new Date().toLocaleDateString('en-GB');
 
+            // --- REDESIGNED INVOICE: WIDER, LARGER IMAGES, CLEANER LAYOUT ---
+            div.style.width = '550px'; // Wider
             div.innerHTML = `
-            <div style="background:linear-gradient(135deg, #ffffff 0%, #f9fafb 100%); padding:40px; border-radius:24px; font-family:'Plus Jakarta Sans', sans-serif; color:#1a1a1a; position:relative; overflow:hidden; width:400px;">
-                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-45deg); font-size:100px; font-weight:900; color:#f3f4f6; z-index:0; pointer-events:none;">SOMPHEA</div>
-                <div style="position:relative; z-index:1;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:30px;">
+            <div style="background:white; padding:0; border-radius:0; font-family:'Plus Jakarta Sans', sans-serif; color:#1a1a1a; position:relative; overflow:hidden; width:550px;">
+                
+                <!-- HEADER -->
+                <div style="background:#90D730; padding:30px 40px; color:#1a1a1a; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <div style="width:50px; height:50px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#90D730; font-weight:900; font-size:24px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">S</div>
                         <div>
-                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
-                                <div style="width:40px; height:40px; background:#1a1a1a; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#90D730; font-weight:bold; font-size:20px;">S</div>
-                                <h1 style="font-size:22px; font-weight:800; color:#1a1a1a; letter-spacing:-0.5px; margin:0;">SOMPHEA REAK</h1>
-                            </div>
-                            <p style="font-size:11px; color:#888; margin:0 0 0 50px; font-weight:600; letter-spacing:1px; text-transform:uppercase;">Toy Universe</p>
-                        </div>
-                        <div style="text-align:right;">
-                            <div style="font-size:10px; font-weight:700; color:#999; text-transform:uppercase; letter-spacing:0.5px;">Invoice Date</div>
-                            <div style="font-size:14px; color:#1a1a1a; font-weight:600;">${ts}</div>
+                            <h1 style="font-size:24px; font-weight:900; letter-spacing:-0.5px; margin:0; line-height:1;">SOMPHEA REAK</h1>
+                            <p style="font-size:12px; margin:4px 0 0 0; font-weight:600; opacity:0.8; text-transform:uppercase; letter-spacing:1px;">Jewelry Store</p>
                         </div>
                     </div>
-
-                    <div style="background:#fff; border:1px solid #eee; padding:20px; border-radius:16px; margin-bottom:25px; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-                        <div style="font-size:10px; font-weight:700; color:#90D730; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Billed To</div>
-                        <div style="font-size:18px; font-weight:800; color:#1a1a1a; margin-bottom:2px;">${n}</div>
-                        <div style="font-size:13px; color:#666; font-weight:500;">${p}</div>
-                        ${a ? `<div style="font-size:12px; color:#888; margin-top:8px; padding-top:8px; border-top:1px dashed #eee;">${a}</div>` : ''}
-                    </div>
-
-                    <table style="width:100%; border-collapse:separate; border-spacing:0; font-size:12px; margin-bottom:25px;">
-                        <thead>
-                            <tr style="color:#888;">
-                                <th style="text-align:left; padding:0 0 10px 10px; font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Item</th>
-                                <th style="text-align:center; padding:0 0 10px 0; font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Qty</th>
-                                <th style="text-align:right; padding:0 10px 10px 0; font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>${items.map((i, idx) => `
-                        <tr>
-                            <td style="padding:12px 10px; border-top:1px solid #f0f0f0;">
-                                <div style="display:flex; align-items:center; gap:12px;">
-                                    <img src="${i.img}" style="width:32px; height:32px; object-fit:cover; border-radius:6px; border:1px solid #eee;">
-                                    <div>
-                                        <div style="font-weight:700; color:#1a1a1a; font-size:13px;">${i.title}</div>
-                                        <div style="font-size:11px; color:#888;">${i.vname}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td style="padding:12px 0; border-top:1px solid #f0f0f0; text-align:center; font-weight:600; color:#555;">x${i.qty}</td>
-                            <td style="padding:12px 10px; border-top:1px solid #f0f0f0; text-align:right; font-weight:700; color:#1a1a1a;">៛${(i.price*i.qty*EX_RATE).toLocaleString()}</td>
-                        </tr>`).join('')}</tbody>
-                    </table>
-
-                    <div style="display:flex; justify-content:flex-end;">
-                        <div style="width:220px; background:#1a1a1a; padding:20px; border-radius:16px; color:white; position:relative; overflow:hidden;">
-                            <div style="position:absolute; top:0; right:0; width:60px; height:60px; background:radial-gradient(circle, #90D730 0%, transparent 70%); opacity:0.2;"></div>
-                            <div style="display:flex; justify-content:space-between; margin-bottom:8px; opacity:0.7; font-size:12px;">
-                                <span>Subtotal</span><span>៛${(total*EX_RATE).toLocaleString()}</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:10px; border-top:1px solid rgba(255,255,255,0.2);">
-                                <span style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Total Due</span>
-                                <span style="font-size:24px; font-weight:900; color:#90D730; line-height:1;">៛${(total*EX_RATE).toLocaleString()}</span>
-                            </div>
-                        </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:0.7;">Date</div>
+                        <div style="font-size:16px; font-weight:700;">${ts}</div>
                     </div>
                 </div>
+
+                <!-- CUSTOMER INFO -->
+                <div style="padding:30px 40px 10px 40px;">
+                    <div style="background:#f9fafb; border:1px solid #eee; border-radius:16px; padding:20px;">
+                        <div style="font-size:11px; font-weight:800; color:#90D730; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Customer Information</div>
+                        <div style="font-size:20px; font-weight:800; color:#1a1a1a; margin-bottom:4px;">${n}</div>
+                        <div style="font-size:14px; color:#555; font-weight:600; display:flex; gap:10px;">
+                             <span><i class="fa-solid fa-phone" style="font-size:12px; margin-right:4px; color:#ccc;"></i> ${p}</span>
+                        </div>
+                        ${a ? `<div style="font-size:13px; color:#777; margin-top:10px; padding-top:10px; border-top:1px dashed #e5e7eb; line-height:1.4;">${a}</div>` : ''}
+                    </div>
+                </div>
+
+                <!-- ORDER ITEMS (LARGE IMAGES) -->
+                <div style="padding:20px 40px;">
+                    <div style="font-size:12px; font-weight:800; color:#1a1a1a; margin-bottom:15px; text-transform:uppercase; letter-spacing:0.5px;">Order Details</div>
+                    <div style="display:flex; flex-direction:column; gap:15px;">
+                        ${items.map((i) => `
+                        <div style="display:flex; align-items:flex-start; gap:20px; border-bottom:1px solid #f3f4f6; padding-bottom:15px;">
+                            <!-- Large 100x100 Image -->
+                            <div style="width:100px; height:100px; flex-shrink:0; border-radius:12px; overflow:hidden; border:1px solid #eee; background:#fff;">
+                                <img src="${i.img}" style="width:100%; height:100%; object-fit:cover;">
+                            </div>
+                            
+                            <!-- Item Details -->
+                            <div style="flex:1; padding-top:5px;">
+                                <div style="font-size:16px; font-weight:800; color:#1a1a1a; margin-bottom:4px; line-height:1.3;">${i.title}</div>
+                                <div style="display:inline-block; background:#f3f4f6; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700; color:#555; margin-bottom:8px;">Model: ${i.vname}</div>
+                                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                                    <div style="font-size:13px; color:#888; font-weight:600;">
+                                        ៛${(i.price*EX_RATE).toLocaleString()} x ${i.qty}
+                                    </div>
+                                    <div style="font-size:18px; font-weight:800; color:#1a1a1a;">
+                                        ៛${(i.price*i.qty*EX_RATE).toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- TOTAL FOOTER -->
+                <div style="padding:0 40px 40px 40px;">
+                    <div style="background:#1a1a1a; color:white; padding:25px; border-radius:20px; position:relative; overflow:hidden;">
+                        <div style="position:absolute; top:-20px; right:-20px; width:100px; height:100px; background:#90D730; border-radius:50%; opacity:0.15; filter:blur(20px);"></div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-size:13px; font-weight:600; opacity:0.7;">Total Amount</div>
+                            <div style="font-size:32px; font-weight:900; color:#90D730;">៛${(total*EX_RATE).toLocaleString()}</div>
+                        </div>
+                        <div style="margin-top:5px; text-align:right; font-size:11px; opacity:0.5;">Thank you for your purchase!</div>
+                    </div>
+                </div>
+
             </div>`;
             document.body.appendChild(div); 
 
@@ -599,7 +656,10 @@
                 generatedBlob = await new Promise(r => cvs.toBlob(r));
 
                 document.getElementById('btn-share').onclick = async () => {
-                    const msg = `🧾 New Order from ${n}\n📱 ${p}\n💰 Total: ៛${(total*EX_RATE).toLocaleString()}\n\n(Please verify with attached image)`;
+                    // Telegram Caption Format
+                    let itemDetails = items.map(i => `• ${i.title} (${i.vname}) x${i.qty}`).join('\n');
+                    const msg = `🧾 *NEW ORDER*\n\n👤 *Customer:* ${n}\n📱 *Phone:* ${p}\n📍 *Address:* ${a || 'N/A'}\n\n🛒 *Items:*\n${itemDetails}\n\n💰 *TOTAL: ៛${(total*EX_RATE).toLocaleString()}*\n📅 ${ts}`;
+                    
                     if (navigator.canShare && generatedBlob) {
                         try {
                             const file = new File([generatedBlob], "invoice.png", { type: "image/png" });
@@ -619,10 +679,10 @@
                 thumbnail: 'static/images/bracelet-01.JPG',
                 variants: [
                     {id:'j1', name:'A', price: 2.00, image:'static/images/bracelet-01.JPG'}, 
-                    {id:'j2', name:'A', price: 2.00, image:'static/images/bracelet-02.JPG'},
-                    {id:'j3', name:'A', price: 2.00, image:'static/images/bracelet-03.JPG'}, 
-                    {id:'j4', name:'A', price: 2.00, image:'static/images/bracelet-04.JPG'},
-                    {id:'j5', name:'A', price: 2.00, image:'static/images/bracelet-05.JPG'}
+                    {id:'j2', name:'B', price: 2.00, image:'static/images/bracelet-02.JPG'},
+                    {id:'j3', name:'C', price: 2.00, image:'static/images/bracelet-03.JPG'}, 
+                    {id:'j4', name:'D', price: 2.00, image:'static/images/bracelet-04.JPG'},
+                    {id:'j5', name:'E', price: 2.00, image:'static/images/bracelet-05.JPG'}
                 ] 
             },
             
