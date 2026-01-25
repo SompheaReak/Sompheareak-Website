@@ -57,8 +57,8 @@
     <!-- HEADER (Sticky) -->
     <header class="sticky top-0 z-50 taobao-header px-4 pt-3 pb-2 shadow-md rounded-b-[24px]">
         <div class="relative flex items-center justify-center mb-3">
-             <!-- UPDATED HOME LINK: Points to landing.html -->
-            <a href="landing.html" class="absolute left-0 w-9 h-9 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-95 transition-transform border border-white/20">
+             <!-- UPDATED HOME LINK: Points to Root '/' (Landing Page) -->
+            <a href="/" class="absolute left-0 w-9 h-9 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-95 transition-transform border border-white/20">
                  <i class="fa-solid fa-house text-sm"></i>
             </a>
             <div class="flex items-center gap-2 text-white">
@@ -100,7 +100,7 @@
             <i class="fa-solid fa-robot text-xl"></i><span class="text-[10px] font-bold">Toys</span>
         </button>
         <!-- JEWELRY LINKS BACK -->
-        <a href="index.html" class="nav-item flex flex-col items-center gap-1 w-14 text-gray-400 transition-colors hover:text-brand">
+        <a href="/bracelet" class="nav-item flex flex-col items-center gap-1 w-14 text-gray-400 transition-colors hover:text-brand">
             <i class="fa-regular fa-gem text-xl"></i><span class="text-[10px] font-bold">Jewelry</span>
         </a>
         <button onclick="openCart()" class="flex flex-col items-center gap-1 w-14 text-gray-400 hover:text-brand relative">
@@ -258,76 +258,249 @@
     </div>
 
     <script>
-        // Use SAME key as Jewelry app so they share the cart!
-        const CART_KEY = 'somphea_universal_cart';
-        const EX_RATE = 4000;
-        const TELEGRAM_USERNAME = "Somphea_Reak";
+        // --- CONFIG & STATE ---
+        const CART_KEY = 'somphea_universal_cart'; 
+        const EX_RATE = 4000; 
+        const TELEGRAM_USERNAME = "somphea_reak";
         const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=400';
 
-        // --- TOY CATALOG ---
+        const APP_CONFIG = {
+            toy: {
+                title: "Premium Toys",
+                image: "https://images.unsplash.com/photo-1596461404942-363759b9d12a?q=80&w=800&auto=format&fit=crop",
+                categories: ['All', 'WWII Soldier', 'Ninjago']
+            },
+            jewelry: {
+                title: "Fine Jewelry",
+                image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=800&auto=format&fit=crop",
+                categories: ['All', 'Jade', 'Gemstone', 'Silver', 'Dumbbell Bracelet']
+            }
+        };
+
+        // --- MERGED DATA ---
         const PRODUCTS = [
+            // === TOYS ===
             {
-                id: 1, title: "WWII Heavy Weapon", sold: "1.2k", category: "WWII Soldier", type: "toy",
+                id: 1, title: "WWII អាវុធធន់ធ្ងន់", sold: "1.2k", category: "WWII Soldier", type: "toy",
                 thumbnail: "static/images/lego-wwii-01.jpg",
                 variants: [
                     { id: "v1", name: "RPG", price: 0.125, image: "static/images/lego-wwii-02.jpg" },
-                    { id: "v11", name: "Long Range Cannon (Black)", price: 1.50, image: "static/images/lego-wwii-101.jpg" },
-                    { id: "v12", name: "Long Range Cannon (Green)", price: 1.25, image: "static/images/lego-wwii-102.jpg" },
-                    { id: "v13", name: "Long Range Cannon (Grey)", price: 0.875, image: "static/images/lego-wwii-103.jpg" },
-                    { id: "v14", name: "Anti-Air Missile", price: 1.00, image: "static/images/lego-wwii-104.jpg" },
-                    { id: "v15", name: "Heavy Machine Gun X4", price: 1.25, image: "static/images/lego-wwii-105.jpg" }
+                    { id: "v11", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.50, image: "static/images/lego-wwii-101.jpg" },
+                    { id: "v12", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-102.jpg" },
+                    { id: "v13", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 0.875, image: "static/images/lego-wwii-103.jpg" },
+                    { id: "v14", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 1.00, image: "static/images/lego-wwii-104.jpg" },
+                    { id: "v15", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-105.jpg" },
+                    { id: "v21", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.50, image: "static/images/lego-wwii-201.jpg" },
+                    { id: "v22", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-202.jpg" },
+                    { id: "v23", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 0.875, image: "static/images/lego-wwii-203.jpg" },
+                    { id: "v24", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 1.00, image: "static/images/lego-wwii-204.jpg" },
+                    { id: "v25", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-205.jpg" },
+                    { id: "v31", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.50, image: "static/images/lego-wwii-301.jpg" },
+                    { id: "v32", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-302.jpg" },
+                    { id: "v33", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 0.875, image: "static/images/lego-wwii-303.jpg" },
+                    { id: "v34", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 1.00, image: "static/images/lego-wwii-304.jpg" },
+                    { id: "v35", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-305.jpg" }
                ]
             },
             {
-                id: 2, title: "WWII Army Squad", sold: "840", category: "WWII Soldier", type: "toy",
+                id: 2, title: "WWII កូនទាហាន", sold: "840", category: "WWII Soldier", type: "toy",
                 thumbnail: "static/images/lego-wwii-army-thumbnail.jpg",
                 variants: [
-                    { id: "a01", name: "German Soldier A", price: 0.25, image: "static/images/lego-wwii-army-101.jpg" },
-                    { id: "a02", name: "German Soldier B", price: 0.25, image: "static/images/lego-wwii-army-102.jpg" },
-                    { id: "a11", name: "US Soldier A", price: 0.25, image: "static/images/lego-wwii-army-201.jpg" },
-                    { id: "a12", name: "US Soldier B", price: 0.25, image: "static/images/lego-wwii-army-202.jpg" },
-                    { id: "a21", name: "Soviet Soldier A", price: 0.25, image: "static/images/lego-wwii-army-301.jpg" },
-                    { id: "a22", name: "Soviet Soldier B", price: 0.25, image: "static/images/lego-wwii-army-302.jpg" }
+                    { id: "a01", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-101.jpg" },
+                    { id: "a02", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-102.jpg" },
+                    { id: "a03", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-103.jpg" },
+                    { id: "a04", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-104.jpg" },
+                    { id: "a05", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-105.jpg" },
+                    { id: "a06", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-106.jpg" },
+                    { id: "a11", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-201.jpg" },
+                    { id: "a12", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-202.jpg" },
+                    { id: "a13", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-203.jpg" },
+                    { id: "a14", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-204.jpg" },
+                    { id: "a15", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-205.jpg" },
+                    { id: "a21", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-301.jpg" },
+                    { id: "a22", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-302.jpg" },
+                    { id: "a23", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-303.jpg" },
+                    { id: "a24", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-304.jpg" },
+                    { id: "a25", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-305.jpg" },
+                    { id: "a26", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-306.jpg" }
                 ]
             },
             {
-                id: 3, title: "German Elite Unit", sold: "310", category: "WWII Soldier", type: "toy",
+                id: 3, title: "ទាហាន អាល្លឺម៉ង", sold: "310", category: "WWII Soldier", type: "toy",
                 thumbnail: "static/images/lego-wwii-german-thumbnail.jpg",
                 variants: [
-                    { id: "German-01", name: "Commander", price: 1.25, image: "static/images/lego-wwii-german-01.jpg" },
-                    { id: "German-02", name: "Sniper", price: 1.25, image: "static/images/lego-wwii-german-02.jpg" },
-                    { id: "German-03", name: "Medic", price: 1.25, image: "static/images/lego-wwii-german-03.jpg" }
+                    { id: "German-01", name: "Kai", price: 1.25, image: "static/images/lego-wwii-german-01.jpg" },
+                    { id: "German-02", name: "Zane", price: 1.25, image: "static/images/lego-wwii-german-02.jpg" },
+                    { id: "German-03", name: "Jay", price: 1.25, image: "static/images/lego-wwii-german-03.jpg" },
+                    { id: "German-04", name: "Cole", price: 1.25, image: "static/images/lego-wwii-german-04.jpg" },
+                    { id: "German-05", name: "Lloyd", price: 1.25, image: "static/images/lego-wwii-german-05.jpg" },
+                    { id: "German-06", name: "Nya", price: 1.25, image: "static/images/lego-wwii-german-06.jpg" }
                 ]
+                
             },
             {
-                id: 9, title: "Soviet Red Army", sold: "310", category: "WWII Soldier", type: "toy",
+                id: 9, title: "ទាហាន សូវៀត", sold: "310", category: "WWII Soldier", type: "toy",
                 thumbnail: "static/images/lego-wwii-soviet-thumbnail.jpg",
                 variants: [
-                    { id: "Soviet-01", name: "Officer", price: 1.25, image: "static/images/lego-wwii-soviet-01.jpg" },
-                    { id: "Soviet-02", name: "Infantry", price: 1.25, image: "static/images/lego-wwii-soviet-02.jpg" }
+                    { id: "Soviet-01", name: "Kai", price: 1.25, image: "static/images/lego-wwii-soviet-01.jpg" },
+                    { id: "Soviet-02", name: "Zane", price: 1.25, image: "static/images/lego-wwii-soviet-02.jpg" },
+                    { id: "Soviet-03", name: "Jay", price: 1.25, image: "static/images/lego-wwii-soviet-03.jpg" },
+                    { id: "Soviet-04", name: "Cole", price: 1.25, image: "static/images/lego-wwii-soviet-04.jpg" },
+                    { id: "Soviet-05", name: "Lloyd", price: 1.25, image: "static/images/lego-wwii-soviet-05.jpg" },
+                    { id: "Soviet-06", name: "Nya", price: 1.25, image: "static/images/lego-wwii-soviet-06.jpg" }
                 ]
             },
             {
-                id: 10, title: "Ninjago Season 1 DX", sold: "310", category: "Ninjago", type: "toy",
+                id: 10, title: "Ninjago Season 1", sold: "310", category: "Ninjago", type: "toy",
                 thumbnail: "static/images/lego-ninjago-season1-dx-thumbnail.jpg",
                 variants: [
-                    { id: "njo-01", name: "Kai DX", price: 1.25, image: "static/images/lucky-01.jpg" },
-                    { id: "njo-02", name: "Zane DX", price: 1.25, image: "static/images/lucky-02.jpg" },
-                    { id: "njo-03", name: "Jay DX", price: 1.25, image: "static/images/lucky-03.jpg" },
-                    { id: "njo-04", name: "Cole DX", price: 1.25, image: "static/images/lucky-04.jpg" }
+                    { id: "njo-01", name: "Kai", price: 1.25, image: "static/images/lucky-01.jpg" },
+                    { id: "njo-02", name: "Zane", price: 1.25, image: "static/images/lucky-02.jpg" },
+                    { id: "njo-03", name: "Jay", price: 1.25, image: "static/images/lucky-03.jpg" },
+                    { id: "njo-04", name: "Cole", price: 1.25, image: "static/images/lucky-04.jpg" },
+                    { id: "njo-05", name: "Lloyd", price: 1.25, image: "static/images/lucky-05.jpg" },
+                    { id: "njo-06", name: "Nya", price: 1.25, image: "static/images/lucky-06.jpg" }
+                ]
+
+            },
+            {
+                id: 4, title: "Ninjago Season 1", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-season1-pilot-thumbnail.jpg",
+                variants: [
+                    { id: "njo-11", name: "Kai", price: 1.25, image: "static/images/lucky-11.jpg" },
+                    { id: "njo-12", name: "Zane", price: 1.25, image: "static/images/lucky-12.jpg" },
+                    { id: "njo-13", name: "Jay", price: 1.25, image: "static/images/lucky-13.jpg" },
+                    { id: "njo-14", name: "Cole", price: 1.25, image: "static/images/lucky-14.jpg" },
+                    { id: "njo-15", name: "Lloyd", price: 1.25, image: "static/images/lucky-15.jpg" },
+                    { id: "njo-16", name: "Nya", price: 1.25, image: "static/images/lucky-16.jpg" }
                 ]
             },
             {
-                id: 8, title: "LEGO Ninjago Sets", sold: "310", category: "Ninjago", type: "toy",
+                id: 5, title: "Ninjago Season 1", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-season1-nrg-thumbnail.jpg",
+                variants: [
+                    { id: "njo-21", name: "Kai", price: 1.25, image: "static/images/lucky-21.jpg" },
+                    { id: "njo-22", name: "Zane", price: 1.25, image: "static/images/lucky-22.jpg" },
+                    { id: "njo-23", name: "Jay", price: 1.25, image: "static/images/lucky-23.jpg" },
+                    { id: "njo-24", name: "Cole", price: 1.25, image: "static/images/lucky-24.jpg" },
+                    { id: "njo-25", name: "Lloyd", price: 1.25, image: "static/images/lucky-25.jpg" },
+                    { id: "njo-26", name: "Nya", price: 1.25, image: "static/images/lucky-26.jpg" }
+                ]
+            },
+            {
+                id: 6, title: "Ninjago Season 1", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-season1-zx-thumbnail.jpg",
+                variants: [
+                    { id: "njo-31", name: "Kai", price: 1.25, image: "static/images/lucky-31.jpg" },
+                    { id: "njo-32", name: "Zane", price: 1.25, image: "static/images/lucky-32.jpg" },
+                    { id: "njo-33", name: "Jay", price: 1.25, image: "static/images/lucky-33.jpg" },
+                    { id: "njo-34", name: "Cole", price: 1.25, image: "static/images/lucky-34.jpg" },
+                    { id: "njo-35", name: "Lloyd", price: 1.25, image: "static/images/lucky-35.jpg" },
+                    { id: "njo-36", name: "Nya", price: 1.25, image: "static/images/lucky-36.jpg" }
+                ]
+            },
+            {
+                id: 7, title: "Ninjago", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-8000-01.jpg",
+                variants: [
+                    { id: "njo-A", name: "Ninjago A", price: 2.00, image: "static/images/lego-ninjago-8000-01.jpg" },
+                    { id: "njo-B", name: "Ninjago B", price: 2.00, image: "static/images/lego-ninjago-8000-02.jpg" },
+                    { id: "njo-C", name: "Ninjago C", price: 2.00, image: "static/images/lego-ninjago-8000-03.jpg" },
+                    { id: "njo-D", name: "Ninjago D", price: 2.00, image: "static/images/lego-ninjago-8000-04.jpg" },
+                    { id: "njo-E", name: "Ninjago E", price: 2.00, image: "static/images/lego-ninjago-8000-05.jpg" },
+                    { id: "njo-F", name: "Ninjago F", price: 2.00, image: "static/images/lego-ninjago-8000-06.jpg" }
+                ]
+            },
+            {
+                id: 8, title: "LEGO Ninjago", sold: "310", category: "Ninjago", type: "toy",
                 thumbnail: "static/images/lego-ninjago-71808.jpg",
                 variants: [
-                    { id: "LEGO 30650", name: "Kai & Rapton Battle", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
-                    { id: "LEGO 71808", name: "Kai's Elemental Fire Mech", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
-                    { id: "LEGO 71806", name: "Cole's Elemental Earth Mech", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" }
+                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
+                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
+                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
+                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
+                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
+                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
+                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
+                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
+                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
                 ]
+            },
+            {
+                id: 11, title: "LEGO Ninjago", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-71808.jpg",
+                variants: [
+                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
+                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
+                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
+                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
+                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
+                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
+                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
+                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
+                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
+                ]
+            },
+            {
+                id: 12, title: "LEGO Ninjago", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-71808.jpg",
+                variants: [
+                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
+                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
+                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
+                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
+                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
+                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
+                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
+                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
+                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
+                ]
+            },
+
+            // === JEWELRY ===
+            { 
+                id: 101, title: "Imperial Green Jade Bangle", price: 2.00, sold: "240", category: "Jade", type: "jewelry",
+                thumbnail: 'static/images/bracelet-01.JPG',
+                variants: [
+                    {id:'j1', name:'A', price: 2.00, image:'static/images/bracelet-01.JPG'}, 
+                    {id:'j2', name:'B', price: 2.00, image:'static/images/bracelet-02.JPG'},
+                    {id:'j3', name:'C', price: 2.00, image:'static/images/bracelet-03.JPG'}, 
+                    {id:'j4', name:'D', price: 2.00, image:'static/images/bracelet-04.JPG'},
+                    {id:'j5', name:'E', price: 2.00, image:'static/images/bracelet-05.JPG'}
+                ] 
+            },
+            { 
+                id: 102, title: "Amethyst Crystal Bracelet", price: 1.50, sold: "580", category: "Gemstone", type: "jewelry",
+                thumbnail: 'static/images/bracelet-101.JPG',
+                variants: [
+                    {id:'g1', name:'B', price: 1.50, image:'static/images/bracelet-101.JPG'}, 
+                    {id:'g2', name:'B', price: 1.50, image:'static/images/bracelet-102.JPG'}, 
+                    {id:'g3', name:'B', price: 1.50, image:'static/images/bracelet-103.JPG'}, 
+                ] 
+            },
+            { 
+                id: 103, title: "Silver 925 Chain", price: 18.00, sold: "120", category: "Silver", type: "jewelry",
+                thumbnail: 'static/images/bracelet-201.JPEG',
+                variants: [
+                   {id:'s1', name:'s', price: 1.50, image:'static/images/bracelet-201.JPEG'},
+                   {id:'s2', name:'s', price: 1.50, image:'static/images/bracelet-202.JPEG'},
+                   {id:'s3', name:'s', price: 1.50, image:'static/images/bracelet-203.JPEG'}
+                ] 
+            },
+            { 
+                id: 104, title: "Dumbbell Bracelet", price: 1.25, sold: "310", category: "Dumbbell Bracelet", type: "jewelry",
+                thumbnail: 'static/images/bracelet-400.JPEG',
+                variants: [
+                   {id:'gd1', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-401.JPEG'},
+                   {id:'gd2', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-402.JPEG'},
+                   {id:'gd3', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-403.JPEG'},
+                   {id:'gd4', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-404.JPEG'},
+                   {id:'gd5', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-405.JPEG'},
+                   {id:'gd6', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-406.JPEG'}
+                ] 
             }
         ];
-
+        
         let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
         let activeCategory = 'All';
         let curProd = null, curVar = null, curQty = 1;
