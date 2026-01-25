@@ -3,136 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Somphea Reak | Store</title>
+    <title>Somphea Reak | Toys</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500;600;700&display=swap');
-
-        :root { 
-            --brand-green: #90D730; 
-            --brand-dark: #1a1a1a;
-        }
         
-        html, body {
-            height: 100%;
-            overflow: hidden; 
-            touch-action: pan-x pan-y; 
-        }
-
         body { 
             font-family: 'Plus Jakarta Sans', 'Noto Sans Khmer', sans-serif; 
             background-color: #f7f7f7; 
             -webkit-tap-highlight-color: transparent; 
-            padding-bottom: 0;
-            overflow-y: auto; 
-            overscroll-behavior-y: none;
+            overflow-x: hidden; 
+            overflow-y: auto;
         }
-
-        /* IOS ZOOM FIX */
-        input, textarea, select { font-size: 16px !important; }
         
-        .text-brand { color: var(--brand-green); }
+        /* THEME: Same Green Brand for Consistency */
+        :root { --brand-green: #90D730; }
         .bg-brand { background-color: var(--brand-green); }
+        .text-brand { color: var(--brand-green); }
         .bg-gradient-brand { background: linear-gradient(135deg, #a4e645 0%, #90D730 100%); }
+        
+        /* UI UTILITIES */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
+        /* HEADER IS STICKY */
         .taobao-header { background: var(--brand-green); transition: all 0.3s; }
         
-        /* Drawer Animations */
-        .drawer-backdrop { opacity: 0; pointer-events: none; transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+        /* DRAWERS & ANIMATIONS */
+        .drawer-backdrop { opacity: 0; pointer-events: none; transition: opacity 0.3s; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); position: fixed; inset: 0; z-index: 70; }
         .drawer-backdrop.active { opacity: 1; pointer-events: auto; }
         
-        .drawer-panel { transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
-        .drawer-panel.active { transform: translateY(0); }
-
-        /* Full Page Transitions */
-        .page-view {
-            position: fixed; inset: 0; background: #f7f7f7;
-            transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
-            will-change: transform; z-index: 60; display: flex; flex-direction: column;
-        }
-        .page-view.active { transform: translateX(0); }
+        .drawer-bottom { transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: fixed; bottom: 0; left: 0; right: 0; background: white; z-index: 71; border-radius: 32px 32px 0 0; }
+        .drawer-bottom.active { transform: translateY(0); }
         
-        /* Screenshot Frame */
-        .screenshot-frame { background: white; padding: 20px; position: fixed; top: 0; left: -2000px; z-index: 9999; visibility: visible; pointer-events: none; }
+        .drawer-right { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: fixed; top: 0; right: 0; bottom: 0; width: 320px; max-width: 85vw; background: #f7f7f7; z-index: 81; display: flex; flex-direction: column; shadow-2xl; }
+        .drawer-right.active { transform: translateX(0); }
         
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
         
-        /* Nav Item Active State */
-        .nav-item.active { color: var(--brand-green); }
-        .nav-item.active i { transform: scale(1.1); }
-        
-        /* TaoBao Selection Styles - UPDATED for List View */
-        .tb-option { transition: all 0.2s; border: 1px solid transparent; }
-        .tb-option.selected { border-color: var(--brand-green); background-color: #f0fdf4; color: #1a1a1a; }
-        .tb-option.selected .tb-name { color: var(--brand-green); }
+        .page-view { position: fixed; inset: 0; background: #fff; transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1); will-change: transform; z-index: 60; display: flex; flex-direction: column; }
+        .page-view.active { transform: translateX(0); }
+
+        .tb-option.selected { border-color: var(--brand-green); background-color: #f0fdf4; }
         .tb-option.selected .idx-num { color: var(--brand-green); font-weight: 900; }
-        .tb-option:not(.selected) { border-color: #f3f4f6; background-color: #fff; color: #4b5563; }
-        .tb-option:not(.selected) .idx-num { color: #9ca3af; }
+        .nav-item.active { color: var(--brand-green); }
     </style>
 </head>
 <body class="bg-[#f7f7f7]">
 
-    <!-- 1. HEADER (REDESIGNED) -->
+    <!-- HEADER (Sticky) -->
     <header class="sticky top-0 z-50 taobao-header px-4 pt-3 pb-2 shadow-md rounded-b-[24px]">
-        <!-- Row 1: Nav Controls & Logo -->
         <div class="relative flex items-center justify-center mb-3">
-            <!-- Home Button (Left) -->
-            <button onclick="location.reload()" class="absolute left-0 w-9 h-9 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-95 transition-transform border border-white/20">
+            <a href="index.html" class="absolute left-0 w-9 h-9 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-95 transition-transform border border-white/20">
                  <i class="fa-solid fa-house text-sm"></i>
-            </button>
-
-            <!-- Logo & Name (Center) -->
+            </a>
             <div class="flex items-center gap-2 text-white">
-                <div class="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-white/20 overflow-hidden">
-                    <img src="static/images/logo.png" onerror="this.src='https://placehold.co/100?text=S'" class="w-full h-full object-cover">
+                <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-white/20 shadow-sm">
+                    <img src="static/images/logo.jpg" onerror="this.onerror=null;this.parentElement.innerHTML='<i class=\'fa-solid fa-robot text-green-500\'></i>'" class="w-full h-full object-cover">
                 </div>
                 <div class="font-black text-base tracking-wide uppercase drop-shadow-sm leading-none">Somphea Reak</div>
             </div>
-
-            <!-- Lang Switch (Right) -->
-            <button onclick="toggleLang()" class="absolute right-0 w-9 h-9 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white font-bold text-[10px] border border-white/20 active:scale-95 transition-transform">
-                <span id="lang-btn">KH</span>
+            <button onclick="openCart()" class="absolute right-0 w-9 h-9 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-95 transition-transform border border-white/20 relative shadow-sm">
+                 <i class="fa-solid fa-cart-shopping text-xs"></i>
+                 <span id="header-cart-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden border border-white shadow-sm">0</span>
             </button>
         </div>
-
-        <!-- Row 2: Search Bar -->
         <div class="h-10 bg-white rounded-xl flex items-center px-4 gap-3 shadow-sm border border-green-400/30 mb-3">
             <i class="fa-solid fa-magnifying-glass text-gray-400 text-xs"></i>
-            <input type="text" placeholder="Search product..." class="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 font-bold text-sm h-full" oninput="searchProduct(this.value)">
+            <input type="text" placeholder="Search toys..." class="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 font-bold text-sm h-full" oninput="searchProduct(this.value)">
         </div>
-
-        <!-- Row 3: Categories -->
         <nav class="flex gap-2 overflow-x-auto hide-scrollbar pb-1 text-white/90 font-medium text-xs" id="category-tabs"></nav>
     </header>
 
-    <!-- 2. CONTENT AREA -->
+    <!-- MAIN CONTENT -->
     <main class="px-3 pt-4 pb-28">
-        <div class="mb-4 rounded-3xl overflow-hidden shadow-md relative h-44 bg-gray-200 transition-all group">
-            <img id="hero-img" src="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+        <!-- Toy Specific Banner -->
+        <div class="mb-4 rounded-3xl overflow-hidden shadow-md relative h-44 bg-blue-200 transition-all">
+            <img src="https://images.unsplash.com/photo-1558060370-d644479cb6f7?q=80&w=800" class="w-full h-full object-cover">
             <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
             <div class="absolute bottom-5 left-5 text-white">
-                <div class="text-[10px] font-bold bg-brand text-black px-2.5 py-1 rounded-full inline-block mb-1.5 shadow-sm">New Arrivals</div>
-                <div class="font-black text-xl leading-none drop-shadow-md" id="hero-title">--</div>
+                <div class="text-[10px] font-bold bg-white text-black px-2.5 py-1 rounded-full inline-block mb-1.5 shadow-sm">New Arrivals</div>
+                <div class="font-black text-xl leading-none drop-shadow-md">Kids Wonderland</div>
             </div>
         </div>
         <div class="grid grid-cols-2 gap-3" id="product-grid"></div>
     </main>
 
-    <!-- 3. BOTTOM NAV -->
+    <!-- BOTTOM NAV -->
     <div class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-gray-100 px-6 py-2 flex justify-between items-center z-[45] pb-safe min-h-[70px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-3xl">
-        <button onclick="switchAppMode('toy')" class="nav-item flex flex-col items-center gap-1 w-14 text-gray-400 transition-colors active" id="nav-toy">
-            <i class="fa-solid fa-robot text-xl transition-transform"></i><span class="text-[10px] font-bold">Toys</span>
+        <!-- TOY IS ACTIVE -->
+        <button class="nav-item active flex flex-col items-center gap-1 w-14 transition-colors">
+            <i class="fa-solid fa-robot text-xl"></i><span class="text-[10px] font-bold">Toys</span>
         </button>
-        <button onclick="switchAppMode('jewelry')" class="nav-item flex flex-col items-center gap-1 w-14 text-gray-400 transition-colors" id="nav-jewelry">
-            <i class="fa-regular fa-gem text-xl transition-transform"></i><span class="text-[10px] font-bold">Jewelry</span>
-        </button>
-        <a href="https://t.me/somphea_reak" target="_blank" class="flex flex-col items-center gap-1 w-14 text-gray-400 hover:text-brand relative">
-            <div class="relative"><i class="fa-brands fa-telegram text-xl"></i><span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span></div><span class="text-[10px] font-bold">Chat</span>
+        <!-- JEWELRY LINKS BACK -->
+        <a href="index.html" class="nav-item flex flex-col items-center gap-1 w-14 text-gray-400 transition-colors hover:text-brand">
+            <i class="fa-regular fa-gem text-xl"></i><span class="text-[10px] font-bold">Jewelry</span>
         </a>
         <button onclick="openCart()" class="flex flex-col items-center gap-1 w-14 text-gray-400 hover:text-brand relative">
             <div class="relative"><i class="fa-solid fa-cart-shopping text-xl"></i><span id="nav-cart-badge" class="absolute -top-1.5 -right-1.5 bg-brand text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-white hidden">0</span></div>
@@ -140,109 +108,73 @@
         </button>
     </div>
 
-    <!-- 4. DETAIL VIEW -->
-    <div id="detail-view" class="page-view">
-        <div class="absolute top-0 left-0 right-0 z-20 flex justify-between p-4 pointer-events-none transition-all duration-300" id="dt-header">
+    <!-- DETAIL OVERLAY -->
+    <div id="view-detail" class="page-view">
+         <div class="absolute top-0 left-0 right-0 z-20 flex justify-between p-4 pointer-events-none" id="dt-header">
             <button onclick="closeDetail()" class="pointer-events-auto w-10 h-10 bg-white/80 backdrop-blur-md rounded-full text-gray-800 flex items-center justify-center active:scale-90 shadow-lg border border-white/50"><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="flex gap-2">
-                <button onclick="openCart()" class="pointer-events-auto w-10 h-10 bg-white/80 backdrop-blur-md rounded-full text-gray-800 flex items-center justify-center active:scale-90 shadow-lg border border-white/50 relative">
-                    <i class="fa-solid fa-cart-shopping text-sm"></i>
-                    <span id="detail-cart-badge" class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full border border-white hidden">0</span>
-                </button>
-            </div>
+            <button onclick="openCart()" class="pointer-events-auto w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-800 active:scale-95 transition-transform border border-white/50 relative shadow-lg">
+                 <i class="fa-solid fa-cart-shopping text-xs"></i>
+                 <span id="detail-cart-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden border border-white shadow-sm">0</span>
+            </button>
         </div>
-
-        <div class="flex-1 overflow-y-auto hide-scrollbar pb-32" onscroll="handleDetailScroll(this)">
+        
+        <div class="flex-1 overflow-y-auto hide-scrollbar pb-32">
             <div class="relative w-full bg-white pb-6 rounded-b-[40px] shadow-sm overflow-hidden">
-                <div id="dt-gallery" class="flex overflow-x-auto snap-mandatory snap-x w-full aspect-square hide-scrollbar bg-gray-50" onscroll="onGalleryScroll(event)"></div>
+                <div id="dt-gallery" class="flex overflow-x-auto snap-mandatory snap-x w-full aspect-square hide-scrollbar bg-gray-50 scroll-smooth" onscroll="onGalleryScroll(event)"></div>
                 <div class="absolute bottom-6 right-6 bg-black/60 backdrop-blur text-white text-xs px-3 py-1.5 rounded-full font-bold pointer-events-none z-10"><span id="gallery-counter">1/1</span></div>
             </div>
-
             <div class="px-4 mt-4">
                 <div class="bg-white p-5 rounded-3xl shadow-sm mb-3">
                     <div class="flex items-end gap-2 mb-3">
                         <div class="text-brand font-black text-3xl leading-none tracking-tight"><span class="text-lg mr-0.5">៛</span><span id="dt-price">0</span></div>
-                        <div class="text-sm text-gray-400 line-through mb-1 font-medium">៛<span id="dt-price-orig">0</span></div>
                     </div>
-                    <h1 id="dt-title" class="text-gray-900 font-bold text-lg leading-snug mb-3">Product Title</h1>
+                    <h1 id="dt-title" class="text-gray-900 font-bold text-lg leading-snug mb-3">Toy Name</h1>
                     <div class="flex justify-between text-[11px] text-gray-500 font-medium border-t border-gray-50 pt-3">
-                        <span class="flex items-center gap-1"><i class="fa-solid fa-truck-fast text-brand"></i> <span data-key="express">Express</span></span>
-                        <span class="flex items-center gap-1"><i class="fa-solid fa-fire text-orange-400"></i> <span id="dt-sold">0</span> <span data-key="sold">Sold</span></span>
-                        <span class="flex items-center gap-1"><i class="fa-solid fa-location-dot text-gray-300"></i> Phnom Penh</span>
+                        <span class="flex items-center gap-1"><i class="fa-solid fa-truck-fast text-brand"></i> <span>Express</span></span>
+                        <span class="flex items-center gap-1"><i class="fa-solid fa-fire text-orange-400"></i> <span id="dt-sold">0</span> <span>Sold</span></span>
                     </div>
                 </div>
-
-                <div class="bg-white p-4 rounded-3xl shadow-sm mb-3 flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer border border-transparent active:border-green-100" onclick="openSku(false)">
+                <div class="bg-white p-4 rounded-3xl shadow-sm mb-3 flex items-center justify-between cursor-pointer border border-transparent active:border-green-100" onclick="openSku(false)">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400"><i class="fa-solid fa-layer-group"></i></div>
+                        <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400"><i class="fa-solid fa-cubes"></i></div>
                         <div class="flex flex-col">
-                            <span class="text-xs text-gray-400 font-bold uppercase tracking-wider" data-key="selected">Select Model</span>
+                            <span class="text-xs text-gray-400 font-bold uppercase tracking-wider">Select Style</span>
                             <span id="dt-sel-preview" class="text-sm font-bold text-gray-900">--</span>
                         </div>
                     </div>
                     <i class="fa-solid fa-chevron-right text-gray-300 text-sm"></i>
                 </div>
-
-                <div class="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl border border-gray-100 p-1 bg-white shadow-sm"><img src="static/images/logo.png" onerror="this.src='https://placehold.co/100'" class="w-full h-full object-contain rounded-xl"></div>
-                    <div class="flex-1">
-                        <div class="text-sm font-bold text-gray-900">Somphea Reak</div>
-                        <div class="text-[10px] text-gray-400 font-medium mt-0.5">Official Store • 4.9 <i class="fa-solid fa-star text-yellow-400"></i></div>
-                    </div>
-                    <button class="bg-gray-900 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg active:scale-95 transition-transform">Visit</button>
-                </div>
             </div>
         </div>
-
         <div class="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-gray-100 px-5 py-3 flex items-center gap-3 pb-safe z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-3xl">
-            <div class="flex gap-5 pr-2">
-                <a href="#" onclick="closeDetail(); return false;" class="flex flex-col items-center gap-1 text-gray-400 active:text-brand"><i class="fa-solid fa-house text-xl"></i><span class="text-[9px] font-bold">Home</span></a>
-                <a href="https://t.me/somphea_reak" target="_blank" class="flex flex-col items-center gap-1 text-gray-400 active:text-brand"><i class="fa-regular fa-comment-dots text-xl"></i><span class="text-[9px] font-bold" data-key="chat">Chat</span></a>
-            </div>
-            <button onclick="openSku(false)" class="flex-1 bg-gradient-brand text-white h-12 rounded-full font-bold text-sm shadow-xl shadow-green-200 active:scale-95 transition-transform flex items-center justify-center gap-2" data-key="add_cart">
-                <i class="fa-solid fa-bag-shopping"></i> Add to Cart
+             <button onclick="closeDetail()" class="flex flex-col items-center gap-1 text-gray-400 active:text-brand px-2"><i class="fa-solid fa-store text-xl"></i><span class="text-[9px] font-bold">Store</span></button>
+            <button onclick="openSku(false)" class="flex-1 bg-gradient-brand text-white h-12 rounded-full font-bold text-sm shadow-xl shadow-green-200 active:scale-95 transition-transform flex items-center justify-center gap-2">
+                <i class="fa-solid fa-cart-plus"></i> Add to Cart
             </button>
         </div>
     </div>
 
-    <!-- 5. FULL SCREEN GALLERY -->
-    <div id="fs-gallery" class="fixed inset-0 z-[100] bg-black hidden flex-col transition-opacity duration-300 opacity-0 touch-none">
-        <div class="absolute top-safe left-0 right-0 p-4 flex justify-between items-start z-20">
-            <span id="fs-counter" class="text-white font-bold text-sm bg-white/10 backdrop-blur px-3 py-1 rounded-full">1/1</span>
-            <button onclick="closeFullScreenGallery()" class="w-10 h-10 bg-white/10 rounded-full text-white flex items-center justify-center backdrop-blur active:bg-white/30"><i class="fa-solid fa-xmark text-lg"></i></button>
-        </div>
-        <div id="fs-scroll" class="flex-1 flex overflow-x-auto snap-mandatory snap-x hide-scrollbar items-center h-full w-full bg-black" onscroll="onFsScroll(event)"></div>
-        <div class="absolute bottom-0 w-full p-6 pb-safe bg-gradient-to-t from-black via-black/80 to-transparent text-white pt-12">
-            <h3 id="fs-title" class="font-bold text-lg line-clamp-1 mb-1">Product Title</h3>
-            <div class="text-brand font-black text-2xl"><span class="text-sm">៛</span><span id="fs-price">0</span></div>
-        </div>
-    </div>
-
-    <!-- 6. SKU DRAWER -->
-    <div id="sku-backdrop" class="fixed inset-0 z-[70] bg-black/60 drawer-backdrop backdrop-blur-sm" onclick="closeSku()"></div>
-    <div id="sku-drawer" class="fixed bottom-0 left-0 right-0 z-[71] bg-white rounded-t-[32px] p-0 drawer-panel h-[80vh] flex flex-col pb-safe shadow-2xl">
+    <!-- SKU DRAWER -->
+    <div id="sku-backdrop" class="drawer-backdrop" onclick="closeSku()"></div>
+    <div id="sku-drawer" class="drawer-bottom p-0 h-[80vh] flex flex-col pb-safe shadow-2xl">
         <div class="relative flex gap-4 px-5 py-4 border-b border-gray-100 items-end">
              <div class="relative w-[100px] h-[100px] rounded-xl p-1 bg-white shadow-lg border border-gray-100 flex-shrink-0 -mt-4 overflow-hidden">
-                <img id="sku-img" class="w-full h-full object-contain rounded-lg bg-white" onerror="this.src='https://placehold.co/100'">
+                <img id="sku-img" class="w-full h-full object-contain rounded-lg bg-white">
             </div>
             <div class="flex-1 pb-1">
                 <div class="text-brand font-black text-2xl"><span class="text-sm">៛</span> <span id="sku-price">0</span></div>
-                <div class="text-xs text-gray-500 font-medium mb-1"><span data-key="stock">Stock</span>: 999+</div>
-                <div class="text-xs text-gray-400 bg-gray-50 inline-block px-2 py-0.5 rounded border border-gray-100"><span data-key="selected">Selected</span>: <span id="sku-text" class="font-bold text-gray-800">--</span></div>
+                <div class="text-xs text-gray-500 font-medium mb-1">Stock: Available</div>
+                <div class="text-xs text-gray-400 bg-gray-50 inline-block px-2 py-0.5 rounded border border-gray-100">Selected: <span id="sku-text" class="font-bold text-gray-800">--</span></div>
             </div>
             <button onclick="closeSku()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
-
         <div class="flex-1 overflow-y-auto hide-scrollbar p-5">
             <div class="mb-5">
-                <div class="text-sm font-bold text-gray-900 mb-3" data-key="models">Classification</div>
-                
-                <!-- REPLACED: vertical list container -->
+                <div class="text-sm font-bold text-gray-900 mb-3">Variants</div>
                 <div id="sku-options-container" class="flex flex-col gap-2"></div>
-                
             </div>
              <div class="flex justify-between items-center py-4 border-t border-gray-50">
-                <span class="text-sm font-bold text-gray-900" data-key="quantity">Quantity</span>
+                <span class="text-sm font-bold text-gray-900">Quantity</span>
                 <div class="flex items-center bg-gray-100 rounded-lg p-1">
                     <button onclick="updQty(-1)" class="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 font-bold active:scale-95"><i class="fa-solid fa-minus text-xs"></i></button>
                     <div id="sku-qty" class="w-10 text-center font-bold text-gray-900 text-sm">1</div>
@@ -250,19 +182,16 @@
                 </div>
             </div>
         </div>
-
         <div class="bg-white p-5 pt-2 pb-safe z-20">
-            <button onclick="confirmSku()" class="w-full h-12 bg-gradient-brand text-white rounded-full font-bold text-base shadow-lg shadow-green-100 active:scale-[0.98] transition-transform flex items-center justify-center gap-2" data-key="add_cart">
-                <span>Add to Cart</span>
-            </button>
+            <button onclick="confirmSku()" class="w-full h-12 bg-gradient-brand text-white rounded-full font-bold text-base shadow-lg shadow-green-100 active:scale-[0.98] transition-transform flex items-center justify-center gap-2">Add to Cart</button>
         </div>
     </div>
 
-    <!-- 7. CART DRAWER -->
-    <div id="cart-bg" class="fixed inset-0 z-[80] bg-black/60 drawer-backdrop backdrop-blur-sm" onclick="closeCart()"></div>
-    <div id="cart-drawer" class="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-[#f7f7f7] z-[81] transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+    <!-- CART DRAWER -->
+    <div id="cart-bg" class="drawer-backdrop" onclick="closeCart()"></div>
+    <div id="cart-drawer" class="drawer-right shadow-2xl">
         <div class="bg-white px-5 py-5 flex justify-between items-center shadow-sm z-10">
-            <div class="font-bold text-xl tracking-tight"><span data-key="my_bag">My Cart</span> <span class="text-white text-xs ml-2 bg-black px-2 py-0.5 rounded-full align-middle" id="cart-count">0</span></div>
+            <div class="font-bold text-xl tracking-tight">My Cart <span class="text-white text-xs ml-2 bg-black px-2 py-0.5 rounded-full align-middle" id="cart-count">0</span></div>
             <button onclick="closeCart()" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"><i class="fa-solid fa-xmark text-gray-500"></i></button>
         </div>
         <div id="cart-list" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
@@ -277,7 +206,7 @@
                     <span class="text-brand font-black text-2xl" id="cart-total">៛0</span>
                 </div>
             </div>
-            <button id="checkout-btn" onclick="checkout()" class="w-full h-14 bg-gradient-brand rounded-full text-white font-bold text-lg shadow-xl shadow-green-200 active:scale-[0.98] transition-all disabled:opacity-50 disabled:shadow-none" data-key="checkout">Checkout</button>
+            <button id="checkout-btn" onclick="openInvoice()" class="w-full h-14 bg-gradient-brand rounded-full text-white font-bold text-lg shadow-xl shadow-green-200 active:scale-[0.98] transition-all disabled:opacity-50 disabled:shadow-none">Checkout</button>
         </div>
     </div>
     
@@ -285,73 +214,57 @@
     <div id="invoice-modal" class="fixed inset-0 z-[90] bg-white hidden flex-col">
         <div class="px-5 py-4 border-b flex items-center gap-4 bg-white sticky top-0 z-10 shadow-sm">
             <button onclick="closeInvoice()" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 hover:bg-gray-100 transition-colors"><i class="fa-solid fa-arrow-left text-lg"></i></button>
-            <span class="font-bold text-xl tracking-tight" data-key="invoice">Details</span>
+            <span class="font-bold text-xl tracking-tight">Checkout Details</span>
         </div>
         <div class="p-6 flex-1 overflow-y-auto bg-gray-50/50">
             <div class="bg-white p-6 rounded-[32px] shadow-sm mb-6 border border-gray-100">
-                <div class="text-xs font-bold text-gray-400 mb-4 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-location-dot text-brand"></i> Delivery Address</div>
                 <div class="space-y-4">
                     <div class="bg-gray-50 rounded-2xl px-4 py-3 border border-transparent focus-within:border-brand focus-within:bg-white transition-all">
                         <label class="text-[10px] text-gray-400 font-bold uppercase block mb-1">Name</label>
                         <input id="inv-name" placeholder="Enter full name" class="w-full bg-transparent text-sm font-bold outline-none text-gray-900 placeholder-gray-300">
                     </div>
                     <div class="bg-gray-50 rounded-2xl px-4 py-3 border border-transparent focus-within:border-brand focus-within:bg-white transition-all">
-                        <label class="text-[10px] text-gray-400 font-bold uppercase block mb-1">Phone</label>
+                        <label class="text-[10px] text-gray-400 font-bold uppercase block mb-1">Phone Number</label>
                         <input id="inv-phone" placeholder="012 345 678" type="tel" class="w-full bg-transparent text-sm font-bold outline-none text-gray-900 placeholder-gray-300">
                     </div>
                     <div class="bg-gray-50 rounded-2xl px-4 py-3 border border-transparent focus-within:border-brand focus-within:bg-white transition-all">
                         <label class="text-[10px] text-gray-400 font-bold uppercase block mb-1">Address (Optional)</label>
-                        <textarea id="inv-addr" placeholder="House, Street, Commune..." class="w-full bg-transparent text-sm font-bold h-16 resize-none outline-none text-gray-900 placeholder-gray-300"></textarea>
+                        <textarea id="inv-addr" placeholder="City, Street, House No..." class="w-full bg-transparent text-sm font-bold h-20 resize-none outline-none text-gray-900 placeholder-gray-300"></textarea>
                     </div>
                 </div>
             </div>
+            <!-- PREVIEW AREA -->
             <div id="invoice-preview" class="hidden flex justify-center mb-10 animate-fade-in-up">
                 <img id="invoice-img" class="border shadow-2xl rounded-2xl w-full max-w-sm rotate-1 hover:rotate-0 transition-transform duration-500">
             </div>
-            <p id="share-instr" class="text-center text-xs text-gray-400 hidden mb-8 font-medium">Verify your order details below</p>
         </div>
         <div class="p-5 border-t pb-safe flex flex-col gap-3 bg-white sticky bottom-0 z-10 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-[32px]">
             <button id="btn-share" class="w-full h-14 bg-[#2AABEE] text-white rounded-full font-bold shadow-xl shadow-blue-200 hidden flex items-center justify-center gap-2 active:scale-95 transition-transform text-lg">
                 <i class="fa-brands fa-telegram text-2xl"></i> <span>Send to Telegram</span>
             </button>
-            <button id="gen-btn" onclick="doGenerate()" class="w-full h-14 bg-gray-900 text-white rounded-full font-bold shadow-xl active:scale-[0.98] transition-transform flex items-center justify-center gap-2 text-lg">
+            <button id="gen-btn" onclick="generateInvoice()" class="w-full h-14 bg-gray-900 text-white rounded-full font-bold shadow-xl active:scale-[0.98] transition-transform flex items-center justify-center gap-2 text-lg">
                 <span>Create Invoice</span> <i class="fa-solid fa-wand-magic-sparkles text-brand"></i>
             </button>
         </div>
     </div>
     
-    <div id="toast" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 backdrop-blur-xl text-white px-6 py-5 rounded-3xl z-[100] hidden flex-col items-center shadow-2xl transition-all scale-90 opacity-0 transform">
-        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-3 shadow-lg shadow-green-500/30"><i class="fa-solid fa-check text-xl"></i></div>
-        <span class="text-base font-bold tracking-wide" data-key="added_to_bag">Added to Cart</span>
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 backdrop-blur-xl text-white px-6 py-5 rounded-3xl z-[100] hidden flex-col items-center shadow-2xl transition-all scale-90 opacity-0 transform text-center min-w-[200px]">
+        <div id="toast-icon-box" class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-3 shadow-lg shadow-green-500/30">
+            <i id="toast-icon" class="fa-solid fa-check text-xl"></i>
+        </div>
+        <span id="toast-msg" class="text-base font-bold tracking-wide">Added to Cart</span>
     </div>
 
     <script>
-        // --- CONFIG & STATE ---
-        const CART_KEY = 'somphea_universal_cart'; 
-        const EX_RATE = 4000; 
-        const TELEGRAM_USERNAME = "somphea_reak";
+        // Use SAME key as Jewelry app so they share the cart!
+        const CART_KEY = 'somphea_universal_cart';
+        const EX_RATE = 4000;
+        const TELEGRAM_USERNAME = "Somphea_Reak";
+        const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?q=80&w=400';
 
-        const TEXTS = {
-            en: { shop_name: "Toy Universe", nav_toys: "Toys", nav_jewelry: "Jewelry", nav_bag: "My Bag", express: "Express", sold: "Sold", chat: "Chat", add_cart: "Add to Cart", stock: "Stock", selected: "Selected", select_model: "Select Variant", models: "Models", quantity: "Quantity", confirm: "Confirm", my_bag: "My Cart", checkout: "Checkout", invoice: "Details", generate_invoice: "Generate Invoice", added_to_bag: "Added to Cart", free_shipping: "Free Shipping" },
-            kh: { shop_name: "ពិភពប្រដាប់ក្មេងលេង", nav_toys: "ប្រដាប់លេង", nav_jewelry: "គ្រឿងអលង្ការ", nav_bag: "កន្ត្រក", express: "ដឹករហ័ស", sold: "លក់បាន", chat: "ឆាត", add_cart: "ដាក់កន្ត្រក", stock: "ស្តុក", selected: "បានជ្រើសរើស", select_model: "ជ្រើសរើសម៉ូដ", models: "ម៉ូដ", quantity: "ចំនួន", confirm: "យល់ព្រម", my_bag: "កន្ត្រកខ្ញុំ", checkout: "គិតលុយ", invoice: "វិក្កយបត្រ", generate_invoice: "បង្កើតវិក្កយបត្រ", added_to_bag: "បានដាក់ចូលកន្ត្រក", free_shipping: "ដឹកជញ្ជូនឥតគិតថ្លៃ" }
-        };
-
-        const APP_CONFIG = {
-            toy: {
-                title: "Premium Toys",
-                image: "https://images.unsplash.com/photo-1596461404942-363759b9d12a?q=80&w=800&auto=format&fit=crop",
-                categories: ['All', 'WWII Soldier', 'Ninjago']
-            },
-            jewelry: {
-                title: "Fine Jewelry",
-                image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=800&auto=format&fit=crop",
-                categories: ['All', 'Jade', 'Gemstone', 'Silver', 'Dumbbell Bracelet']
-            }
-        };
-
-        // --- MERGED DATA ---
+        // --- TOY CATALOG ---
         const PRODUCTS = [
-            // === TOYS ===
             {
                 id: 1, title: "WWII អាវុធធន់ធ្ងន់", sold: "1.2k", category: "WWII Soldier", type: "toy",
                 thumbnail: "static/images/lego-wwii-01.jpg",
@@ -527,451 +440,212 @@
                     { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
                     { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
                 ]
-            },
-
-            // === JEWELRY ===
-            { 
-                id: 101, title: "Imperial Green Jade Bangle", price: 2.00, sold: "240", category: "Jade", type: "jewelry",
-                thumbnail: 'static/images/bracelet-01.JPG',
-                variants: [
-                    {id:'j1', name:'A', price: 2.00, image:'static/images/bracelet-01.JPG'}, 
-                    {id:'j2', name:'B', price: 2.00, image:'static/images/bracelet-02.JPG'},
-                    {id:'j3', name:'C', price: 2.00, image:'static/images/bracelet-03.JPG'}, 
-                    {id:'j4', name:'D', price: 2.00, image:'static/images/bracelet-04.JPG'},
-                    {id:'j5', name:'E', price: 2.00, image:'static/images/bracelet-05.JPG'}
-                ] 
-            },
-            { 
-                id: 102, title: "Amethyst Crystal Bracelet", price: 1.50, sold: "580", category: "Gemstone", type: "jewelry",
-                thumbnail: 'static/images/bracelet-101.JPG',
-                variants: [
-                    {id:'g1', name:'B', price: 1.50, image:'static/images/bracelet-101.JPG'}, 
-                    {id:'g2', name:'B', price: 1.50, image:'static/images/bracelet-102.JPG'}, 
-                    {id:'g3', name:'B', price: 1.50, image:'static/images/bracelet-103.JPG'}, 
-                ] 
-            },
-            { 
-                id: 103, title: "Silver 925 Chain", price: 18.00, sold: "120", category: "Silver", type: "jewelry",
-                thumbnail: 'static/images/bracelet-201.JPEG',
-                variants: [
-                   {id:'s1', name:'s', price: 1.50, image:'static/images/bracelet-201.JPEG'},
-                   {id:'s2', name:'s', price: 1.50, image:'static/images/bracelet-202.JPEG'},
-                   {id:'s3', name:'s', price: 1.50, image:'static/images/bracelet-203.JPEG'}
-                ] 
-            },
-            { 
-                id: 104, title: "Dumbbell Bracelet", price: 1.25, sold: "310", category: "Dumbbell Bracelet", type: "jewelry",
-                thumbnail: 'static/images/bracelet-400.JPEG',
-                variants: [
-                   {id:'gd1', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-401.JPEG'},
-                   {id:'gd2', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-402.JPEG'},
-                   {id:'gd3', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-403.JPEG'},
-                   {id:'gd4', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-404.JPEG'},
-                   {id:'gd5', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-405.JPEG'},
-                   {id:'gd6', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-406.JPEG'}
-                ] 
             }
         ];
 
-        // --- APP STATE ---
-        let lang = 'en'; 
-        let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); 
-        let currentAppMode = 'toy'; // 'toy' or 'jewelry'
+        let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
         let activeCategory = 'All';
-        let curProd = null, curVar = null, curQty = 1, generatedBlob = null;
+        let curProd = null, curVar = null, curQty = 1;
 
-        // --- INITIALIZATION ---
-        function init() { 
-            switchAppMode('toy'); // Default to toys
-            updateBadges(); 
-        }
+        // Init Categories
+        const categories = ['All', 'WWII Soldier', 'Ninjago'];
+        document.getElementById('category-tabs').innerHTML = categories.map(c => `<button onclick="filter('${c}', this)" class="px-4 py-1.5 rounded-full whitespace-nowrap transition-all border border-transparent text-xs font-bold ${c === 'All' ? 'bg-white text-green-600 shadow-sm' : 'text-white/80 hover:bg-white/10'}">${c}</button>`).join('');
 
-        // --- SWITCH MODE (TOY vs JEWELRY) ---
-        function switchAppMode(mode) {
-            currentAppMode = mode;
-            const config = APP_CONFIG[mode];
+        function filter(c, btn) { activeCategory = c; Array.from(document.getElementById('category-tabs').children).forEach(b => b.className = "px-4 py-1.5 rounded-full whitespace-nowrap transition-all border border-transparent text-xs font-bold text-white/80 hover:bg-white/10"); if(btn) btn.className = "px-4 py-1.5 rounded-full whitespace-nowrap transition-all bg-white text-green-600 shadow-sm text-xs font-bold"; renderGrid(); }
+        
+        function searchProduct(q) { renderGrid(q); }
+
+        function renderGrid(query = '') {
+            let list = PRODUCTS;
+            if (activeCategory !== 'All') list = list.filter(p => p.category === activeCategory);
+            if (query) list = list.filter(p => p.title.toLowerCase().includes(query.toLowerCase()));
             
-            // Update Hero
-            document.getElementById('hero-img').src = config.image;
-            document.getElementById('hero-title').innerText = config.title;
-            
-            // Update Tab Categories
-            renderTabs(config.categories);
-            activeCategory = 'All';
-            filterGrid();
-
-            // Update Bottom Nav Styling
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`nav-${mode}`).classList.add('active');
-        }
-
-        function renderTabs(categories) { 
-            document.getElementById('category-tabs').innerHTML = categories.map(c => 
-                `<button onclick="filter('${c}', this)" class="px-4 py-1.5 rounded-full whitespace-nowrap transition-all border border-transparent text-xs font-bold ${c === 'All' ? 'bg-white text-green-600 shadow-sm' : 'text-white/80 hover:bg-white/10'}">${c}</button>`
-            ).join(''); 
-        }
-
-        function filter(c, btn) { 
-            activeCategory = c;
-            Array.from(document.getElementById('category-tabs').children).forEach(b => b.className = "px-4 py-1.5 rounded-full whitespace-nowrap transition-all border border-transparent text-xs font-bold text-white/80 hover:bg-white/10"); 
-            if(btn) btn.className = "px-4 py-1.5 rounded-full whitespace-nowrap transition-all bg-white text-green-600 shadow-sm text-xs font-bold"; 
-            filterGrid();
-        }
-
-        function filterGrid() {
-            // Filter by App Mode (type) AND Category
-            let list = PRODUCTS.filter(p => p.type === currentAppMode);
-            if (activeCategory !== 'All') {
-                list = list.filter(p => p.category === activeCategory);
-            }
-            renderGrid(list);
-        }
-
-        function searchProduct(q) { 
-            if(!q) { filterGrid(); return; }
-            // Search only within current App Mode
-            const list = PRODUCTS.filter(p => p.type === currentAppMode && p.title.toLowerCase().includes(q.toLowerCase()));
-            renderGrid(list); 
-        }
-
-        function renderGrid(list) { 
-            document.getElementById('product-grid').innerHTML = list.map(p => { 
-                if(!p.variants || p.variants.length === 0) return ''; 
-                const img = p.thumbnail || p.variants[0].image || 'https://placehold.co/400'; 
-                return `<div onclick="openDetail(${p.id})" class="bg-white rounded-3xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform duration-300 group"><div class="relative w-full aspect-square overflow-hidden"><img src="${img}" class="w-full h-full object-cover bg-gray-100 group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/400'"> ${p.variants[0].price < 2 ? '<div class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">HOT</div>' : ''}</div><div class="px-3 pt-3 pb-4"><div class="text-xs text-gray-900 line-clamp-2 leading-snug h-8 mb-2 font-bold">${p.title}</div><div class="flex items-end justify-between"><div><div class="flex items-baseline gap-0.5 text-brand leading-none"><span class="text-[10px] font-bold">៛</span><span class="text-base font-black">${(p.variants[0].price * EX_RATE).toLocaleString()}</span></div><div class="text-[9px] text-gray-400 mt-1 font-medium">${p.sold} ${TEXTS[lang].sold}</div></div><button class="w-8 h-8 rounded-full bg-gray-50 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-colors shadow-sm"><i class="fa-solid fa-plus text-xs"></i></button></div></div></div>`; 
-            }).join(''); 
-        }
-
-        function toggleLang() { 
-            lang = lang === 'en' ? 'kh' : 'en'; 
-            document.getElementById('lang-btn').innerText = lang === 'en' ? 'KH' : 'EN'; 
-            updateTexts(); 
-        }
-        function updateTexts() { 
-            document.querySelectorAll('[data-key]').forEach(el => { 
-                const k = el.getAttribute('data-key'); 
-                if(TEXTS[lang][k]) el.innerText = TEXTS[lang][k]; 
-            }); 
-            // Re-render tabs to maintain language consistency if we had translated categories
-        }
-
-        // --- DETAIL VIEW LOGIC ---
-        function openDetail(id) { 
-            curProd = PRODUCTS.find(p=>p.id===id); curVar = curProd.variants[0]; 
-            const gallery = document.getElementById('dt-gallery'); 
-            gallery.innerHTML = curProd.variants.map((v, idx) => `<div onclick="openFullScreenGallery(${idx})" class="flex-shrink-0 w-full h-full snap-center bg-white flex items-center justify-center relative"><img src="${v.image}" class="max-w-full max-h-full object-contain p-8" onerror="this.src='https://placehold.co/400?text=No+Image'"></div>`).join(''); 
-            updateDetailUI(); 
-            
-            // Slide In Animation
-            requestAnimationFrame(() => {
-                document.getElementById('detail-view').classList.add('active'); 
-            });
-            document.getElementById('detail-view').scrollTop = 0; 
+            document.getElementById('product-grid').innerHTML = list.map(p => {
+                const img = p.thumbnail || p.variants[0].image;
+                return `<div onclick="openDetail(${p.id})" class="bg-white rounded-3xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform duration-300 group"><div class="relative w-full aspect-square overflow-hidden"><img src="${img}" class="w-full h-full object-cover bg-gray-100 group-hover:scale-105 transition-transform duration-500" onerror="this.src='${PLACEHOLDER_IMG}'"></div><div class="px-3 pt-3 pb-4"><div class="text-xs text-gray-900 line-clamp-2 leading-snug h-8 mb-2 font-bold">${p.title}</div><div class="flex items-end justify-between"><div><div class="flex items-baseline gap-0.5 text-brand leading-none"><span class="text-[10px] font-bold">៛</span><span class="text-base font-black">${(p.variants[0].price * EX_RATE).toLocaleString()}</span></div><div class="text-[9px] text-gray-400 mt-1 font-medium">${p.sold} Sold</div></div><button class="w-8 h-8 rounded-full bg-gray-50 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-colors shadow-sm"><i class="fa-solid fa-plus text-xs"></i></button></div></div></div>`;
+            }).join('');
         }
         
-        function closeDetail() { document.getElementById('detail-view').classList.remove('active'); }
-
-        function handleDetailScroll(el) { const h = document.getElementById('dt-header'); if(el.scrollTop > 50) { h.querySelector('button').classList.replace('bg-white/80','bg-white'); } else { h.querySelector('button').classList.replace('bg-white','bg-white/80'); } }
+        // --- DETAIL & SKU LOGIC ---
+        function openDetail(id) { curProd = PRODUCTS.find(p=>p.id===id); curVar = curProd.variants[0]; updateDetailUI(); document.getElementById('view-detail').classList.add('active'); }
+        function closeDetail() { document.getElementById('view-detail').classList.remove('active'); }
         
+        function updateDetailUI() { 
+            document.getElementById('dt-price').innerText = (curVar.price * EX_RATE).toLocaleString(); 
+            document.getElementById('dt-title').innerText = curProd.title; 
+            document.getElementById('dt-sold').innerText = curProd.sold;
+            document.getElementById('dt-sel-preview').innerText = curVar.name;
+            document.getElementById('dt-gallery').innerHTML = curProd.variants.map((v, i) => `<div class="flex-shrink-0 w-full h-full snap-center flex items-center justify-center"><img src="${v.image}" class="max-w-full max-h-full object-contain p-8" onerror="this.src='${PLACEHOLDER_IMG}'"></div>`).join('');
+            document.getElementById('gallery-counter').innerText = `1/${curProd.variants.length}`;
+            
+            // Sync SKU
+            const sImg = document.getElementById('sku-img');
+            sImg.src = curVar.image; 
+            sImg.onerror = function() { this.src=PLACEHOLDER_IMG; };
+            document.getElementById('sku-price').innerText = (curVar.price * EX_RATE).toLocaleString(); 
+            document.getElementById('sku-text').innerText = curVar.name;
+        }
+
+        // Sync Scroll & Selection
         function onGalleryScroll(e) { 
             const el = e.target; 
             const idx = Math.round(el.scrollLeft / el.offsetWidth); 
             if(curProd.variants[idx] && curProd.variants[idx].id !== curVar.id) { 
-                curVar = curProd.variants[idx]; 
-                updateDetailUI(false); 
+                curVar = curProd.variants[idx];
+                document.getElementById('dt-price').innerText = (curVar.price * EX_RATE).toLocaleString();
+                document.getElementById('dt-sel-preview').innerText = curVar.name;
+                document.getElementById('gallery-counter').innerText = `${idx+1}/${curProd.variants.length}`;
+                const sImg = document.getElementById('sku-img');
+                sImg.src = curVar.image;
+                sImg.onerror = function() { this.src=PLACEHOLDER_IMG; };
+                document.getElementById('sku-price').innerText = (curVar.price * EX_RATE).toLocaleString();
+                document.getElementById('sku-text').innerText = curVar.name;
             } 
         }
 
-        function updateDetailUI(scrollGallery = true) { 
-            document.getElementById('dt-price').innerText = (curProd.variants.find(v=>v.id===curVar.id).price * EX_RATE).toLocaleString(); 
-            document.getElementById('dt-price-orig').innerText = (curProd.variants.find(v=>v.id===curVar.id).price * EX_RATE * 1.2).toLocaleString(); 
-            document.getElementById('dt-title').innerText = curProd.title; 
-            document.getElementById('dt-sold').innerText = curProd.sold; 
-            document.getElementById('dt-sel-preview').innerText = curVar.name; 
-            
-            const idx = curProd.variants.findIndex(v=>v.id===curVar.id); 
-            document.getElementById('gallery-counter').innerText = `${idx + 1}/${curProd.variants.length}`; 
-            
-            // Sync SKU drawer if open
-            if(document.getElementById('sku-drawer').classList.contains('active')) {
-                document.getElementById('sku-img').src = curVar.image; 
-                document.getElementById('sku-price').innerText = (curVar.price * EX_RATE).toLocaleString(); 
-                document.getElementById('sku-text').innerText = curVar.name; 
-                document.querySelectorAll('.tb-option').forEach(el => el.classList.remove('selected'));
-                const btn = document.getElementById(`tb-btn-${curVar.id}`);
-                if(btn) btn.classList.add('selected');
-            }
-
-            if(scrollGallery) { 
-                const gallery = document.getElementById('dt-gallery'); 
-                // Changed to 'auto' for instant jump
-                gallery.scrollTo({ left: idx * gallery.offsetWidth, behavior: 'auto' }); 
-            } 
-        }
-
-        function openFullScreenGallery(startIdx) { const fs = document.getElementById('fs-gallery'); const scroller = document.getElementById('fs-scroll'); scroller.innerHTML = curProd.variants.map(v => `<div class="flex-shrink-0 w-full h-full snap-center flex items-center justify-center p-2"><img src="${v.image}" class="max-w-full max-h-full object-contain" onerror="this.src='https://placehold.co/800'"></div>`).join(''); fs.classList.remove('hidden'); fs.classList.add('flex'); requestAnimationFrame(() => { fs.classList.remove('opacity-0'); scroller.scrollTo({left: startIdx * scroller.offsetWidth, behavior: 'auto'}); }); updateFsUI(startIdx); }
-        function closeFullScreenGallery() { document.getElementById('fs-gallery').classList.add('opacity-0'); setTimeout(() => { document.getElementById('fs-gallery').classList.add('hidden'); document.getElementById('fs-gallery').classList.remove('flex'); }, 300); }
-        function onFsScroll(e) { const el = e.target; const idx = Math.round(el.scrollLeft / el.offsetWidth); updateFsUI(idx); }
-        function updateFsUI(idx) { if(curProd.variants[idx]) { document.getElementById('fs-counter').innerText = `${idx + 1}/${curProd.variants.length}`; document.getElementById('fs-title').innerText = `${curProd.title} - ${curProd.variants[idx].name}`; document.getElementById('fs-price').innerText = (curProd.variants[idx].price * EX_RATE).toLocaleString(); } }
-
-        // --- SKU SELECTION (LIST VIEW) ---
-        function openSku(buyNow) { 
-            curQty = 1; 
-            const container = document.getElementById('sku-options-container');
-            
-            // Set vertical stack layout
-            container.className = "flex flex-col gap-2";
-            
-            // Render LIST STYLE: [Image] 1/. Name
-            container.innerHTML = curProd.variants.map((v, idx) => `
-                <button onclick="selVar('${v.id}')" id="tb-btn-${v.id}" class="tb-option w-full p-2 rounded-2xl flex items-center gap-3 border transition-all active:scale-[0.98] bg-white text-left relative overflow-hidden group">
-                    <img src="${v.image}" class="w-12 h-12 rounded-lg object-cover bg-gray-50 border border-gray-100 shrink-0" onerror="this.src='https://placehold.co/100'">
-                    <span class="tb-name text-sm font-bold text-gray-700 flex-1">
-                        <span class="idx-num mr-1">${idx+1}/.</span> ${v.name}
-                    </span>
-                    <!-- Tick removed as requested -->
-                </button>
-            `).join('');
-            
-            selVar(curVar.id, false); 
+        function openSku() { 
+            curQty = 1; document.getElementById('sku-qty').innerText = 1;
+            document.getElementById('sku-options-container').innerHTML = curProd.variants.map((v, i) => `<button onclick="selVar('${v.id}')" id="tb-btn-${v.id}" class="tb-option w-full p-2 rounded-2xl flex items-center gap-3 border transition-all active:scale-[0.98] bg-white text-left relative overflow-hidden group"><img src="${v.image}" class="w-12 h-12 rounded-lg object-cover bg-gray-50 border border-gray-100 shrink-0" onerror="this.src='${PLACEHOLDER_IMG}'"><span class="tb-name text-sm font-bold text-gray-700 flex-1"><span class="idx-num mr-1">${i+1}/.</span> ${v.name}</span></button>`).join('');
+            document.querySelectorAll('.tb-option').forEach(el=>el.classList.remove('selected')); 
+            const activeBtn = document.getElementById(`tb-btn-${curVar.id}`); if(activeBtn) activeBtn.classList.add('selected');
             document.getElementById('sku-backdrop').classList.add('active'); 
             document.getElementById('sku-drawer').classList.add('active'); 
         }
-
-        function closeSku() { 
-            document.getElementById('sku-drawer').classList.remove('active'); 
-            document.getElementById('sku-backdrop').classList.remove('active'); 
-        }
-
-        function selVar(id, forceScroll = true) { 
+        
+        function closeSku() { document.getElementById('sku-drawer').classList.remove('active'); document.getElementById('sku-backdrop').classList.remove('active'); }
+        
+        function selVar(id) { 
             curVar = curProd.variants.find(v=>v.id===id); 
-            document.querySelectorAll('.tb-option').forEach(el => el.classList.remove('selected'));
-            document.getElementById(`tb-btn-${id}`).classList.add('selected');
-            document.getElementById('sku-img').src = curVar.image; 
+            document.querySelectorAll('.tb-option').forEach(el=>el.classList.remove('selected')); document.getElementById(`tb-btn-${id}`).classList.add('selected'); 
+            document.getElementById('dt-price').innerText = (curVar.price * EX_RATE).toLocaleString(); 
+            document.getElementById('dt-sel-preview').innerText = curVar.name;
+            const sImg = document.getElementById('sku-img'); sImg.src = curVar.image; sImg.onerror = function() { this.src=PLACEHOLDER_IMG; };
             document.getElementById('sku-price').innerText = (curVar.price * EX_RATE).toLocaleString(); 
-            document.getElementById('sku-text').innerText = curVar.name; 
-            updateDetailUI(forceScroll);
+            document.getElementById('sku-text').innerText = curVar.name;
+            const idx = curProd.variants.findIndex(v => v.id === id); const gallery = document.getElementById('dt-gallery');
+            if(idx >= 0) { gallery.scrollTo({ left: idx * gallery.offsetWidth, behavior: 'smooth' }); document.getElementById('gallery-counter').innerText = `${idx+1}/${curProd.variants.length}`; }
         }
-
+        
         function updQty(d) { curQty = Math.max(1, curQty+d); document.getElementById('sku-qty').innerText = curQty; }
         
-        function confirmSku() { 
-            const ex = cart.find(i => i.vid === curVar.id); 
-            if(ex) ex.qty += curQty; 
-            else cart.push({pid: curProd.id, title: curProd.title, vid: curVar.id, vname: curVar.name, price: curVar.price, img: curVar.image, qty: curQty, chk: true}); 
-            localStorage.setItem(CART_KEY, JSON.stringify(cart)); 
-            updateBadges(); 
-            closeSku(); 
-            
-            const t = document.getElementById('toast'); 
-            t.classList.remove('hidden'); 
-            t.classList.add('flex');
-            setTimeout(() => { t.classList.add('scale-100', 'opacity-100'); }, 10);
-            setTimeout(()=> { 
-                t.classList.remove('scale-100', 'opacity-100');
-                setTimeout(() => { t.classList.remove('flex'); t.classList.add('hidden'); }, 300);
-            }, 1500); 
+        function confirmSku() {
+            const ex = cart.find(i => i.vid === curVar.id);
+            if(ex) ex.qty += curQty; else cart.push({pid: curProd.id, title: curProd.title, vid: curVar.id, vname: curVar.name, price: curVar.price, img: curVar.image, qty: curQty, chk: true});
+            localStorage.setItem(CART_KEY, JSON.stringify(cart)); updateBadges(); closeSku(); showToast("Added to Cart", false);
         }
 
-        function updateBadges() { const c = cart.reduce((a,b)=>a+b.qty,0); ['nav-cart-badge', 'detail-cart-badge'].forEach(id => { const el = document.getElementById(id); el.innerText = c; el.classList.toggle('hidden', c===0); }); document.getElementById('cart-count').innerText = c; }
-        
-        // --- CART LOGIC ---
-        function openCart() { renderCartList(); document.getElementById('cart-bg').classList.add('active'); document.getElementById('cart-drawer').classList.remove('translate-x-full'); }
-        function closeCart() { document.getElementById('cart-drawer').classList.add('translate-x-full'); document.getElementById('cart-bg').classList.remove('active'); }
-        function toggleCheck(idx, event) { if(event) event.stopPropagation(); cart[idx].chk = !cart[idx].chk; localStorage.setItem(CART_KEY, JSON.stringify(cart)); renderCartList(); }
-        function toggleAllCart() { const all = cart.every(i => i.chk); cart.forEach(i=>i.chk=!all); localStorage.setItem(CART_KEY, JSON.stringify(cart)); renderCartList(); }
-        
-        function changeCartQty(i, delta, event) {
-            if(event) event.stopPropagation();
-            const item = cart[i];
-            const newQty = item.qty + delta;
-            if(newQty < 1) return; 
-            item.qty = newQty;
-            localStorage.setItem(CART_KEY, JSON.stringify(cart));
-            renderCartList();
-        }
+        // --- SHARED CART SYSTEM ---
+        function updateBadges() { const c = cart.reduce((a,b)=>a+b.qty,0); ['header-cart-badge', 'nav-cart-badge', 'detail-cart-badge'].forEach(id=>{const el=document.getElementById(id); if(el) {el.innerText=c; if(c>0)el.classList.remove('hidden'); else el.classList.add('hidden');}}); document.getElementById('cart-count').innerText=c; }
+        function openCart() { cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); renderCartList(); document.getElementById('cart-bg').classList.add('active'); document.getElementById('cart-drawer').classList.add('active'); }
+        function closeCart() { document.getElementById('cart-drawer').classList.remove('active'); document.getElementById('cart-bg').classList.remove('active'); }
 
-        function renderCartList() { 
-            const list = document.getElementById('cart-list'); 
-            if(!cart.length) { 
-                list.innerHTML = '<div class="flex flex-col items-center justify-center h-64 text-gray-300"><i class="fa-solid fa-cart-arrow-down text-4xl mb-3"></i><div class="text-xs font-bold">Your cart is empty</div></div>'; 
-                document.getElementById('cart-total').innerText = '៛0'; 
-                document.getElementById('checkout-btn').disabled = true; 
-                document.getElementById('select-all-box').className = "w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center transition-colors";
-                document.getElementById('select-all-box').querySelector('i').classList.add('hidden');
-                return; 
-            } 
+        function renderCartList() {
+            const list = document.getElementById('cart-list');
+            if(!cart.length) { list.innerHTML = '<div class="text-center text-gray-300 py-10 flex flex-col items-center"><i class="fa-solid fa-cart-arrow-down text-4xl mb-3"></i><span>Empty</span></div>'; document.getElementById('cart-total').innerText='៛0'; document.getElementById('checkout-btn').disabled = true; return; }
             list.innerHTML = cart.map((item, i) => `
                 <div onclick="toggleCheck(${i})" class="bg-white p-3 rounded-2xl flex gap-3 shadow-sm items-center border transition-all cursor-pointer select-none active:scale-[0.98] ${item.chk ? 'border-brand bg-green-50/30' : 'border-gray-50'}">
                     <div class="shrink-0"><div class="w-5 h-5 rounded-full border-2 ${item.chk ? 'bg-brand border-brand' : 'border-gray-300'} flex items-center justify-center transition-colors">${item.chk ? '<i class="fa-solid fa-check text-white text-[10px]"></i>' : ''}</div></div>
-                    <img src="${item.img}" class="w-16 h-16 rounded-xl bg-gray-50 object-cover border border-gray-100" onerror="this.src='https://placehold.co/100'">
+                    <img src="${item.img}" class="w-16 h-16 rounded-xl bg-gray-50 object-cover border border-gray-100" onerror="this.src='${PLACEHOLDER_IMG}'">
                     <div class="flex-1 min-w-0">
                         <div class="text-xs font-bold line-clamp-1 mb-0.5 text-gray-900">${item.title}</div>
                         <div class="text-[10px] text-gray-500 font-medium mb-1">${item.vname}</div>
-                        <div class="flex justify-between items-end">
-                            <div class="text-brand text-sm font-black">៛${(item.price*EX_RATE).toLocaleString()}</div>
-                            <div class="flex items-center bg-gray-100 rounded-lg h-6">
-                                <button onclick="changeCartQty(${i}, -1, event)" class="w-6 h-6 flex items-center justify-center text-gray-600 font-bold active:scale-90 hover:bg-gray-200 rounded-l-lg">-</button>
+                        <div class="flex justify-between items-center mt-2">
+                             <div class="text-brand text-sm font-black">៛${(item.price*EX_RATE).toLocaleString()}</div>
+                             <div class="flex items-center bg-gray-100 rounded-lg h-7" onclick="event.stopPropagation()">
+                                <button onclick="changeCartQty(${i}, -1)" class="w-7 h-7 flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200 rounded-l-lg">-</button>
                                 <div class="text-xs font-bold text-gray-900 px-1 min-w-[1.5rem] text-center">${item.qty}</div>
-                                <button onclick="changeCartQty(${i}, 1, event)" class="w-6 h-6 flex items-center justify-center text-gray-600 font-bold active:scale-90 hover:bg-gray-200 rounded-r-lg">+</button>
+                                <button onclick="changeCartQty(${i}, 1)" class="w-7 h-7 flex items-center justify-center text-gray-600 font-bold hover:bg-gray-200 rounded-r-lg">+</button>
                             </div>
                         </div>
                     </div>
                     <button onclick="delItem(${i}, event)" class="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors active:scale-90"><i class="fa-solid fa-trash-can text-sm"></i></button>
                 </div>
-            `).join(''); 
-            
-            const total = cart.reduce((a,b)=> (b.chk ? a+(b.price*b.qty) : a), 0); 
-            document.getElementById('cart-total').innerText = '៛' + (total*EX_RATE).toLocaleString(); 
-            const anySelected = cart.some(i => i.chk);
-            
+            `).join('');
+            const selected = cart.filter(i => i.chk);
+            const total = selected.reduce((a,b)=> a+(b.price*b.qty), 0);
+            document.getElementById('cart-total').innerText = '៛' + (total*EX_RATE).toLocaleString();
+            document.getElementById('checkout-btn').disabled = selected.length === 0;
             const box = document.getElementById('select-all-box');
-            if(cart.every(i => i.chk) && cart.length > 0) {
-                 box.className = "w-5 h-5 rounded-full border-2 border-brand bg-brand flex items-center justify-center transition-colors";
-                 box.querySelector('i').classList.remove('hidden');
-            } else {
-                 box.className = "w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center transition-colors";
-                 box.querySelector('i').classList.add('hidden');
-            }
-            document.getElementById('checkout-btn').disabled = !anySelected; 
+            if(cart.length > 0 && cart.every(i => i.chk)) { box.className = "w-5 h-5 rounded-full border-2 border-brand bg-brand flex items-center justify-center transition-colors"; box.querySelector('i').classList.remove('hidden'); } else { box.className = "w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center transition-colors"; box.querySelector('i').classList.add('hidden'); }
         }
-        
-        function delItem(i, event) { if(event) event.stopPropagation(); cart.splice(i,1); localStorage.setItem(CART_KEY, JSON.stringify(cart)); renderCartList(); updateBadges(); }
-        
-        function checkout() { if(!cart.filter(i=>i.chk).length) return; closeCart(); document.getElementById('invoice-modal').classList.remove('hidden'); document.getElementById('invoice-modal').classList.add('flex'); document.getElementById('btn-share').classList.add('hidden'); document.getElementById('gen-btn').style.display = 'flex'; document.getElementById('gen-btn').innerHTML = '<span>Create Invoice</span> <i class="fa-solid fa-wand-magic-sparkles text-brand"></i>'; document.getElementById('gen-btn').disabled = false; document.getElementById('invoice-preview').classList.add('hidden'); document.getElementById('share-instr').classList.add('hidden'); }
+
+        function toggleCheck(i) { cart[i].chk = !cart[i].chk; saveCart(); }
+        function toggleAllCart() { const all = cart.every(i => i.chk); cart.forEach(i=>i.chk=!all); saveCart(); }
+        function changeCartQty(i, d) { const n = cart[i].qty + d; if(n<1) return; cart[i].qty = n; saveCart(); }
+        function delItem(i, e) { e.stopPropagation(); cart.splice(i,1); saveCart(); }
+        function saveCart() { localStorage.setItem(CART_KEY, JSON.stringify(cart)); renderCartList(); updateBadges(); }
+
+        // --- INVOICE GENERATION ---
+        function openInvoice() { closeCart(); document.getElementById('invoice-modal').classList.remove('hidden'); document.getElementById('invoice-modal').classList.add('flex'); document.getElementById('btn-share').classList.add('hidden'); document.getElementById('gen-btn').style.display='flex'; document.getElementById('invoice-preview').classList.add('hidden'); }
         function closeInvoice() { document.getElementById('invoice-modal').classList.add('hidden'); document.getElementById('invoice-modal').classList.remove('flex'); openCart(); }
 
-        // --- INVOICE GENERATOR ---
-        async function doGenerate() {
-            const n=document.getElementById('inv-name').value, p=document.getElementById('inv-phone').value, a=document.getElementById('inv-addr').value; 
-            if(!n) return alert('Please enter Name');
+        async function generateInvoice() {
+            const n=document.getElementById('inv-name').value, p=document.getElementById('inv-phone').value, a=document.getElementById('inv-addr').value;
+            if(!n) return showToast('Please enter your Name', true);
+            const btn=document.getElementById('gen-btn'); btn.disabled=true; btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+            const items = cart.filter(i=>i.chk); const total = items.reduce((a,b)=>a+(b.price*b.qty),0);
+            const div = document.createElement('div'); div.style.width='550px'; div.style.position='fixed'; div.style.left='-2000px';
             
-            const btn = document.getElementById('gen-btn');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
-            btn.disabled = true;
-
-            const div = document.createElement('div'); div.className = 'screenshot-frame';
-            div.style.left = '-2000px'; 
-            div.style.top = '0';
-            
-            const items = cart.filter(i => i.chk); 
-            const total = items.reduce((a,b)=> a+((b.price||b.p)*b.qty), 0);
-            const ts = new Date().toLocaleDateString('en-GB');
-
-            // --- REDESIGNED INVOICE: WIDER, LARGER IMAGES, CLEANER LAYOUT ---
-            div.style.width = '550px'; 
             div.innerHTML = `
-            <div style="background:white; padding:0; border-radius:0; font-family:'Plus Jakarta Sans', sans-serif; color:#1a1a1a; position:relative; overflow:hidden; width:550px;">
-                
-                <!-- HEADER -->
-                <div style="background:#90D730; padding:30px 40px; color:#1a1a1a; display:flex; justify-content:space-between; align-items:center;">
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <div style="width:50px; height:50px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#90D730; font-weight:900; font-size:24px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">S</div>
-                        <div>
-                            <h1 style="font-size:24px; font-weight:900; letter-spacing:-0.5px; margin:0; line-height:1;">SOMPHEA REAK</h1>
-                            <p style="font-size:12px; margin:4px 0 0 0; font-weight:600; opacity:0.8; text-transform:uppercase; letter-spacing:1px;">Official Store</p>
-                        </div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:0.7;">Date</div>
-                        <div style="font-size:16px; font-weight:700;">${ts}</div>
-                    </div>
+            <div style="background:white; font-family:'Plus Jakarta Sans'; color:#1a1a1a; padding:0; overflow:hidden;">
+                <div style="background:#90D730; padding:30px 40px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; gap:15px; align-items:center;"><div style="width:50px; height:50px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#90D730; font-weight:900; font-size:24px;">S</div><div><h1 style="font-size:24px; font-weight:900; margin:0;">SOMPHEA REAK</h1><p style="font-size:12px; margin:0; opacity:0.8; font-weight:600; text-transform:uppercase;">Official Store</p></div></div>
+                    <div style="text-align:right;"><div style="font-size:11px; font-weight:700; opacity:0.7; text-transform:uppercase;">Date</div><div style="font-size:16px; font-weight:700;">${new Date().toLocaleDateString('en-GB')}</div></div>
                 </div>
-
-                <!-- CUSTOMER INFO -->
-                <div style="padding:30px 40px 10px 40px;">
+                <div style="padding:30px 40px 10px;">
                     <div style="background:#f9fafb; border:1px solid #eee; border-radius:16px; padding:20px;">
-                        <div style="font-size:11px; font-weight:800; color:#90D730; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Customer Information</div>
-                        <div style="font-size:20px; font-weight:800; color:#1a1a1a; margin-bottom:4px;">${n}</div>
-                        <div style="font-size:14px; color:#555; font-weight:600; display:flex; gap:10px;">
-                             <span><i class="fa-solid fa-phone" style="font-size:12px; margin-right:4px; color:#ccc;"></i> ${p}</span>
-                        </div>
-                        ${a ? `<div style="font-size:13px; color:#777; margin-top:10px; padding-top:10px; border-top:1px dashed #e5e7eb; line-height:1.4;">${a}</div>` : ''}
+                        <div style="font-size:11px; font-weight:800; color:#90D730; margin-bottom:10px; text-transform:uppercase;">Customer</div>
+                        <div style="font-size:20px; font-weight:800; margin-bottom:4px;">${n}</div>
+                        <div style="font-size:14px; color:#555; font-weight:600;">${p}</div>
+                        ${a?`<div style="font-size:13px; color:#777; margin-top:10px; border-top:1px dashed #e5e7eb; padding-top:10px;">${a}</div>`:''}
                     </div>
                 </div>
-
-                <!-- ORDER ITEMS -->
                 <div style="padding:20px 40px;">
-                    <div style="font-size:12px; font-weight:800; color:#1a1a1a; margin-bottom:15px; text-transform:uppercase; letter-spacing:0.5px;">Order Details</div>
+                    <div style="font-size:12px; font-weight:800; margin-bottom:15px; text-transform:uppercase;">Items</div>
                     <div style="display:flex; flex-direction:column; gap:15px;">
-                        ${items.map((i) => `
-                        <div style="display:flex; align-items:flex-start; gap:20px; border-bottom:1px solid #f3f4f6; padding-bottom:15px;">
-                            <div style="width:100px; height:100px; flex-shrink:0; border-radius:12px; overflow:hidden; border:1px solid #eee; background:#fff;">
-                                <img src="${i.img}" style="width:100%; height:100%; object-fit:cover;">
-                            </div>
-                            <div style="flex:1; padding-top:5px;">
-                                <div style="font-size:16px; font-weight:800; color:#1a1a1a; margin-bottom:4px; line-height:1.3;">${i.title}</div>
-                                <div style="display:inline-block; background:#f3f4f6; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700; color:#555; margin-bottom:8px;">Model: ${i.vname}</div>
-                                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-                                    <div style="font-size:13px; color:#888; font-weight:600;">
-                                        ៛${(i.price*EX_RATE).toLocaleString()} x ${i.qty}
-                                    </div>
-                                    <div style="font-size:18px; font-weight:800; color:#1a1a1a;">
-                                        ៛${(i.price*i.qty*EX_RATE).toLocaleString()}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        `).join('')}
+                        ${items.map(i=>`<div style="display:flex; gap:20px; border-bottom:1px solid #f3f4f6; padding-bottom:15px;"><div style="width:80px; height:80px; border-radius:12px; overflow:hidden; background:#fff; border:1px solid #eee;"><img src="${i.img}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='${PLACEHOLDER_IMG}'"></div><div style="flex:1;"><div style="font-size:16px; font-weight:800; margin-bottom:4px;">${i.title}</div><div style="background:#f3f4f6; display:inline-block; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700; color:#555; margin-bottom:8px;">${i.vname}</div><div style="display:flex; justify-content:space-between;"><div style="font-size:13px; color:#888; font-weight:600;">៛${(i.price*EX_RATE).toLocaleString()} x ${i.qty}</div><div style="font-size:18px; font-weight:800;">៛${(i.price*i.qty*EX_RATE).toLocaleString()}</div></div></div></div>`).join('')}
                     </div>
                 </div>
-
-                <!-- TOTAL FOOTER -->
-                <div style="padding:0 40px 40px 40px;">
-                    <div style="background:#1a1a1a; color:white; padding:25px; border-radius:20px; position:relative; overflow:hidden;">
-                        <div style="position:absolute; top:-20px; right:-20px; width:100px; height:100px; background:#90D730; border-radius:50%; opacity:0.15; filter:blur(20px);"></div>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div style="font-size:13px; font-weight:600; opacity:0.7;">Total Amount</div>
-                            <div style="font-size:32px; font-weight:900; color:#90D730;">៛${(total*EX_RATE).toLocaleString()}</div>
-                        </div>
-                        <div style="margin-top:5px; text-align:right; font-size:11px; opacity:0.5;">Thank you for your purchase!</div>
+                <div style="padding:0 40px 40px;">
+                    <div style="background:#1a1a1a; color:white; padding:25px; border-radius:20px; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:13px; font-weight:600; opacity:0.7;">Total Amount</div>
+                        <div style="font-size:32px; font-weight:900; color:#90D730;">៛${(total*EX_RATE).toLocaleString()}</div>
                     </div>
                 </div>
-
             </div>`;
-            document.body.appendChild(div); 
-
-            await Promise.all(Array.from(div.querySelectorAll('img')).map(img => { 
-                img.crossOrigin = "anonymous";
-                if (img.complete) return Promise.resolve(); 
-                return new Promise(resolve => { img.onload = img.onerror = resolve; }); 
-            }));
-            await new Promise(r => setTimeout(r, 300));
-
+            document.body.appendChild(div);
+            
+            await Promise.all(Array.from(div.querySelectorAll('img')).map(img=>{ img.crossOrigin="anonymous"; if(img.complete) return Promise.resolve(); return new Promise(r=>{img.onload=img.onerror=r;}); }));
             try {
-                const cvs = await html2canvas(div, { scale: 2, backgroundColor:null, useCORS: true }); 
-                const url = cvs.toDataURL();
-                document.getElementById('invoice-img').src = url; 
-                document.getElementById('invoice-preview').classList.remove('hidden'); 
-                document.getElementById('share-instr').classList.remove('hidden');
-                
-                btn.style.display = 'none';
-                document.getElementById('btn-share').classList.remove('hidden'); 
-                document.getElementById('btn-share').style.display = 'flex';
-                
-                generatedBlob = await new Promise(r => cvs.toBlob(r));
-
-                document.getElementById('btn-share').onclick = async () => {
-                    let itemDetails = items.map(i => `• ${i.title} (${i.vname}) x${i.qty}`).join('\n');
-                    const msg = `🧾 *NEW ORDER*\n\n👤 *Customer:* ${n}\n📱 *Phone:* ${p}\n📍 *Address:* ${a || 'N/A'}\n\n🛒 *Items:*\n${itemDetails}\n\n💰 *TOTAL: ៛${(total*EX_RATE).toLocaleString()}*\n📅 ${ts}`;
-                    
-                    if (navigator.canShare && generatedBlob) {
-                        try {
-                            const file = new File([generatedBlob], "invoice.png", { type: "image/png" });
-                            await navigator.share({ files: [file], title: 'Order Invoice', text: msg });
-                            return;
-                        } catch (err) { console.log('Share failed'); }
-                    }
-                    window.open(`https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(msg)}`, '_blank');
+                const cvs = await html2canvas(div, {scale:2, useCORS:true});
+                document.getElementById('invoice-img').src=cvs.toDataURL();
+                document.getElementById('invoice-preview').classList.remove('hidden');
+                btn.style.display='none';
+                const sBtn=document.getElementById('btn-share'); sBtn.classList.remove('hidden'); sBtn.style.display='flex';
+                const blob = await new Promise(r=>cvs.toBlob(r));
+                sBtn.onclick = async () => {
+                   const msg = `🧾 *ORDER*\n👤 ${n}\n📞 ${p}\n💰 ៛${(total*EX_RATE).toLocaleString()}`;
+                   if(navigator.canShare){ try{await navigator.share({files:[new File([blob],"invoice.png",{type:"image/png"})],title:'Invoice',text:msg}); return;}catch(e){}}
+                   window.open(`https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(msg)}`, '_blank');
                 };
-            } catch (e) { alert("Error generating invoice."); console.error(e); btn.innerText = "Generate Invoice"; btn.disabled = false; } finally { div.remove(); }
+            } catch(e) { console.error(e); showToast('Error generating invoice', true); btn.disabled=false; btn.innerHTML='Create Invoice'; } finally { div.remove(); }
         }
 
-        // START APP
-        init();
+        // --- TOASTS ---
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast'); const icon = document.getElementById('toast-icon'); const iconBox = document.getElementById('toast-icon-box'); const text = document.getElementById('toast-msg');
+            text.innerText = msg;
+            if(isError) { icon.className = 'fa-solid fa-triangle-exclamation text-xl'; iconBox.className = 'w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mb-3 shadow-lg shadow-red-500/30'; } 
+            else { icon.className = 'fa-solid fa-check text-xl'; iconBox.className = 'w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mb-3 shadow-lg shadow-green-500/30'; }
+            t.classList.remove('hidden'); t.classList.add('flex'); setTimeout(() => { t.classList.add('scale-100', 'opacity-100'); }, 10);
+            setTimeout(() => { t.classList.remove('scale-100', 'opacity-100'); setTimeout(() => { t.classList.remove('flex'); t.classList.add('hidden'); }, 300); }, 2500);
+        }
+
+        renderGrid();
+        updateBadges();
+        window.addEventListener('storage', () => { cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); updateBadges(); });
     </script>
 </body>
 </html>
-
 
 
