@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Somphea Reak | Jewelry</title>
+    <title>Somphea Reak | Jewelry Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -19,7 +19,7 @@
         html, body {
             height: 100%;
             overflow: hidden; 
-            touch-action: pan-x pan-y; /* Prevent pinch zoom but allow scrolling */
+            touch-action: pan-x pan-y; 
         }
 
         body { 
@@ -31,10 +31,8 @@
             overscroll-behavior-y: none;
         }
 
-        /* IOS ZOOM FIX: Inputs must be 16px to prevent auto-zoom on focus */
-        input, textarea, select {
-            font-size: 16px !important;
-        }
+        /* IOS ZOOM FIX */
+        input, textarea, select { font-size: 16px !important; }
         
         .text-brand { color: var(--brand-green); }
         .bg-brand { background-color: var(--brand-green); }
@@ -51,75 +49,75 @@
         .drawer-panel { transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
         .drawer-panel.active { transform: translateY(0); }
 
-        /* Full Page Transitions (TaoBao Style Slide) */
+        /* Full Page Transitions */
         .page-view {
-            position: fixed;
-            inset: 0;
-            background: #f7f7f7;
-            transform: translateX(100%);
-            transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1); /* Authentic iOS/App ease */
-            will-change: transform;
-            z-index: 60;
-            display: flex; /* Changed from hidden logic to transform logic */
-            flex-direction: column;
+            position: fixed; inset: 0; background: #f7f7f7;
+            transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+            will-change: transform; z-index: 60; display: flex; flex-direction: column;
         }
-        .page-view.active {
-            transform: translateX(0);
-        }
+        .page-view.active { transform: translateX(0); }
         
         /* Screenshot Frame */
-        .screenshot-frame { background: white; width: 400px; padding: 20px; position: fixed; top: 0; left: -2000px; z-index: 9999; visibility: visible; pointer-events: none; }
-        
-        .custom-checkbox { appearance: none; width: 22px; height: 22px; border: 2px solid #ddd; border-radius: 50%; display: grid; place-content: center; transition: all 0.2s; }
-        .custom-checkbox:checked { background-color: var(--brand-green); border-color: var(--brand-green); }
-        .custom-checkbox:checked::before { content: ""; width: 10px; height: 10px; background: white; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
-
-        .snap-mandatory { scroll-snap-type: x mandatory; }
-        .snap-center { scroll-snap-align: center; }
+        .screenshot-frame { background: white; padding: 20px; position: fixed; top: 0; left: -2000px; z-index: 9999; visibility: visible; pointer-events: none; }
         
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
         
-        /* TaoBao Selection Styles */
+        /* Nav Item Active State */
+        .nav-item.active { color: var(--brand-green); }
+        .nav-item.active i { transform: scale(1.1); }
+        
+        /* TaoBao Selection Styles - UPDATED for List View */
         .tb-option { transition: all 0.2s; border: 1px solid transparent; }
         .tb-option.selected { border-color: var(--brand-green); background-color: #f0fdf4; color: #1a1a1a; }
         .tb-option.selected .tb-name { color: var(--brand-green); }
-        .tb-option:not(.selected) { border-color: #f3f4f6; background-color: #f9fafb; color: #4b5563; }
+        .tb-option.selected .idx-num { color: var(--brand-green); font-weight: 900; }
+        .tb-option:not(.selected) { border-color: #f3f4f6; background-color: #fff; color: #4b5563; }
+        .tb-option:not(.selected) .idx-num { color: #9ca3af; }
     </style>
 </head>
 <body class="bg-[#f7f7f7]">
 
-    <!-- 1. HEADER -->
-    <header class="sticky top-0 z-50 taobao-header px-4 py-3 shadow-sm">
-        <div class="flex items-center gap-3 mb-3">
-            <a href="/" class="flex items-center gap-2 mr-1 active:opacity-80 transition-opacity">
-                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-white/20 overflow-hidden">
+    <!-- 1. HEADER (REDESIGNED) -->
+    <header class="sticky top-0 z-50 taobao-header px-4 pt-3 pb-2 shadow-md rounded-b-[24px]">
+        <!-- Row 1: Nav Controls & Logo -->
+        <div class="relative flex items-center justify-center mb-3">
+            <!-- Home Button (Left) -->
+            <button onclick="location.reload()" class="absolute left-0 w-9 h-9 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-95 transition-transform border border-white/20">
+                 <i class="fa-solid fa-house text-sm"></i>
+            </button>
+
+            <!-- Logo & Name (Center) -->
+            <div class="flex items-center gap-2 text-white">
+                <div class="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-white/20 overflow-hidden">
                     <img src="static/images/logo.png" onerror="this.src='https://placehold.co/100?text=S'" class="w-full h-full object-cover">
                 </div>
-                <div class="flex flex-col justify-center text-white leading-tight">
-                    <span class="font-black text-sm tracking-wide uppercase drop-shadow-sm">Somphea</span>
-                    <span class="font-bold text-[10px] opacity-90 tracking-[0.2em] uppercase">Reak</span>
-                </div>
-            </a>
-            <div class="flex-1 h-10 bg-white/95 rounded-full flex items-center px-4 gap-2 shadow-inner border border-green-400/30">
-                <i class="fa-solid fa-magnifying-glass text-gray-400 text-sm"></i>
-                <!-- Font size class removed, handled by CSS !important to 16px -->
-                <input type="text" placeholder="Search..." class="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 font-medium h-full" oninput="searchProduct(this.value)">
+                <div class="font-black text-base tracking-wide uppercase drop-shadow-sm leading-none">Somphea Reak</div>
             </div>
-            <div class="flex items-center gap-3 text-white">
-                <button onclick="toggleLang()" class="font-bold text-xs border border-white/40 px-2 py-1 rounded-lg backdrop-blur-md active:bg-white/10"><span id="lang-btn">KH</span></button>
-            </div>
+
+            <!-- Lang Switch (Right) -->
+            <button onclick="toggleLang()" class="absolute right-0 w-9 h-9 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white font-bold text-[10px] border border-white/20 active:scale-95 transition-transform">
+                <span id="lang-btn">KH</span>
+            </button>
         </div>
+
+        <!-- Row 2: Search Bar -->
+        <div class="h-10 bg-white rounded-xl flex items-center px-4 gap-3 shadow-sm border border-green-400/30 mb-3">
+            <i class="fa-solid fa-magnifying-glass text-gray-400 text-xs"></i>
+            <input type="text" placeholder="Search jewelry..." class="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 font-bold text-sm h-full" oninput="searchProduct(this.value)">
+        </div>
+
+        <!-- Row 3: Categories -->
         <nav class="flex gap-2 overflow-x-auto hide-scrollbar pb-1 text-white/90 font-medium text-xs" id="category-tabs"></nav>
     </header>
 
     <!-- 2. CONTENT AREA -->
     <main class="px-3 pt-4 pb-28">
-        <div class="mb-4 rounded-3xl overflow-hidden shadow-md relative h-44 bg-gray-200">
-            <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover">
+        <div class="mb-4 rounded-3xl overflow-hidden shadow-md relative h-44 bg-gray-200 transition-all group">
+            <img id="hero-img" src="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
             <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
             <div class="absolute bottom-5 left-5 text-white">
-                <div class="text-[10px] font-bold bg-brand text-black px-2.5 py-1 rounded-full inline-block mb-1.5 shadow-sm">Exclusive</div>
-                <div class="font-black text-xl leading-none drop-shadow-md">Fine Jewelry</div>
+                <div class="text-[10px] font-bold bg-brand text-black px-2.5 py-1 rounded-full inline-block mb-1.5 shadow-sm">New Collection</div>
+                <div class="font-black text-xl leading-none drop-shadow-md" id="hero-title">Fine Jewelry</div>
             </div>
         </div>
         <div class="grid grid-cols-2 gap-3" id="product-grid"></div>
@@ -127,12 +125,9 @@
 
     <!-- 3. BOTTOM NAV -->
     <div class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-gray-100 px-6 py-2 flex justify-between items-center z-[45] pb-safe min-h-[70px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-3xl">
-        <a href="/" class="flex flex-col items-center gap-1 w-14 text-gray-400 hover:text-brand transition-colors">
-            <i class="fa-solid fa-house text-xl"></i><span class="text-[10px] font-bold">Home</span>
-        </a>
-        <a href="/bracelet" class="flex flex-col items-center gap-1 w-14 text-brand">
-            <i class="fa-regular fa-gem text-xl"></i><span class="text-[10px] font-bold">Jewelry</span>
-        </a>
+        <button onclick="switchAppMode('jewelry')" class="nav-item flex flex-col items-center gap-1 w-14 text-gray-400 transition-colors active" id="nav-jewelry">
+            <i class="fa-regular fa-gem text-xl transition-transform"></i><span class="text-[10px] font-bold">Jewelry</span>
+        </button>
         <a href="https://t.me/somphea_reak" target="_blank" class="flex flex-col items-center gap-1 w-14 text-gray-400 hover:text-brand relative">
             <div class="relative"><i class="fa-brands fa-telegram text-xl"></i><span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span></div><span class="text-[10px] font-bold">Chat</span>
         </a>
@@ -142,7 +137,7 @@
         </button>
     </div>
 
-    <!-- 4. DETAIL VIEW (Now using Slide Animation) -->
+    <!-- 4. DETAIL VIEW -->
     <div id="detail-view" class="page-view">
         <div class="absolute top-0 left-0 right-0 z-20 flex justify-between p-4 pointer-events-none transition-all duration-300" id="dt-header">
             <button onclick="closeDetail()" class="pointer-events-auto w-10 h-10 bg-white/80 backdrop-blur-md rounded-full text-gray-800 flex items-center justify-center active:scale-90 shadow-lg border border-white/50"><i class="fa-solid fa-chevron-left"></i></button>
@@ -186,7 +181,7 @@
                 </div>
 
                 <div class="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl border border-gray-100 p-1 bg-white shadow-sm"><img src="static/images/logo.png" class="w-full h-full object-contain rounded-xl"></div>
+                    <div class="w-12 h-12 rounded-2xl border border-gray-100 p-1 bg-white shadow-sm"><img src="static/images/logo.png" onerror="this.src='https://placehold.co/100'" class="w-full h-full object-contain rounded-xl"></div>
                     <div class="flex-1">
                         <div class="text-sm font-bold text-gray-900">Somphea Reak</div>
                         <div class="text-[10px] text-gray-400 font-medium mt-0.5">Official Store • 4.9 <i class="fa-solid fa-star text-yellow-400"></i></div>
@@ -198,7 +193,7 @@
 
         <div class="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-gray-100 px-5 py-3 flex items-center gap-3 pb-safe z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-3xl">
             <div class="flex gap-5 pr-2">
-                <a href="/" class="flex flex-col items-center gap-1 text-gray-400 active:text-brand"><i class="fa-solid fa-house text-xl"></i><span class="text-[9px] font-bold">Home</span></a>
+                <a href="#" onclick="closeDetail(); return false;" class="flex flex-col items-center gap-1 text-gray-400 active:text-brand"><i class="fa-solid fa-house text-xl"></i><span class="text-[9px] font-bold">Home</span></a>
                 <a href="https://t.me/somphea_reak" target="_blank" class="flex flex-col items-center gap-1 text-gray-400 active:text-brand"><i class="fa-regular fa-comment-dots text-xl"></i><span class="text-[9px] font-bold" data-key="chat">Chat</span></a>
             </div>
             <button onclick="openSku(false)" class="flex-1 bg-gradient-brand text-white h-12 rounded-full font-bold text-sm shadow-xl shadow-green-200 active:scale-95 transition-transform flex items-center justify-center gap-2" data-key="add_cart">
@@ -220,11 +215,9 @@
         </div>
     </div>
 
-    <!-- 6. SKU DRAWER (TaoBao Style - Green & White) -->
+    <!-- 6. SKU DRAWER -->
     <div id="sku-backdrop" class="fixed inset-0 z-[70] bg-black/60 drawer-backdrop backdrop-blur-sm" onclick="closeSku()"></div>
     <div id="sku-drawer" class="fixed bottom-0 left-0 right-0 z-[71] bg-white rounded-t-[32px] p-0 drawer-panel h-[80vh] flex flex-col pb-safe shadow-2xl">
-        
-        <!-- Top Fixed Info Area -->
         <div class="relative flex gap-4 px-5 py-4 border-b border-gray-100 items-end">
              <div class="relative w-[100px] h-[100px] rounded-xl p-1 bg-white shadow-lg border border-gray-100 flex-shrink-0 -mt-4 overflow-hidden">
                 <img id="sku-img" class="w-full h-full object-contain rounded-lg bg-white" onerror="this.src='https://placehold.co/100'">
@@ -237,16 +230,11 @@
             <button onclick="closeSku()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
 
-        <!-- Scrollable Options Area -->
         <div class="flex-1 overflow-y-auto hide-scrollbar p-5">
             <div class="mb-5">
                 <div class="text-sm font-bold text-gray-900 mb-3" data-key="models">Classification</div>
-                <!-- TaoBao Style Flex Container -->
-                <div id="sku-options-container" class="flex flex-wrap gap-3">
-                    <!-- Populated by JS -->
-                </div>
+                <div id="sku-options-container" class="flex flex-col gap-2"></div>
             </div>
-            
              <div class="flex justify-between items-center py-4 border-t border-gray-50">
                 <span class="text-sm font-bold text-gray-900" data-key="quantity">Quantity</span>
                 <div class="flex items-center bg-gray-100 rounded-lg p-1">
@@ -257,7 +245,6 @@
             </div>
         </div>
 
-        <!-- Footer Actions -->
         <div class="bg-white p-5 pt-2 pb-safe z-20">
             <button onclick="confirmSku()" class="w-full h-12 bg-gradient-brand text-white rounded-full font-bold text-base shadow-lg shadow-green-100 active:scale-[0.98] transition-transform flex items-center justify-center gap-2" data-key="add_cart">
                 <span>Add to Cart</span>
@@ -333,52 +320,170 @@
     </div>
 
     <script>
-        // --- 1. PREVENT ZOOM ---
-        document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
-        document.addEventListener('dblclick', function(e) { e.preventDefault(); }, { passive: false });
+        // --- CONFIG & STATE ---
+        const CART_KEY = 'somphea_universal_cart'; 
+        const EX_RATE = 4000; 
+        const TELEGRAM_USERNAME = "somphea_reak";
 
-        const CART_KEY = 'somphea_universal_cart'; const EX_RATE = 4000; const TELEGRAM_USERNAME = "somphea_reak";
         const TEXTS = {
-            en: { shop_name: "Toy Universe", nav_toys: "Toys", nav_jewelry: "Jewelry", nav_bag: "My Bag", express: "Express", sold: "Sold", chat: "Chat", add_cart: "Add to Cart", stock: "Stock", selected: "Selected", select_model: "Select Variant", models: "Models", quantity: "Quantity", confirm: "Confirm", my_bag: "My Cart", checkout: "Checkout", invoice: "Details", generate_invoice: "Generate Invoice", added_to_bag: "Added to Cart", free_shipping: "Free Shipping" },
-            kh: { shop_name: "ពិភពប្រដាប់ក្មេងលេង", nav_toys: "ប្រដាប់លេង", nav_jewelry: "គ្រឿងអលង្ការ", nav_bag: "កន្ត្រក", express: "ដឹករហ័ស", sold: "លក់បាន", chat: "ឆាត", add_cart: "ដាក់កន្ត្រក", stock: "ស្តុក", selected: "បានជ្រើសរើស", select_model: "ជ្រើសរើសម៉ូដ", models: "ម៉ូដ", quantity: "ចំនួន", confirm: "យល់ព្រម", my_bag: "កន្ត្រកខ្ញុំ", checkout: "គិតលុយ", invoice: "វិក្កយបត្រ", generate_invoice: "បង្កើតវិក្កយបត្រ", added_to_bag: "បានដាក់ចូលកន្ត្រក", free_shipping: "ដឹកជញ្ជូនឥតគិតថ្លៃ" }
+            en: { shop_name: "Jewelry Store", nav_jewelry: "Jewelry", nav_bag: "My Bag", express: "Express", sold: "Sold", chat: "Chat", add_cart: "Add to Cart", stock: "Stock", selected: "Selected", select_model: "Select Variant", models: "Models", quantity: "Quantity", confirm: "Confirm", my_bag: "My Cart", checkout: "Checkout", invoice: "Details", generate_invoice: "Generate Invoice", added_to_bag: "Added to Cart", free_shipping: "Free Shipping" },
+            kh: { shop_name: "ហាងគ្រឿងអលង្ការ", nav_jewelry: "គ្រឿងអលង្ការ", nav_bag: "កន្ត្រក", express: "ដឹករហ័ស", sold: "លក់បាន", chat: "ឆាត", add_cart: "ដាក់កន្ត្រក", stock: "ស្តុក", selected: "បានជ្រើសរើស", select_model: "ជ្រើសរើសម៉ូដ", models: "ម៉ូដ", quantity: "ចំនួន", confirm: "យល់ព្រម", my_bag: "កន្ត្រកខ្ញុំ", checkout: "គិតលុយ", invoice: "វិក្កយបត្រ", generate_invoice: "បង្កើតវិក្កយបត្រ", added_to_bag: "បានដាក់ចូលកន្ត្រក", free_shipping: "ដឹកជញ្ជូនឥតគិតថ្លៃ" }
         };
-        
-        let lang = 'en'; let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); let curProd = null, curVar = null, curQty = 1, generatedBlob = null;
-        let skuScrollTimer = null;
 
-        function init() { renderTabs(); renderGrid(PRODUCTS); updateBadges(); }
-        function toggleLang() { lang = lang === 'en' ? 'kh' : 'en'; document.getElementById('lang-btn').innerText = lang === 'en' ? 'KH' : 'EN'; updateTexts(); }
-        function updateTexts() { document.querySelectorAll('[data-key]').forEach(el => { const k = el.getAttribute('data-key'); if(TEXTS[lang][k]) el.innerText = TEXTS[lang][k]; }); renderTabs(); }
-        function renderTabs() { 
-            const cats = ['All', 'Jade', 'Gemstone', 'Silver', 'Gold']; 
-            document.getElementById('category-tabs').innerHTML = cats.map(c => `<button onclick="filter('${c}', this)" class="px-4 py-1.5 rounded-full whitespace-nowrap transition-all border border-transparent text-xs font-bold ${c==='All' ? 'bg-white text-green-600 shadow-sm' : 'text-white/80 hover:bg-white/10'}">${c}</button>`).join(''); 
+        const APP_CONFIG = {
+            jewelry: {
+                title: "Fine Jewelry",
+                image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=800&auto=format&fit=crop",
+                categories: ['All', 'Jade', 'Gemstone', 'Silver', 'Dumbbell Bracelet']
+            }
+        };
+
+        // --- JEWELRY ONLY CATALOG ---
+        const PRODUCTS = [
+            { 
+                id: 101, title: "Imperial Green Jade Bangle", price: 2.00, sold: "240", category: "Jade", type: "jewelry",
+                thumbnail: 'static/images/bracelet-01.JPG',
+                variants: [
+                    {id:'j1', name:'A', price: 2.00, image:'static/images/bracelet-01.JPG'}, 
+                    {id:'j2', name:'B', price: 2.00, image:'static/images/bracelet-02.JPG'},
+                    {id:'j3', name:'C', price: 2.00, image:'static/images/bracelet-03.JPG'}, 
+                    {id:'j4', name:'D', price: 2.00, image:'static/images/bracelet-04.JPG'},
+                    {id:'j5', name:'E', price: 2.00, image:'static/images/bracelet-05.JPG'}
+                ] 
+            },
+            { 
+                id: 102, title: "Amethyst Crystal Bracelet", price: 1.50, sold: "580", category: "Gemstone", type: "jewelry",
+                thumbnail: 'static/images/bracelet-101.JPG',
+                variants: [
+                    {id:'g1', name:'B', price: 1.50, image:'static/images/bracelet-101.JPG'}, 
+                    {id:'g2', name:'B', price: 1.50, image:'static/images/bracelet-102.JPG'}, 
+                    {id:'g3', name:'B', price: 1.50, image:'static/images/bracelet-103.JPG'}, 
+                ] 
+            },
+            { 
+                id: 103, title: "Silver 925 Chain", price: 18.00, sold: "120", category: "Silver", type: "jewelry",
+                thumbnail: 'static/images/bracelet-201.JPEG',
+                variants: [
+                   {id:'s1', name:'s', price: 1.50, image:'static/images/bracelet-201.JPEG'},
+                   {id:'s2', name:'s', price: 1.50, image:'static/images/bracelet-202.JPEG'},
+                   {id:'s3', name:'s', price: 1.50, image:'static/images/bracelet-203.JPEG'}
+                ] 
+            },
+            { 
+                id: 104, title: "Dumbbell Bracelet", price: 1.25, sold: "310", category: "Dumbbell Bracelet", type: "jewelry",
+                thumbnail: 'static/images/bracelet-400.JPEG',
+                variants: [
+                   {id:'gd1', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-401.JPEG'},
+                   {id:'gd2', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-402.JPEG'},
+                   {id:'gd3', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-403.JPEG'},
+                   {id:'gd4', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-404.JPEG'},
+                   {id:'gd5', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-405.JPEG'},
+                   {id:'gd6', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-406.JPEG'}
+                ] 
+            }
+        ];
+
+        // --- APP STATE ---
+        let lang = 'en'; 
+        let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); 
+        let currentAppMode = 'jewelry'; 
+        let activeCategory = 'All';
+        let curProd = null, curVar = null, curQty = 1, generatedBlob = null;
+
+        // --- INITIALIZATION ---
+        function init() { 
+            switchAppMode('jewelry'); 
+            updateBadges(); 
         }
-        function filter(c, btn) { Array.from(document.getElementById('category-tabs').children).forEach(b => b.className = "px-4 py-1.5 rounded-full whitespace-nowrap transition-all border border-transparent text-xs font-bold text-white/80 hover:bg-white/10"); btn.className = "px-4 py-1.5 rounded-full whitespace-nowrap transition-all bg-white text-green-600 shadow-sm text-xs font-bold"; renderGrid(c==='All' ? PRODUCTS : PRODUCTS.filter(p=>p.category===c)); }
-        function searchProduct(q) { renderGrid(PRODUCTS.filter(p => p.title.toLowerCase().includes(q.toLowerCase()))); }
-        function renderGrid(list) { document.getElementById('product-grid').innerHTML = list.map(p => { if(!p.variants || p.variants.length === 0) return ''; const img = p.thumbnail || p.variants[0].image || 'https://placehold.co/400'; return `<div onclick="openDetail(${p.id})" class="bg-white rounded-3xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform duration-300 group"><div class="relative w-full aspect-square overflow-hidden"><img src="${img}" class="w-full h-full object-cover bg-gray-100 group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/400'"> ${p.variants[0].price < 2 ? '<div class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">HOT</div>' : ''}</div><div class="px-3 pt-3 pb-4"><div class="text-xs text-gray-900 line-clamp-2 leading-snug h-8 mb-2 font-bold">${p.title}</div><div class="flex items-end justify-between"><div><div class="flex items-baseline gap-0.5 text-brand leading-none"><span class="text-[10px] font-bold">៛</span><span class="text-base font-black">${(p.variants[0].price * EX_RATE).toLocaleString()}</span></div><div class="text-[9px] text-gray-400 mt-1 font-medium">${p.sold} ${TEXTS[lang].sold}</div></div><button class="w-8 h-8 rounded-full bg-gray-50 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-colors shadow-sm"><i class="fa-solid fa-plus text-xs"></i></button></div></div></div>`; }).join(''); }
 
+        // --- SWITCH MODE (JEWELRY ONLY) ---
+        function switchAppMode(mode) {
+            currentAppMode = mode;
+            const config = APP_CONFIG[mode];
+            
+            // Update Hero
+            document.getElementById('hero-img').src = config.image;
+            document.getElementById('hero-title').innerText = config.title;
+            
+            // Update Tab Categories
+            renderTabs(config.categories);
+            activeCategory = 'All';
+            filterGrid();
+
+            // Update Bottom Nav Styling
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const btn = document.getElementById(`nav-${mode}`);
+            if(btn) btn.classList.add('active');
+        }
+
+        function renderTabs(categories) { 
+            document.getElementById('category-tabs').innerHTML = categories.map(c => 
+                `<button onclick="filter('${c}', this)" class="px-4 py-1.5 rounded-full whitespace-nowrap transition-all border border-transparent text-xs font-bold ${c === 'All' ? 'bg-white text-green-600 shadow-sm' : 'text-white/80 hover:bg-white/10'}">${c}</button>`
+            ).join(''); 
+        }
+
+        function filter(c, btn) { 
+            activeCategory = c;
+            Array.from(document.getElementById('category-tabs').children).forEach(b => b.className = "px-4 py-1.5 rounded-full whitespace-nowrap transition-all border border-transparent text-xs font-bold text-white/80 hover:bg-white/10"); 
+            if(btn) btn.className = "px-4 py-1.5 rounded-full whitespace-nowrap transition-all bg-white text-green-600 shadow-sm text-xs font-bold"; 
+            filterGrid();
+        }
+
+        function filterGrid() {
+            // Filter by App Mode (type) AND Category
+            let list = PRODUCTS.filter(p => p.type === currentAppMode);
+            if (activeCategory !== 'All') {
+                list = list.filter(p => p.category === activeCategory);
+            }
+            renderGrid(list);
+        }
+
+        function searchProduct(q) { 
+            if(!q) { filterGrid(); return; }
+            // Search only within current App Mode
+            const list = PRODUCTS.filter(p => p.type === currentAppMode && p.title.toLowerCase().includes(q.toLowerCase()));
+            renderGrid(list); 
+        }
+
+        function renderGrid(list) { 
+            document.getElementById('product-grid').innerHTML = list.map(p => { 
+                if(!p.variants || p.variants.length === 0) return ''; 
+                const img = p.thumbnail || p.variants[0].image || 'https://placehold.co/400'; 
+                return `<div onclick="openDetail(${p.id})" class="bg-white rounded-3xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform duration-300 group"><div class="relative w-full aspect-square overflow-hidden"><img src="${img}" class="w-full h-full object-cover bg-gray-100 group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/400'"> ${p.variants[0].price < 2 ? '<div class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">HOT</div>' : ''}</div><div class="px-3 pt-3 pb-4"><div class="text-xs text-gray-900 line-clamp-2 leading-snug h-8 mb-2 font-bold">${p.title}</div><div class="flex items-end justify-between"><div><div class="flex items-baseline gap-0.5 text-brand leading-none"><span class="text-[10px] font-bold">៛</span><span class="text-base font-black">${(p.variants[0].price * EX_RATE).toLocaleString()}</span></div><div class="text-[9px] text-gray-400 mt-1 font-medium">${p.sold} ${TEXTS[lang].sold}</div></div><button class="w-8 h-8 rounded-full bg-gray-50 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-colors shadow-sm"><i class="fa-solid fa-plus text-xs"></i></button></div></div></div>`; 
+            }).join(''); 
+        }
+
+        function toggleLang() { 
+            lang = lang === 'en' ? 'kh' : 'en'; 
+            document.getElementById('lang-btn').innerText = lang === 'en' ? 'KH' : 'EN'; 
+            updateTexts(); 
+        }
+        function updateTexts() { 
+            document.querySelectorAll('[data-key]').forEach(el => { 
+                const k = el.getAttribute('data-key'); 
+                if(TEXTS[lang][k]) el.innerText = TEXTS[lang][k]; 
+            }); 
+            // Re-render tabs to maintain language consistency if we had translated categories
+        }
+
+        // --- DETAIL VIEW LOGIC ---
         function openDetail(id) { 
             curProd = PRODUCTS.find(p=>p.id===id); curVar = curProd.variants[0]; 
             const gallery = document.getElementById('dt-gallery'); 
             gallery.innerHTML = curProd.variants.map((v, idx) => `<div onclick="openFullScreenGallery(${idx})" class="flex-shrink-0 w-full h-full snap-center bg-white flex items-center justify-center relative"><img src="${v.image}" class="max-w-full max-h-full object-contain p-8" onerror="this.src='https://placehold.co/400?text=No+Image'"></div>`).join(''); 
             updateDetailUI(); 
             
-            // Slide Animation Logic
-            const view = document.getElementById('detail-view');
-            // Remove any hidden state (though we use transform now, hidden might interfere if used elsewhere)
+            // Slide In Animation
             requestAnimationFrame(() => {
-                view.classList.add('active'); 
+                document.getElementById('detail-view').classList.add('active'); 
             });
-            view.scrollTop = 0; 
+            document.getElementById('detail-view').scrollTop = 0; 
         }
         
-        function closeDetail() { 
-            document.getElementById('detail-view').classList.remove('active'); 
-        }
+        function closeDetail() { document.getElementById('detail-view').classList.remove('active'); }
 
         function handleDetailScroll(el) { const h = document.getElementById('dt-header'); if(el.scrollTop > 50) { h.querySelector('button').classList.replace('bg-white/80','bg-white'); } else { h.querySelector('button').classList.replace('bg-white','bg-white/80'); } }
         
-        // --- SYNCHRONIZED SCROLL LOGIC ---
         function onGalleryScroll(e) { 
             const el = e.target; 
             const idx = Math.round(el.scrollLeft / el.offsetWidth); 
@@ -398,18 +503,20 @@
             const idx = curProd.variants.findIndex(v=>v.id===curVar.id); 
             document.getElementById('gallery-counter').innerText = `${idx + 1}/${curProd.variants.length}`; 
             
-            // Sync the 100x100 SKU image if drawer is active
+            // Sync SKU drawer if open
             if(document.getElementById('sku-drawer').classList.contains('active')) {
                 document.getElementById('sku-img').src = curVar.image; 
                 document.getElementById('sku-price').innerText = (curVar.price * EX_RATE).toLocaleString(); 
                 document.getElementById('sku-text').innerText = curVar.name; 
                 document.querySelectorAll('.tb-option').forEach(el => el.classList.remove('selected'));
-                if(document.getElementById(`tb-btn-${curVar.id}`)) document.getElementById(`tb-btn-${curVar.id}`).classList.add('selected');
+                const btn = document.getElementById(`tb-btn-${curVar.id}`);
+                if(btn) btn.classList.add('selected');
             }
 
             if(scrollGallery) { 
                 const gallery = document.getElementById('dt-gallery'); 
-                gallery.scrollTo({ left: idx * gallery.offsetWidth, behavior: 'smooth' }); 
+                // Changed to 'auto' for instant jump
+                gallery.scrollTo({ left: idx * gallery.offsetWidth, behavior: 'auto' }); 
             } 
         }
 
@@ -418,14 +525,22 @@
         function onFsScroll(e) { const el = e.target; const idx = Math.round(el.scrollLeft / el.offsetWidth); updateFsUI(idx); }
         function updateFsUI(idx) { if(curProd.variants[idx]) { document.getElementById('fs-counter').innerText = `${idx + 1}/${curProd.variants.length}`; document.getElementById('fs-title').innerText = `${curProd.title} - ${curProd.variants[idx].name}`; document.getElementById('fs-price').innerText = (curProd.variants[idx].price * EX_RATE).toLocaleString(); } }
 
-        // --- TAOBAO STYLE SKU SELECTION LOGIC ---
+        // --- SKU SELECTION (LIST VIEW) ---
         function openSku(buyNow) { 
             curQty = 1; 
             const container = document.getElementById('sku-options-container');
+            
+            // Set vertical stack layout
+            container.className = "flex flex-col gap-2";
+            
+            // Render LIST STYLE: [Image] 1/. Name
             container.innerHTML = curProd.variants.map((v, idx) => `
-                <button onclick="selVar('${v.id}')" id="tb-btn-${v.id}" class="tb-option h-9 rounded-full flex items-center pr-4 pl-1 gap-2 active:scale-95">
-                    <img src="${v.image}" class="w-7 h-7 rounded-full object-cover bg-gray-100" onerror="this.src='https://placehold.co/100'">
-                    <span class="tb-name text-xs font-bold truncate max-w-[120px]">${v.name}</span>
+                <button onclick="selVar('${v.id}')" id="tb-btn-${v.id}" class="tb-option w-full p-2 rounded-2xl flex items-center gap-3 border transition-all active:scale-[0.98] bg-white text-left relative overflow-hidden group">
+                    <img src="${v.image}" class="w-12 h-12 rounded-lg object-cover bg-gray-50 border border-gray-100 shrink-0" onerror="this.src='https://placehold.co/100'">
+                    <span class="tb-name text-sm font-bold text-gray-700 flex-1">
+                        <span class="idx-num mr-1">${idx+1}/.</span> ${v.name}
+                    </span>
+                    <!-- Tick removed as requested -->
                 </button>
             `).join('');
             
@@ -441,14 +556,11 @@
 
         function selVar(id, forceScroll = true) { 
             curVar = curProd.variants.find(v=>v.id===id); 
-            
             document.querySelectorAll('.tb-option').forEach(el => el.classList.remove('selected'));
             document.getElementById(`tb-btn-${id}`).classList.add('selected');
-
             document.getElementById('sku-img').src = curVar.image; 
             document.getElementById('sku-price').innerText = (curVar.price * EX_RATE).toLocaleString(); 
             document.getElementById('sku-text').innerText = curVar.name; 
-            
             updateDetailUI(forceScroll);
         }
 
@@ -474,6 +586,7 @@
 
         function updateBadges() { const c = cart.reduce((a,b)=>a+b.qty,0); ['nav-cart-badge', 'detail-cart-badge'].forEach(id => { const el = document.getElementById(id); el.innerText = c; el.classList.toggle('hidden', c===0); }); document.getElementById('cart-count').innerText = c; }
         
+        // --- CART LOGIC ---
         function openCart() { renderCartList(); document.getElementById('cart-bg').classList.add('active'); document.getElementById('cart-drawer').classList.remove('translate-x-full'); }
         function closeCart() { document.getElementById('cart-drawer').classList.add('translate-x-full'); document.getElementById('cart-bg').classList.remove('active'); }
         function toggleCheck(idx, event) { if(event) event.stopPropagation(); cart[idx].chk = !cart[idx].chk; localStorage.setItem(CART_KEY, JSON.stringify(cart)); renderCartList(); }
@@ -483,7 +596,7 @@
             if(event) event.stopPropagation();
             const item = cart[i];
             const newQty = item.qty + delta;
-            if(newQty < 1) return; // Min 1
+            if(newQty < 1) return; 
             item.qty = newQty;
             localStorage.setItem(CART_KEY, JSON.stringify(cart));
             renderCartList();
@@ -508,14 +621,11 @@
                         <div class="text-[10px] text-gray-500 font-medium mb-1">${item.vname}</div>
                         <div class="flex justify-between items-end">
                             <div class="text-brand text-sm font-black">៛${(item.price*EX_RATE).toLocaleString()}</div>
-                            
-                            <!-- QUANTITY ADJUSTER IN CART -->
                             <div class="flex items-center bg-gray-100 rounded-lg h-6">
                                 <button onclick="changeCartQty(${i}, -1, event)" class="w-6 h-6 flex items-center justify-center text-gray-600 font-bold active:scale-90 hover:bg-gray-200 rounded-l-lg">-</button>
                                 <div class="text-xs font-bold text-gray-900 px-1 min-w-[1.5rem] text-center">${item.qty}</div>
                                 <button onclick="changeCartQty(${i}, 1, event)" class="w-6 h-6 flex items-center justify-center text-gray-600 font-bold active:scale-90 hover:bg-gray-200 rounded-r-lg">+</button>
                             </div>
-                            
                         </div>
                     </div>
                     <button onclick="delItem(${i}, event)" class="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors active:scale-90"><i class="fa-solid fa-trash-can text-sm"></i></button>
@@ -524,11 +634,10 @@
             
             const total = cart.reduce((a,b)=> (b.chk ? a+(b.price*b.qty) : a), 0); 
             document.getElementById('cart-total').innerText = '៛' + (total*EX_RATE).toLocaleString(); 
-            const allSelected = cart.every(i => i.chk) && cart.length > 0;
             const anySelected = cart.some(i => i.chk);
             
             const box = document.getElementById('select-all-box');
-            if(allSelected) {
+            if(cart.every(i => i.chk) && cart.length > 0) {
                  box.className = "w-5 h-5 rounded-full border-2 border-brand bg-brand flex items-center justify-center transition-colors";
                  box.querySelector('i').classList.remove('hidden');
             } else {
@@ -543,6 +652,7 @@
         function checkout() { if(!cart.filter(i=>i.chk).length) return; closeCart(); document.getElementById('invoice-modal').classList.remove('hidden'); document.getElementById('invoice-modal').classList.add('flex'); document.getElementById('btn-share').classList.add('hidden'); document.getElementById('gen-btn').style.display = 'flex'; document.getElementById('gen-btn').innerHTML = '<span>Create Invoice</span> <i class="fa-solid fa-wand-magic-sparkles text-brand"></i>'; document.getElementById('gen-btn').disabled = false; document.getElementById('invoice-preview').classList.add('hidden'); document.getElementById('share-instr').classList.add('hidden'); }
         function closeInvoice() { document.getElementById('invoice-modal').classList.add('hidden'); document.getElementById('invoice-modal').classList.remove('flex'); openCart(); }
 
+        // --- INVOICE GENERATOR ---
         async function doGenerate() {
             const n=document.getElementById('inv-name').value, p=document.getElementById('inv-phone').value, a=document.getElementById('inv-addr').value; 
             if(!n) return alert('Please enter Name');
@@ -560,7 +670,7 @@
             const ts = new Date().toLocaleDateString('en-GB');
 
             // --- REDESIGNED INVOICE: WIDER, LARGER IMAGES, CLEANER LAYOUT ---
-            div.style.width = '550px'; // Wider
+            div.style.width = '550px'; 
             div.innerHTML = `
             <div style="background:white; padding:0; border-radius:0; font-family:'Plus Jakarta Sans', sans-serif; color:#1a1a1a; position:relative; overflow:hidden; width:550px;">
                 
@@ -570,7 +680,7 @@
                         <div style="width:50px; height:50px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#90D730; font-weight:900; font-size:24px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">S</div>
                         <div>
                             <h1 style="font-size:24px; font-weight:900; letter-spacing:-0.5px; margin:0; line-height:1;">SOMPHEA REAK</h1>
-                            <p style="font-size:12px; margin:4px 0 0 0; font-weight:600; opacity:0.8; text-transform:uppercase; letter-spacing:1px;">Jewelry Store</p>
+                            <p style="font-size:12px; margin:4px 0 0 0; font-weight:600; opacity:0.8; text-transform:uppercase; letter-spacing:1px;">Official Store</p>
                         </div>
                     </div>
                     <div style="text-align:right;">
@@ -591,18 +701,15 @@
                     </div>
                 </div>
 
-                <!-- ORDER ITEMS (LARGE IMAGES) -->
+                <!-- ORDER ITEMS -->
                 <div style="padding:20px 40px;">
                     <div style="font-size:12px; font-weight:800; color:#1a1a1a; margin-bottom:15px; text-transform:uppercase; letter-spacing:0.5px;">Order Details</div>
                     <div style="display:flex; flex-direction:column; gap:15px;">
                         ${items.map((i) => `
                         <div style="display:flex; align-items:flex-start; gap:20px; border-bottom:1px solid #f3f4f6; padding-bottom:15px;">
-                            <!-- Large 100x100 Image -->
                             <div style="width:100px; height:100px; flex-shrink:0; border-radius:12px; overflow:hidden; border:1px solid #eee; background:#fff;">
                                 <img src="${i.img}" style="width:100%; height:100%; object-fit:cover;">
                             </div>
-                            
-                            <!-- Item Details -->
                             <div style="flex:1; padding-top:5px;">
                                 <div style="font-size:16px; font-weight:800; color:#1a1a1a; margin-bottom:4px; line-height:1.3;">${i.title}</div>
                                 <div style="display:inline-block; background:#f3f4f6; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700; color:#555; margin-bottom:8px;">Model: ${i.vname}</div>
@@ -656,7 +763,6 @@
                 generatedBlob = await new Promise(r => cvs.toBlob(r));
 
                 document.getElementById('btn-share').onclick = async () => {
-                    // Telegram Caption Format
                     let itemDetails = items.map(i => `• ${i.title} (${i.vname}) x${i.qty}`).join('\n');
                     const msg = `🧾 *NEW ORDER*\n\n👤 *Customer:* ${n}\n📱 *Phone:* ${p}\n📍 *Address:* ${a || 'N/A'}\n\n🛒 *Items:*\n${itemDetails}\n\n💰 *TOTAL: ៛${(total*EX_RATE).toLocaleString()}*\n📅 ${ts}`;
                     
@@ -672,62 +778,9 @@
             } catch (e) { alert("Error generating invoice."); console.error(e); btn.innerText = "Generate Invoice"; btn.disabled = false; } finally { div.remove(); }
         }
 
-        const PRODUCTS = [
-            // === SECTION 1: JADE ===
-            { 
-                id: 101, title: "Imperial Green Jade Bangle", price: 2.00, sold: "240", category: "Jade", 
-                thumbnail: 'static/images/bracelet-01.JPG',
-                variants: [
-                    {id:'j1', name:'A', price: 2.00, image:'static/images/bracelet-01.JPG'}, 
-                    {id:'j2', name:'B', price: 2.00, image:'static/images/bracelet-02.JPG'},
-                    {id:'j3', name:'C', price: 2.00, image:'static/images/bracelet-03.JPG'}, 
-                    {id:'j4', name:'D', price: 2.00, image:'static/images/bracelet-04.JPG'},
-                    {id:'j5', name:'E', price: 2.00, image:'static/images/bracelet-05.JPG'}
-                ] 
-            },
-            
-            // === SECTION 2: GEMSTONE ===
-            { 
-                id: 102, title: "Amethyst Crystal Bracelet", price: 1.50, sold: "580", category: "Gemstone", 
-                thumbnail: 'static/images/bracelet-101.JPG',
-                variants: [
-                    {id:'g1', name:'B', price: 1.50, image:'static/images/bracelet-101.JPG'}, 
-                    {id:'g2', name:'B', price: 1.50, image:'static/images/bracelet-102.JPG'}, 
-                    {id:'g3', name:'B', price: 1.50, image:'static/images/bracelet-103.JPG'}, 
-                ] 
-            },
-
-            // === SECTION 3: SILVER ===
-            { 
-                id: 103, title: "Silver 925 Chain", price: 18.00, sold: "120", category: "Silver", 
-                thumbnail: 'static/images/bracelet-201.JPEG',
-                variants: [
-                   {id:'s1', name:'s', price: 1.50, image:'static/images/bracelet-201.JPEG'},
-                   {id:'s2', name:'s', price: 1.50, image:'static/images/bracelet-202.JPEG'},
-                   {id:'s3', name:'s', price: 1.50, image:'static/images/bracelet-203.JPEG'}
-                ] 
-            },
-
-            // === SECTION 4: GOLD ===
-            { 
-                id: 104, title: "Dumbbell Bracelet", price: 1.25, sold: "310", category: "Dumbbell Bracelet", 
-                thumbnail: 'static/images/bracelet-400.JPEG',
-                variants: [
-                   {id:'gd1', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-401.JPEG'}
-                   {id:'gd2', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-402.JPEG'}
-                    {id:'gd3', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-403.JPEG'}
-                    {id:'gd4', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-404.JPEG'}
-                    {id:'gd5', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-405.JPEG'}
-                    {id:'gd6', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-406.JPEG'}
-
-                ] 
-            }
-        ];
-
         // START APP
         init();
     </script>
 </body>
 </html>
-
 
