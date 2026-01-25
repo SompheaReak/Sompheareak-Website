@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Somphea Reak | Toy Universe</title>
+    <title>Somphea Reak | Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -30,6 +30,9 @@
             overflow-y: auto; 
             overscroll-behavior-y: none;
         }
+
+        /* IOS ZOOM FIX */
+        input, textarea, select { font-size: 16px !important; }
         
         .text-brand { color: var(--brand-green); }
         .bg-brand { background-color: var(--brand-green); }
@@ -45,72 +48,76 @@
         
         .drawer-panel { transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
         .drawer-panel.active { transform: translateY(0); }
+
+        /* Full Page Transitions */
+        .page-view {
+            position: fixed; inset: 0; background: #f7f7f7;
+            transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+            will-change: transform; z-index: 60; display: flex; flex-direction: column;
+        }
+        .page-view.active { transform: translateX(0); }
         
         /* Screenshot Frame */
-        .screenshot-frame { background: white; width: 400px; padding: 20px; position: fixed; top: 0; left: -2000px; z-index: 9999; visibility: visible; pointer-events: none; }
-        
-        .custom-checkbox { appearance: none; width: 22px; height: 22px; border: 2px solid #ddd; border-radius: 50%; display: grid; place-content: center; transition: all 0.2s; }
-        .custom-checkbox:checked { background-color: var(--brand-green); border-color: var(--brand-green); }
-        .custom-checkbox:checked::before { content: ""; width: 10px; height: 10px; background: white; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
-
-        .snap-mandatory { scroll-snap-type: x mandatory; }
-        .snap-center { scroll-snap-align: center; }
+        .screenshot-frame { background: white; padding: 20px; position: fixed; top: 0; left: -2000px; z-index: 9999; visibility: visible; pointer-events: none; }
         
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
         
-        /* TaoBao Selection Styles */
-        .tb-option {
-            transition: all 0.2s;
-            border: 1px solid transparent;
-        }
-        .tb-option.selected {
-            border-color: var(--brand-green);
-            background-color: #f0fdf4; /* Green-50 */
-            color: #1a1a1a;
-        }
-        .tb-option.selected .tb-name {
-            color: var(--brand-green);
-        }
-        .tb-option:not(.selected) {
-            border-color: #f3f4f6;
-            background-color: #f9fafb;
-            color: #4b5563;
-        }
+        /* Nav Item Active State */
+        .nav-item.active { color: var(--brand-green); }
+        .nav-item.active i { transform: scale(1.1); }
+        
+        /* TaoBao Selection Styles - UPDATED for List View */
+        .tb-option { transition: all 0.2s; border: 1px solid transparent; }
+        .tb-option.selected { border-color: var(--brand-green); background-color: #f0fdf4; color: #1a1a1a; }
+        .tb-option.selected .tb-name { color: var(--brand-green); }
+        .tb-option.selected .idx-num { color: var(--brand-green); font-weight: 900; }
+        .tb-option:not(.selected) { border-color: #f3f4f6; background-color: #fff; color: #4b5563; }
+        .tb-option:not(.selected) .idx-num { color: #9ca3af; }
     </style>
 </head>
 <body class="bg-[#f7f7f7]">
 
-    <!-- 1. HEADER -->
-    <header class="sticky top-0 z-50 taobao-header px-4 py-3 shadow-sm">
-        <div class="flex items-center gap-3 mb-3">
-            <a href="/" class="flex items-center gap-2 mr-1 active:opacity-80 transition-opacity">
-                <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-white/20 overflow-hidden">
+    <!-- 1. HEADER (REDESIGNED) -->
+    <header class="sticky top-0 z-50 taobao-header px-4 pt-3 pb-2 shadow-md rounded-b-[24px]">
+        <!-- Row 1: Nav Controls & Logo -->
+        <div class="relative flex items-center justify-center mb-3">
+            <!-- Home Button (Left) -->
+            <button onclick="location.reload()" class="absolute left-0 w-9 h-9 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white active:scale-95 transition-transform border border-white/20">
+                 <i class="fa-solid fa-house text-sm"></i>
+            </button>
+
+            <!-- Logo & Name (Center) -->
+            <div class="flex items-center gap-2 text-white">
+                <div class="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-white/20 overflow-hidden">
                     <img src="static/images/logo.png" onerror="this.src='https://placehold.co/100?text=S'" class="w-full h-full object-cover">
                 </div>
-                <div class="flex flex-col justify-center text-white leading-tight">
-                    <span class="font-black text-sm tracking-wide uppercase drop-shadow-sm">Somphea</span>
-                    <span class="font-bold text-[10px] opacity-90 tracking-[0.2em] uppercase">Reak</span>
-                </div>
-            </a>
-            <div class="flex-1 h-10 bg-white/95 rounded-full flex items-center px-4 gap-2 shadow-inner border border-green-400/30">
-                <i class="fa-solid fa-magnifying-glass text-gray-400 text-sm"></i>
-                <input type="text" placeholder="Search..." class="flex-1 bg-transparent text-sm outline-none text-gray-700 placeholder-gray-400 font-medium" oninput="searchProduct(this.value)">
+                <div class="font-black text-base tracking-wide uppercase drop-shadow-sm leading-none">Somphea Reak</div>
             </div>
-            <div class="flex items-center gap-3 text-white">
-                <button onclick="toggleLang()" class="font-bold text-xs border border-white/40 px-2 py-1 rounded-lg backdrop-blur-md active:bg-white/10"><span id="lang-btn">KH</span></button>
-            </div>
+
+            <!-- Lang Switch (Right) -->
+            <button onclick="toggleLang()" class="absolute right-0 w-9 h-9 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white font-bold text-[10px] border border-white/20 active:scale-95 transition-transform">
+                <span id="lang-btn">KH</span>
+            </button>
         </div>
+
+        <!-- Row 2: Search Bar -->
+        <div class="h-10 bg-white rounded-xl flex items-center px-4 gap-3 shadow-sm border border-green-400/30 mb-3">
+            <i class="fa-solid fa-magnifying-glass text-gray-400 text-xs"></i>
+            <input type="text" placeholder="Search product..." class="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 font-bold text-sm h-full" oninput="searchProduct(this.value)">
+        </div>
+
+        <!-- Row 3: Categories -->
         <nav class="flex gap-2 overflow-x-auto hide-scrollbar pb-1 text-white/90 font-medium text-xs" id="category-tabs"></nav>
     </header>
 
     <!-- 2. CONTENT AREA -->
     <main class="px-3 pt-4 pb-28">
-        <div class="mb-4 rounded-3xl overflow-hidden shadow-md relative h-44 bg-gray-200">
-            <img src="https://images.unsplash.com/photo-1596461404942-363759b9d12a?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover">
+        <div class="mb-4 rounded-3xl overflow-hidden shadow-md relative h-44 bg-gray-200 transition-all group">
+            <img id="hero-img" src="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
             <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
             <div class="absolute bottom-5 left-5 text-white">
                 <div class="text-[10px] font-bold bg-brand text-black px-2.5 py-1 rounded-full inline-block mb-1.5 shadow-sm">New Arrivals</div>
-                <div class="font-black text-xl leading-none drop-shadow-md">Premium Toys</div>
+                <div class="font-black text-xl leading-none drop-shadow-md" id="hero-title">--</div>
             </div>
         </div>
         <div class="grid grid-cols-2 gap-3" id="product-grid"></div>
@@ -118,12 +125,12 @@
 
     <!-- 3. BOTTOM NAV -->
     <div class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-gray-100 px-6 py-2 flex justify-between items-center z-[45] pb-safe min-h-[70px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-3xl">
-        <a href="/" class="flex flex-col items-center gap-1 w-14 text-brand">
-            <i class="fa-solid fa-house text-xl"></i><span class="text-[10px] font-bold">Home</span>
-        </a>
-        <a href="/bracelet" class="flex flex-col items-center gap-1 w-14 text-gray-400 hover:text-brand transition-colors">
-            <i class="fa-regular fa-gem text-xl"></i><span class="text-[10px] font-bold">Jewelry</span>
-        </a>
+        <button onclick="switchAppMode('toy')" class="nav-item flex flex-col items-center gap-1 w-14 text-gray-400 transition-colors active" id="nav-toy">
+            <i class="fa-solid fa-robot text-xl transition-transform"></i><span class="text-[10px] font-bold">Toys</span>
+        </button>
+        <button onclick="switchAppMode('jewelry')" class="nav-item flex flex-col items-center gap-1 w-14 text-gray-400 transition-colors" id="nav-jewelry">
+            <i class="fa-regular fa-gem text-xl transition-transform"></i><span class="text-[10px] font-bold">Jewelry</span>
+        </button>
         <a href="https://t.me/somphea_reak" target="_blank" class="flex flex-col items-center gap-1 w-14 text-gray-400 hover:text-brand relative">
             <div class="relative"><i class="fa-brands fa-telegram text-xl"></i><span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span></div><span class="text-[10px] font-bold">Chat</span>
         </a>
@@ -134,7 +141,7 @@
     </div>
 
     <!-- 4. DETAIL VIEW -->
-    <div id="detail-view" class="fixed inset-0 z-[60] bg-[#f7f7f7] hidden flex-col">
+    <div id="detail-view" class="page-view">
         <div class="absolute top-0 left-0 right-0 z-20 flex justify-between p-4 pointer-events-none transition-all duration-300" id="dt-header">
             <button onclick="closeDetail()" class="pointer-events-auto w-10 h-10 bg-white/80 backdrop-blur-md rounded-full text-gray-800 flex items-center justify-center active:scale-90 shadow-lg border border-white/50"><i class="fa-solid fa-chevron-left"></i></button>
             <div class="flex gap-2">
@@ -177,7 +184,7 @@
                 </div>
 
                 <div class="bg-white p-4 rounded-3xl shadow-sm flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl border border-gray-100 p-1 bg-white shadow-sm"><img src="static/images/logo.png" class="w-full h-full object-contain rounded-xl"></div>
+                    <div class="w-12 h-12 rounded-2xl border border-gray-100 p-1 bg-white shadow-sm"><img src="static/images/logo.png" onerror="this.src='https://placehold.co/100'" class="w-full h-full object-contain rounded-xl"></div>
                     <div class="flex-1">
                         <div class="text-sm font-bold text-gray-900">Somphea Reak</div>
                         <div class="text-[10px] text-gray-400 font-medium mt-0.5">Official Store • 4.9 <i class="fa-solid fa-star text-yellow-400"></i></div>
@@ -189,7 +196,7 @@
 
         <div class="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-gray-100 px-5 py-3 flex items-center gap-3 pb-safe z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] rounded-t-3xl">
             <div class="flex gap-5 pr-2">
-                <a href="/" class="flex flex-col items-center gap-1 text-gray-400 active:text-brand"><i class="fa-solid fa-house text-xl"></i><span class="text-[9px] font-bold">Home</span></a>
+                <a href="#" onclick="closeDetail(); return false;" class="flex flex-col items-center gap-1 text-gray-400 active:text-brand"><i class="fa-solid fa-house text-xl"></i><span class="text-[9px] font-bold">Home</span></a>
                 <a href="https://t.me/somphea_reak" target="_blank" class="flex flex-col items-center gap-1 text-gray-400 active:text-brand"><i class="fa-regular fa-comment-dots text-xl"></i><span class="text-[9px] font-bold" data-key="chat">Chat</span></a>
             </div>
             <button onclick="openSku(false)" class="flex-1 bg-gradient-brand text-white h-12 rounded-full font-bold text-sm shadow-xl shadow-green-200 active:scale-95 transition-transform flex items-center justify-center gap-2" data-key="add_cart">
@@ -211,14 +218,11 @@
         </div>
     </div>
 
-    <!-- 6. SKU DRAWER (TaoBao Style - Green & White) -->
+    <!-- 6. SKU DRAWER -->
     <div id="sku-backdrop" class="fixed inset-0 z-[70] bg-black/60 drawer-backdrop backdrop-blur-sm" onclick="closeSku()"></div>
     <div id="sku-drawer" class="fixed bottom-0 left-0 right-0 z-[71] bg-white rounded-t-[32px] p-0 drawer-panel h-[80vh] flex flex-col pb-safe shadow-2xl">
-        
-        <!-- Top Fixed Info Area -->
         <div class="relative flex gap-4 px-5 py-4 border-b border-gray-100 items-end">
              <div class="relative w-[100px] h-[100px] rounded-xl p-1 bg-white shadow-lg border border-gray-100 flex-shrink-0 -mt-4 overflow-hidden">
-                <!-- Updated: object-contain to strict box sizing -->
                 <img id="sku-img" class="w-full h-full object-contain rounded-lg bg-white" onerror="this.src='https://placehold.co/100'">
             </div>
             <div class="flex-1 pb-1">
@@ -229,16 +233,14 @@
             <button onclick="closeSku()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
 
-        <!-- Scrollable Options Area -->
         <div class="flex-1 overflow-y-auto hide-scrollbar p-5">
             <div class="mb-5">
                 <div class="text-sm font-bold text-gray-900 mb-3" data-key="models">Classification</div>
-                <!-- TaoBao Style Flex Container -->
-                <div id="sku-options-container" class="flex flex-wrap gap-3">
-                    <!-- Populated by JS -->
-                </div>
+                
+                <!-- REPLACED: vertical list container -->
+                <div id="sku-options-container" class="flex flex-col gap-2"></div>
+                
             </div>
-            
              <div class="flex justify-between items-center py-4 border-t border-gray-50">
                 <span class="text-sm font-bold text-gray-900" data-key="quantity">Quantity</span>
                 <div class="flex items-center bg-gray-100 rounded-lg p-1">
@@ -249,7 +251,6 @@
             </div>
         </div>
 
-        <!-- Footer Actions -->
         <div class="bg-white p-5 pt-2 pb-safe z-20">
             <button onclick="confirmSku()" class="w-full h-12 bg-gradient-brand text-white rounded-full font-bold text-base shadow-lg shadow-green-100 active:scale-[0.98] transition-transform flex items-center justify-center gap-2" data-key="add_cart">
                 <span>Add to Cart</span>
@@ -325,63 +326,414 @@
     </div>
 
     <script>
-        // --- 1. PREVENT ZOOM ---
-        document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
-        document.addEventListener('dblclick', function(e) { e.preventDefault(); }, { passive: false });
+        // --- CONFIG & STATE ---
+        const CART_KEY = 'somphea_universal_cart'; 
+        const EX_RATE = 4000; 
+        const TELEGRAM_USERNAME = "somphea_reak";
 
-        const CART_KEY = 'somphea_universal_cart'; const EX_RATE = 4000; const TELEGRAM_USERNAME = "somphea_reak";
         const TEXTS = {
             en: { shop_name: "Toy Universe", nav_toys: "Toys", nav_jewelry: "Jewelry", nav_bag: "My Bag", express: "Express", sold: "Sold", chat: "Chat", add_cart: "Add to Cart", stock: "Stock", selected: "Selected", select_model: "Select Variant", models: "Models", quantity: "Quantity", confirm: "Confirm", my_bag: "My Cart", checkout: "Checkout", invoice: "Details", generate_invoice: "Generate Invoice", added_to_bag: "Added to Cart", free_shipping: "Free Shipping" },
             kh: { shop_name: "ពិភពប្រដាប់ក្មេងលេង", nav_toys: "ប្រដាប់លេង", nav_jewelry: "គ្រឿងអលង្ការ", nav_bag: "កន្ត្រក", express: "ដឹករហ័ស", sold: "លក់បាន", chat: "ឆាត", add_cart: "ដាក់កន្ត្រក", stock: "ស្តុក", selected: "បានជ្រើសរើស", select_model: "ជ្រើសរើសម៉ូដ", models: "ម៉ូដ", quantity: "ចំនួន", confirm: "យល់ព្រម", my_bag: "កន្ត្រកខ្ញុំ", checkout: "គិតលុយ", invoice: "វិក្កយបត្រ", generate_invoice: "បង្កើតវិក្កយបត្រ", added_to_bag: "បានដាក់ចូលកន្ត្រក", free_shipping: "ដឹកជញ្ជូនឥតគិតថ្លៃ" }
         };
-        
-        let lang = 'en'; let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); let curProd = null, curVar = null, curQty = 1, generatedBlob = null;
-        let skuScrollTimer = null;
 
-        function init() { renderTabs(); renderGrid(PRODUCTS); updateBadges(); }
-        function toggleLang() { lang = lang === 'en' ? 'kh' : 'en'; document.getElementById('lang-btn').innerText = lang === 'en' ? 'KH' : 'EN'; updateTexts(); }
-        function updateTexts() { document.querySelectorAll('[data-key]').forEach(el => { const k = el.getAttribute('data-key'); if(TEXTS[lang][k]) el.innerText = TEXTS[lang][k]; }); renderTabs(); }
-        function renderTabs() { 
-            const cats = ['All', 'WWII Soldier', 'Ninjago']; 
-            document.getElementById('category-tabs').innerHTML = cats.map(c => `<button onclick="filter('${c}', this)" class="px-4 py-1.5 rounded-full whitespace-nowrap transition-all border border-transparent text-xs font-bold ${c==='All' ? 'bg-white text-green-600 shadow-sm' : 'text-white/80 hover:bg-white/10'}">${c}</button>`).join(''); 
+        const APP_CONFIG = {
+            toy: {
+                title: "Premium Toys",
+                image: "https://images.unsplash.com/photo-1596461404942-363759b9d12a?q=80&w=800&auto=format&fit=crop",
+                categories: ['All', 'WWII Soldier', 'Ninjago']
+            },
+            jewelry: {
+                title: "Fine Jewelry",
+                image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=800&auto=format&fit=crop",
+                categories: ['All', 'Jade', 'Gemstone', 'Silver', 'Dumbbell Bracelet']
+            }
+        };
+
+        // --- MERGED DATA ---
+        const PRODUCTS = [
+            // === TOYS ===
+            {
+                id: 1, title: "WWII អាវុធធន់ធ្ងន់", sold: "1.2k", category: "WWII Soldier", type: "toy",
+                thumbnail: "static/images/lego-wwii-01.jpg",
+                variants: [
+                    { id: "v1", name: "RPG", price: 0.125, image: "static/images/lego-wwii-02.jpg" },
+                    { id: "v11", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.50, image: "static/images/lego-wwii-101.jpg" },
+                    { id: "v12", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-102.jpg" },
+                    { id: "v13", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 0.875, image: "static/images/lego-wwii-103.jpg" },
+                    { id: "v14", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 1.00, image: "static/images/lego-wwii-104.jpg" },
+                    { id: "v15", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-105.jpg" },
+                    { id: "v21", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.50, image: "static/images/lego-wwii-201.jpg" },
+                    { id: "v22", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-202.jpg" },
+                    { id: "v23", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 0.875, image: "static/images/lego-wwii-203.jpg" },
+                    { id: "v24", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 1.00, image: "static/images/lego-wwii-204.jpg" },
+                    { id: "v25", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-205.jpg" },
+                    { id: "v31", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.50, image: "static/images/lego-wwii-301.jpg" },
+                    { id: "v32", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-302.jpg" },
+                    { id: "v33", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 0.875, image: "static/images/lego-wwii-303.jpg" },
+                    { id: "v34", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 1.00, image: "static/images/lego-wwii-304.jpg" },
+                    { id: "v35", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-305.jpg" }
+               ]
+            },
+            {
+                id: 2, title: "WWII កូនទាហាន", sold: "840", category: "WWII Soldier", type: "toy",
+                thumbnail: "static/images/lego-wwii-army-thumbnail.jpg",
+                variants: [
+                    { id: "a01", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-101.jpg" },
+                    { id: "a02", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-102.jpg" },
+                    { id: "a03", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-103.jpg" },
+                    { id: "a04", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-104.jpg" },
+                    { id: "a05", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-105.jpg" },
+                    { id: "a06", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-106.jpg" },
+                    { id: "a11", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-201.jpg" },
+                    { id: "a12", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-202.jpg" },
+                    { id: "a13", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-203.jpg" },
+                    { id: "a14", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-204.jpg" },
+                    { id: "a15", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-205.jpg" },
+                    { id: "a21", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-301.jpg" },
+                    { id: "a22", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-302.jpg" },
+                    { id: "a23", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-303.jpg" },
+                    { id: "a24", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-304.jpg" },
+                    { id: "a25", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-305.jpg" },
+                    { id: "a26", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-306.jpg" }
+                ]
+            },
+            {
+                id: 3, title: "ទាហាន អាល្លឺម៉ង", sold: "310", category: "WWII Soldier", type: "toy",
+                thumbnail: "static/images/lego-wwii-german-thumbnail.jpg",
+                variants: [
+                    { id: "German-01", name: "Kai", price: 1.25, image: "static/images/lego-wwii-german-01.jpg" },
+                    { id: "German-02", name: "Zane", price: 1.25, image: "static/images/lego-wwii-german-02.jpg" },
+                    { id: "German-03", name: "Jay", price: 1.25, image: "static/images/lego-wwii-german-03.jpg" },
+                    { id: "German-04", name: "Cole", price: 1.25, image: "static/images/lego-wwii-german-04.jpg" },
+                    { id: "German-05", name: "Lloyd", price: 1.25, image: "static/images/lego-wwii-german-05.jpg" },
+                    { id: "German-06", name: "Nya", price: 1.25, image: "static/images/lego-wwii-german-06.jpg" }
+                ]
+                
+            },
+            {
+                id: 9, title: "ទាហាន សូវៀត", sold: "310", category: "WWII Soldier", type: "toy",
+                thumbnail: "static/images/lego-wwii-soviet-thumbnail.jpg",
+                variants: [
+                    { id: "Soviet-01", name: "Kai", price: 1.25, image: "static/images/lego-wwii-soviet-01.jpg" },
+                    { id: "Soviet-02", name: "Zane", price: 1.25, image: "static/images/lego-wwii-soviet-02.jpg" },
+                    { id: "Soviet-03", name: "Jay", price: 1.25, image: "static/images/lego-wwii-soviet-03.jpg" },
+                    { id: "Soviet-04", name: "Cole", price: 1.25, image: "static/images/lego-wwii-soviet-04.jpg" },
+                    { id: "Soviet-05", name: "Lloyd", price: 1.25, image: "static/images/lego-wwii-soviet-05.jpg" },
+                    { id: "Soviet-06", name: "Nya", price: 1.25, image: "static/images/lego-wwii-soviet-06.jpg" }
+                ]
+            },
+            {
+                id: 10, title: "Ninjago Season 1", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-season1-dx-thumbnail.jpg",
+                variants: [
+                    { id: "njo-01", name: "Kai", price: 1.25, image: "static/images/lucky-01.jpg" },
+                    { id: "njo-02", name: "Zane", price: 1.25, image: "static/images/lucky-02.jpg" },
+                    { id: "njo-03", name: "Jay", price: 1.25, image: "static/images/lucky-03.jpg" },
+                    { id: "njo-04", name: "Cole", price: 1.25, image: "static/images/lucky-04.jpg" },
+                    { id: "njo-05", name: "Lloyd", price: 1.25, image: "static/images/lucky-05.jpg" },
+                    { id: "njo-06", name: "Nya", price: 1.25, image: "static/images/lucky-06.jpg" }
+                ]
+
+            },
+            {
+                id: 4, title: "Ninjago Season 1", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-season1-pilot-thumbnail.jpg",
+                variants: [
+                    { id: "njo-11", name: "Kai", price: 1.25, image: "static/images/lucky-11.jpg" },
+                    { id: "njo-12", name: "Zane", price: 1.25, image: "static/images/lucky-12.jpg" },
+                    { id: "njo-13", name: "Jay", price: 1.25, image: "static/images/lucky-13.jpg" },
+                    { id: "njo-14", name: "Cole", price: 1.25, image: "static/images/lucky-14.jpg" },
+                    { id: "njo-15", name: "Lloyd", price: 1.25, image: "static/images/lucky-15.jpg" },
+                    { id: "njo-16", name: "Nya", price: 1.25, image: "static/images/lucky-16.jpg" }
+                ]
+            },
+            {
+                id: 5, title: "Ninjago Season 1", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-season1-nrg-thumbnail.jpg",
+                variants: [
+                    { id: "njo-21", name: "Kai", price: 1.25, image: "static/images/lucky-21.jpg" },
+                    { id: "njo-22", name: "Zane", price: 1.25, image: "static/images/lucky-22.jpg" },
+                    { id: "njo-23", name: "Jay", price: 1.25, image: "static/images/lucky-23.jpg" },
+                    { id: "njo-24", name: "Cole", price: 1.25, image: "static/images/lucky-24.jpg" },
+                    { id: "njo-25", name: "Lloyd", price: 1.25, image: "static/images/lucky-25.jpg" },
+                    { id: "njo-26", name: "Nya", price: 1.25, image: "static/images/lucky-26.jpg" }
+                ]
+            },
+            {
+                id: 6, title: "Ninjago Season 1", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-season1-zx-thumbnail.jpg",
+                variants: [
+                    { id: "njo-31", name: "Kai", price: 1.25, image: "static/images/lucky-31.jpg" },
+                    { id: "njo-32", name: "Zane", price: 1.25, image: "static/images/lucky-32.jpg" },
+                    { id: "njo-33", name: "Jay", price: 1.25, image: "static/images/lucky-33.jpg" },
+                    { id: "njo-34", name: "Cole", price: 1.25, image: "static/images/lucky-34.jpg" },
+                    { id: "njo-35", name: "Lloyd", price: 1.25, image: "static/images/lucky-35.jpg" },
+                    { id: "njo-36", name: "Nya", price: 1.25, image: "static/images/lucky-36.jpg" }
+                ]
+            },
+            {
+                id: 7, title: "Ninjago", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-8000-01.jpg",
+                variants: [
+                    { id: "njo-A", name: "Ninjago A", price: 2.00, image: "static/images/lego-ninjago-8000-01.jpg" },
+                    { id: "njo-B", name: "Ninjago B", price: 2.00, image: "static/images/lego-ninjago-8000-02.jpg" },
+                    { id: "njo-C", name: "Ninjago C", price: 2.00, image: "static/images/lego-ninjago-8000-03.jpg" },
+                    { id: "njo-D", name: "Ninjago D", price: 2.00, image: "static/images/lego-ninjago-8000-04.jpg" },
+                    { id: "njo-E", name: "Ninjago E", price: 2.00, image: "static/images/lego-ninjago-8000-05.jpg" },
+                    { id: "njo-F", name: "Ninjago F", price: 2.00, image: "static/images/lego-ninjago-8000-06.jpg" }
+                ]
+            },
+            {
+                id: 8, title: "LEGO Ninjago", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-71808.jpg",
+                variants: [
+                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
+                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
+                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
+                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
+                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
+                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
+                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
+                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
+                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
+                ]
+            },
+            {
+                id: 11, title: "LEGO Ninjago", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-71808.jpg",
+                variants: [
+                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
+                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
+                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
+                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
+                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
+                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
+                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
+                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
+                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
+                ]
+            },
+            {
+                id: 12, title: "LEGO Ninjago", sold: "310", category: "Ninjago", type: "toy",
+                thumbnail: "static/images/lego-ninjago-71808.jpg",
+                variants: [
+                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
+                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
+                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
+                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
+                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
+                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
+                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
+                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
+                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
+                ]
+            },
+
+            // === JEWELRY ===
+            { 
+                id: 101, title: "Imperial Green Jade Bangle", price: 2.00, sold: "240", category: "Jade", type: "jewelry",
+                thumbnail: 'static/images/bracelet-01.JPG',
+                variants: [
+                    {id:'j1', name:'A', price: 2.00, image:'static/images/bracelet-01.JPG'}, 
+                    {id:'j2', name:'B', price: 2.00, image:'static/images/bracelet-02.JPG'},
+                    {id:'j3', name:'C', price: 2.00, image:'static/images/bracelet-03.JPG'}, 
+                    {id:'j4', name:'D', price: 2.00, image:'static/images/bracelet-04.JPG'},
+                    {id:'j5', name:'E', price: 2.00, image:'static/images/bracelet-05.JPG'}
+                ] 
+            },
+            { 
+                id: 102, title: "Amethyst Crystal Bracelet", price: 1.50, sold: "580", category: "Gemstone", type: "jewelry",
+                thumbnail: 'static/images/bracelet-101.JPG',
+                variants: [
+                    {id:'g1', name:'B', price: 1.50, image:'static/images/bracelet-101.JPG'}, 
+                    {id:'g2', name:'B', price: 1.50, image:'static/images/bracelet-102.JPG'}, 
+                    {id:'g3', name:'B', price: 1.50, image:'static/images/bracelet-103.JPG'}, 
+                ] 
+            },
+            { 
+                id: 103, title: "Silver 925 Chain", price: 18.00, sold: "120", category: "Silver", type: "jewelry",
+                thumbnail: 'static/images/bracelet-201.JPEG',
+                variants: [
+                   {id:'s1', name:'s', price: 1.50, image:'static/images/bracelet-201.JPEG'},
+                   {id:'s2', name:'s', price: 1.50, image:'static/images/bracelet-202.JPEG'},
+                   {id:'s3', name:'s', price: 1.50, image:'static/images/bracelet-203.JPEG'}
+                ] 
+            },
+            { 
+                id: 104, title: "Dumbbell Bracelet", price: 1.25, sold: "310", category: "Dumbbell Bracelet", type: "jewelry",
+                thumbnail: 'static/images/bracelet-400.JPEG',
+                variants: [
+                   {id:'gd1', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-401.JPEG'},
+                   {id:'gd2', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-402.JPEG'},
+                   {id:'gd3', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-403.JPEG'},
+                   {id:'gd4', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-404.JPEG'},
+                   {id:'gd5', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-405.JPEG'},
+                   {id:'gd6', name:'Dumbbell Bracelet', price: 1.25, image:'static/images/bracelet-406.JPEG'}
+                ] 
+            }
+        ];
+
+        // --- APP STATE ---
+        let lang = 'en'; 
+        let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); 
+        let currentAppMode = 'toy'; // 'toy' or 'jewelry'
+        let activeCategory = 'All';
+        let curProd = null, curVar = null, curQty = 1, generatedBlob = null;
+
+        // --- INITIALIZATION ---
+        function init() { 
+            switchAppMode('toy'); // Default to toys
+            updateBadges(); 
         }
-        function filter(c, btn) { Array.from(document.getElementById('category-tabs').children).forEach(b => b.className = "px-4 py-1.5 rounded-full whitespace-nowrap transition-all border border-transparent text-xs font-bold text-white/80 hover:bg-white/10"); btn.className = "px-4 py-1.5 rounded-full whitespace-nowrap transition-all bg-white text-green-600 shadow-sm text-xs font-bold"; renderGrid(c==='All' ? PRODUCTS : PRODUCTS.filter(p=>p.category===c)); }
-        function searchProduct(q) { renderGrid(PRODUCTS.filter(p => p.title.toLowerCase().includes(q.toLowerCase()))); }
-        function renderGrid(list) { document.getElementById('product-grid').innerHTML = list.map(p => { if(!p.variants || p.variants.length === 0) return ''; const img = p.thumbnail || p.variants[0].image || 'https://placehold.co/400'; return `<div onclick="openDetail(${p.id})" class="bg-white rounded-3xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform duration-300 group"><div class="relative w-full aspect-square overflow-hidden"><img src="${img}" class="w-full h-full object-cover bg-gray-100 group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/400'"> ${p.variants[0].price < 2 ? '<div class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">HOT</div>' : ''}</div><div class="px-3 pt-3 pb-4"><div class="text-xs text-gray-900 line-clamp-2 leading-snug h-8 mb-2 font-bold">${p.title}</div><div class="flex items-end justify-between"><div><div class="flex items-baseline gap-0.5 text-brand leading-none"><span class="text-[10px] font-bold">៛</span><span class="text-base font-black">${(p.variants[0].price * EX_RATE).toLocaleString()}</span></div><div class="text-[9px] text-gray-400 mt-1 font-medium">${p.sold} ${TEXTS[lang].sold}</div></div><button class="w-8 h-8 rounded-full bg-gray-50 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-colors shadow-sm"><i class="fa-solid fa-plus text-xs"></i></button></div></div></div>`; }).join(''); }
 
+        // --- SWITCH MODE (TOY vs JEWELRY) ---
+        function switchAppMode(mode) {
+            currentAppMode = mode;
+            const config = APP_CONFIG[mode];
+            
+            // Update Hero
+            document.getElementById('hero-img').src = config.image;
+            document.getElementById('hero-title').innerText = config.title;
+            
+            // Update Tab Categories
+            renderTabs(config.categories);
+            activeCategory = 'All';
+            filterGrid();
+
+            // Update Bottom Nav Styling
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${mode}`).classList.add('active');
+        }
+
+        function renderTabs(categories) { 
+            document.getElementById('category-tabs').innerHTML = categories.map(c => 
+                `<button onclick="filter('${c}', this)" class="px-4 py-1.5 rounded-full whitespace-nowrap transition-all border border-transparent text-xs font-bold ${c === 'All' ? 'bg-white text-green-600 shadow-sm' : 'text-white/80 hover:bg-white/10'}">${c}</button>`
+            ).join(''); 
+        }
+
+        function filter(c, btn) { 
+            activeCategory = c;
+            Array.from(document.getElementById('category-tabs').children).forEach(b => b.className = "px-4 py-1.5 rounded-full whitespace-nowrap transition-all border border-transparent text-xs font-bold text-white/80 hover:bg-white/10"); 
+            if(btn) btn.className = "px-4 py-1.5 rounded-full whitespace-nowrap transition-all bg-white text-green-600 shadow-sm text-xs font-bold"; 
+            filterGrid();
+        }
+
+        function filterGrid() {
+            // Filter by App Mode (type) AND Category
+            let list = PRODUCTS.filter(p => p.type === currentAppMode);
+            if (activeCategory !== 'All') {
+                list = list.filter(p => p.category === activeCategory);
+            }
+            renderGrid(list);
+        }
+
+        function searchProduct(q) { 
+            if(!q) { filterGrid(); return; }
+            // Search only within current App Mode
+            const list = PRODUCTS.filter(p => p.type === currentAppMode && p.title.toLowerCase().includes(q.toLowerCase()));
+            renderGrid(list); 
+        }
+
+        function renderGrid(list) { 
+            document.getElementById('product-grid').innerHTML = list.map(p => { 
+                if(!p.variants || p.variants.length === 0) return ''; 
+                const img = p.thumbnail || p.variants[0].image || 'https://placehold.co/400'; 
+                return `<div onclick="openDetail(${p.id})" class="bg-white rounded-3xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform duration-300 group"><div class="relative w-full aspect-square overflow-hidden"><img src="${img}" class="w-full h-full object-cover bg-gray-100 group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/400'"> ${p.variants[0].price < 2 ? '<div class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">HOT</div>' : ''}</div><div class="px-3 pt-3 pb-4"><div class="text-xs text-gray-900 line-clamp-2 leading-snug h-8 mb-2 font-bold">${p.title}</div><div class="flex items-end justify-between"><div><div class="flex items-baseline gap-0.5 text-brand leading-none"><span class="text-[10px] font-bold">៛</span><span class="text-base font-black">${(p.variants[0].price * EX_RATE).toLocaleString()}</span></div><div class="text-[9px] text-gray-400 mt-1 font-medium">${p.sold} ${TEXTS[lang].sold}</div></div><button class="w-8 h-8 rounded-full bg-gray-50 text-brand flex items-center justify-center group-hover:bg-brand group-hover:text-white transition-colors shadow-sm"><i class="fa-solid fa-plus text-xs"></i></button></div></div></div>`; 
+            }).join(''); 
+        }
+
+        function toggleLang() { 
+            lang = lang === 'en' ? 'kh' : 'en'; 
+            document.getElementById('lang-btn').innerText = lang === 'en' ? 'KH' : 'EN'; 
+            updateTexts(); 
+        }
+        function updateTexts() { 
+            document.querySelectorAll('[data-key]').forEach(el => { 
+                const k = el.getAttribute('data-key'); 
+                if(TEXTS[lang][k]) el.innerText = TEXTS[lang][k]; 
+            }); 
+            // Re-render tabs to maintain language consistency if we had translated categories
+        }
+
+        // --- DETAIL VIEW LOGIC ---
         function openDetail(id) { 
             curProd = PRODUCTS.find(p=>p.id===id); curVar = curProd.variants[0]; 
             const gallery = document.getElementById('dt-gallery'); 
             gallery.innerHTML = curProd.variants.map((v, idx) => `<div onclick="openFullScreenGallery(${idx})" class="flex-shrink-0 w-full h-full snap-center bg-white flex items-center justify-center relative"><img src="${v.image}" class="max-w-full max-h-full object-contain p-8" onerror="this.src='https://placehold.co/400?text=No+Image'"></div>`).join(''); 
             updateDetailUI(); 
-            document.getElementById('detail-view').classList.remove('hidden'); 
-            document.getElementById('detail-view').classList.add('flex'); 
+            
+            // Slide In Animation
+            requestAnimationFrame(() => {
+                document.getElementById('detail-view').classList.add('active'); 
+            });
             document.getElementById('detail-view').scrollTop = 0; 
         }
         
-        function closeDetail() { document.getElementById('detail-view').classList.add('hidden'); document.getElementById('detail-view').classList.remove('flex'); }
+        function closeDetail() { document.getElementById('detail-view').classList.remove('active'); }
 
         function handleDetailScroll(el) { const h = document.getElementById('dt-header'); if(el.scrollTop > 50) { h.querySelector('button').classList.replace('bg-white/80','bg-white'); } else { h.querySelector('button').classList.replace('bg-white','bg-white/80'); } }
-        function onGalleryScroll(e) { const el = e.target; const idx = Math.round(el.scrollLeft / el.offsetWidth); if(curProd.variants[idx] && curProd.variants[idx].id !== curVar.id) { curVar = curProd.variants[idx]; updateDetailUI(false); } }
-        function updateDetailUI(scrollGallery = true) { document.getElementById('dt-price').innerText = (curProd.variants.find(v=>v.id===curVar.id).price * EX_RATE).toLocaleString(); document.getElementById('dt-price-orig').innerText = (curProd.variants.find(v=>v.id===curVar.id).price * EX_RATE * 1.2).toLocaleString(); document.getElementById('dt-title').innerText = curProd.title; document.getElementById('dt-sold').innerText = curProd.sold; document.getElementById('dt-sel-preview').innerText = curVar.name; const idx = curProd.variants.findIndex(v=>v.id===curVar.id); document.getElementById('gallery-counter').innerText = `${idx + 1}/${curProd.variants.length}`; if(scrollGallery) { const gallery = document.getElementById('dt-gallery'); gallery.scrollTo({ left: idx * gallery.offsetWidth, behavior: 'smooth' }); } }
+        
+        function onGalleryScroll(e) { 
+            const el = e.target; 
+            const idx = Math.round(el.scrollLeft / el.offsetWidth); 
+            if(curProd.variants[idx] && curProd.variants[idx].id !== curVar.id) { 
+                curVar = curProd.variants[idx]; 
+                updateDetailUI(false); 
+            } 
+        }
+
+        function updateDetailUI(scrollGallery = true) { 
+            document.getElementById('dt-price').innerText = (curProd.variants.find(v=>v.id===curVar.id).price * EX_RATE).toLocaleString(); 
+            document.getElementById('dt-price-orig').innerText = (curProd.variants.find(v=>v.id===curVar.id).price * EX_RATE * 1.2).toLocaleString(); 
+            document.getElementById('dt-title').innerText = curProd.title; 
+            document.getElementById('dt-sold').innerText = curProd.sold; 
+            document.getElementById('dt-sel-preview').innerText = curVar.name; 
+            
+            const idx = curProd.variants.findIndex(v=>v.id===curVar.id); 
+            document.getElementById('gallery-counter').innerText = `${idx + 1}/${curProd.variants.length}`; 
+            
+            // Sync SKU drawer if open
+            if(document.getElementById('sku-drawer').classList.contains('active')) {
+                document.getElementById('sku-img').src = curVar.image; 
+                document.getElementById('sku-price').innerText = (curVar.price * EX_RATE).toLocaleString(); 
+                document.getElementById('sku-text').innerText = curVar.name; 
+                document.querySelectorAll('.tb-option').forEach(el => el.classList.remove('selected'));
+                const btn = document.getElementById(`tb-btn-${curVar.id}`);
+                if(btn) btn.classList.add('selected');
+            }
+
+            if(scrollGallery) { 
+                const gallery = document.getElementById('dt-gallery'); 
+                // Changed to 'auto' for instant jump
+                gallery.scrollTo({ left: idx * gallery.offsetWidth, behavior: 'auto' }); 
+            } 
+        }
 
         function openFullScreenGallery(startIdx) { const fs = document.getElementById('fs-gallery'); const scroller = document.getElementById('fs-scroll'); scroller.innerHTML = curProd.variants.map(v => `<div class="flex-shrink-0 w-full h-full snap-center flex items-center justify-center p-2"><img src="${v.image}" class="max-w-full max-h-full object-contain" onerror="this.src='https://placehold.co/800'"></div>`).join(''); fs.classList.remove('hidden'); fs.classList.add('flex'); requestAnimationFrame(() => { fs.classList.remove('opacity-0'); scroller.scrollTo({left: startIdx * scroller.offsetWidth, behavior: 'auto'}); }); updateFsUI(startIdx); }
         function closeFullScreenGallery() { document.getElementById('fs-gallery').classList.add('opacity-0'); setTimeout(() => { document.getElementById('fs-gallery').classList.add('hidden'); document.getElementById('fs-gallery').classList.remove('flex'); }, 300); }
         function onFsScroll(e) { const el = e.target; const idx = Math.round(el.scrollLeft / el.offsetWidth); updateFsUI(idx); }
         function updateFsUI(idx) { if(curProd.variants[idx]) { document.getElementById('fs-counter').innerText = `${idx + 1}/${curProd.variants.length}`; document.getElementById('fs-title').innerText = `${curProd.title} - ${curProd.variants[idx].name}`; document.getElementById('fs-price').innerText = (curProd.variants[idx].price * EX_RATE).toLocaleString(); } }
 
-        // --- TAOBAO STYLE SKU SELECTION LOGIC ---
+        // --- SKU SELECTION (LIST VIEW) ---
         function openSku(buyNow) { 
             curQty = 1; 
             const container = document.getElementById('sku-options-container');
+            
+            // Set vertical stack layout
+            container.className = "flex flex-col gap-2";
+            
+            // Render LIST STYLE: [Image] 1/. Name
             container.innerHTML = curProd.variants.map((v, idx) => `
-                <button onclick="selVar('${v.id}')" id="tb-btn-${v.id}" class="tb-option h-9 rounded-full flex items-center pr-4 pl-1 gap-2 active:scale-95">
-                    <img src="${v.image}" class="w-7 h-7 rounded-full object-cover bg-gray-100" onerror="this.src='https://placehold.co/100'">
-                    <span class="tb-name text-xs font-bold truncate max-w-[120px]">${v.name}</span>
+                <button onclick="selVar('${v.id}')" id="tb-btn-${v.id}" class="tb-option w-full p-2 rounded-2xl flex items-center gap-3 border transition-all active:scale-[0.98] bg-white text-left relative overflow-hidden group">
+                    <img src="${v.image}" class="w-12 h-12 rounded-lg object-cover bg-gray-50 border border-gray-100 shrink-0" onerror="this.src='https://placehold.co/100'">
+                    <span class="tb-name text-sm font-bold text-gray-700 flex-1">
+                        <span class="idx-num mr-1">${idx+1}/.</span> ${v.name}
+                    </span>
+                    <!-- Tick removed as requested -->
                 </button>
             `).join('');
             
-            selVar(curVar.id); 
+            selVar(curVar.id, false); 
             document.getElementById('sku-backdrop').classList.add('active'); 
             document.getElementById('sku-drawer').classList.add('active'); 
         }
@@ -391,20 +743,14 @@
             document.getElementById('sku-backdrop').classList.remove('active'); 
         }
 
-        function selVar(id) { 
+        function selVar(id, forceScroll = true) { 
             curVar = curProd.variants.find(v=>v.id===id); 
-            
-            // Remove 'selected' class from all, add to current
             document.querySelectorAll('.tb-option').forEach(el => el.classList.remove('selected'));
             document.getElementById(`tb-btn-${id}`).classList.add('selected');
-
-            // Update Header Info
             document.getElementById('sku-img').src = curVar.image; 
             document.getElementById('sku-price').innerText = (curVar.price * EX_RATE).toLocaleString(); 
             document.getElementById('sku-text').innerText = curVar.name; 
-            
-            // Sync with main detail view
-            updateDetailUI(false);
+            updateDetailUI(forceScroll);
         }
 
         function updQty(d) { curQty = Math.max(1, curQty+d); document.getElementById('sku-qty').innerText = curQty; }
@@ -429,6 +775,7 @@
 
         function updateBadges() { const c = cart.reduce((a,b)=>a+b.qty,0); ['nav-cart-badge', 'detail-cart-badge'].forEach(id => { const el = document.getElementById(id); el.innerText = c; el.classList.toggle('hidden', c===0); }); document.getElementById('cart-count').innerText = c; }
         
+        // --- CART LOGIC ---
         function openCart() { renderCartList(); document.getElementById('cart-bg').classList.add('active'); document.getElementById('cart-drawer').classList.remove('translate-x-full'); }
         function closeCart() { document.getElementById('cart-drawer').classList.add('translate-x-full'); document.getElementById('cart-bg').classList.remove('active'); }
         function toggleCheck(idx, event) { if(event) event.stopPropagation(); cart[idx].chk = !cart[idx].chk; localStorage.setItem(CART_KEY, JSON.stringify(cart)); renderCartList(); }
@@ -438,7 +785,7 @@
             if(event) event.stopPropagation();
             const item = cart[i];
             const newQty = item.qty + delta;
-            if(newQty < 1) return; // Min 1
+            if(newQty < 1) return; 
             item.qty = newQty;
             localStorage.setItem(CART_KEY, JSON.stringify(cart));
             renderCartList();
@@ -463,14 +810,11 @@
                         <div class="text-[10px] text-gray-500 font-medium mb-1">${item.vname}</div>
                         <div class="flex justify-between items-end">
                             <div class="text-brand text-sm font-black">៛${(item.price*EX_RATE).toLocaleString()}</div>
-                            
-                            <!-- QUANTITY ADJUSTER IN CART -->
                             <div class="flex items-center bg-gray-100 rounded-lg h-6">
                                 <button onclick="changeCartQty(${i}, -1, event)" class="w-6 h-6 flex items-center justify-center text-gray-600 font-bold active:scale-90 hover:bg-gray-200 rounded-l-lg">-</button>
                                 <div class="text-xs font-bold text-gray-900 px-1 min-w-[1.5rem] text-center">${item.qty}</div>
                                 <button onclick="changeCartQty(${i}, 1, event)" class="w-6 h-6 flex items-center justify-center text-gray-600 font-bold active:scale-90 hover:bg-gray-200 rounded-r-lg">+</button>
                             </div>
-                            
                         </div>
                     </div>
                     <button onclick="delItem(${i}, event)" class="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors active:scale-90"><i class="fa-solid fa-trash-can text-sm"></i></button>
@@ -479,11 +823,10 @@
             
             const total = cart.reduce((a,b)=> (b.chk ? a+(b.price*b.qty) : a), 0); 
             document.getElementById('cart-total').innerText = '៛' + (total*EX_RATE).toLocaleString(); 
-            const allSelected = cart.every(i => i.chk) && cart.length > 0;
             const anySelected = cart.some(i => i.chk);
             
             const box = document.getElementById('select-all-box');
-            if(allSelected) {
+            if(cart.every(i => i.chk) && cart.length > 0) {
                  box.className = "w-5 h-5 rounded-full border-2 border-brand bg-brand flex items-center justify-center transition-colors";
                  box.querySelector('i').classList.remove('hidden');
             } else {
@@ -498,6 +841,7 @@
         function checkout() { if(!cart.filter(i=>i.chk).length) return; closeCart(); document.getElementById('invoice-modal').classList.remove('hidden'); document.getElementById('invoice-modal').classList.add('flex'); document.getElementById('btn-share').classList.add('hidden'); document.getElementById('gen-btn').style.display = 'flex'; document.getElementById('gen-btn').innerHTML = '<span>Create Invoice</span> <i class="fa-solid fa-wand-magic-sparkles text-brand"></i>'; document.getElementById('gen-btn').disabled = false; document.getElementById('invoice-preview').classList.add('hidden'); document.getElementById('share-instr').classList.add('hidden'); }
         function closeInvoice() { document.getElementById('invoice-modal').classList.add('hidden'); document.getElementById('invoice-modal').classList.remove('flex'); openCart(); }
 
+        // --- INVOICE GENERATOR ---
         async function doGenerate() {
             const n=document.getElementById('inv-name').value, p=document.getElementById('inv-phone').value, a=document.getElementById('inv-addr').value; 
             if(!n) return alert('Please enter Name');
@@ -514,68 +858,76 @@
             const total = items.reduce((a,b)=> a+((b.price||b.p)*b.qty), 0);
             const ts = new Date().toLocaleDateString('en-GB');
 
+            // --- REDESIGNED INVOICE: WIDER, LARGER IMAGES, CLEANER LAYOUT ---
+            div.style.width = '550px'; 
             div.innerHTML = `
-            <div style="background:linear-gradient(135deg, #ffffff 0%, #f9fafb 100%); padding:40px; border-radius:24px; font-family:'Plus Jakarta Sans', sans-serif; color:#1a1a1a; position:relative; overflow:hidden; width:400px;">
-                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-45deg); font-size:100px; font-weight:900; color:#f3f4f6; z-index:0; pointer-events:none;">SOMPHEA</div>
-                <div style="position:relative; z-index:1;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:30px;">
+            <div style="background:white; padding:0; border-radius:0; font-family:'Plus Jakarta Sans', sans-serif; color:#1a1a1a; position:relative; overflow:hidden; width:550px;">
+                
+                <!-- HEADER -->
+                <div style="background:#90D730; padding:30px 40px; color:#1a1a1a; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <div style="width:50px; height:50px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#90D730; font-weight:900; font-size:24px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">S</div>
                         <div>
-                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
-                                <div style="width:40px; height:40px; background:#1a1a1a; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#90D730; font-weight:bold; font-size:20px;">S</div>
-                                <h1 style="font-size:22px; font-weight:800; color:#1a1a1a; letter-spacing:-0.5px; margin:0;">SOMPHEA REAK</h1>
-                            </div>
-                            <p style="font-size:11px; color:#888; margin:0 0 0 50px; font-weight:600; letter-spacing:1px; text-transform:uppercase;">Toy Universe</p>
-                        </div>
-                        <div style="text-align:right;">
-                            <div style="font-size:10px; font-weight:700; color:#999; text-transform:uppercase; letter-spacing:0.5px;">Invoice Date</div>
-                            <div style="font-size:14px; color:#1a1a1a; font-weight:600;">${ts}</div>
+                            <h1 style="font-size:24px; font-weight:900; letter-spacing:-0.5px; margin:0; line-height:1;">SOMPHEA REAK</h1>
+                            <p style="font-size:12px; margin:4px 0 0 0; font-weight:600; opacity:0.8; text-transform:uppercase; letter-spacing:1px;">Official Store</p>
                         </div>
                     </div>
-
-                    <div style="background:#fff; border:1px solid #eee; padding:20px; border-radius:16px; margin-bottom:25px; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-                        <div style="font-size:10px; font-weight:700; color:#90D730; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Billed To</div>
-                        <div style="font-size:18px; font-weight:800; color:#1a1a1a; margin-bottom:2px;">${n}</div>
-                        <div style="font-size:13px; color:#666; font-weight:500;">${p}</div>
-                        ${a ? `<div style="font-size:12px; color:#888; margin-top:8px; padding-top:8px; border-top:1px dashed #eee;">${a}</div>` : ''}
-                    </div>
-
-                    <table style="width:100%; border-collapse:separate; border-spacing:0; font-size:12px; margin-bottom:25px;">
-                        <thead>
-                            <tr style="color:#888;">
-                                <th style="text-align:left; padding:0 0 10px 10px; font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Item</th>
-                                <th style="text-align:center; padding:0 0 10px 0; font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Qty</th>
-                                <th style="text-align:right; padding:0 10px 10px 0; font-size:10px; text-transform:uppercase; letter-spacing:0.5px;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>${items.map((i, idx) => `
-                        <tr>
-                            <td style="padding:12px 10px; border-top:1px solid #f0f0f0;">
-                                <div style="display:flex; align-items:center; gap:12px;">
-                                    <img src="${i.img}" style="width:32px; height:32px; object-fit:cover; border-radius:6px; border:1px solid #eee;">
-                                    <div>
-                                        <div style="font-weight:700; color:#1a1a1a; font-size:13px;">${i.title}</div>
-                                        <div style="font-size:11px; color:#888;">${i.vname}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td style="padding:12px 0; border-top:1px solid #f0f0f0; text-align:center; font-weight:600; color:#555;">x${i.qty}</td>
-                            <td style="padding:12px 10px; border-top:1px solid #f0f0f0; text-align:right; font-weight:700; color:#1a1a1a;">៛${(i.price*i.qty*EX_RATE).toLocaleString()}</td>
-                        </tr>`).join('')}</tbody>
-                    </table>
-
-                    <div style="display:flex; justify-content:flex-end;">
-                        <div style="width:220px; background:#1a1a1a; padding:20px; border-radius:16px; color:white; position:relative; overflow:hidden;">
-                            <div style="position:absolute; top:0; right:0; width:60px; height:60px; background:radial-gradient(circle, #90D730 0%, transparent 70%); opacity:0.2;"></div>
-                            <div style="display:flex; justify-content:space-between; margin-bottom:8px; opacity:0.7; font-size:12px;">
-                                <span>Subtotal</span><span>៛${(total*EX_RATE).toLocaleString()}</span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:10px; border-top:1px solid rgba(255,255,255,0.2);">
-                                <span style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px;">Total Due</span>
-                                <span style="font-size:24px; font-weight:900; color:#90D730; line-height:1;">៛${(total*EX_RATE).toLocaleString()}</span>
-                            </div>
-                        </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:0.7;">Date</div>
+                        <div style="font-size:16px; font-weight:700;">${ts}</div>
                     </div>
                 </div>
+
+                <!-- CUSTOMER INFO -->
+                <div style="padding:30px 40px 10px 40px;">
+                    <div style="background:#f9fafb; border:1px solid #eee; border-radius:16px; padding:20px;">
+                        <div style="font-size:11px; font-weight:800; color:#90D730; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px;">Customer Information</div>
+                        <div style="font-size:20px; font-weight:800; color:#1a1a1a; margin-bottom:4px;">${n}</div>
+                        <div style="font-size:14px; color:#555; font-weight:600; display:flex; gap:10px;">
+                             <span><i class="fa-solid fa-phone" style="font-size:12px; margin-right:4px; color:#ccc;"></i> ${p}</span>
+                        </div>
+                        ${a ? `<div style="font-size:13px; color:#777; margin-top:10px; padding-top:10px; border-top:1px dashed #e5e7eb; line-height:1.4;">${a}</div>` : ''}
+                    </div>
+                </div>
+
+                <!-- ORDER ITEMS -->
+                <div style="padding:20px 40px;">
+                    <div style="font-size:12px; font-weight:800; color:#1a1a1a; margin-bottom:15px; text-transform:uppercase; letter-spacing:0.5px;">Order Details</div>
+                    <div style="display:flex; flex-direction:column; gap:15px;">
+                        ${items.map((i) => `
+                        <div style="display:flex; align-items:flex-start; gap:20px; border-bottom:1px solid #f3f4f6; padding-bottom:15px;">
+                            <div style="width:100px; height:100px; flex-shrink:0; border-radius:12px; overflow:hidden; border:1px solid #eee; background:#fff;">
+                                <img src="${i.img}" style="width:100%; height:100%; object-fit:cover;">
+                            </div>
+                            <div style="flex:1; padding-top:5px;">
+                                <div style="font-size:16px; font-weight:800; color:#1a1a1a; margin-bottom:4px; line-height:1.3;">${i.title}</div>
+                                <div style="display:inline-block; background:#f3f4f6; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700; color:#555; margin-bottom:8px;">Model: ${i.vname}</div>
+                                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                                    <div style="font-size:13px; color:#888; font-weight:600;">
+                                        ៛${(i.price*EX_RATE).toLocaleString()} x ${i.qty}
+                                    </div>
+                                    <div style="font-size:18px; font-weight:800; color:#1a1a1a;">
+                                        ៛${(i.price*i.qty*EX_RATE).toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- TOTAL FOOTER -->
+                <div style="padding:0 40px 40px 40px;">
+                    <div style="background:#1a1a1a; color:white; padding:25px; border-radius:20px; position:relative; overflow:hidden;">
+                        <div style="position:absolute; top:-20px; right:-20px; width:100px; height:100px; background:#90D730; border-radius:50%; opacity:0.15; filter:blur(20px);"></div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-size:13px; font-weight:600; opacity:0.7;">Total Amount</div>
+                            <div style="font-size:32px; font-weight:900; color:#90D730;">៛${(total*EX_RATE).toLocaleString()}</div>
+                        </div>
+                        <div style="margin-top:5px; text-align:right; font-size:11px; opacity:0.5;">Thank you for your purchase!</div>
+                    </div>
+                </div>
+
             </div>`;
             document.body.appendChild(div); 
 
@@ -600,7 +952,9 @@
                 generatedBlob = await new Promise(r => cvs.toBlob(r));
 
                 document.getElementById('btn-share').onclick = async () => {
-                    const msg = `🧾 New Order from ${n}\n📱 ${p}\n💰 Total: ៛${(total*EX_RATE).toLocaleString()}\n\n(Please verify with attached image)`;
+                    let itemDetails = items.map(i => `• ${i.title} (${i.vname}) x${i.qty}`).join('\n');
+                    const msg = `🧾 *NEW ORDER*\n\n👤 *Customer:* ${n}\n📱 *Phone:* ${p}\n📍 *Address:* ${a || 'N/A'}\n\n🛒 *Items:*\n${itemDetails}\n\n💰 *TOTAL: ៛${(total*EX_RATE).toLocaleString()}*\n📅 ${ts}`;
+                    
                     if (navigator.canShare && generatedBlob) {
                         try {
                             const file = new File([generatedBlob], "invoice.png", { type: "image/png" });
@@ -613,190 +967,11 @@
             } catch (e) { alert("Error generating invoice."); console.error(e); btn.innerText = "Generate Invoice"; btn.disabled = false; } finally { div.remove(); }
         }
 
-        const PRODUCTS = [
-            {
-                id: 1, title: "WWII អាវុធធន់ធ្ងន់", sold: "1.2k", category: "WWII Soldier",
-                thumbnail: "static/images/lego-wwii-01.jpg",
-                variants: [
-                    { id: "v1", name: "RPG", price: 0.125, image: "static/images/lego-wwii-02.jpg" },
-                    { id: "v11", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.50, image: "static/images/lego-wwii-101.jpg" },
-                    { id: "v12", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-102.jpg" },
-                    { id: "v13", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 0.875, image: "static/images/lego-wwii-103.jpg" },
-                    { id: "v14", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 1.00, image: "static/images/lego-wwii-104.jpg" },
-                    { id: "v15", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-105.jpg" },
-                    { id: "v21", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.50, image: "static/images/lego-wwii-201.jpg" },
-                    { id: "v22", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-202.jpg" },
-                    { id: "v23", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 0.875, image: "static/images/lego-wwii-203.jpg" },
-                    { id: "v24", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 1.00, image: "static/images/lego-wwii-204.jpg" },
-                    { id: "v25", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-205.jpg" },
-                    { id: "v31", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.50, image: "static/images/lego-wwii-301.jpg" },
-                    { id: "v32", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-302.jpg" },
-                    { id: "v33", name: "កាណុងរយៈចម្ងាយឆ្ងាយ (ខ្មៅ", price: 0.875, image: "static/images/lego-wwii-303.jpg" },
-                    { id: "v34", name: "កាំជ្រួចការពារដែនអាកាស (ខ្មៅ)", price: 1.00, image: "static/images/lego-wwii-304.jpg" },
-                    { id: "v35", name: "កាំភ្លើងយន្តX4 (ខ្មៅ)", price: 1.25, image: "static/images/lego-wwii-305.jpg" }
-               ]
-            },
-            {
-                id: 2, title: "WWII កូនទាហាន", sold: "840", category: "WWII Soldier",
-                thumbnail: "static/images/lego-wwii-army-thumbnail.jpg",
-                variants: [
-                    { id: "a01", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-101.jpg" },
-                    { id: "a02", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-102.jpg" },
-                    { id: "a03", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-103.jpg" },
-                    { id: "a04", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-104.jpg" },
-                    { id: "a05", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-105.jpg" },
-                    { id: "a06", name: "ទាហានអាល្លឺម៉ង", price: 0.25, image: "static/images/lego-wwii-army-106.jpg" },
-                    { id: "a11", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-201.jpg" },
-                    { id: "a12", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-202.jpg" },
-                    { id: "a13", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-203.jpg" },
-                    { id: "a14", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-204.jpg" },
-                    { id: "a15", name: "ទាហានអាមេរិក", price: 0.25, image: "static/images/lego-wwii-army-205.jpg" },
-                    { id: "a21", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-301.jpg" },
-                    { id: "a22", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-302.jpg" },
-                    { id: "a23", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-303.jpg" },
-                    { id: "a24", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-304.jpg" },
-                    { id: "a25", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-305.jpg" },
-                    { id: "a26", name: "ទាហានសូវៀត", price: 0.25, image: "static/images/lego-wwii-army-306.jpg" }
-                ]
-            },
-            {
-                id: 3, title: "ទាហាន អាល្លឺម៉ង", sold: "310", category: "WWII Soldier",
-                thumbnail: "static/images/lego-wwii-german-thumbnail.jpg",
-                variants: [
-                    { id: "German-01", name: "Kai", price: 1.25, image: "static/images/lego-wwii-german-01.jpg" },
-                    { id: "German-02", name: "Zane", price: 1.25, image: "static/images/lego-wwii-german-02.jpg" },
-                    { id: "German-03", name: "Jay", price: 1.25, image: "static/images/lego-wwii-german-03.jpg" },
-                    { id: "German-04", name: "Cole", price: 1.25, image: "static/images/lego-wwii-german-04.jpg" },
-                    { id: "German-05", name: "Lloyd", price: 1.25, image: "static/images/lego-wwii-german-05.jpg" },
-                    { id: "German-06", name: "Nya", price: 1.25, image: "static/images/lego-wwii-german-06.jpg" }
-                ]
-                
-            },
-            {
-                id: 9, title: "ទាហាន សូវៀត", sold: "310", category: "WWII Soldier",
-                thumbnail: "static/images/lego-wwii-soviet-thumbnail.jpg",
-                variants: [
-                    { id: "Soviet-01", name: "Kai", price: 1.25, image: "static/images/lego-wwii-soviet-01.jpg" },
-                    { id: "Soviet-02", name: "Zane", price: 1.25, image: "static/images/lego-wwii-soviet-02.jpg" },
-                    { id: "Soviet-03", name: "Jay", price: 1.25, image: "static/images/lego-wwii-soviet-03.jpg" },
-                    { id: "Soviet-04", name: "Cole", price: 1.25, image: "static/images/lego-wwii-soviet-04.jpg" },
-                    { id: "Soviet-05", name: "Lloyd", price: 1.25, image: "static/images/lego-wwii-soviet-05.jpg" },
-                    { id: "Soviet-06", name: "Nya", price: 1.25, image: "static/images/lego-wwii-soviet-06.jpg" }
-                ]
-            },
-            {
-                id: 10, title: "Ninjago Season 1", sold: "310", category: "Ninjago",
-                thumbnail: "static/images/lego-ninjago-season1-dx-thumbnail.jpg",
-                variants: [
-                    { id: "njo-01", name: "Kai", price: 1.25, image: "static/images/lucky-01.jpg" },
-                    { id: "njo-02", name: "Zane", price: 1.25, image: "static/images/lucky-02.jpg" },
-                    { id: "njo-03", name: "Jay", price: 1.25, image: "static/images/lucky-03.jpg" },
-                    { id: "njo-04", name: "Cole", price: 1.25, image: "static/images/lucky-04.jpg" },
-                    { id: "njo-05", name: "Lloyd", price: 1.25, image: "static/images/lucky-05.jpg" },
-                    { id: "njo-06", name: "Nya", price: 1.25, image: "static/images/lucky-06.jpg" }
-                ]
-
-            },
-            {
-                id: 4, title: "Ninjago Season 1", sold: "310", category: "Ninjago",
-                thumbnail: "static/images/lego-ninjago-season1-pilot-thumbnail.jpg",
-                variants: [
-                    { id: "njo-11", name: "Kai", price: 1.25, image: "static/images/lucky-11.jpg" },
-                    { id: "njo-12", name: "Zane", price: 1.25, image: "static/images/lucky-12.jpg" },
-                    { id: "njo-13", name: "Jay", price: 1.25, image: "static/images/lucky-13.jpg" },
-                    { id: "njo-14", name: "Cole", price: 1.25, image: "static/images/lucky-14.jpg" },
-                    { id: "njo-15", name: "Lloyd", price: 1.25, image: "static/images/lucky-15.jpg" },
-                    { id: "njo-16", name: "Nya", price: 1.25, image: "static/images/lucky-16.jpg" }
-                ]
-            },
-            {
-                id: 5, title: "Ninjago Season 1", sold: "310", category: "Ninjago",
-                thumbnail: "static/images/lego-ninjago-season1-nrg-thumbnail.jpg",
-                variants: [
-                    { id: "njo-21", name: "Kai", price: 1.25, image: "static/images/lucky-21.jpg" },
-                    { id: "njo-22", name: "Zane", price: 1.25, image: "static/images/lucky-22.jpg" },
-                    { id: "njo-23", name: "Jay", price: 1.25, image: "static/images/lucky-23.jpg" },
-                    { id: "njo-24", name: "Cole", price: 1.25, image: "static/images/lucky-24.jpg" },
-                    { id: "njo-25", name: "Lloyd", price: 1.25, image: "static/images/lucky-25.jpg" },
-                    { id: "njo-26", name: "Nya", price: 1.25, image: "static/images/lucky-26.jpg" }
-                ]
-            },
-            {
-                id: 6, title: "Ninjago Season 1", sold: "310", category: "Ninjago",
-                thumbnail: "static/images/lego-ninjago-season1-zx-thumbnail.jpg",
-                variants: [
-                    { id: "njo-31", name: "Kai", price: 1.25, image: "static/images/lucky-31.jpg" },
-                    { id: "njo-32", name: "Zane", price: 1.25, image: "static/images/lucky-32.jpg" },
-                    { id: "njo-33", name: "Jay", price: 1.25, image: "static/images/lucky-33.jpg" },
-                    { id: "njo-34", name: "Cole", price: 1.25, image: "static/images/lucky-34.jpg" },
-                    { id: "njo-35", name: "Lloyd", price: 1.25, image: "static/images/lucky-35.jpg" },
-                    { id: "njo-36", name: "Nya", price: 1.25, image: "static/images/lucky-36.jpg" }
-                ]
-            },
-            {
-                id: 7, title: "Ninjago", sold: "310", category: "Ninjago",
-                thumbnail: "static/images/lego-ninjago-8000-01.jpg",
-                variants: [
-                    { id: "njo-A", name: "Ninjago A", price: 2.00, image: "static/images/lego-ninjago-8000-01.jpg" },
-                    { id: "njo-B", name: "Ninjago B", price: 2.00, image: "static/images/lego-ninjago-8000-02.jpg" },
-                    { id: "njo-C", name: "Ninjago C", price: 2.00, image: "static/images/lego-ninjago-8000-03.jpg" },
-                    { id: "njo-D", name: "Ninjago D", price: 2.00, image: "static/images/lego-ninjago-8000-04.jpg" },
-                    { id: "njo-E", name: "Ninjago E", price: 2.00, image: "static/images/lego-ninjago-8000-05.jpg" },
-                    { id: "njo-F", name: "Ninjago F", price: 2.00, image: "static/images/lego-ninjago-8000-06.jpg" }
-                ]
-            },
-            {
-                id: 8, title: "LEGO Ninjago", sold: "310", category: "Ninjago",
-                thumbnail: "static/images/lego-ninjago-71808.jpg",
-                variants: [
-                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
-                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
-                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
-                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
-                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
-                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
-                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
-                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
-                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
-                ]
-            },
-            {
-                id: 11, title: "LEGO Ninjago", sold: "310", category: "Ninjago",
-                thumbnail: "static/images/lego-ninjago-71808.jpg",
-                variants: [
-                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
-                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
-                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
-                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
-                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
-                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
-                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
-                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
-                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
-                ]
-            },
-            {
-                id: 12, title: "LEGO Ninjago", sold: "310", category: "Ninjago",
-                thumbnail: "static/images/lego-ninjago-71808.jpg",
-                variants: [
-                    { id: "LEGO 30650", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-30650.jpg" },
-                    { id: "LEGO 30675", name: "LEGO 30675", price: 9.99, image: "static/images/lego-ninjago-30675.jpg" },
-                    { id: "LEGO 30700", name: "LEGO 30700", price: 11.99, image: "static/images/lego-ninjago-30700.jpg" },
-                    { id: "LEGO 71829", name: "LEGO 71829", price: 32.99, image: "static/images/lego-ninjago-71829.jpg" },
-                    { id: "LEGO 71808", name: "LEGO 71808", price: 34.99, image: "static/images/lego-ninjago-71808.jpg" },
-                    { id: "LEGO 71806", name: "LEGO 71806", price: 29.99, image: "static/images/lego-ninjago-71806.jpg" },
-                    { id: "LEGO 71827", name: "LEGO 30650", price: 9.99, image: "static/images/lego-ninjago-71827.jpg" },
-                    { id: "LEGO 71828", name: "LEGO 71828", price: 9.99, image: "static/images/lego-ninjago-71828.jpg" },
-                    { id: "LEGO 71840", name: "LEGO 71840", price: 11.99, image: "static/images/lego-ninjago-71840.jpg" }
-                ]
-            }
-        ];
-
+        // START APP
         init();
     </script>
 </body>
 </html>
-
 
 
 
