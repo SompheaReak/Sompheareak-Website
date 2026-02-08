@@ -61,7 +61,8 @@
         align-items: center;
         justify-content: center;
         gap: 12px;
-        margin-top: 10px;
+        margin-top: 5px;
+        margin-bottom: 8px;
     }
 
     .nav-arrow {
@@ -126,8 +127,8 @@
 
   <!-- TOAST NOTIFICATION -->
   <div id="toast" style="pointer-events: none;" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[300] bg-black/90 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl opacity-0 transition-opacity duration-200 scale-90">
-    <i class="fa-solid fa-circle-check text-green-400"></i>
-    <span class="text-xs font-bold uppercase tracking-widest">Added</span>
+    <i id="toast-icon" class="fa-solid fa-circle-check text-green-400"></i>
+    <span id="toast-text" class="text-xs font-bold uppercase tracking-widest">Added</span>
   </div>
 
   <!-- LOADING OVERLAY -->
@@ -247,19 +248,35 @@
   </section>
 
   <!-- PREVIEW BOX -->
-  <section class="sticky top-[53px] z-[90] bg-white border-b shadow-lg pb-4">
+  <section class="sticky top-[53px] z-[90] bg-white border-b shadow-lg pb-2">
     <div class="max-w-4xl mx-auto">
-        <div class="flex items-center justify-between px-4 py-3">
-            <div class="flex items-center gap-2">
-                <span id="link-count" class="bg-gray-900 text-[9px] font-black text-white px-2.5 py-1 rounded-full tracking-widest uppercase">0 LINKS</span>
+        <!-- TOP HEADER -->
+        <div class="flex items-center justify-between px-4 py-2 border-b border-gray-100">
+            <div class="flex items-center gap-4">
+                 <div class="flex flex-col">
+                    <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest">Charms</span>
+                    <span id="header-count" class="text-sm font-black text-gray-900 leading-none">0</span>
+                 </div>
+                 <div class="w-px h-6 bg-gray-100"></div>
+                 <div class="flex flex-col">
+                    <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest">Price</span>
+                    <div class="flex items-baseline gap-1">
+                        <span id="header-price-khr" class="text-sm font-black text-orange-600 leading-none">0៛</span>
+                        <span id="header-price-usd" class="text-[10px] font-bold text-gray-400 leading-none">($0.00)</span>
+                    </div>
+                 </div>
             </div>
-            <button onclick="clearBracelet()" class="text-[10px] font-black text-red-500 uppercase tracking-widest px-2 py-1">Reset</button>
+            <!-- Reset Button with Confirmation -->
+            <button onclick="clearBracelet()" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 flex items-center gap-1">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
         </div>
 
-        <div id="bracelet-preview" onscroll="handlePreviewScroll(this)" class="flex overflow-x-auto py-6 px-4 scrollbar-hide min-h-[140px] items-center bg-slate-50 border-y border-gray-100 gap-0">
-            <div class="w-full text-center py-8 opacity-20">
-                <i class="fa-solid fa-layer-group text-3xl mb-2"></i>
-                <p class="text-[10px] font-black uppercase tracking-[0.2em]">Start Designing</p>
+        <!-- SMALLER PREVIEW HEIGHT -->
+        <div id="bracelet-preview" onscroll="handlePreviewScroll(this)" class="flex overflow-x-auto py-2 px-4 scrollbar-hide min-h-[100px] items-center bg-slate-50 gap-0">
+            <div class="w-full text-center py-6 opacity-20">
+                <i class="fa-solid fa-layer-group text-2xl mb-1"></i>
+                <p class="text-[8px] font-black uppercase tracking-[0.2em]">Start Designing</p>
             </div>
         </div>
 
@@ -271,12 +288,31 @@
             <button onclick="scrollManual(60)" class="nav-arrow"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
 
-        <div class="mt-3 flex justify-between items-center px-4">
-            <div class="flex flex-col">
-                <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest">Est. Total</span>
-                <span id="total-price" class="text-xl font-black text-gray-900 leading-none">0៛</span>
+        <!-- CODE SECTION -->
+        <div class="px-4 space-y-2">
+            <!-- Copy Code -->
+            <div class="flex gap-2">
+                <div class="relative flex-grow">
+                    <input type="text" id="share-code-input" readonly class="w-full bg-gray-100 border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono text-gray-600 focus:outline-none uppercase tracking-widest" placeholder="0000000000">
+                    <div class="absolute right-1 top-1 bottom-1">
+                        <button onclick="copyDesignCode()" class="h-full px-3 bg-white border border-gray-200 rounded-md text-[9px] font-bold uppercase text-gray-500 hover:text-orange-600 transition-colors">
+                            Copy
+                        </button>
+                    </div>
+                </div>
             </div>
-            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-right leading-tight">Tap to remove<br>Hold & drag to move</p>
+            
+            <!-- Paste Code -->
+             <div class="flex gap-2">
+                <input type="tel" inputmode="numeric" id="load-code-input" class="flex-grow bg-white border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono text-gray-900 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none transition-all placeholder:normal-case placeholder:text-gray-400" placeholder="Paste code to load...">
+                <button onclick="loadDesignCode()" class="bg-gray-900 text-white px-4 rounded-lg text-[10px] font-bold uppercase tracking-wide active:scale-95 transition-transform shadow-lg shadow-gray-200">
+                    Load
+                </button>
+            </div>
+            
+            <p class="text-[8px] font-bold text-gray-300 uppercase italic text-center pt-1">
+                Tap charm to remove • Drag to reorder
+            </p>
         </div>
     </div>
   </section>
@@ -787,9 +823,7 @@
         const charm = allCharms.find(c => c.id === id);
         selectedCharms.push({ ...charm, uid: Math.random().toString(36).substr(2, 9) });
         updateUI();
-        const toast = document.getElementById('toast');
-        toast.classList.remove('opacity-0', 'scale-90');
-        setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500);
+        showToast('Added', 'text-green-400', 'fa-circle-check');
         setTimeout(() => {
             const preview = document.getElementById('bracelet-preview');
             preview.scrollTo({ left: preview.scrollWidth, behavior: 'smooth' });
@@ -801,23 +835,61 @@
         updateUI();
     }
 
+    function showToast(text, colorClass, iconClass) {
+        const toast = document.getElementById('toast');
+        const icon = document.getElementById('toast-icon');
+        const textSpan = document.getElementById('toast-text');
+        
+        textSpan.innerText = text;
+        icon.className = `fa-solid ${iconClass} ${colorClass}`;
+        
+        toast.classList.remove('opacity-0', 'scale-90');
+        setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500);
+    }
+
     function updateUI() {
         const preview = document.getElementById('bracelet-preview');
         try { localStorage.setItem('customCharms', JSON.stringify(selectedCharms)); } catch(e) {}
 
+        // --- NEW UPDATE: Header Info ---
+        let total = 0;
+        selectedCharms.forEach(c => total += c.price);
+        
+        document.getElementById('header-count').innerText = selectedCharms.length;
+        document.getElementById('header-price-khr').innerText = total.toLocaleString() + "៛";
+        // Approx 1 USD = 4000 KHR
+        const usd = (total / 4000).toFixed(2);
+        document.getElementById('header-price-usd').innerText = `($${usd})`;
+
+        // --- FIXED: Generate 10-Digit Numeric Code ---
+        if(selectedCharms.length > 0) {
+            // Map each charm to its index in allCharms (2 digits per charm)
+            let code = selectedCharms.map(c => {
+                const idx = allCharms.findIndex(x => x.id === c.id);
+                // Pad with leading zero if index < 10
+                return idx !== -1 ? idx.toString().padStart(2, '0') : '99';
+            }).join('');
+            
+            // Pad with '99' to reach at least 10 digits
+            while (code.length < 10) {
+                code += '99';
+            }
+            
+            document.getElementById('share-code-input').value = code;
+        } else {
+            document.getElementById('share-code-input').value = "";
+        }
+
         if (selectedCharms.length === 0) {
             preview.innerHTML = `<div class="w-full text-center py-8 opacity-30 flex flex-col items-center"><p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Empty Workspace</p></div>`;
-            document.getElementById('total-price').innerText = "0៛";
-            document.getElementById('link-count').innerText = "0 LINKS";
             document.getElementById('screenshot-btn').disabled = true;
             document.querySelector('.nav-indicator-container').style.opacity = '0';
             return;
         }
 
         document.querySelector('.nav-indicator-container').style.opacity = '1';
-        let total = 0;
+        
         preview.innerHTML = selectedCharms.map((c, index) => {
-            total += c.price;
             return `
                 <div class="bracelet-link-container link-pop group" 
                      draggable="true" 
@@ -833,10 +905,69 @@
                 </div>`;
         }).join('');
 
-        document.getElementById('total-price').innerText = total.toLocaleString() + "៛";
-        document.getElementById('link-count').innerText = `${selectedCharms.length} LINKS`;
         document.getElementById('screenshot-btn').disabled = false;
         handlePreviewScroll(preview);
+    }
+
+    // --- NEW FUNCTIONS FOR CODE HANDLING ---
+    function copyDesignCode() {
+        const input = document.getElementById('share-code-input');
+        if(!input.value) return;
+        input.select();
+        input.setSelectionRange(0, 99999); // Mobile
+        navigator.clipboard.writeText(input.value).then(() => {
+            showToast('Code Copied', 'text-white', 'fa-copy');
+        });
+    }
+
+    function loadDesignCode() {
+        const input = document.getElementById('load-code-input');
+        const code = input.value.trim();
+        if(!code) return;
+
+        // Check if numeric
+        if(!/^\d+$/.test(code)) {
+            alert("Invalid code. Please enter the numeric design code.");
+            return;
+        }
+        
+        try {
+            // FIXED: Safe loading with 99 skip check
+            const newCharms = [];
+            for(let i=0; i < code.length; i+=2) {
+                const chunk = code.substring(i, i+2);
+                if(chunk === '99') continue; // Skip padding
+                
+                const idx = parseInt(chunk, 10);
+                if(allCharms[idx]) {
+                     newCharms.push({ ...allCharms[idx], uid: Math.random().toString(36).substr(2, 9) });
+                }
+            }
+            
+            if(newCharms.length > 0) {
+                if(confirm("Load this design? Current design will be replaced.")) {
+                    selectedCharms = newCharms;
+                    updateUI();
+                    input.value = "";
+                    showToast('Design Loaded', 'text-green-400', 'fa-download');
+                }
+            } else {
+                alert("No valid charms found in this code.");
+            }
+        } catch(e) {
+            alert("Error loading code.");
+            console.error(e);
+        }
+    }
+
+    // --- FIXED RESET FUNCTION ---
+    function clearBracelet() {
+        if(selectedCharms.length === 0) return;
+        if(confirm("Clear current design?")) {
+            selectedCharms = []; 
+            updateUI();
+            showToast('Workspace Cleared', 'text-red-400', 'fa-trash');
+        }
     }
 
     // --- NEW FLOW LOGIC ---
@@ -947,6 +1078,10 @@
                 braceletContainer.appendChild(img);
             });
 
+            // Calculate totals for receipt
+            let total = 0;
+            selectedCharms.forEach(c => total += c.price);
+
             // Package & Price Info (HORIZONTAL ROW)
             const footer = document.createElement('div');
             footer.style.textAlign = 'center'; footer.style.width = '100%';
@@ -966,7 +1101,7 @@
                     <!-- Price -->
                     <div style="text-align:center; flex:1;">
                         <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Total</div>
-                        <div style="font-size:24px; font-weight:900; color:#1a1a1a;">${document.getElementById('total-price').innerText}</div>
+                        <div style="font-size:24px; font-weight:900; color:#1a1a1a;">${total.toLocaleString()}៛</div>
                     </div>
 
                     <!-- Divider -->
@@ -1019,7 +1154,7 @@
                     await navigator.share({
                         files: [file],
                         title: 'My Bracelet Order',
-                        text: `New Order: ${selectedCharms.length} charms. Total: ${document.getElementById('total-price').innerText}`
+                        text: `New Order: ${selectedCharms.length} charms.`
                     });
                 } catch (error) { console.log('Sharing failed', error); }
             } else { alert("Sharing not supported on this device."); }
@@ -1049,10 +1184,11 @@
     function handleTouchEnd(e) { document.querySelectorAll('.bracelet-link-container').forEach(el => { el.classList.remove('dragging'); el.classList.remove('drag-over'); }); if (touchStartIndex !== null && currentHoverIndex !== null && touchStartIndex !== currentHoverIndex) reorderArray(touchStartIndex, currentHoverIndex); touchStartIndex = null; currentHoverIndex = null; }
 
     function reorderArray(from, to) { const item = selectedCharms.splice(from, 1)[0]; selectedCharms.splice(to, 0, item); updateUI(); }
-    function clearBracelet() { if (confirm("Reset current design?")) { selectedCharms = []; updateUI(); } }
     function addRandom() { const rand = allCharms[Math.floor(Math.random() * allCharms.length)]; if(rand) addCharmById(rand.id); }
 
     init();
   </script>
 </body>
 </html>
+
+
