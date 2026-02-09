@@ -167,21 +167,23 @@
                   <h3 class="text-[12px] font-black uppercase text-gray-900 tracking-widest mb-4 text-center">Choose Your Package</h3>
                   <div class="grid grid-cols-2 gap-4">
                       <!-- Premium -->
-                      <div onclick="finalizeOrder('Premium', 'https://cdn-icons-png.flaticon.com/512/4599/4599148.png')" class="package-card border-2 border-gray-100 rounded-2xl p-4 flex flex-col items-center gap-3 cursor-pointer transition-all">
+                      <div onclick="finalizeOrder('Premium', 'https://cdn-icons-png.flaticon.com/512/4599/4599148.png', 2000)" class="package-card border-2 border-gray-100 rounded-2xl p-4 flex flex-col items-center gap-3 cursor-pointer transition-all">
                           <img src="https://cdn-icons-png.flaticon.com/512/4599/4599148.png" class="w-16 h-16 object-contain drop-shadow-md" alt="Premium">
                           <div class="text-center">
                               <p class="text-xs font-black uppercase text-gray-900">Premium Box</p>
                               <p class="text-[9px] text-gray-500 font-medium mt-1">Luxury Gift Set</p>
+                              <p class="text-[10px] text-orange-600 font-black mt-1">+2,000៛</p>
                           </div>
                           <div class="w-full bg-orange-50 text-orange-600 text-[9px] font-bold py-1.5 rounded-lg text-center uppercase tracking-wide mt-1">Select</div>
                       </div>
 
                       <!-- Normal -->
-                      <div onclick="finalizeOrder('Normal', 'https://cdn-icons-png.flaticon.com/512/679/679720.png')" class="package-card border-2 border-gray-100 rounded-2xl p-4 flex flex-col items-center gap-3 cursor-pointer transition-all">
+                      <div onclick="finalizeOrder('Normal', 'https://cdn-icons-png.flaticon.com/512/679/679720.png', 0)" class="package-card border-2 border-gray-100 rounded-2xl p-4 flex flex-col items-center gap-3 cursor-pointer transition-all">
                           <img src="https://cdn-icons-png.flaticon.com/512/679/679720.png" class="w-16 h-16 object-contain drop-shadow-md opacity-80" alt="Normal">
                           <div class="text-center">
                               <p class="text-xs font-black uppercase text-gray-900">Normal Bag</p>
                               <p class="text-[9px] text-gray-500 font-medium mt-1">Standard Pack</p>
+                              <p class="text-[10px] text-green-600 font-black mt-1">FREE</p>
                           </div>
                           <div class="w-full bg-gray-50 text-gray-600 text-[9px] font-bold py-1.5 rounded-lg text-center uppercase tracking-wide mt-1">Select</div>
                       </div>
@@ -353,14 +355,13 @@
         </button>
         <button onclick="startPreviewFlow()" id="screenshot-btn" disabled class="flex-grow bg-gray-900 text-white font-black rounded-2xl shadow-xl shadow-gray-200 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2">
             <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
-            <span>Preview & Share</span>
+            <span>គិតប្រាក់ និង ផ្ញើទៅកាន់អ្នកលក់</span>
         </button>
     </div>
   </div>
 
   <script>
     const allCharms = [
-      // --- Charm
       // --- Charm
     {"id": 1, "name_kh": "Silver Charm", "price": 500, "image": "/static/images/c01.jpg", "categories": ["Charm"]},
     {"id": 2, "name_kh": "Gold Charm", "price": 600, "image": "/static/images/c01.jpg", "categories": ["Charm"]},
@@ -1026,15 +1027,18 @@
     }
 
     // 2. Finalize with Package Info included in image
-    async function finalizeOrder(pkgName, pkgImgUrl) {
+    async function finalizeOrder(pkgName, pkgImgUrl, pkgPrice) {
         const overlay = document.getElementById('loadingOverlay');
         document.getElementById('loadingText').innerText = "Creating Final Order";
         overlay.style.display = 'flex';
         overlay.classList.remove('hidden'); overlay.classList.add('flex');
 
         try {
-            const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-            
+            // Date time in Cambodia
+            const now = new Date();
+            const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Phnom_Penh' };
+            const dateTimeStr = now.toLocaleString('en-GB', dateOptions);
+
             const tempDiv = document.createElement('div');
             tempDiv.style.position = 'absolute'; tempDiv.style.left = '-9999px';
             tempDiv.className = 'screenshot-frame'; 
@@ -1079,29 +1083,46 @@
             });
 
             // Calculate totals for receipt
-            let total = 0;
-            selectedCharms.forEach(c => total += c.price);
+            let charmsTotal = 0;
+            selectedCharms.forEach(c => charmsTotal += c.price);
+            const finalTotal = charmsTotal + pkgPrice;
 
-            // Package & Price Info (HORIZONTAL ROW)
+            // Generate Code
+            let code = selectedCharms.map(c => {
+                const idx = allCharms.findIndex(x => x.id === c.id);
+                return idx !== -1 ? idx.toString().padStart(2, '0') : '99';
+            }).join('');
+            while (code.length < 10) code += '99';
+
+            // Package & Price Info (UPDATED LAYOUT)
             const footer = document.createElement('div');
             footer.style.textAlign = 'center'; footer.style.width = '100%';
             footer.innerHTML = `
-                <!-- Package Box -->
-                <div style="display:flex; justify-content:center; gap:15px; align-items:center; margin-bottom:20px; padding:12px; background:#fff7ed; border-radius:12px; border:1px solid #ffedd5; width: fit-content; margin-left: auto; margin-right: auto;">
-                    <img src="${pkgImgUrl}" style="width:30px; height:30px; object-fit:contain;">
-                    <div style="text-align:left;">
-                        <div style="font-size:8px; font-weight:bold; color:#9a3412; text-transform:uppercase; letter-spacing:0.1em;">Packaging</div>
-                        <div style="font-size:12px; font-weight:900; color:#ea580c; text-transform:uppercase;">${pkgName}</div>
+                <!-- Top Row: Package Left, Code Right -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding:0 10px;">
+                    <!-- Package Box (Left) -->
+                    <div style="display:flex; gap:10px; align-items:center; padding:10px; background:#fff7ed; border-radius:10px; border:1px solid #ffedd5;">
+                        <img src="${pkgImgUrl}" style="width:25px; height:25px; object-fit:contain;">
+                        <div style="text-align:left;">
+                            <div style="font-size:8px; font-weight:bold; color:#9a3412; text-transform:uppercase;">Packaging</div>
+                            <div style="font-size:10px; font-weight:900; color:#ea580c; text-transform:uppercase;">${pkgName}</div>
+                        </div>
+                    </div>
+
+                    <!-- Code Box (Right) -->
+                    <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                         <div style="font-size:8px; font-weight:bold; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:2px;">Design Code</div>
+                         <div style="font-size:12px; font-family:monospace; font-weight:900; color:#334155; background:#f1f5f9; padding:4px 8px; border-radius:6px; letter-spacing:1px;">${code}</div>
                     </div>
                 </div>
 
-                <!-- Horizontal Info Row -->
+                <!-- Bottom Row: Stats -->
                 <div style="display:flex; justify-content:space-between; align-items:center; border-top: 2px dashed #e2e8f0; padding-top: 15px; padding-left: 10px; padding-right: 10px;">
                     
-                    <!-- Price -->
+                    <!-- Total Price -->
                     <div style="text-align:center; flex:1;">
                         <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Total</div>
-                        <div style="font-size:24px; font-weight:900; color:#1a1a1a;">${total.toLocaleString()}៛</div>
+                        <div style="font-size:24px; font-weight:900; color:#1a1a1a;">${finalTotal.toLocaleString()}៛</div>
                     </div>
 
                     <!-- Divider -->
@@ -1116,10 +1137,10 @@
                     <!-- Divider -->
                     <div style="width:1px; height:30px; background:#e2e8f0;"></div>
 
-                    <!-- Date -->
+                    <!-- Date & Time -->
                     <div style="text-align:center; flex:1;">
-                        <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Date</div>
-                        <div style="font-size:14px; font-weight:800; color:#64748b;">${date}</div>
+                        <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Date & Time</div>
+                        <div style="font-size:10px; font-weight:800; color:#64748b; line-height:1.2;">${dateTimeStr}</div>
                     </div>
                 </div>
             `;
