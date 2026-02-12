@@ -7,67 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- FIREBASE SDKs -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    const firebaseConfig = JSON.parse(new URLSearchParams(window.location.search).get('firebaseConfig') || '{}') || {};
-    // Fallback if config is injected globally
-    const config = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfig;
-    
-    let db, auth, user;
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-    try {
-        const app = initializeApp(config);
-        auth = getAuth(app);
-        db = getFirestore(app);
-        
-        signInAnonymously(auth).catch(console.error);
-        onAuthStateChanged(auth, (u) => { user = u; });
-    } catch(e) {
-        console.warn("Firebase not initialized. Codes will not save.");
-    }
-
-    // Expose DB functions globally
-    window.saveDesignToCloud = async (charms) => {
-        if (!user || !db) return null;
-        const code = Math.floor(1000000000 + Math.random() * 9000000000).toString(); // 10 Digit Random ID
-        const charmIds = charms.map(c => c.id);
-        
-        try {
-            // Path: artifacts/{appId}/public/data/bracelets/{code}
-            const path = `artifacts/${appId}/public/data/bracelets`;
-            await setDoc(doc(db, path, code), { 
-                ids: charmIds,
-                createdAt: new Date().toISOString()
-            });
-            return code;
-        } catch(e) {
-            console.error("Save failed", e);
-            return null;
-        }
-    };
-
-    window.loadDesignFromCloud = async (code) => {
-        if (!user || !db) return null;
-        try {
-            const path = `artifacts/${appId}/public/data/bracelets`;
-            const snap = await getDoc(doc(db, path, code));
-            if (snap.exists()) {
-                return snap.data().ids;
-            }
-            return null;
-        } catch(e) {
-            console.error("Load failed", e);
-            return null;
-        }
-    };
-  </script>
-
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     
@@ -356,7 +295,7 @@
             <!-- Copy Code -->
             <div class="flex gap-2">
                 <div class="relative flex-grow">
-                    <input type="text" id="share-code-input" readonly class="w-full bg-gray-100 border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono text-gray-600 focus:outline-none uppercase tracking-widest" placeholder="Generate 10-digit code...">
+                    <input type="text" id="share-code-input" readonly class="w-full bg-gray-100 border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono text-gray-600 focus:outline-none uppercase tracking-widest" placeholder="0000000000">
                     <div class="absolute right-1 top-1 bottom-1">
                         <button onclick="copyDesignCode()" class="h-full px-3 bg-white border border-gray-200 rounded-md text-[9px] font-bold uppercase text-gray-500 hover:text-orange-600 transition-colors">
                             Copy
@@ -367,7 +306,7 @@
             
             <!-- Paste Code -->
              <div class="flex gap-2">
-                <input type="tel" inputmode="numeric" id="load-code-input" class="flex-grow bg-white border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono text-gray-900 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none transition-all placeholder:normal-case placeholder:text-gray-400" placeholder="Paste 10-digit code...">
+                <input type="tel" inputmode="numeric" id="load-code-input" class="flex-grow bg-white border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono text-gray-900 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none transition-all placeholder:normal-case placeholder:text-gray-400" placeholder="Paste code to load...">
                 <button onclick="loadDesignCode()" class="bg-gray-900 text-white px-4 rounded-lg text-[10px] font-bold uppercase tracking-wide active:scale-95 transition-transform shadow-lg shadow-gray-200">
                     Load
                 </button>
@@ -423,29 +362,278 @@
 
   <script>
     const allCharms = [
-      // --- Charm
-    {"id": 1, "name_kh": "Silver Charm", "price": 500, "image": "/static/images/charm-silver.png", "categories": ["Charm"]},
-    {"id": 2, "name_kh": "Gold Charm", "price": 600, "image": "/static/images/charm-gold.png", "categories": ["Charm"]},
-    {"id": 3, "name_kh": "Black Charm", "price": 700, "image": "/static/images/charm-rosegold.png", "categories": ["Charm"]},
-    {"id": 4, "name_kh": "Silver Charm", "price": 800, "image": "/static/images/charm-black.png", "categories": ["Charm"]},
-    {"id": 5, "name_kh": "Gold Charm", "price": 700, "image": "/static/images/charm-pink.png", "categories": ["Charm"]},
-    {"id": 6, "name_kh": "Black Charm", "price": 600, "image": "/static/images/charm-blue.png", "categories": ["Charm"]},
-    {"id": 7, "name_kh": "Silver Charm", "price": 600, "image": "/static/images/charm-red.png", "categories": ["Charm"]},
-    {"id": 8, "name_kh": "Gold Charm", "price": 600, "image": "/static/images/charm-purple.png", "categories": ["Charm"]},
-    {"id": 9, "name_kh": "Black Charm", "price": 600, "image": "/static/images/charm-green.png", "categories": ["Charm"]},
 
-     // --- F1 LOGOS (1001 - 1015) ---
-    {"id": 1100, "name_kh": "Classic F1 Logo", "price": 3000, "image": "/static/images/charm-f1–101.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1191, "name_kh": "Classic F1", "price": 3000, "image": "/static/images/charm-chain-03.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1192, "name_kh": "Classic F1 - Ferri", "price": 3000, "image": "/static/images/charm-f1-301.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1193, "name_kh": "Classic F1 - Porsche", "price": 3000, "image": "/static/images/charm-f1-302.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1194, "name_kh": "Classic F1 - BMW", "price": 3000, "image": "/static/images/charm-f1-303.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1195, "name_kh": "Classic F1 - BMW", "price": 3000, "image": "/static/images/charm-f1-304.jpg", "categories": ["Class F1🏎️"]},
-    
-    {"id": 1301, "name_kh": "Classic F1 - Mercedes", "price": 3000, "image": "/static/images/cc15.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1302, "name_kh": "Classic F1 - Ferrari", "price": 3000, "image": "/static/images/cc04.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1303, "name_kh": "Classic F1 - Porsche", "price": 3000, "image": "/static/images/cc12.jpg", "categories": ["Class F1🏎️"]},
-    {"id": 1304, "name_kh": "Classic F1 - BMW", "price": 3000, "image": "/static/images/cc06.jpg", "categories": ["Class F1🏎️"]},
+[
+    // Charm (IDs 101-109)
+    {"id": 101, "name_kh": "X", "price": 0, "image": "/static/images/charm-01.png", "categories": ["Charm"]},
+    {"id": 102, "name_kh": "X", "price": 0, "image": "/static/images/charm-02.png", "categories": ["Charm"]},
+    {"id": 103, "name_kh": "X", "price": 0, "image": "/static/images/charm-03.png", "categories": ["Charm"]},
+    {"id": 104, "name_kh": "X", "price": 0, "image": "/static/images/charm-04.png", "categories": ["Charm"]},
+    {"id": 105, "name_kh": "X", "price": 0, "image": "/static/images/charm-05.png", "categories": ["Charm"]},
+    {"id": 106, "name_kh": "X", "price": 0, "image": "/static/images/charm-06.png", "categories": ["Charm"]},
+    {"id": 107, "name_kh": "X", "price": 0, "image": "/static/images/charm-07.png", "categories": ["Charm"]},
+    {"id": 108, "name_kh": "X", "price": 0, "image": "/static/images/charm-08.png", "categories": ["Charm"]},
+    {"id": 109, "name_kh": "X", "price": 0, "image": "/static/images/charm-09.png", "categories": ["Charm"]},
+
+    // Black Letter (IDs 201-226)
+    {"id": 201, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-A.png", "categories": ["Black Letter"]},
+    {"id": 202, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-B.png", "categories": ["Black Letter"]},
+    {"id": 203, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-C.png", "categories": ["Black Letter"]},
+    {"id": 204, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-D.png", "categories": ["Black Letter"]},
+    {"id": 205, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-E.png", "categories": ["Black Letter"]},
+    {"id": 206, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-F.png", "categories": ["Black Letter"]},
+    {"id": 207, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-G.png", "categories": ["Black Letter"]},
+    {"id": 208, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-H.png", "categories": ["Black Letter"]},
+    {"id": 209, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-I.png", "categories": ["Black Letter"]},
+    {"id": 210, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-J.png", "categories": ["Black Letter"]},
+    {"id": 211, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-K.png", "categories": ["Black Letter"]},
+    {"id": 212, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-L.png", "categories": ["Black Letter"]},
+    {"id": 213, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-M.png", "categories": ["Black Letter"]},
+    {"id": 214, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-N.png", "categories": ["Black Letter"]},
+    {"id": 215, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-O.png", "categories": ["Black Letter"]},
+    {"id": 216, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-P.png", "categories": ["Black Letter"]},
+    {"id": 217, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-Q.png", "categories": ["Black Letter"]},
+    {"id": 218, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-R.png", "categories": ["Black Letter"]},
+    {"id": 219, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-S.png", "categories": ["Black Letter"]},
+    {"id": 220, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-T.png", "categories": ["Black Letter"]},
+    {"id": 221, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-U.png", "categories": ["Black Letter"]},
+    {"id": 222, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-V.png", "categories": ["Black Letter"]},
+    {"id": 223, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-W.png", "categories": ["Black Letter"]},
+    {"id": 224, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-X.png", "categories": ["Black Letter"]},
+    {"id": 225, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-Y.png", "categories": ["Black Letter"]},
+    {"id": 226, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-Z.png", "categories": ["Black Letter"]},
+
+    // Pink Letter Images / Category: Black Letter (IDs 301-326)
+    {"id": 301, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-A.png", "categories": ["Black Letter"]},
+    {"id": 302, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-B.png", "categories": ["Black Letter"]},
+    {"id": 303, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-C.png", "categories": ["Black Letter"]},
+    {"id": 304, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-D.png", "categories": ["Black Letter"]},
+    {"id": 305, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-E.png", "categories": ["Black Letter"]},
+    {"id": 306, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-F.png", "categories": ["Black Letter"]},
+    {"id": 307, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-G.png", "categories": ["Black Letter"]},
+    {"id": 308, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-H.png", "categories": ["Black Letter"]},
+    {"id": 309, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-I.png", "categories": ["Black Letter"]},
+    {"id": 310, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-J.png", "categories": ["Black Letter"]},
+    {"id": 311, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-K.png", "categories": ["Black Letter"]},
+    {"id": 312, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-L.png", "categories": ["Black Letter"]},
+    {"id": 313, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-M.png", "categories": ["Black Letter"]},
+    {"id": 314, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-N.png", "categories": ["Black Letter"]},
+    {"id": 315, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-O.png", "categories": ["Black Letter"]},
+    {"id": 316, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-P.png", "categories": ["Black Letter"]},
+    {"id": 317, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-Q.png", "categories": ["Black Letter"]},
+    {"id": 318, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-R.png", "categories": ["Black Letter"]},
+    {"id": 319, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-S.png", "categories": ["Black Letter"]},
+    {"id": 320, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-T.png", "categories": ["Black Letter"]},
+    {"id": 321, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-U.png", "categories": ["Black Letter"]},
+    {"id": 322, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-V.png", "categories": ["Black Letter"]},
+    {"id": 323, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-W.png", "categories": ["Black Letter"]},
+    {"id": 324, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-X.png", "categories": ["Black Letter"]},
+    {"id": 325, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-Y.png", "categories": ["Black Letter"]},
+    {"id": 326, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-Z.png", "categories": ["Black Letter"]},
+
+    // Black Number (IDs 401-410)
+    {"id": 401, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-00.png", "categories": ["Black Number"]},
+    {"id": 402, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-01.png", "categories": ["Black Number"]},
+    {"id": 403, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-02.png", "categories": ["Black Number"]},
+    {"id": 404, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-03.png", "categories": ["Black Number"]},
+    {"id": 405, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-04.png", "categories": ["Black Number"]},
+    {"id": 406, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-05.png", "categories": ["Black Number"]},
+    {"id": 407, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-06.png", "categories": ["Black Number"]},
+    {"id": 408, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-07.png", "categories": ["Black Number"]},
+    {"id": 409, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-08.png", "categories": ["Black Number"]},
+    {"id": 410, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-09.png", "categories": ["Black Number"]},
+
+    // Pink Number (IDs 501-510)
+    {"id": 501, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-00.png", "categories": ["Pink Number"]},
+    {"id": 502, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-01.png", "categories": ["Pink Number"]},
+    {"id": 503, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-02.png", "categories": ["Pink Number"]},
+    {"id": 504, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-03.png", "categories": ["Pink Number"]},
+    {"id": 505, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-04.png", "categories": ["Pink Number"]},
+    {"id": 506, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-05.png", "categories": ["Pink Number"]},
+    {"id": 507, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-06.png", "categories": ["Pink Number"]},
+    {"id": 508, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-07.png", "categories": ["Pink Number"]},
+    {"id": 509, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-08.png", "categories": ["Pink Number"]},
+    {"id": 510, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-09.png", "categories": ["Pink Number"]},
+
+    // Pink Letter (IDs 601-649)
+    {"id": 601, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-01.png", "categories": ["Pink Letter"]},
+    {"id": 602, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-02.png", "categories": ["Pink Letter"]},
+    {"id": 603, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-03.png", "categories": ["Pink Letter"]},
+    {"id": 604, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-04.png", "categories": ["Pink Letter"]},
+    {"id": 605, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-05.png", "categories": ["Pink Letter"]},
+    {"id": 606, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-06.png", "categories": ["Pink Letter"]},
+    {"id": 607, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-07.png", "categories": ["Pink Letter"]},
+    {"id": 608, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-08.png", "categories": ["Pink Letter"]},
+    {"id": 609, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-09.png", "categories": ["Pink Letter"]},
+    {"id": 610, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-10.png", "categories": ["Pink Letter"]},
+    {"id": 611, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-11.png", "categories": ["Pink Letter"]},
+    {"id": 612, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-12.png", "categories": ["Pink Letter"]},
+    {"id": 613, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-13.png", "categories": ["Pink Letter"]},
+    {"id": 614, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-14.png", "categories": ["Pink Letter"]},
+    {"id": 615, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-15.png", "categories": ["Pink Letter"]},
+    {"id": 616, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-16.png", "categories": ["Pink Letter"]},
+    {"id": 617, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-17.png", "categories": ["Pink Letter"]},
+    {"id": 618, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-18.png", "categories": ["Pink Letter"]},
+    {"id": 619, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-19.png", "categories": ["Pink Letter"]},
+    {"id": 620, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-20.png", "categories": ["Pink Letter"]},
+    {"id": 621, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-21.png", "categories": ["Pink Letter"]},
+    {"id": 622, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-22.png", "categories": ["Pink Letter"]},
+    {"id": 623, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-23.png", "categories": ["Pink Letter"]},
+    {"id": 624, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-24.png", "categories": ["Pink Letter"]},
+    {"id": 625, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-25.png", "categories": ["Pink Letter"]},
+    {"id": 626, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-26.png", "categories": ["Pink Letter"]},
+    {"id": 627, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-27.png", "categories": ["Pink Letter"]},
+    {"id": 628, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-28.png", "categories": ["Pink Letter"]},
+    {"id": 629, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-29.png", "categories": ["Pink Letter"]},
+    {"id": 630, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-30.png", "categories": ["Pink Letter"]},
+    {"id": 631, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-31.png", "categories": ["Pink Letter"]},
+    {"id": 632, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-32.png", "categories": ["Pink Letter"]},
+    {"id": 633, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-33.png", "categories": ["Pink Letter"]},
+    {"id": 634, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-34.png", "categories": ["Pink Letter"]},
+    {"id": 635, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-35.png", "categories": ["Pink Letter"]},
+    {"id": 636, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-36.png", "categories": ["Pink Letter"]},
+    {"id": 637, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-37.png", "categories": ["Pink Letter"]},
+    {"id": 638, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-38.png", "categories": ["Pink Letter"]},
+    {"id": 639, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-39.png", "categories": ["Pink Letter"]},
+    {"id": 640, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-40.png", "categories": ["Pink Letter"]},
+    {"id": 641, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-41.png", "categories": ["Pink Letter"]},
+    {"id": 642, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-42.png", "categories": ["Pink Letter"]},
+    {"id": 643, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-43.png", "categories": ["Pink Letter"]},
+    {"id": 644, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-44.png", "categories": ["Pink Letter"]},
+    {"id": 645, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-45.png", "categories": ["Pink Letter"]},
+    {"id": 646, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-46.png", "categories": ["Pink Letter"]},
+    {"id": 647, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-47.png", "categories": ["Pink Letter"]},
+    {"id": 648, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-48.png", "categories": ["Pink Letter"]},
+    {"id": 649, "name_kh": "X", "price": 4000, "image": "/static/images/charm-chain-49.png", "categories": ["Pink Letter"]},
+
+    // Flag (IDs 701-718)
+    {"id": 701, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-01.png", "categories": ["Flag"]},
+    {"id": 702, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-02.png", "categories": ["Flag"]},
+    {"id": 703, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-03.png", "categories": ["Flag"]},
+    {"id": 704, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-04.png", "categories": ["Flag"]},
+    {"id": 705, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-05.png", "categories": ["Flag"]},
+    {"id": 706, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-06.png", "categories": ["Flag"]},
+    {"id": 707, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-07.png", "categories": ["Flag"]},
+    {"id": 708, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-08.png", "categories": ["Flag"]},
+    {"id": 709, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-09.png", "categories": ["Flag"]},
+    {"id": 710, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-10.png", "categories": ["Flag"]},
+    {"id": 711, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-11.png", "categories": ["Flag"]},
+    {"id": 712, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-12.png", "categories": ["Flag"]},
+    {"id": 713, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-13.png", "categories": ["Flag"]},
+    {"id": 714, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-14.png", "categories": ["Flag"]},
+    {"id": 715, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-15.png", "categories": ["Flag"]},
+    {"id": 716, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-16.png", "categories": ["Flag"]},
+    {"id": 717, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-17.png", "categories": ["Flag"]},
+    {"id": 718, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-18.png", "categories": ["Flag"]}
+      // --- Charm
+    {"id": 101, "name_kh": "Silver Charm", "price": 500, "image": "/static/images/charm-silver.png", "categories": ["Charm"]},
+    {"id": 102, "name_kh": "Gold Charm", "price": 600, "image": "/static/images/charm-gold.png", "categories": ["Charm"]},
+    {"id": 103, "name_kh": "Rose Gold Charm", "price": 700, "image": "/static/images/charm-rosegold.png", "categories": ["Charm"]},
+    {"id": 104, "name_kh": "Silver Charm", "price": 800, "image": "/static/images/charm-black.png", "categories": ["Charm"]},
+    {"id": 105, "name_kh": "Gold Charm", "price": 700, "image": "/static/images/charm-pink.png", "categories": ["Charm"]},
+    {"id": 106, "name_kh": "Black Charm", "price": 600, "image": "/static/images/charm-blue.png", "categories": ["Charm"]},
+    {"id": 107, "name_kh": "Silver Charm", "price": 600, "image": "/static/images/charm-red.png", "categories": ["Charm"]},
+    {"id": 108, "name_kh": "Gold Charm", "price": 600, "image": "/static/images/charm-purple.png", "categories": ["Charm"]},
+    {"id": 109, "name_kh": "Black Charm", "price": 600, "image": "/static/images/charm-green.png", "categories": ["Charm"]},
+
+     // --- Black Letter (1001 - 1015) ---
+    {"id": 201, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-A.png", "categories": ["Black Letter"]},
+    {"id": 202, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-B.png", "categories": ["Black Letter"]},
+    {"id": 203, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-C.png", "categories": ["Black Letter"]},
+    {"id": 204, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-D.png", "categories": ["Black Letter"]},
+    {"id": 205, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-E.png", "categories": ["Black Letter"]},
+    {"id": 206, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-F.png", "categories": ["Black Letter"]},
+    {"id": 207, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-G.png", "categories": ["Black Letter"]},
+    {"id": 208, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-H.png", "categories": ["Black Letter"]},
+    {"id": 209, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-I.png", "categories": ["Black Letter"]},
+    {"id": 210, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-J.png", "categories": ["Black Letter"]},
+    {"id": 211, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-K.png", "categories": ["Black Letter"]},
+    {"id": 212, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-L.png", "categories": ["Black Letter"]},
+    {"id": 213, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-M.png", "categories": ["Black Letter"]},
+    {"id": 214, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-N.png", "categories": ["Black Letter"]},
+    {"id": 215, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-O.png", "categories": ["Black Letter"]},
+    {"id": 216, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-P.png", "categories": ["Black Letter"]},
+    {"id": 217, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-Q.png", "categories": ["Black Letter"]},
+    {"id": 218, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-R.png", "categories": ["Black Letter"]},
+    {"id": 219, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-S.png", "categories": ["Black Letter"]},
+    {"id": 220, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-T.png", "categories": ["Black Letter"]},
+    {"id": 221, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-U.png", "categories": ["Black Letter"]},
+    {"id": 222, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-V.png", "categories": ["Black Letter"]},
+    {"id": 223, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-W.png", "categories": ["Black Letter"]},
+    {"id": 224, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-X.png", "categories": ["Black Letter"]},
+    {"id": 225, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-Y.png", "categories": ["Black Letter"]},
+    {"id": 226, "name_kh": "X", "price": 1200, "image": "/static/images/charm-blackletter-Z.png", "categories": ["Black Letter"]},
+
+     // --- Pink Letter 
+    {"id": 301, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-A.png", "categories": ["Black Letter"]},
+    {"id": 302, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-B.png", "categories": ["Black Letter"]},
+    {"id": 303, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-C.png", "categories": ["Black Letter"]},
+    {"id": 304, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-D.png", "categories": ["Black Letter"]},
+    {"id": 305, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-E.png", "categories": ["Black Letter"]},
+    {"id": 306, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-F.png", "categories": ["Black Letter"]},
+    {"id": 307, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-G.png", "categories": ["Black Letter"]},
+    {"id": 308, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-H.png", "categories": ["Black Letter"]},
+    {"id": 309, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-I.png", "categories": ["Black Letter"]},
+    {"id": 310, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-J.png", "categories": ["Black Letter"]},
+    {"id": 311, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-K.png", "categories": ["Black Letter"]},
+    {"id": 312, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-L.png", "categories": ["Black Letter"]},
+    {"id": 313, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-M.png", "categories": ["Black Letter"]},
+    {"id": 314, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-N.png", "categories": ["Black Letter"]},
+    {"id": 315, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-O.png", "categories": ["Black Letter"]},
+    {"id": 316, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-P.png", "categories": ["Black Letter"]},
+    {"id": 317, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-Q.png", "categories": ["Black Letter"]},
+    {"id": 318, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-R.png", "categories": ["Black Letter"]},
+    {"id": 319, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-S.png", "categories": ["Black Letter"]},
+    {"id": 320, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-T.png", "categories": ["Black Letter"]},
+    {"id": 321, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-U.png", "categories": ["Black Letter"]},
+    {"id": 322, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-V.png", "categories": ["Black Letter"]},
+    {"id": 323, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-W.png", "categories": ["Black Letter"]},
+    {"id": 324, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-X.png", "categories": ["Black Letter"]},
+    {"id": 325, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-Y.png", "categories": ["Black Letter"]},
+    {"id": 326, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pinkletter-Z.png", "categories": ["Black Letter"]},
+
+     // --- Black Number
+    {"id": 401, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-00.png", "categories": ["Black Letter"]},
+    {"id": 402, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-01.png", "categories": ["Black Letter"]},
+    {"id": 403, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-02.png", "categories": ["Black Letter"]},
+    {"id": 404, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-03.png", "categories": ["Black Letter"]},
+    {"id": 405, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-04.png", "categories": ["Black Letter"]},
+    {"id": 406, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-05.png", "categories": ["Black Letter"]},
+    {"id": 407, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-06.png", "categories": ["Black Letter"]},
+    {"id": 408, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-07.png", "categories": ["Black Letter"]},
+    {"id": 409, "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-08.png", "categories": ["Black Letter"]},
+    {"id": 410 , "name_kh": "X", "price": 1200, "image": "/static/images/charm-black-number-09.png", "categories": ["Black Letter"]},
+    // --- Pink Number 
+     // --- Black Number
+    {"id": 501, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-00.png", "categories": ["Black Letter"]},
+    {"id": 502, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-01.png", "categories": ["Black Letter"]},
+    {"id": 503, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-02.png", "categories": ["Black Letter"]},
+    {"id": 504, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-03.png", "categories": ["Black Letter"]},
+    {"id": 505, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-04.png", "categories": ["Black Letter"]},
+    {"id": 506, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-05.png", "categories": ["Black Letter"]},
+    {"id": 507, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-06.png", "categories": ["Black Letter"]},
+    {"id": 508, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-07.png", "categories": ["Black Letter"]},
+    {"id": 509, "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-08.png", "categories": ["Black Letter"]},
+    {"id": 510 , "name_kh": "X", "price": 1200, "image": "/static/images/charm-pink-number-09.png", "categories": ["Black Letter"]},
+    // Flag
+    {"id": 601, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-01.png", "categories": ["Flag"]},
+    {"id": 602, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-02.png", "categories": ["Flag"]},
+    {"id": 603, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-03.png", "categories": ["Flag"]},
+    {"id": 604, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-04.png", "categories": ["Flag"]},
+    {"id": 605, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-05.png", "categories": ["Flag"]},
+    {"id": 606, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-06.png", "categories": ["Flag"]},
+    {"id": 607, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-07.png", "categories": ["Flag"]},
+    {"id": 608, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-08.png", "categories": ["Flag"]},
+    {"id": 609, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-09.png", "categories": ["Flag"]},
+    {"id": 610, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-10.png", "categories": ["Flag"]},
+    {"id": 611, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-11.png", "categories": ["Flag"]},
+    {"id": 612, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-12.png", "categories": ["Flag"]},
+    {"id": 613, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-13.png", "categories": ["Flag"]},
+    {"id": 614, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-14.png", "categories": ["Flag"]},
+    {"id": 615, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-15.png", "categories": ["Flag"]},
+    {"id": 616, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-16.png", "categories": ["Flag"]},
+    {"id": 617, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-17.png", "categories": ["Flag"]},
+    {"id": 618, "name_kh": "X", "price": 3000, "image": "/static/images/charm-flag-18.png", "categories": ["Flag"]},
 
      // --- Pink F1 
     {"id": 1200, "name_kh": "Pink F1 Logo", "price": 3000, "image": "/static/images/charm-f1-201.jpg", "categories": ["Pink F1🏎️"]},
@@ -824,7 +1012,6 @@
     let stockData = {};
     let masterSwitch = "off";
     let currentBlob = null; 
-    let generatedCode = ""; // Store for checkout
 
     async function init() {
         try {
@@ -920,143 +1107,146 @@
         const preview = document.getElementById('bracelet-preview');
         try { localStorage.setItem('customCharms', JSON.stringify(selectedCharms)); } catch(e) {}
 
-        // Header Info
+        // --- NEW UPDATE: Header Info ---
         let total = 0;
         selectedCharms.forEach(c => total += c.price);
         
         document.getElementById('header-count').innerText = selectedCharms.length;
         document.getElementById('header-price-khr').innerText = total.toLocaleString() + "៛";
+        // Approx 1 USD = 4000 KHR
         const usd = (total / 4000).toFixed(2);
         document.getElementById('header-price-usd').innerText = `($${usd})`;
 
-        // Visuals
+        // --- FIXED: Generate 10-Digit Numeric Code ---
+        if(selectedCharms.length > 0) {
+            // Map each charm to its index in allCharms (2 digits per charm)
+            let code = selectedCharms.map(c => {
+                const idx = allCharms.findIndex(x => x.id === c.id);
+                // Pad with leading zero if index < 10
+                return idx !== -1 ? idx.toString().padStart(2, '0') : '99';
+            }).join('');
+            
+            // Pad with '99' to reach at least 10 digits
+            while (code.length < 10) {
+                code += '99';
+            }
+            
+            document.getElementById('share-code-input').value = code;
+        } else {
+            document.getElementById('share-code-input').value = "";
+        }
+
         if (selectedCharms.length === 0) {
             preview.innerHTML = `<div class="w-full text-center py-8 opacity-30 flex flex-col items-center"><p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Empty Workspace</p></div>`;
             document.getElementById('screenshot-btn').disabled = true;
             document.querySelector('.nav-indicator-container').style.opacity = '0';
-        } else {
-            document.querySelector('.nav-indicator-container').style.opacity = '1';
-            preview.innerHTML = selectedCharms.map((c, index) => {
-                return `
-                    <div class="bracelet-link-container link-pop group" 
-                         draggable="true" 
-                         data-index="${index}"
-                         ontouchstart="handleTouchStart(event)"
-                         ontouchmove="handleTouchMove(event)"
-                         ontouchend="handleTouchEnd(event)">
-                        <img src="${c.image}">
-                        <button onclick="removeCharm('${c.uid}')" class="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[8px] shadow-lg z-20 scale-0 group-hover:scale-100 transition-transform duration-200">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                        <div class="absolute top-1/2 -right-[2px] w-1 h-3 bg-gray-300/50 rounded-full transform -translate-y-1/2 -z-10"></div>
-                    </div>`;
-            }).join('');
-            document.getElementById('screenshot-btn').disabled = false;
-            handlePreviewScroll(preview);
+            return;
         }
+
+        document.querySelector('.nav-indicator-container').style.opacity = '1';
+        
+        preview.innerHTML = selectedCharms.map((c, index) => {
+            return `
+                <div class="bracelet-link-container link-pop group" 
+                     draggable="true" 
+                     data-index="${index}"
+                     ontouchstart="handleTouchStart(event)"
+                     ontouchmove="handleTouchMove(event)"
+                     ontouchend="handleTouchEnd(event)">
+                    <img src="${c.image}">
+                    <button onclick="removeCharm('${c.uid}')" class="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[8px] shadow-lg z-20 scale-0 group-hover:scale-100 transition-transform duration-200">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <div class="absolute top-1/2 -right-[2px] w-1 h-3 bg-gray-300/50 rounded-full transform -translate-y-1/2 -z-10"></div>
+                </div>`;
+        }).join('');
+
+        document.getElementById('screenshot-btn').disabled = false;
+        handlePreviewScroll(preview);
     }
 
-    // --- NEW FUNCTIONS FOR CODE HANDLING (CLOUD BASED) ---
-    async function copyDesignCode() {
+    // --- NEW FUNCTIONS FOR CODE HANDLING ---
+    function copyDesignCode() {
         const input = document.getElementById('share-code-input');
-        if(selectedCharms.length === 0) return;
-        
-        // UI Feedback
-        const originalText = input.value;
-        input.value = "Saving...";
-        
-        // Save to cloud
-        const code = await window.saveDesignToCloud(selectedCharms);
-        
-        if (code) {
-            input.value = code;
-            generatedCode = code; // Save for checkout flow
-            input.select();
-            input.setSelectionRange(0, 99999); 
-            navigator.clipboard.writeText(code).then(() => {
-                showToast('Saved & Copied', 'text-white', 'fa-cloud-arrow-up');
-            });
-        } else {
-            input.value = "Error Saving";
-            setTimeout(() => input.value = "", 2000);
-        }
+        if(!input.value) return;
+        input.select();
+        input.setSelectionRange(0, 99999); // Mobile
+        navigator.clipboard.writeText(input.value).then(() => {
+            showToast('Code Copied', 'text-white', 'fa-copy');
+        });
     }
 
-    async function loadDesignCode() {
+    function loadDesignCode() {
         const input = document.getElementById('load-code-input');
         const code = input.value.trim();
         if(!code) return;
 
-        if(!/^\d{10}$/.test(code)) {
-            alert("Please enter a valid 10-digit code.");
+        // Check if numeric
+        if(!/^\d+$/.test(code)) {
+            alert("Invalid code. Please enter the numeric design code.");
             return;
         }
         
-        // UI Feedback
-        const btn = document.querySelector('button[onclick="loadDesignCode()"]');
-        const originalBtnText = btn.innerText;
-        btn.innerText = "Loading...";
-        
-        const charmIds = await window.loadDesignFromCloud(code);
-        
-        if (charmIds && Array.isArray(charmIds)) {
-             if(confirm("Load this design? Current workspace will be replaced.")) {
-                 selectedCharms = [];
-                 charmIds.forEach(id => {
-                     const charm = allCharms.find(c => c.id === id);
-                     if (charm) {
-                         selectedCharms.push({ ...charm, uid: Math.random().toString(36).substr(2, 9) });
-                     }
-                 });
-                 updateUI();
-                 input.value = "";
-                 generatedCode = code; // Update current code context
-                 showToast('Design Loaded', 'text-green-400', 'fa-cloud-arrow-down');
-             }
-        } else {
-            alert("Design not found. Check the code.");
+        try {
+            // FIXED: Safe loading with 99 skip check
+            const newCharms = [];
+            for(let i=0; i < code.length; i+=2) {
+                const chunk = code.substring(i, i+2);
+                if(chunk === '99') continue; // Skip padding
+                
+                const idx = parseInt(chunk, 10);
+                if(allCharms[idx]) {
+                     newCharms.push({ ...allCharms[idx], uid: Math.random().toString(36).substr(2, 9) });
+                }
+            }
+            
+            if(newCharms.length > 0) {
+                if(confirm("Load this design? Current design will be replaced.")) {
+                    selectedCharms = newCharms;
+                    updateUI();
+                    input.value = "";
+                    showToast('Design Loaded', 'text-green-400', 'fa-download');
+                }
+            } else {
+                alert("No valid charms found in this code.");
+            }
+        } catch(e) {
+            alert("Error loading code.");
+            console.error(e);
         }
-        
-        btn.innerText = originalBtnText;
     }
 
+    // --- FIXED RESET FUNCTION ---
     function clearBracelet() {
         if(selectedCharms.length === 0) return;
         if(confirm("Clear current design?")) {
             selectedCharms = []; 
-            generatedCode = "";
             updateUI();
             showToast('Workspace Cleared', 'text-red-400', 'fa-trash');
-            document.getElementById('share-code-input').value = "";
         }
     }
 
-    // --- CHECKOUT FLOW ---
+    // --- NEW FLOW LOGIC ---
 
+    // 1. Generate just the bracelet strip for preview
     async function startPreviewFlow() {
-        // If no code generated yet, generate one silently for the receipt
-        if (!generatedCode && selectedCharms.length > 0) {
-            generatedCode = await window.saveDesignToCloud(selectedCharms);
-            if (generatedCode) {
-                 document.getElementById('share-code-input').value = generatedCode;
-            }
-        }
-
         const overlay = document.getElementById('loadingOverlay');
         document.getElementById('loadingText').innerText = "Generating Preview";
         overlay.style.display = 'flex';
         overlay.classList.remove('hidden'); overlay.classList.add('flex');
 
         try {
+            // Setup hidden div for pure bracelet strip (SINGLE LINE)
             const tempDiv = document.createElement('div');
             tempDiv.style.position = 'absolute'; tempDiv.style.left = '-9999px';
             tempDiv.style.display = 'flex';
-            tempDiv.style.flexWrap = 'nowrap'; 
+            tempDiv.style.flexWrap = 'nowrap'; // force single line
             tempDiv.style.justifyContent = 'center';
             tempDiv.style.alignItems = 'center';
             tempDiv.style.background = '#ffffff';
             tempDiv.style.padding = '20px';
             
+            // Dynamic width to prevent squishing
             const width = Math.max(600, (selectedCharms.length * 60) + 40); 
             tempDiv.style.width = `${width}px`;
             tempDiv.style.gap = '2px';
@@ -1076,11 +1266,13 @@
             const dataUrl = canvas.toDataURL("image/png");
             document.body.removeChild(tempDiv);
 
+            // Set to Step 1
             document.getElementById('initialPreviewImg').src = dataUrl;
             document.getElementById('step-selection').classList.remove('hidden');
             document.getElementById('step-result').classList.add('hidden');
             document.getElementById('modalTitle').innerText = "Select Packaging";
             
+            // Show Modal
             const modal = document.getElementById('resultModal');
             modal.style.display = 'flex';
             modal.classList.remove('hidden');
@@ -1089,6 +1281,7 @@
         finally { overlay.classList.add('hidden'); overlay.style.display = 'none'; }
     }
 
+    // 2. Finalize with Package Info included in image
     async function finalizeOrder(pkgName, pkgImgUrl, pkgPrice) {
         const overlay = document.getElementById('loadingOverlay');
         document.getElementById('loadingText').innerText = "Creating Final Order";
@@ -1096,6 +1289,7 @@
         overlay.classList.remove('hidden'); overlay.classList.add('flex');
 
         try {
+            // Date time in Cambodia
             const now = new Date();
             const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Phnom_Penh' };
             const dateTimeStr = now.toLocaleString('en-GB', dateOptions);
@@ -1104,9 +1298,11 @@
             tempDiv.style.position = 'absolute'; tempDiv.style.left = '-9999px';
             tempDiv.className = 'screenshot-frame'; 
             
+            // Ensure width is wide enough for the single line of charms
             const neededWidth = Math.max(550, (selectedCharms.length * 55) + 100);
             tempDiv.style.width = `${neededWidth}px`;
             
+            // Header
             const headerDiv = document.createElement('div');
             headerDiv.innerHTML = `
                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:20px;">
@@ -1118,9 +1314,10 @@
                 </div>
             `;
             
+            // Bracelet Container (SINGLE LINE)
             const braceletContainer = document.createElement('div');
             braceletContainer.style.display = 'flex';
-            braceletContainer.style.flexWrap = 'nowrap';
+            braceletContainer.style.flexWrap = 'nowrap'; // Force single line
             braceletContainer.style.justifyContent = 'center';
             braceletContainer.style.alignItems = 'center';
             braceletContainer.style.background = '#f8fafc';
@@ -1140,17 +1337,25 @@
                 braceletContainer.appendChild(img);
             });
 
+            // Calculate totals for receipt
             let charmsTotal = 0;
             selectedCharms.forEach(c => charmsTotal += c.price);
             const finalTotal = charmsTotal + pkgPrice;
 
-            // Ensure we have a code for the receipt, otherwise generate on the fly (sync issue if offline, but assumed online)
-            const displayCode = generatedCode || "PENDING";
+            // Generate Code
+            let code = selectedCharms.map(c => {
+                const idx = allCharms.findIndex(x => x.id === c.id);
+                return idx !== -1 ? idx.toString().padStart(2, '0') : '99';
+            }).join('');
+            while (code.length < 10) code += '99';
 
+            // Package & Price Info (UPDATED LAYOUT)
             const footer = document.createElement('div');
             footer.style.textAlign = 'center'; footer.style.width = '100%';
             footer.innerHTML = `
+                <!-- Top Row: Package Left, Code Right -->
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding:0 10px;">
+                    <!-- Package Box (Left) -->
                     <div style="display:flex; gap:10px; align-items:center; padding:10px; background:#fff7ed; border-radius:10px; border:1px solid #ffedd5;">
                         <img src="${pkgImgUrl}" style="width:25px; height:25px; object-fit:contain;">
                         <div style="text-align:left;">
@@ -1159,23 +1364,35 @@
                         </div>
                     </div>
 
+                    <!-- Code Box (Right) -->
                     <div style="display:flex; flex-direction:column; align-items:flex-end;">
                          <div style="font-size:8px; font-weight:bold; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:2px;">Design Code</div>
-                         <div style="font-size:16px; font-family:monospace; font-weight:900; color:#334155; background:#f1f5f9; padding:6px 10px; border-radius:6px; letter-spacing:2px;">${displayCode}</div>
+                         <div style="font-size:12px; font-family:monospace; font-weight:900; color:#334155; background:#f1f5f9; padding:4px 8px; border-radius:6px; letter-spacing:1px;">${code}</div>
                     </div>
                 </div>
 
+                <!-- Bottom Row: Stats -->
                 <div style="display:flex; justify-content:space-between; align-items:center; border-top: 2px dashed #e2e8f0; padding-top: 15px; padding-left: 10px; padding-right: 10px;">
+                    
+                    <!-- Total Price -->
                     <div style="text-align:center; flex:1;">
                         <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Total</div>
                         <div style="font-size:24px; font-weight:900; color:#1a1a1a;">${finalTotal.toLocaleString()}៛</div>
                     </div>
+
+                    <!-- Divider -->
                     <div style="width:1px; height:30px; background:#e2e8f0;"></div>
+
+                    <!-- Charms -->
                     <div style="text-align:center; flex:1;">
                         <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Charms</div>
                         <div style="font-size:24px; font-weight:900; color:#1a1a1a;">${selectedCharms.length}</div>
                     </div>
+
+                    <!-- Divider -->
                     <div style="width:1px; height:30px; background:#e2e8f0;"></div>
+
+                    <!-- Date & Time -->
                     <div style="text-align:center; flex:1;">
                         <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Date & Time</div>
                         <div style="font-size:10px; font-weight:800; color:#64748b; line-height:1.2;">${dateTimeStr}</div>
@@ -1195,6 +1412,7 @@
             document.getElementById('finalReceiptImg').src = dataUrl;
             document.body.removeChild(tempDiv);
 
+            // Switch to Step 2
             document.getElementById('step-selection').classList.add('hidden');
             document.getElementById('step-result').classList.remove('hidden');
             document.getElementById('modalTitle').innerText = "Order Ready";
