@@ -33,6 +33,21 @@
         will-change: transform;
     }
 
+    /* TUTORIAL MODAL ANIMATION */
+    #tutorialModal {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .modal-active {
+        opacity: 1;
+        pointer-events: auto;
+        transform: scale(1);
+    }
+    .modal-hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.95);
+    }
+
     .bracelet-link-container {
         display: flex;
         align-items: flex-end;
@@ -137,8 +152,42 @@
       <p id="loadingText" class="text-xs font-black uppercase tracking-[0.3em]">Preparing Preview</p>
   </div>
 
+  <!-- TUTORIAL POPUP -->
+  <div id="tutorialModal" class="fixed inset-0 z-[1300] flex items-center justify-center px-4 modal-hidden">
+      <!-- Backdrop -->
+      <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeTutorial()"></div>
+      
+      <!-- Content -->
+      <div class="bg-white w-full max-w-sm rounded-2xl p-6 relative shadow-2xl flex flex-col items-center gap-4 text-center transform transition-transform">
+          
+          <!-- Close Button -->
+          <button onclick="closeTutorial()" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 transition-colors">
+              <i class="fa-solid fa-xmark"></i>
+          </button>
+
+          <!-- Icon -->
+          <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 text-2xl mb-2 animate-bounce">
+              <i class="fa-brands fa-tiktok"></i>
+          </div>
+
+          <!-- Title -->
+          <h3 class="text-lg font-black uppercase tracking-tight text-gray-900">How to Order?</h3>
+          
+          <!-- Message (Khmer) -->
+          <p class="text-sm font-bold text-gray-600 leading-relaxed">
+              ចំណាយពេល 30 វិនាទី ដើម្បីដឹងពីរបៀបប្រើប្រាស់ និងធ្វើការ DIY ដោយគ្រាន់តែចុចលើវីដេអូខាងក្រោម
+          </p>
+
+          <!-- Link/Button (Connect your TikTok here) -->
+          <a href="https://www.tiktok.com/@sompheareak_italy" target="_blank" class="w-full bg-black text-white py-3.5 rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-gray-300">
+              <i class="fa-solid fa-play"></i> Watch Video
+          </a>
+          
+      </div>
+  </div>
+
   <!-- RESULT MODAL -->
-  <div id="resultModal" style="display: none;" class="fixed inset-0 z-[1100] bg-white hidden flex-col overflow-y-auto">
+  <div id="resultModal" style="display: none;" class="fixed inset-0 z-[1100] bg-white hidden overflow-y-auto overscroll-contain">
       
       <!-- HEADER -->
       <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
@@ -156,10 +205,39 @@
               <!-- Initial Bracelet Preview -->
               <div class="w-full bg-slate-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center">
                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Your Design</p>
-                   <!-- Added overflow-x-auto to allow scrolling if the single line image is very wide on small screens -->
                    <div class="w-full overflow-x-auto flex justify-center">
                         <img id="initialPreviewImg" class="h-auto object-contain max-h-[150px]" src="" alt="Bracelet Preview">
                    </div>
+              </div>
+
+              <!-- Summary Block (Matches Invoice Style - Natural Wrap) -->
+              <div class="w-full bg-white border border-gray-200 rounded-xl p-0 flex flex-col shadow-sm overflow-hidden">
+                  
+                  <!-- Top Row: Code Box (Full Width) -->
+                  <div class="flex flex-col w-full p-4 bg-slate-50">
+                       <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Design Code</span>
+                       <!-- Natural wrapping break-all, clean monospace -->
+                       <div id="preview-code" class="text-lg font-mono font-black text-slate-800 bg-white px-4 py-3 rounded-lg tracking-[0.1em] border border-slate-200 text-center leading-relaxed break-all w-full shadow-sm">
+                           000000
+                       </div>
+                  </div>
+
+                  <!-- Divider (Dashed) -->
+                  <div class="w-full h-px bg-dashed border-t-2 border-dashed border-gray-100"></div>
+
+                  <!-- Bottom Row: Stats -->
+                  <div class="flex justify-between items-center p-4 bg-white">
+                       <div class="flex flex-col items-center flex-1">
+                           <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Charms</span>
+                           <span id="preview-count" class="text-xl font-black text-gray-900 mt-1">0</span>
+                       </div>
+                       <!-- Vertical Divider -->
+                       <div class="w-px h-8 bg-gray-100"></div>
+                       <div class="flex flex-col items-center flex-1">
+                           <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Subtotal</span>
+                           <span id="preview-price" class="text-xl font-black text-orange-600 mt-1">0៛</span>
+                       </div>
+                  </div>
               </div>
 
               <!-- Package Options -->
@@ -211,12 +289,14 @@
   </div>
 
   <!-- HEADER -->
-  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-2 flex items-center justify-between shadow-sm">
-    <a href="/" class="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-400 border border-gray-100 active:scale-90 transition-transform">
+  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-2 flex items-center justify-between shadow-sm relative">
+    <!-- Left: Back Button -->
+    <a href="/" class="relative z-20 w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-400 border border-gray-100 active:scale-90 transition-transform">
       <i class="fa-solid fa-arrow-left text-sm"></i>
     </a>
 
-    <div class="flex flex-col items-center justify-center">
+    <!-- Center: Logo (Absolute Centered) -->
+    <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center z-10 pointer-events-none">
         <div class="flex items-center gap-2.5 mb-0.5">
             <div class="relative">
                 <img src="static/image/logo.jpg" 
@@ -235,7 +315,15 @@
             <span class="w-1 h-1 rounded-full bg-orange-500"></span>
         </div>
     </div>
-    <div class="w-9"></div>
+
+    <!-- Right: Visitor Counter (New) -->
+    <div class="relative z-20 flex flex-col items-end">
+         <span class="text-[8px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Daily Views</span>
+         <div class="flex items-center gap-1.5 bg-orange-50 px-2 py-1 rounded-md border border-orange-100">
+             <i class="fa-solid fa-eye text-[10px] text-orange-500"></i>
+             <span id="header-visitor-count" class="text-[10px] font-black text-gray-900">...</span>
+         </div>
+    </div>
   </header>
 
   <!-- BANNER -->
@@ -361,8 +449,8 @@
   </div>
 
   <script>
-const allCharms =
-[
+    // Added sample data for testing
+    const allCharms = [
     // Charm (IDs 101-109)
     {"id": 101, "name_kh": "X", "price": 500, "image": "/static/images/charm-silver.png", "categories": ["Charm"]},
     {"id": 102, "name_kh": "X", "price": 600, "image": "/static/images/charm-gold.png", "categories": ["Charm"]},
@@ -903,9 +991,8 @@ const allCharms =
     {"id": 2808, "name_kh": "X", "price": 3000, "image": "/static/images/charm-anime-08.png", "categories": ["Anime"]},
     {"id": 2809, "name_kh": "X", "price": 3000, "image": "/static/images/charm-anime-09.png", "categories": ["Anime"]},
     {"id": 2810, "name_kh": "X", "price": 3000, "image": "/static/images/charm-anime-10.png", "categories": ["Anime"]},
-    {"id": 2811, "name_kh": "X", "price": 3000, "image": "/static/images/charm-anime-11.png", "categories": ["Anime"]},
+    {"id": 2811, "name_kh": "X", "price": 3000, "image": "/static/images/charm-anime-11.png", "categories": ["Anime"]},    ];
 
-];
     let selectedCharms = [];
     try {
         const saved = localStorage.getItem('customCharms');
@@ -920,18 +1007,56 @@ const allCharms =
 
     async function init() {
         try {
-            await fetch('/api/sync', { 
+            // Check if API exists, if not, use dummy mode gracefully
+            const sync = await fetch('/api/sync', { 
                 method: 'POST', 
                 headers: {'Content-Type':'application/json'}, 
                 body: JSON.stringify({items: allCharms})
             });
-            const res = await fetch('/api/get-data');
-            const data = await res.json();
-            stockData = data.stock;
-            masterSwitch = data.master_switch || data.override || "off"; 
-        } catch(e) { console.log("Preview Mode"); }
+            if(sync.ok) {
+                const res = await fetch('/api/get-data');
+                const data = await res.json();
+                stockData = data.stock;
+                masterSwitch = data.master_switch || data.override || "off"; 
+            }
+        } catch(e) { console.log("Preview Mode - No API"); }
         renderCategories();
         updateUI();
+
+        // SIMULATE DAILY VISITOR COUNT
+        document.getElementById('header-visitor-count').innerText = getDailyVisitorCount().toLocaleString();
+
+        // TUTORIAL POPUP LOGIC (3 Seconds Delay)
+        setTimeout(() => {
+            const modal = document.getElementById('tutorialModal');
+            modal.classList.remove('modal-hidden');
+            modal.classList.add('modal-active');
+        }, 3000);
+    }
+
+    function getDailyVisitorCount() {
+        // Generates a consistent daily number based on the date so it doesn't look fake
+        // Real implementation would replace this with a fetch() to your backend
+        const today = new Date().toISOString().slice(0, 10);
+        let hash = 0;
+        for (let i = 0; i < today.length; i++) {
+            hash = ((hash << 5) - hash) + today.charCodeAt(i);
+            hash |= 0; 
+        }
+        const baseCount = Math.abs(hash) % 1000 + 500; // Base visits between 500-1500
+        
+        const storageKey = 'daily_visits_' + today;
+        let localCount = parseInt(localStorage.getItem(storageKey) || '0');
+        localCount++;
+        localStorage.setItem(storageKey, localCount);
+
+        return baseCount + localCount;
+    }
+
+    function closeTutorial() {
+        const modal = document.getElementById('tutorialModal');
+        modal.classList.remove('modal-active');
+        modal.classList.add('modal-hidden');
     }
 
     function renderCategories() {
@@ -1008,6 +1133,26 @@ const allCharms =
         setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500);
     }
 
+    function getDesignCode() {
+        if(selectedCharms.length > 0) {
+            // Map each charm to its index in allCharms (3 digits per charm)
+            let code = selectedCharms.map(c => {
+                const idx = allCharms.findIndex(x => x.id === c.id);
+                // Pad with leading zero if index < 100 to support up to 999
+                return idx !== -1 ? idx.toString().padStart(3, '0') : '999';
+            }).join('');
+            
+            // Pad with '999' to reach at least 12 digits (4 charms worth)
+            while (code.length < 12) {
+                code += '999';
+            }
+            return code;
+        }
+        return "";
+    }
+
+    // REMOVED formatCodeForDisplay to satisfy "1 line/no breaks" request
+
     function updateUI() {
         const preview = document.getElementById('bracelet-preview');
         try { localStorage.setItem('customCharms', JSON.stringify(selectedCharms)); } catch(e) {}
@@ -1022,24 +1167,9 @@ const allCharms =
         const usd = (total / 4000).toFixed(2);
         document.getElementById('header-price-usd').innerText = `($${usd})`;
 
-        // --- FIXED: Generate 10-Digit Numeric Code ---
-        if(selectedCharms.length > 0) {
-            // Map each charm to its index in allCharms (2 digits per charm)
-            let code = selectedCharms.map(c => {
-                const idx = allCharms.findIndex(x => x.id === c.id);
-                // Pad with leading zero if index < 10
-                return idx !== -1 ? idx.toString().padStart(2, '0') : '99';
-            }).join('');
-            
-            // Pad with '99' to reach at least 10 digits
-            while (code.length < 10) {
-                code += '99';
-            }
-            
-            document.getElementById('share-code-input').value = code;
-        } else {
-            document.getElementById('share-code-input').value = "";
-        }
+        // --- FIXED: Generate 3-Digit Numeric Code ---
+        const code = getDesignCode();
+        document.getElementById('share-code-input').value = code;
 
         if (selectedCharms.length === 0) {
             preview.innerHTML = `<div class="w-full text-center py-8 opacity-30 flex flex-col items-center"><p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Empty Workspace</p></div>`;
@@ -1093,11 +1223,11 @@ const allCharms =
         }
         
         try {
-            // FIXED: Safe loading with 99 skip check
+            // FIXED: Safe loading with 999 skip check and 3-digit chunking
             const newCharms = [];
-            for(let i=0; i < code.length; i+=2) {
-                const chunk = code.substring(i, i+2);
-                if(chunk === '99') continue; // Skip padding
+            for(let i=0; i < code.length; i+=3) {
+                const chunk = code.substring(i, i+3);
+                if(chunk === '999') continue; // Skip padding
                 
                 const idx = parseInt(chunk, 10);
                 if(allCharms[idx]) {
@@ -1133,7 +1263,7 @@ const allCharms =
 
     // --- NEW FLOW LOGIC ---
 
-    // 1. Generate just the bracelet strip for preview
+    // 1. Generate just the bracelet strip for preview AND populate summary
     async function startPreviewFlow() {
         const overlay = document.getElementById('loadingOverlay');
         document.getElementById('loadingText').innerText = "Generating Preview";
@@ -1141,6 +1271,15 @@ const allCharms =
         overlay.classList.remove('hidden'); overlay.classList.add('flex');
 
         try {
+            // Update Summary Info for Selection Screen
+            let total = 0;
+            selectedCharms.forEach(c => total += c.price);
+            
+            // Format Code for display (Raw, letting CSS handle wrap)
+            document.getElementById('preview-code').innerText = getDesignCode();
+            document.getElementById('preview-count').innerText = selectedCharms.length;
+            document.getElementById('preview-price').innerText = total.toLocaleString() + "៛";
+
             // Setup hidden div for pure bracelet strip (SINGLE LINE)
             const tempDiv = document.createElement('div');
             tempDiv.style.position = 'absolute'; tempDiv.style.left = '-9999px';
@@ -1177,9 +1316,9 @@ const allCharms =
             document.getElementById('step-result').classList.add('hidden');
             document.getElementById('modalTitle').innerText = "Select Packaging";
             
-            // Show Modal
+            // Show Modal - Use Block for proper scrolling
             const modal = document.getElementById('resultModal');
-            modal.style.display = 'flex';
+            modal.style.display = 'block'; 
             modal.classList.remove('hidden');
 
         } catch (err) { console.error(err); alert("Error generating preview."); } 
@@ -1247,32 +1386,30 @@ const allCharms =
             selectedCharms.forEach(c => charmsTotal += c.price);
             const finalTotal = charmsTotal + pkgPrice;
 
-            // Generate Code
-            let code = selectedCharms.map(c => {
-                const idx = allCharms.findIndex(x => x.id === c.id);
-                return idx !== -1 ? idx.toString().padStart(2, '0') : '99';
-            }).join('');
-            while (code.length < 10) code += '99';
+            // Generate Code (Raw string)
+            const code = getDesignCode();
 
-            // Package & Price Info (UPDATED LAYOUT)
+            // Package & Price Info (UPDATED LAYOUT - MATCHING SELECTION SCREEN)
             const footer = document.createElement('div');
             footer.style.textAlign = 'center'; footer.style.width = '100%';
             footer.innerHTML = `
-                <!-- Top Row: Package Left, Code Right -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding:0 10px;">
-                    <!-- Package Box (Left) -->
-                    <div style="display:flex; gap:10px; align-items:center; padding:10px; background:#fff7ed; border-radius:10px; border:1px solid #ffedd5;">
-                        <img src="${pkgImgUrl}" style="width:25px; height:25px; object-fit:contain;">
+                <div style="display:flex; flex-direction:column; gap:15px; width:100%; padding:0 10px; margin-bottom:20px;">
+                    
+                    <!-- Row 1: Package (Left) -->
+                    <div style="align-self: flex-start; display:flex; gap:10px; align-items:center; padding:8px 12px; background:#fff7ed; border-radius:10px; border:1px solid #ffedd5;">
+                        <img src="${pkgImgUrl}" style="width:20px; height:20px; object-fit:contain;">
                         <div style="text-align:left;">
                             <div style="font-size:8px; font-weight:bold; color:#9a3412; text-transform:uppercase;">Packaging</div>
                             <div style="font-size:10px; font-weight:900; color:#ea580c; text-transform:uppercase;">${pkgName}</div>
                         </div>
                     </div>
 
-                    <!-- Code Box (Right) -->
-                    <div style="display:flex; flex-direction:column; align-items:flex-end;">
-                         <div style="font-size:8px; font-weight:bold; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:2px;">Design Code</div>
-                         <div style="font-size:12px; font-family:monospace; font-weight:900; color:#334155; background:#f1f5f9; padding:4px 8px; border-radius:6px; letter-spacing:1px;">${code}</div>
+                    <!-- Row 2: Code (Full Width, No forced breaks) -->
+                    <div style="width:100%;">
+                         <div style="font-size:8px; font-weight:bold; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; text-align:center;">Design Code</div>
+                         <div style="font-size:20px; font-family:monospace; font-weight:900; color:#1e293b; background:#fff; padding:15px; border-radius:12px; letter-spacing:3px; border:1px solid #e2e8f0; text-align:center; line-height:1.6; word-break:break-all; width:100%;">
+                            ${code}
+                         </div>
                     </div>
                 </div>
 
@@ -1281,8 +1418,8 @@ const allCharms =
                     
                     <!-- Total Price -->
                     <div style="text-align:center; flex:1;">
-                        <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Total</div>
-                        <div style="font-size:24px; font-weight:900; color:#1a1a1a;">${finalTotal.toLocaleString()}៛</div>
+                        <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Total Amount</div>
+                        <div style="font-size:28px; font-weight:900; color:#ea580c; line-height:1;">${finalTotal.toLocaleString()}៛</div>
                     </div>
 
                     <!-- Divider -->
@@ -1299,7 +1436,7 @@ const allCharms =
 
                     <!-- Date & Time -->
                     <div style="text-align:center; flex:1;">
-                        <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Date & Time</div>
+                        <div style="font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em;">Ordered On</div>
                         <div style="font-size:10px; font-weight:800; color:#64748b; line-height:1.2;">${dateTimeStr}</div>
                     </div>
                 </div>
