@@ -116,6 +116,9 @@
     }
 
     /* Selected State */
+    .bracelet-link-container.selected {
+        z-index: 40;
+    }
     .bracelet-link-container.selected img {
         filter: drop-shadow(0 0 0 2px #ea580c);
         transform: translateY(-4px);
@@ -301,9 +304,9 @@
 
               <!-- Summary Block -->
               <div class="w-full bg-white border border-gray-200 rounded-xl p-0 flex flex-col shadow-sm overflow-hidden">
-                  <div class="flex flex-col w-full p-4 bg-slate-50">
+                  <div class="flex flex-col w-full p-4 bg-slate-50 overflow-hidden">
                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center" data-i18n="design_code">កូដរចនា (Design Code)</span>
-                       <div id="preview-code" class="text-lg font-mono font-black text-slate-800 bg-white px-4 py-3 rounded-lg tracking-[0.1em] border border-slate-200 text-center leading-relaxed break-all w-full shadow-sm">000000</div>
+                       <div id="preview-code" class="text-sm md:text-base font-mono font-black text-slate-800 bg-white px-4 py-3 rounded-lg tracking-[0.1em] border border-slate-200 text-center break-all w-full shadow-sm leading-relaxed">000000</div>
                   </div>
                   <div class="w-full h-px bg-dashed border-t-2 border-dashed border-gray-100"></div>
                   <div class="flex justify-between items-center p-4 bg-white">
@@ -466,15 +469,23 @@
                     </div>
                  </div>
             </div>
-            <!-- Reset Button with Confirmation -->
-            <button onclick="clearBracelet()" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 flex items-center gap-1 font-['Kantumruy_Pro']">
-                <i class="fa-solid fa-rotate-left"></i> <span data-i18n="reset">ជម្រះ</span>
-            </button>
+            
+            <!-- ACTIONS (DUPLICATE & RESET) -->
+            <div class="flex items-center gap-2">
+                <!-- Duplicate Button -->
+                <button id="duplicate-btn" onclick="duplicateSelectedCharms()" class="hidden bg-blue-50 text-blue-500 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 items-center gap-1 font-['Kantumruy_Pro']">
+                    <i class="fa-solid fa-copy"></i> <span data-i18n="duplicate">ចម្លង</span>
+                </button>
+                <!-- Reset Button with Confirmation -->
+                <button onclick="clearBracelet()" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 flex items-center gap-1 font-['Kantumruy_Pro']">
+                    <i class="fa-solid fa-rotate-left"></i> <span data-i18n="reset">ជម្រះ</span>
+                </button>
+            </div>
         </div>
 
         <!-- SMALLER PREVIEW HEIGHT -->
-        <div id="bracelet-preview" onclick="handleBackgroundClick(event)" onscroll="handlePreviewScroll(this)" class="flex overflow-x-auto py-2 px-4 scrollbar-hide min-h-[100px] items-center bg-slate-50 gap-0">
-            <div class="w-full text-center py-6 opacity-20">
+        <div id="bracelet-preview" onclick="handleBackgroundClick(event)" onscroll="handlePreviewScroll(this)" class="flex overflow-x-auto py-8 px-4 scrollbar-hide min-h-[120px] items-center justify-center bg-slate-50 gap-0 transition-all">
+            <div class="w-full text-center opacity-20 flex flex-col items-center">
                 <i class="fa-solid fa-layer-group text-2xl mb-1"></i>
                 <p class="text-[8px] font-black uppercase tracking-[0.2em] font-['Kantumruy_Pro']" data-i18n="start_design">ចាប់ផ្តើមរចនា</p>
             </div>
@@ -567,7 +578,8 @@
             slide3_title: "ដឹកជញ្ជូន<br><span class=\"text-green-400\">គ្រប់ខេត្តក្រុង</span>",
             header_charms: "ចំនួនគ្រាប់",
             header_price: "តម្លៃ",
-            reset: "Reset",
+            reset: "ជម្រះ",
+            duplicate: "ចម្លង",
             start_design: "ចាប់ផ្តើមឌីហ្សាញ់",
             copy: "Copy",
             load: "បញ្ជូន",
@@ -615,6 +627,7 @@
             header_charms: "Charms",
             header_price: "Price",
             reset: "Reset",
+            duplicate: "Duplicate",
             start_design: "Start Designing",
             copy: "Copy",
             load: "Load",
@@ -1199,6 +1212,7 @@
     {"id": 2810, "name_kh": "X", "price": 3000, "image": "/static/images/charm-anime-10.png", "categories": ["Anime"]},
     {"id": 2811, "name_kh": "X", "price": 3000, "image": "/static/images/charm-anime-11.png", "categories": ["Anime"]},
     ];
+    ];
 
     let selectedCharms = [];
     try {
@@ -1209,7 +1223,9 @@
     let stockData = {};
     let masterSwitch = "off";
     let currentBlob = null; 
-    let activeCharmUid = null; 
+    
+    // MULTI-SELECT STATE
+    let selectedCharmUids = []; 
 
     // Helper translation function
     function t(key) {
@@ -1364,7 +1380,10 @@
 
         const newUid = Math.random().toString(36).substr(2, 9);
         selectedCharms.push({ ...charm, uid: newUid });
-        activeCharmUid = newUid; // Select the newly added charm
+        
+        // Auto-select the newly added charm
+        selectedCharmUids = [newUid]; 
+        
         updateUI();
         showToast(t('added'), 'text-green-400', 'fa-circle-check');
         setTimeout(() => {
@@ -1376,13 +1395,42 @@
     function removeCharm(uid, event) {
         if(event) event.stopPropagation();
         selectedCharms = selectedCharms.filter(c => c.uid !== uid);
-        activeCharmUid = null; 
+        selectedCharmUids = selectedCharmUids.filter(id => id !== uid); 
         updateUI();
+    }
+    
+    function duplicateSelectedCharms(event) {
+        if (event) event.stopPropagation();
+        if (selectedCharmUids.length === 0) return;
+
+        // Get items to duplicate in their current visual order
+        const itemsToDuplicate = selectedCharms.filter(c => selectedCharmUids.includes(c.uid));
+        
+        // Find the max index to insert right after the last selected item
+        let maxIndex = -1;
+        selectedCharms.forEach((c, i) => { if (selectedCharmUids.includes(c.uid)) maxIndex = i; });
+        
+        const newCharms = itemsToDuplicate.map(c => ({ ...c, uid: Math.random().toString(36).substr(2, 9) }));
+        
+        selectedCharms.splice(maxIndex + 1, 0, ...newCharms);
+        
+        // Keep the newly duplicated items selected
+        selectedCharmUids = newCharms.map(c => c.uid);
+        
+        updateUI();
+        showToast(currentLang === 'KH' ? 'បានចម្លង' : 'Duplicated', 'text-blue-400', 'fa-copy');
+        
+        setTimeout(() => {
+            if (selectedCharmUids.length > 0) {
+                const newEl = document.querySelector(`[data-uid="${selectedCharmUids[selectedCharmUids.length - 1]}"]`);
+                if (newEl) newEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }, 50);
     }
 
     function handleBackgroundClick(e) {
         if (e.target.id === 'bracelet-preview') {
-            activeCharmUid = null;
+            selectedCharmUids = [];
             updateUI();
         }
     }
@@ -1423,18 +1471,31 @@
 
         const code = getDesignCode();
         document.getElementById('share-code-input').value = code;
+        
+        // Handle Top Duplicate Button Visibility
+        const duplicateBtn = document.getElementById('duplicate-btn');
+        if (selectedCharmUids.length > 0) {
+            duplicateBtn.classList.remove('hidden');
+            duplicateBtn.classList.add('flex');
+        } else {
+            duplicateBtn.classList.add('hidden');
+            duplicateBtn.classList.remove('flex');
+        }
 
         if (selectedCharms.length === 0) {
-            preview.innerHTML = `<div class="w-full text-center py-8 opacity-30 flex flex-col items-center"><p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 font-['Kantumruy_Pro']" data-i18n="start_design">${t('start_design')}</p></div>`;
+            preview.className = "flex overflow-x-auto py-8 px-4 scrollbar-hide min-h-[120px] items-center justify-center bg-slate-50 gap-0 transition-all";
+            preview.innerHTML = `<div class="w-full text-center opacity-30 flex flex-col items-center"><i class="fa-solid fa-layer-group text-2xl mb-1"></i><p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 font-['Kantumruy_Pro']" data-i18n="start_design">${t('start_design')}</p></div>`;
             document.getElementById('screenshot-btn').disabled = true;
             document.querySelector('.nav-indicator-container').style.opacity = '0';
             return;
         }
 
+        preview.className = "flex overflow-x-auto pt-10 pb-4 px-4 scrollbar-hide min-h-[140px] items-center bg-slate-50 gap-0 transition-all";
         document.querySelector('.nav-indicator-container').style.opacity = '1';
         
         preview.innerHTML = selectedCharms.map((c, index) => {
-            const isSelected = c.uid === activeCharmUid;
+            const isSelected = selectedCharmUids.includes(c.uid);
+            
             return `
                 <div class="bracelet-link-container link-pop group ${isSelected ? 'selected' : ''}" 
                      data-index="${index}"
@@ -1443,9 +1504,12 @@
                      ontouchmove="handleTouchMove(event)"
                      ontouchend="handleTouchEnd(event)">
                     <img src="${c.image}">
-                    <button onclick="removeCharm('${c.uid}', event)" class="${isSelected ? 'flex' : 'hidden'} remove-btn-anim absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-red-500 text-white rounded-full items-center justify-center text-[10px] shadow-lg z-20">
-                        <i class="fa-solid fa-xmark"></i>
+                    
+                    <!-- INDIVIDUAL TRASH BUTTON -->
+                    <button onclick="removeCharm('${c.uid}', event)" class="${isSelected ? 'flex' : 'hidden'} remove-btn-anim absolute -top-4 left-1/2 -translate-x-1/2 w-7 h-7 bg-red-500 text-white rounded-full items-center justify-center text-[12px] shadow-lg z-50 hover:bg-red-600 active:scale-90 transition-transform">
+                        <i class="fa-solid fa-trash-can"></i>
                     </button>
+
                     <div class="absolute top-1/2 -right-[2px] w-1 h-3 bg-gray-300/50 rounded-full transform -translate-y-1/2 -z-10"></div>
                 </div>`;
         }).join('');
@@ -1460,12 +1524,14 @@
     let draggedItem = null;
 
     function handleTouchStart(e) {
+        if (e.target.closest('button')) return;
+
         const container = e.target.closest('.bracelet-link-container');
         if (!container) return;
 
         const uid = container.dataset.uid;
-        // Only allow dragging if selected
-        if (uid === activeCharmUid) {
+        // Only allow touch-dragging if it's the only selected item or not handling multi-drag
+        if (selectedCharmUids.includes(uid) && selectedCharmUids.length === 1) {
             isDragging = true;
             draggedItem = container;
             container.classList.add('dragging');
@@ -1495,6 +1561,7 @@
     }
 
     function handleTouchEnd(e) {
+        if (e.target.closest('button')) return;
         const container = e.target.closest('.bracelet-link-container');
         if(!container) return;
 
@@ -1505,7 +1572,12 @@
         // Tap Logic: Short tap and small movement
         if (timeDiff < 200 && dist < 10 && !isDragging) {
              const uid = container.dataset.uid;
-             activeCharmUid = uid; 
+             // Multi-select toggle
+             if (selectedCharmUids.includes(uid)) {
+                 selectedCharmUids = selectedCharmUids.filter(id => id !== uid);
+             } else {
+                 selectedCharmUids.push(uid);
+             }
              updateUI();
         } 
         else if (isDragging && draggedItem) {
@@ -1551,7 +1623,7 @@
             }
             if(newCharms.length > 0 && confirm(currentLang === 'KH' ? "តើអ្នកចង់ដាក់កូដនេះមែនទេ?" : "Load this design?")) {
                 selectedCharms = newCharms;
-                activeCharmUid = null;
+                selectedCharmUids = [];
                 updateUI();
                 input.value = "";
                 showToast(t('design_loaded'), 'text-green-400', 'fa-download');
@@ -1563,7 +1635,7 @@
         if(selectedCharms.length === 0) return;
         if(confirm(currentLang === 'KH' ? "តើអ្នកចង់ជម្រះការរចនានេះមែនទេ?" : "Clear current design?")) {
             selectedCharms = []; 
-            activeCharmUid = null;
+            selectedCharmUids = [];
             updateUI();
             showToast(t('cleared'), 'text-red-400', 'fa-trash');
         }
@@ -1698,7 +1770,7 @@
                     </div>
                     <div style="width:100%;">
                          <div style="font-size:8px; font-weight:bold; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; text-align:center; font-family:'Kantumruy_Pro'">${labelCode}</div>
-                         <div style="font-size:20px; font-family:monospace; font-weight:900; color:#1e293b; background:#fff; padding:15px; border-radius:12px; letter-spacing:3px; border:1px solid #e2e8f0; text-align:center; line-height:1.6; word-break:break-all; width:100%;">${code}</div>
+                         <div style="font-size:14px; font-family:monospace; font-weight:900; color:#1e293b; background:#fff; padding:15px; border-radius:12px; letter-spacing:2px; border:1px solid #e2e8f0; text-align:center; word-break:break-all; line-height:1.6; width:100%;">${code}</div>
                     </div>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; border-top: 2px dashed #e2e8f0; padding-top: 15px; padding-left: 10px; padding-right: 10px;">
@@ -1769,11 +1841,12 @@
     }
 
     function scrollManual(val) { document.getElementById('bracelet-preview').scrollBy({ left: val, behavior: 'smooth' }); }
+    
     function reorderArray(from, to) { 
         const item = selectedCharms.splice(from, 1)[0]; 
         selectedCharms.splice(to, 0, item); 
-        // Deselect immediately after reordering
-        activeCharmUid = null; 
+        // Deselect immediately after single drag reordering
+        selectedCharmUids = []; 
         updateUI(); 
     }
     function addRandom() { const rand = allCharms[Math.floor(Math.random() * allCharms.length)]; if(rand) addCharmById(rand.id); }
@@ -1782,6 +1855,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
