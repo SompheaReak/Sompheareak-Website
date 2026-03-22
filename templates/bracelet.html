@@ -47,26 +47,22 @@
         .badge-anim { animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
         .glass-nav { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border-top: 1px solid rgba(0,0,0,0.05); }
-
         .sku-active { background-color: #f0fdf4; border: 1px solid #90D730; color: #90D730; }
-
         .screenshot-frame { font-family: 'Noto Sans Khmer', sans-serif; background: #fff; width: 400px; padding: 30px; box-sizing: border-box; border-radius: 0; }
-
         .flying-img { position: fixed; z-index: 9999; pointer-events: none; transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); border-radius: 50%; opacity: 0.8; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-
         .snap-x-mandatory { scroll-snap-type: x mandatory; }
         .snap-center { scroll-snap-align: center; }
     </style>
 </head>
 <body>
 
-    <!-- 1. HEADER -->
+    <!-- 1. HEADER (WITH RETURN TO HOME BUTTON) -->
     <header class="sticky top-0 z-50 glass-nav px-4 py-2 flex items-center justify-between shadow-sm h-[72px]">
-        <a href="./index.html" class="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center active:scale-90 transition-transform flex-shrink-0 z-10">
+        <a href="/" class="w-10 h-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center active:scale-90 transition-transform flex-shrink-0 z-10 shadow-sm border border-gray-200">
             <i class="fa-solid fa-house"></i>
         </a>
 
-        <a href="./index.html" class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center pt-1 group whitespace-nowrap">
+        <a href="/" class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center pt-1 group whitespace-nowrap">
             <img src="https://i.gifer.com/origin/21/2143717c1803737a475306541b222956_w200.gif" class="h-3 w-5 object-cover rounded shadow-sm border border-gray-200 mb-0.5">
             <div class="flex items-center gap-1.5">
                 <img src="static/images/logo.png" onerror="this.src='static/images/logo.jpg'" class="h-9 w-auto object-contain drop-shadow-sm">
@@ -74,7 +70,7 @@
             </div>
         </a>
        
-        <a href="https://t.me/Somphea_Reak" target="_blank" class="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-[#0088cc] shadow-sm active:scale-90 transition-transform flex-shrink-0 z-10">
+        <a href="https://t.me/Somphea_Reak" target="_blank" class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-[#0088cc] shadow-sm active:scale-90 transition-transform flex-shrink-0 z-10 border border-blue-100">
             <i class="fa-brands fa-telegram text-lg"></i>
         </a>
     </header>
@@ -85,24 +81,28 @@
     <!-- 3. PRODUCT GRID -->
     <main class="px-3 pb-4 grid grid-cols-2 gap-2.5" id="product-grid"></main>
 
-    <!-- 4. BOTTOM NAV -->
+    <!-- 4. BOTTOM NAV (WITH RETURN TO HOME BUTTON) -->
     <div class="fixed bottom-0 left-0 right-0 glass-nav px-4 py-2 flex justify-between items-center z-[45] pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
         
-        <a href="./index.html" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-800 w-16 active:scale-90 transition-transform">
+        <!-- HOME LINK -->
+        <a href="/" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-800 w-16 active:scale-90 transition-transform">
             <i class="fa-solid fa-house text-xl"></i>
             <span class="text-[10px] font-bold">Home</span>
         </a>
 
-        <a href="./toy.html" class="flex flex-col items-center gap-1 text-gray-400 hover:text-[#ff5000] w-16 active:scale-90 transition-transform">
+        <!-- TOYS LINK -->
+        <a href="/toy-universe" class="flex flex-col items-center gap-1 text-gray-400 hover:text-[#ff5000] w-16 active:scale-90 transition-transform">
             <i class="fa-solid fa-robot text-xl"></i>
             <span class="text-[10px] font-bold">Toys</span>
         </a>
 
+        <!-- JEWELRY LINK (ACTIVE) -->
         <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center gap-1 text-brand w-16 active:scale-90 transition-transform">
             <i class="fa-regular fa-gem text-xl"></i>
             <span class="text-[10px] font-bold">Jewelry</span>
         </button>
 
+        <!-- CART DRAWER -->
         <button onclick="openCart()" class="flex flex-col items-center gap-1 text-gray-400 hover:text-brand w-16 relative active:scale-90 transition-transform">
             <div class="relative">
                 <i id="nav-cart-icon" class="fa-solid fa-cart-shopping text-xl"></i>
@@ -333,30 +333,22 @@
         }
 
         function init() {
-            const savedCart = localStorage.getItem('somphea_universal_cart');
+            // REVERTED to jewelry_cart
+            const savedCart = localStorage.getItem('jewelry_cart');
             if(savedCart) {
                 try {
                     cart = JSON.parse(savedCart);
                     updateCartCount();
                 } catch(e) {
-                    localStorage.removeItem('somphea_universal_cart');
+                    localStorage.removeItem('jewelry_cart');
                 }
             }
             renderTabs();
             renderProducts(FULL_PRODUCTS);
         }
 
-        // Sync changes across multiple open tabs automatically
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'somphea_universal_cart') {
-                cart = JSON.parse(e.newValue || '[]');
-                updateCartCount();
-                if (!document.getElementById('cart-drawer').classList.contains('hidden')) renderCartItems();
-            }
-        });
-
         function saveCart() {
-            localStorage.setItem('somphea_universal_cart', JSON.stringify(cart));
+            localStorage.setItem('jewelry_cart', JSON.stringify(cart));
             updateCartCount();
         }
 
@@ -517,9 +509,7 @@
             if (existingItem) { existingItem.qty += qty; } 
             else { cart.push({ variantId: selectedVariant.id, title: currentProduct.title, variantName: selectedVariant.name, price: selectedVariant.price, image: selectedVariant.image, qty: qty, checked: true }); }
             
-            // SAVE IMMEDIATELY SO NUMBER UPDATES
             saveCart(); 
-            
             animateFlyToCart();
             setTimeout(() => { showToast(); }, 550);
         }
@@ -723,7 +713,7 @@
             let html = `
                 <div style="text-align: center; margin-bottom: 20px;">
                     <h1 style="color: #90D730; font-weight: 900; font-size: 24px; margin-bottom: 4px; letter-spacing: -1px;">SOMPHEA REAK</h1>
-                    <p style="color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 2px;">Order Invoice</p>
+                    <p style="color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 2px;">Jewelry Collection Invoice</p>
                 </div>
                 
                 <div style="background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
