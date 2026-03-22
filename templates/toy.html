@@ -33,12 +33,12 @@
 </head>
 <body>
 
-    <!-- 1. HEADER (WITH RETURN TO HOME) -->
+    <!-- 1. HEADER (FIXED LINKS: href="/") -->
     <header class="sticky top-0 z-50 glass-nav px-4 py-2 flex items-center justify-between shadow-sm h-[72px]">
-        <a href="index.html" class="w-10 h-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center active:scale-90 transition-transform flex-shrink-0 z-10 shadow-sm border border-gray-200">
+        <a href="/" class="w-10 h-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center active:scale-90 transition-transform flex-shrink-0 z-10 shadow-sm border border-gray-200">
             <i class="fa-solid fa-house"></i>
         </a>
-        <a href="index.html" class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center pt-1 group whitespace-nowrap">
+        <a href="/" class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center pt-1 group whitespace-nowrap">
             <img src="https://i.gifer.com/origin/21/2143717c1803737a475306541b222956_w200.gif" class="h-3 w-5 object-cover rounded shadow-sm border border-gray-200 mb-0.5">
             <div class="flex items-center gap-1.5">
                 <img src="static/images/logo.png" onerror="this.src='static/images/logo.jpg'" class="h-9 w-auto object-contain drop-shadow-sm">
@@ -56,13 +56,12 @@
     <!-- 3. PRODUCT GRID -->
     <main class="px-3 pb-4 grid grid-cols-2 gap-2.5" id="product-grid"></main>
 
-    <!-- 4. BOTTOM NAV -->
+    <!-- 4. BOTTOM NAV (FIXED LINKS) -->
     <div class="fixed bottom-0 left-0 right-0 glass-nav px-4 py-2 flex justify-between items-center z-[45] pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
-        <a href="index.html" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-800 w-16 active:scale-90 transition-transform"><i class="fa-solid fa-house text-xl"></i><span class="text-[10px] font-bold">Home</span></a>
+        <a href="/" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-800 w-16 active:scale-90 transition-transform"><i class="fa-solid fa-house text-xl"></i><span class="text-[10px] font-bold">Home</span></a>
         <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center gap-1 text-taobao w-16 active:scale-90 transition-transform"><i class="fa-solid fa-robot text-xl"></i><span class="text-[10px] font-bold">Toys</span></button>
-        <a href="bracelet.html" class="flex flex-col items-center gap-1 text-gray-400 hover:text-[#90D730] w-16 active:scale-90 transition-transform"><i class="fa-regular fa-gem text-xl"></i><span class="text-[10px] font-bold">Jewelry</span></a>
+        <a href="/bracelet" class="flex flex-col items-center gap-1 text-gray-400 hover:text-[#90D730] w-16 active:scale-90 transition-transform"><i class="fa-regular fa-gem text-xl"></i><span class="text-[10px] font-bold">Jewelry</span></a>
         
-        <!-- OPENS THE CART SLIDER INSTEAD OF A NEW PAGE -->
         <button onclick="openCart()" class="flex flex-col items-center gap-1 text-gray-400 hover:text-taobao w-16 relative active:scale-90 transition-transform">
             <div class="relative">
                 <i id="nav-cart-icon" class="fa-solid fa-cart-shopping text-xl"></i>
@@ -105,7 +104,6 @@
                     <span class="text-xs font-bold text-gray-500">Total:</span>
                     <div class="text-right"><div class="text-xl font-black text-taobao" id="cart-total-riel">0៛</div><div class="text-xs text-gray-400 font-bold" id="cart-total-usd">$0.00</div></div>
                 </div>
-                <!-- OPENS THE CHECKOUT MODAL -->
                 <button onclick="openCheckout()" class="w-full taobao-orange text-white font-bold py-3.5 rounded-full shadow-lg active:scale-95 transition-transform flex justify-between px-6 items-center">
                     <span>Invoice & Checkout</span><i class="fa-solid fa-file-invoice"></i>
                 </button>
@@ -182,13 +180,11 @@
         function formatCurrency(usd) { return { riel: `${Math.round(usd * EXCHANGE_RATE).toLocaleString()}៛`, usd: `$${usd.toFixed(2)}` }; }
 
         function init() {
-            // GLOBALLY SHARED CART!
             const savedCart = localStorage.getItem('somphea_global_cart');
             if(savedCart) { try { cart = JSON.parse(savedCart); updateCartCount(); } catch(e) { localStorage.removeItem('somphea_global_cart'); } }
             renderTabs(); renderProducts(FULL_PRODUCTS);
         }
 
-        // Keep cart synced across tabs
         window.addEventListener('storage', (e) => {
             if (e.key === 'somphea_global_cart') { cart = JSON.parse(e.newValue || '[]'); updateCartCount(); renderCartItems(); }
         });
