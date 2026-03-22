@@ -21,7 +21,6 @@
         .sku-active { background-color: #fff1eb; border: 1px solid #ff5000; color: #ff5000; }
         .flying-img { position: fixed; z-index: 9999; pointer-events: none; transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); border-radius: 50%; opacity: 0.8; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .snap-x-mandatory { scroll-snap-type: x mandatory; } .snap-center { scroll-snap-align: center; }
-        .smooth-transform { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
 <body>
@@ -41,15 +40,17 @@
     <nav class="sticky top-[72px] z-40 bg-[#f2f2f2] overflow-x-auto hide-scrollbar flex px-4 pb-3 pt-1 gap-2" id="category-nav"></nav>
     <main class="px-3 pb-4 grid grid-cols-2 gap-2.5" id="product-grid"></main>
 
-    <!-- BOTTOM NAV (Opens Drawer) -->
+    <!-- BOTTOM NAV (DIRECT LINK TO CART.HTML) -->
     <div class="fixed bottom-0 left-0 right-0 glass-nav px-4 py-2 flex justify-between items-center z-[45] pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
         <a href="index.html" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-800 w-16 active:scale-90 transition-transform"><i class="fa-solid fa-house text-xl"></i><span class="text-[10px] font-bold">Home</span></a>
         <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center gap-1 text-taobao w-16 active:scale-90 transition-transform"><i class="fa-solid fa-robot text-xl"></i><span class="text-[10px] font-bold">Toys</span></button>
         <a href="bracelet.html" class="flex flex-col items-center gap-1 text-gray-400 hover:text-[#90D730] w-16 active:scale-90 transition-transform"><i class="fa-regular fa-gem text-xl"></i><span class="text-[10px] font-bold">Jewelry</span></a>
-        <button onclick="openCartDrawer()" class="flex flex-col items-center gap-1 text-gray-400 hover:text-taobao w-16 relative active:scale-90 transition-transform">
+        
+        <!-- OPENS CART.HTML -->
+        <a href="cart.html" class="flex flex-col items-center gap-1 text-gray-400 hover:text-taobao w-16 relative active:scale-90 transition-transform">
             <div class="relative"><i id="nav-cart-icon" class="fa-solid fa-cart-shopping text-xl"></i><span id="nav-cart-badge" class="absolute -top-2.5 -right-2.5 z-10 bg-taobao text-white text-[9px] font-bold px-1.5 min-w-[16px] h-4 flex items-center justify-center rounded-full border-2 border-white hidden shadow-sm">0</span></div>
             <span class="text-[10px] font-bold">My Bag</span>
-        </button>
+        </a>
     </div>
 
     <!-- PRODUCT MODAL -->
@@ -68,31 +69,6 @@
             </div>
             <div class="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-50 z-20 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
                 <button onclick="addToCart()" class="w-full taobao-orange text-white font-bold py-4 rounded-full shadow-lg shadow-orange-200 active:scale-95 transition-transform flex items-center justify-center gap-2 text-lg"><span>Add to Bag</span><i class="fa-solid fa-bag-shopping"></i></button>
-            </div>
-        </div>
-    </div>
-
-    <!-- CART DRAWER (Shows Items added) -->
-    <div id="cart-drawer" class="fixed inset-0 z-[70] bg-black/60 hidden transition-opacity duration-300" onclick="if(event.target == this) closeCartDrawer()">
-        <div id="cart-content" class="absolute top-0 right-0 w-[85%] md:w-96 h-[100dvh] bg-[#f2f2f2] shadow-2xl smooth-transform translate-x-full flex flex-col">
-            <div class="px-4 py-3 bg-white flex justify-between items-center shadow-sm z-20">
-                <h2 class="font-black text-lg">Mini Cart <span id="cart-header-count" class="text-gray-400 text-sm font-normal">(0)</span></h2>
-                <button onclick="closeCartDrawer()" class="w-8 h-8 flex items-center justify-center text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4 space-y-3 pb-32" id="drawer-items"></div>
-            <div class="bg-white p-4 border-t border-gray-100 z-20 pb-safe shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
-                <div class="flex justify-between items-end mb-4">
-                    <span class="text-xs font-bold text-gray-500">Subtotal:</span>
-                    <div class="text-right">
-                        <div class="text-xl font-black text-taobao" id="drawer-total-riel">0៛</div>
-                        <div class="text-xs text-gray-400 font-bold" id="drawer-total-usd">$0.00</div>
-                    </div>
-                </div>
-                <!-- THIS BUTTON GOES TO CART.HTML -->
-                <a href="cart.html" class="w-full taobao-orange text-white font-bold py-3.5 rounded-full shadow-lg active:scale-95 transition-transform flex justify-between px-6 items-center">
-                    <span>Go to Checkout</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                </a>
             </div>
         </div>
     </div>
@@ -125,9 +101,9 @@
             renderTabs(); filterCat('All');
         }
 
-        window.addEventListener('storage', (e) => { if (e.key === 'somphea_global_cart') { cart = JSON.parse(e.newValue || '[]'); updateCartBadge(); renderDrawerItems(); } });
+        window.addEventListener('storage', (e) => { if (e.key === 'somphea_global_cart') { cart = JSON.parse(e.newValue || '[]'); updateCartBadge(); } });
 
-        function saveCart() { localStorage.setItem('somphea_global_cart', JSON.stringify(cart)); updateCartBadge(); renderDrawerItems(); }
+        function saveCart() { localStorage.setItem('somphea_global_cart', JSON.stringify(cart)); updateCartBadge(); }
 
         function updateCartBadge() {
             const badge = document.getElementById('nav-cart-badge'); const count = cart.reduce((acc, item) => acc + item.qty, 0);
@@ -182,54 +158,6 @@
             const existingItem = cart.find(item => item.variantId === selectedVariant.id);
             if (existingItem) existingItem.qty += qty; else cart.push({ variantId: selectedVariant.id, title: currentProduct.title, variantName: selectedVariant.name, price: selectedVariant.price, image: selectedVariant.image, qty: qty });
             saveCart(); animateFlyToCart(); const toast = document.getElementById('toast'); toast.classList.remove('hidden'); toast.classList.add('flex'); setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('flex'); }, 2000);
-        }
-
-        // --- MINI CART DRAWER LOGIC ---
-        function openCartDrawer() {
-            renderDrawerItems();
-            document.getElementById('cart-drawer').classList.remove('hidden');
-            setTimeout(() => document.getElementById('cart-content').classList.remove('translate-x-full'), 10);
-        }
-
-        function closeCartDrawer() {
-            document.getElementById('cart-content').classList.add('translate-x-full');
-            setTimeout(() => document.getElementById('cart-drawer').classList.add('hidden'), 300);
-        }
-
-        function updateDrawerQty(index, delta) { cart[index].qty += delta; if (cart[index].qty <= 0) cart[index].qty = 1; saveCart(); }
-        function removeDrawerItem(index) { cart.splice(index, 1); saveCart(); }
-
-        function renderDrawerItems() {
-            const container = document.getElementById('drawer-items');
-            if(cart.length === 0) {
-                container.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-gray-300"><i class="fa-solid fa-basket-shopping text-5xl mb-3 opacity-20"></i><p class="text-xs font-bold uppercase tracking-widest opacity-50">Empty</p></div>`;
-            } else {
-                container.innerHTML = cart.map((item, idx) => {
-                    const price = formatCurrency(item.price);
-                    return `
-                    <div class="bg-white p-3 rounded-xl flex gap-3 shadow-sm items-center border border-gray-50">
-                        <div class="w-16 h-16 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100"><img src="${item.image}" onerror="this.src='${PLACEHOLDER_IMG}'" class="w-full h-full object-cover"></div>
-                        <div class="flex-1 min-w-0">
-                            <div class="text-xs text-gray-800 font-bold line-clamp-1">${item.title}</div>
-                            <div class="text-[10px] text-gray-400 mt-0.5 bg-gray-50 inline-block px-1.5 rounded border border-gray-100">${item.variantName}</div>
-                            <div class="flex justify-between items-end mt-2">
-                                <div class="font-black text-taobao text-sm">${price.riel}</div>
-                                <div class="flex items-center bg-gray-100 rounded-lg p-0.5">
-                                    <button onclick="updateDrawerQty(${idx}, -1)" class="w-6 h-6 bg-white rounded shadow-sm text-gray-600 font-bold active:scale-90 text-xs">-</button>
-                                    <span class="w-8 text-center font-bold text-xs">${item.qty}</span>
-                                    <button onclick="updateDrawerQty(${idx}, 1)" class="w-6 h-6 bg-white rounded shadow-sm text-gray-600 font-bold active:scale-90 text-xs">+</button>
-                                </div>
-                            </div>
-                        </div>
-                        <button onclick="removeDrawerItem(${idx})" class="text-gray-300 hover:text-red-500 px-2 self-start"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>`;
-                }).join('');
-            }
-            const totalUsd = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-            const price = formatCurrency(totalUsd);
-            document.getElementById('drawer-total-riel').innerText = price.riel;
-            document.getElementById('drawer-total-usd').innerText = price.usd;
-            document.getElementById('cart-header-count').innerText = `(${cart.length})`;
         }
 
         // --- ZOOM LOGIC ---
