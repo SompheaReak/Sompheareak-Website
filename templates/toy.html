@@ -134,18 +134,26 @@
     <main class="px-3 pb-4 grid grid-cols-2 gap-2.5" id="product-grid"></main>
 
     <!-- 4. BOTTOM NAV (LINKED) -->
-    <div class="fixed bottom-0 left-0 right-0 glass-nav px-6 py-2 flex justify-between items-center z-[45] pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+    <div class="fixed bottom-0 left-0 right-0 glass-nav px-4 py-2 flex justify-between items-center z-[45] pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+        <!-- Home -->
+        <a href="index.html" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-800 w-16 active:scale-90 transition-transform">
+            <i class="fa-solid fa-house text-xl"></i>
+            <span class="text-[10px] font-bold">Home</span>
+        </a>
+
+        <!-- Toys -->
         <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center gap-1 text-taobao w-16 active:scale-90 transition-transform">
             <i class="fa-solid fa-robot text-xl"></i>
             <span class="text-[10px] font-bold">Toys</span>
         </button>
         
-        <!-- LINK TO JEWELRY PAGE -->
+        <!-- Jewelry -->
         <a href="bracelet.html" class="flex flex-col items-center gap-1 text-gray-400 hover:text-[#90D730] w-16 active:scale-90 transition-transform">
             <i class="fa-regular fa-gem text-xl"></i>
             <span class="text-[10px] font-bold">Jewelry</span>
         </a>
 
+        <!-- Cart -->
         <button onclick="openCart()" class="flex flex-col items-center gap-1 text-gray-400 hover:text-taobao w-16 relative active:scale-90 transition-transform">
             <div class="relative">
                 <i id="nav-cart-icon" class="fa-solid fa-cart-shopping text-xl"></i>
@@ -388,13 +396,14 @@
         }
 
         function init() {
-            const savedCart = localStorage.getItem('toy_cart');
+            // FIX: Connected to Universal Cart
+            const savedCart = localStorage.getItem('somphea_universal_cart');
             if(savedCart) {
                 try {
                     cart = JSON.parse(savedCart);
                     updateCartCount();
                 } catch(e) {
-                    localStorage.removeItem('toy_cart');
+                    localStorage.removeItem('somphea_universal_cart');
                 }
             }
             renderTabs();
@@ -402,7 +411,8 @@
         }
 
         function saveCart() {
-            localStorage.setItem('toy_cart', JSON.stringify(cart));
+            // FIX: Connected to Universal Cart
+            localStorage.setItem('somphea_universal_cart', JSON.stringify(cart));
             updateCartCount();
         }
 
@@ -761,10 +771,11 @@
             tempDiv.style.top = '0';
             tempDiv.className = 'screenshot-frame'; 
             
+            // Universal Header logic for invoices from this store
             let html = `
                 <div style="text-align: center; margin-bottom: 20px;">
                     <h1 style="color: #90D730; font-weight: 900; font-size: 24px; margin-bottom: 4px; letter-spacing: -1px;">SOMPHEA REAK</h1>
-                    <p style="color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 2px;">Toy Universe Invoice</p>
+                    <p style="color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 2px;">Order Invoice</p>
                 </div>
                 
                 <div style="background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
@@ -831,7 +842,6 @@
             tempDiv.innerHTML = html;
             document.body.appendChild(tempDiv);
 
-            // Wait for images to load to prevent blank invoice pictures!
             await Promise.all(Array.from(tempDiv.querySelectorAll('img')).map(img => {
                 img.crossOrigin = "anonymous";
                 if(img.complete) return Promise.resolve();
@@ -885,4 +895,5 @@
     </script>
 </body>
 </html>
+
 
