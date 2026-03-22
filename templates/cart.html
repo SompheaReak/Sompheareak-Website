@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Somphea Reak | Checkout</title>
+    <title>Somphea Reak | My Bag</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,13 +24,13 @@
 </head>
 <body class="pb-32">
 
-    <!-- HEADER -->
+    <!-- HEADER (Return to Home) -->
     <header class="sticky top-0 z-50 glass-nav px-4 py-3 flex items-center justify-between shadow-sm h-[72px]">
         <a href="index.html" class="w-10 h-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center active:scale-90 transition-transform shadow-sm border border-gray-200">
             <i class="fa-solid fa-house"></i>
         </a>
-        <h1 class="font-black text-xl tracking-tighter text-gray-900 leading-none">SECURE CHECKOUT</h1>
-        <div class="w-10 h-10"></div> <!-- Spacer -->
+        <h1 class="font-black text-xl tracking-tighter text-gray-900 leading-none">MY BAG</h1>
+        <div class="w-10 h-10"></div> <!-- Spacer to keep title centered -->
     </header>
 
     <main class="p-4" id="main-content">
@@ -41,7 +41,7 @@
         </div>
 
         <!-- DELIVERY FORM -->
-        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4 mb-4">
+        <div id="delivery-form" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4 mb-4 hidden">
             <h3 class="text-sm font-black text-gray-800 flex items-center gap-2">
                 <i class="fa-solid fa-truck-fast text-orange-500"></i> Delivery Details
             </h3>
@@ -79,9 +79,9 @@
                 <div class="text-xs text-gray-500 font-bold" id="cart-total-usd">$0.00</div>
             </div>
         </div>
-        <button onclick="generateInvoice()" id="action-btn" class="w-full bg-black text-white font-bold py-4 rounded-xl shadow-xl active:scale-95 transition-transform flex items-center justify-center gap-2">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span>Generate Official Invoice</span>
+        <button onclick="processCheckout()" id="action-btn" class="w-full bg-black text-white font-bold py-4 rounded-xl shadow-xl active:scale-95 transition-transform flex items-center justify-center gap-2">
+            <span>Continue to Delivery</span>
+            <i class="fa-solid fa-arrow-right"></i>
         </button>
     </div>
 
@@ -97,6 +97,7 @@
         const EXCHANGE_RATE = 4000;
         const TELEGRAM_USERNAME = "Somphea_Reak"; 
         let cart = [];
+        let currentState = 'cart'; // 'cart' -> 'delivery' -> 'invoice'
 
         function formatCurrency(usd) {
             return { riel: `${Math.round(usd * EXCHANGE_RATE).toLocaleString()}៛`, usd: `$${usd.toFixed(2)}` };
@@ -105,7 +106,26 @@
         function init() {
             const savedCart = localStorage.getItem('somphea_global_cart');
             if(savedCart) { try { cart = JSON.parse(savedCart); } catch(e) { cart = []; } }
-            
+            renderCart();
+        }
+
+        function saveCart() {
+            localStorage.setItem('somphea_global_cart', JSON.stringify(cart));
+            renderCart();
+        }
+
+        function updateQty(idx, delta) {
+            cart[idx].qty += delta;
+            if (cart[idx].qty <= 0) cart[idx].qty = 1;
+            saveCart();
+        }
+
+        function removeItem(idx) {
+            cart.splice(idx, 1);
+            saveCart();
+        }
+
+        function renderCart() {
             if(cart.length === 0) {
                 document.getElementById('main-content').innerHTML = `
                     <div class="flex flex-col items-center justify-center py-20 text-center">
@@ -121,21 +141,44 @@
                 return;
             }
 
-            // Render Items
-            document.getElementById('checkout-items').innerHTML = cart.map(item => {
+            document.getElementById('bottom-bar').classList.remove('hidden');
+
+            document.getElementById('checkout-items').innerHTML = cart.map((item, idx) => {
                 const total = formatCurrency(item.price * item.qty);
-                return `
-                    <div class="flex gap-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm items-center">
-                        <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-gray-50">
+                if (currentState === 'cart') {
+                    // Editable view
+                    return `
+                    <div class="flex gap-3 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm items-center">
+                        <img src="${item.image}" class="w-20 h-20 rounded-xl object-cover flex-shrink-0 border border-gray-50">
                         <div class="flex-1 min-w-0">
-                            <div class="text-sm font-bold text-gray-800 line-clamp-1">${item.title}</div>
-                            <div class="text-[10px] text-gray-500 bg-gray-50 inline-block px-2 py-0.5 rounded mt-1 font-bold border border-gray-100">${item.variantName}</div>
+                            <div class="text-sm font-bold text-gray-800 line-clamp-1 mb-1">${item.title}</div>
+                            <div class="text-[10px] text-gray-500 bg-gray-50 inline-block px-2 py-0.5 rounded font-bold border border-gray-100">${item.variantName}</div>
+                            <div class="flex justify-between items-end mt-2">
+                                <div class="font-black text-gray-900 text-sm">${total.riel}</div>
+                                <div class="flex items-center bg-gray-100 rounded-lg p-0.5">
+                                    <button onclick="updateQty(${idx}, -1)" class="w-7 h-7 bg-white rounded shadow-sm text-gray-600 font-bold active:scale-90">-</button>
+                                    <span class="w-8 text-center font-bold text-xs">${item.qty}</span>
+                                    <button onclick="updateQty(${idx}, 1)" class="w-7 h-7 bg-white rounded shadow-sm text-gray-600 font-bold active:scale-90">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="removeItem(${idx})" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 bg-gray-50 rounded-full active:scale-90"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                    </div>`;
+                } else {
+                    // Static summary view for delivery step
+                    return `
+                    <div class="flex gap-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm items-center">
+                        <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-50">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs font-bold text-gray-800 line-clamp-1">${item.title}</div>
+                            <div class="text-[10px] text-gray-400 font-bold">${item.variantName}</div>
                         </div>
                         <div class="text-right">
-                            <div class="text-xs text-gray-400 font-bold mb-1">Qty: ${item.qty}</div>
-                            <div class="text-sm font-black text-gray-900">${total.riel}</div>
+                            <div class="text-[10px] text-gray-400 font-bold mb-0.5">Qty: ${item.qty}</div>
+                            <div class="text-xs font-black text-gray-900">${total.riel}</div>
                         </div>
                     </div>`;
+                }
             }).join('');
 
             // Totals
@@ -143,6 +186,20 @@
             const totals = formatCurrency(totalUsd);
             document.getElementById('cart-total-riel').innerText = totals.riel;
             document.getElementById('cart-total-usd').innerText = totals.usd;
+        }
+
+        function processCheckout() {
+            if (currentState === 'cart') {
+                currentState = 'delivery';
+                renderCart(); // changes to static summary
+                document.getElementById('delivery-form').classList.remove('hidden');
+                
+                const btn = document.getElementById('action-btn');
+                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>Generate Official Invoice</span>`;
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            } else if (currentState === 'delivery') {
+                generateInvoice();
+            }
         }
 
         async function generateInvoice() {
