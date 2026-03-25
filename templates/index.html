@@ -4,15 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Somphea Reak | Home</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;600;700&display=swap');
+        
         body { font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif; }
         .category-card { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
         .category-card:active { transform: scale(0.95); }
         .gradient-overlay { background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, transparent 100%); }
+        
+        /* Cart Styles */
+        .hide-scrollbar::-webkit-scrollbar { display: none; } 
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        .smooth-transform { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .taobao-orange { background: linear-gradient(135deg, #ff9000, #ff5000); } 
+        .text-taobao { color: #ff5000; } 
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+        .screenshot-frame { font-family: 'Kantumruy Pro', sans-serif; background: #fff; width: 400px; padding: 30px; box-sizing: border-box; border-radius: 0; position: fixed; left: -9999px; top: 0; }
     </style>
 </head>
 <body class="bg-white text-gray-900 pb-24 select-none">
@@ -30,11 +44,11 @@
             <span class="font-black text-[10px] tracking-widest uppercase text-gray-900 leading-none">Somphea Reak</span>
         </div>
 
-        <!-- LINK FIXED FOR FLASK -->
-        <a href="/bracelet" class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 border border-orange-100 active:scale-90 transition-transform relative">
+        <!-- FIXED: NOW OPENS THE CART DRAWER INSTEAD OF CHANGING PAGE -->
+        <button onclick="openCart()" class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 border border-orange-100 active:scale-90 transition-transform relative shadow-sm">
             <i class="fa-solid fa-bag-shopping"></i>
             <span id="home-cart-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden border-2 border-white">0</span>
-        </a>
+        </button>
     </header>
 
     <!-- HERO -->
@@ -56,7 +70,6 @@
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-            <!-- LINK FIXED FOR FLASK -->
             <a href="/custom-bracelet" class="category-card relative col-span-2 aspect-[16/9] rounded-3xl overflow-hidden shadow-sm border border-gray-100 group">
                 <img src="https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover">
                 <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-5">
@@ -65,7 +78,6 @@
                 </div>
             </a>
 
-            <!-- LINK FIXED FOR FLASK -->
             <a href="/toy-universe" class="category-card relative col-span-2 aspect-[21/9] rounded-3xl overflow-hidden shadow-sm border border-gray-100 group">
                 <img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover">
                 <div class="gradient-overlay absolute inset-0 bg-gradient-to-r from-orange-900/80 to-transparent flex flex-col justify-center p-6">
@@ -75,7 +87,6 @@
                 </div>
             </a>
 
-            <!-- LINK FIXED FOR FLASK -->
             <a href="/bracelet" class="category-card relative aspect-square rounded-3xl overflow-hidden shadow-sm border border-gray-100 group">
                 <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=500" class="w-full h-full object-cover">
                 <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-4">
@@ -96,30 +107,266 @@
 
     <!-- FOOTER NAV -->
     <nav class="fixed bottom-6 left-6 right-6 h-16 bg-black/90 backdrop-blur-2xl rounded-2xl flex items-center justify-around px-4 shadow-2xl z-50">
-        <!-- LINK FIXED FOR FLASK -->
-        <a href="/" class="text-orange-500"><i class="fa-solid fa-house text-xl"></i></a>
-        <!-- LINK FIXED FOR FLASK -->
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-orange-500"><i class="fa-solid fa-house text-xl"></i></button>
         <a href="/custom-bracelet" class="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center text-white -translate-y-4 border-4 border-white shadow-xl active:scale-95 transition-transform">
             <i class="fa-solid fa-plus text-xl"></i>
         </a>
         <a href="/admin/login" class="text-gray-500 hover:text-white transition-colors"><i class="fa-solid fa-user text-xl"></i></a>
     </nav>
 
+    <!-- SLIDE-OUT CART DRAWER -->
+    <div id="cart-drawer" class="fixed inset-0 z-[70] bg-black/60 hidden transition-opacity duration-300" onclick="if(event.target == this) closeCart()">
+        <div id="cart-content" class="absolute top-0 right-0 w-[90%] md:w-96 h-[100dvh] bg-[#f2f2f2] shadow-2xl smooth-transform translate-x-full flex flex-col">
+            <div class="px-4 py-3 bg-white flex justify-between items-center shadow-sm z-20">
+                <h2 class="font-black text-lg">My Bag <span id="cart-header-count" class="text-gray-400 text-sm font-normal">(0)</span></h2>
+                <button onclick="closeCart()" class="w-8 h-8 flex items-center justify-center text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-3 pb-32" id="cart-items"></div>
+            <div class="bg-white p-4 border-t border-gray-100 z-20 pb-safe">
+                <div class="flex justify-between items-end mb-4">
+                    <span class="text-xs font-bold text-gray-500">Total:</span>
+                    <div class="text-right"><div class="text-xl font-black text-taobao" id="cart-total-riel">0៛</div><div class="text-xs text-gray-400 font-bold" id="cart-total-usd">$0.00</div></div>
+                </div>
+                <button onclick="openCheckout()" class="w-full taobao-orange text-white font-bold py-3.5 rounded-full shadow-lg active:scale-95 transition-transform flex justify-between px-6 items-center">
+                    <span>Invoice & Checkout</span><i class="fa-solid fa-file-invoice"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHECKOUT / INVOICE MODAL -->
+    <div id="checkout-modal" class="fixed inset-0 z-[90] bg-black/80 hidden transition-opacity duration-300" onclick="if(event.target == this) closeCheckout()">
+        <div id="checkout-panel" class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[1.5rem] smooth-transform translate-y-full flex flex-col p-6 pb-safe shadow-2xl max-h-[90vh] overflow-hidden">
+            <div class="flex justify-between items-center mb-4 flex-none">
+                <h2 class="text-xl font-black text-gray-800" id="checkout-title"><i class="fa-solid fa-receipt text-taobao mr-2"></i>Invoice</h2>
+                <button onclick="closeCheckout()" class="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div id="checkout-form" class="overflow-y-auto hide-scrollbar flex-1 space-y-4 mb-4">
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3">
+                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Delivery Info</h3>
+                    <div class="bg-white rounded-lg px-3 py-2 border border-gray-200 focus-within:border-taobao transition-all group" id="field-name"><input type="text" id="cust-name" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 placeholder-gray-300" placeholder="Your Name *"></div>
+                    <div class="bg-white rounded-lg px-3 py-2 border border-gray-200 focus-within:border-taobao transition-all group" id="field-phone"><input type="tel" id="cust-phone" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 placeholder-gray-300" placeholder="Phone Number *"></div>
+                    <div class="bg-white rounded-lg px-3 py-2 border border-gray-200 focus-within:border-taobao transition-all group"><textarea id="cust-address" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 h-10 resize-none placeholder-gray-300" placeholder="Address..."></textarea></div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Order Items</h3>
+                    <div id="invoice-items" class="space-y-3"></div>
+                    <div class="border-t border-dashed border-gray-300 mt-4 pt-3 flex justify-between items-end"><span class="text-xs font-bold text-gray-500">Total Amount</span><div class="text-right"><div class="text-lg font-black text-taobao" id="invoice-total-riel">0៛</div><div class="text-[10px] font-bold text-gray-400" id="invoice-total-usd">$0.00</div></div></div>
+                </div>
+            </div>
+
+            <div id="checkout-result" class="overflow-y-auto hide-scrollbar flex-1 mb-4 hidden flex flex-col items-center">
+                <p class="text-xs text-gray-500 mb-2 font-bold">Long press to save or click download</p>
+                <div class="w-full border rounded-xl overflow-hidden shadow-lg"><img id="generated-invoice-img" src="" class="w-full h-auto"></div>
+                <a id="download-link" href="#" download="invoice.png" class="mt-4 text-[#0088cc] text-xs font-bold underline">Download Image</a>
+            </div>
+
+            <div class="flex-none pt-2" id="checkout-footer">
+                <button onclick="generateInvoice()" id="btn-generate" class="w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i><span>Generate Invoice Image</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-black/80 backdrop-blur text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xl hidden items-center gap-2">
+        <i id="toast-icon" class="fa-solid fa-circle-exclamation text-orange-500"></i>
+        <span id="toast-msg">Message</span>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="fixed inset-0 z-[110] bg-black/50 hidden items-center justify-center backdrop-blur-sm">
+        <div class="bg-white p-4 rounded-full shadow-xl"><i class="fa-solid fa-spinner fa-spin text-2xl text-taobao"></i></div>
+    </div>
+
     <script>
-        // SHARED CART LOGIC
-        function updateHomeBadge() {
+        // GLOBALS
+        const TELEGRAM_USERNAME = "Somphea_Reak"; 
+        const EXCHANGE_RATE = 4000;
+        const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1596461404969-9ce205b14a1e?q=80&w=400&auto=format&fit=crop';
+        let cart = [];
+
+        function formatCurrency(usd) { return { riel: `${Math.round(usd * EXCHANGE_RATE).toLocaleString()}៛`, usd: `$${usd.toFixed(2)}` }; }
+
+        function showToast(msg, isError=false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            document.getElementById('toast-icon').className = isError ? "fa-solid fa-circle-exclamation text-orange-500" : "fa-solid fa-check-circle text-[#90D730]";
+            toast.classList.remove('hidden'); toast.classList.add('flex');
+            setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('flex'); }, 2000);
+        }
+
+        // CART LOGIC
+        function initCart() {
             const savedCart = localStorage.getItem('somphea_global_cart');
-            const badge = document.getElementById('home-cart-badge');
-            if (savedCart) {
-                try {
-                    const cart = JSON.parse(savedCart);
-                    const count = cart.reduce((acc, item) => acc + item.qty, 0);
-                    if (count > 0) { badge.innerText = count; badge.classList.remove('hidden'); }
-                    else { badge.classList.add('hidden'); }
-                } catch(e) {}
+            if(savedCart) { 
+                try { 
+                    cart = JSON.parse(savedCart); 
+                    updateHomeBadge(); 
+                } catch(e) {} 
             }
         }
-        
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'somphea_global_cart') { 
+                cart = JSON.parse(e.newValue || '[]'); 
+                updateHomeBadge(); 
+                if(!document.getElementById('cart-drawer').classList.contains('hidden')) renderCartItems();
+            }
+        });
+
+        function saveCart() { 
+            localStorage.setItem('somphea_global_cart', JSON.stringify(cart)); 
+            updateHomeBadge(); 
+        }
+
+        function updateHomeBadge() {
+            const badge = document.getElementById('home-cart-badge'); 
+            const count = cart.reduce((acc, item) => acc + item.qty, 0);
+            if (count > 0) { badge.innerText = count; badge.classList.remove('hidden'); } 
+            else { badge.classList.add('hidden'); }
+        }
+
+        function openCart() {
+            renderCartItems(); 
+            document.getElementById('cart-drawer').classList.remove('hidden'); 
+            setTimeout(() => { document.getElementById('cart-content').classList.remove('translate-x-full'); }, 10);
+        }
+
+        function closeCart() { 
+            document.getElementById('cart-content').classList.add('translate-x-full'); 
+            setTimeout(() => { document.getElementById('cart-drawer').classList.add('hidden'); }, 300); 
+        }
+
+        function updateCartItemQty(index, delta) { cart[index].qty += delta; if (cart[index].qty <= 0) { cart[index].qty = 1; } saveCart(); renderCartItems(); }
+        function toggleCheck(idx) { cart[idx].checked = !cart[idx].checked; saveCart(); renderCartItems(); }
+        function removeItem(idx) { cart.splice(idx, 1); saveCart(); renderCartItems(); }
+
+        function renderCartItems() {
+            const container = document.getElementById('cart-items');
+            if(cart.length === 0) {
+                container.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-gray-300"><i class="fa-solid fa-basket-shopping text-5xl mb-3 opacity-20"></i><p class="text-xs font-bold uppercase tracking-widest opacity-50">Empty</p></div>`;
+            } else {
+                container.innerHTML = cart.map((item, idx) => {
+                    const price = formatCurrency(item.price);
+                    return `<div class="bg-white p-3 rounded-xl flex gap-3 shadow-sm items-center"><button onclick="toggleCheck(${idx})" class="text-xl ${item.checked ? 'text-taobao' : 'text-gray-200'}"><i class="fa-solid fa-circle-check"></i></button><div class="w-16 h-16 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100"><img src="${item.image}" onerror="this.src='${PLACEHOLDER_IMG}'" class="w-full h-full object-cover"></div><div class="flex-1 min-w-0"><div class="text-xs text-gray-800 font-bold line-clamp-1">${item.title}</div><div class="text-[10px] text-gray-400 mt-0.5 bg-gray-50 inline-block px-1.5 rounded border border-gray-100">${item.variantName}</div><div class="flex justify-between items-end mt-2"><div class="font-black text-taobao text-sm">${price.riel}</div><div class="flex items-center bg-gray-100 rounded-lg p-0.5"><button onclick="updateCartItemQty(${idx}, -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 font-bold active:scale-90 text-xs">-</button><span class="w-8 text-center font-bold text-xs">${item.qty}</span><button onclick="updateCartItemQty(${idx}, 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 font-bold active:scale-90 text-xs">+</button></div></div></div><button onclick="removeItem(${idx})" class="text-gray-300 hover:text-red-500 px-2 self-start"><i class="fa-solid fa-trash-can"></i></button></div>`;
+                }).join('');
+            }
+            updateCartTotal(); 
+            document.getElementById('cart-header-count').innerText = `(${cart.length})`;
+        }
+
+        function updateCartTotal() {
+            const totalUsd = cart.reduce((acc, item) => item.checked ? acc + (item.price * item.qty) : acc, 0);
+            const price = formatCurrency(totalUsd); 
+            document.getElementById('cart-total-riel').innerText = price.riel; 
+            document.getElementById('cart-total-usd').innerText = price.usd;
+        }
+
+        // CHECKOUT LOGIC
+        function openCheckout() {
+            const activeItems = cart.filter(i => i.checked); 
+            if(activeItems.length === 0) return showToast("Please select items to checkout!", true);
+            
+            document.getElementById('invoice-items').innerHTML = activeItems.map(item => {
+                const total = formatCurrency(item.price * item.qty);
+                return `<div class="flex gap-3 bg-white p-2 rounded-lg border border-gray-100"><img src="${item.image}" onerror="this.src='${PLACEHOLDER_IMG}'" class="w-12 h-12 rounded object-cover flex-shrink-0"><div class="flex-1 min-w-0"><div class="text-[11px] font-bold text-gray-800 line-clamp-1">${item.title}</div><div class="text-[10px] text-gray-400">${item.variantName}</div><div class="flex justify-between items-end mt-1"><span class="text-[10px] text-gray-500">x${item.qty}</span><span class="text-xs font-black text-gray-800">${total.riel}</span></div></div></div>`;
+            }).join('');
+            
+            const totalUsd = activeItems.reduce((acc, item) => acc + (item.price * item.qty), 0); 
+            const totalPrice = formatCurrency(totalUsd);
+            
+            document.getElementById('invoice-total-riel').innerText = totalPrice.riel; 
+            document.getElementById('invoice-total-usd').innerText = totalPrice.usd;
+            
+            document.getElementById('checkout-form').classList.remove('hidden'); 
+            document.getElementById('checkout-result').classList.add('hidden');
+            document.getElementById('btn-generate').innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i><span>Generate Invoice Image</span>`; 
+            document.getElementById('btn-generate').onclick = generateInvoice; 
+            document.getElementById('checkout-footer').classList.remove('hidden');
+            
+            document.getElementById('cart-drawer').classList.add('hidden'); 
+            const modal = document.getElementById('checkout-modal'); 
+            modal.classList.remove('hidden'); 
+            setTimeout(() => { document.getElementById('checkout-panel').classList.remove('translate-y-full'); }, 10);
+        }
+
+        function closeCheckout() { 
+            document.getElementById('checkout-panel').classList.add('translate-y-full'); 
+            setTimeout(() => { document.getElementById('checkout-modal').classList.add('hidden'); }, 300); 
+        }
+
+        async function generateInvoice() {
+            const name = document.getElementById('cust-name').value.trim(), phone = document.getElementById('cust-phone').value.trim(), address = document.getElementById('cust-address').value.trim();
+            let isValid = true;
+            
+            if(!name) { document.getElementById('field-name').classList.add('border-red-500', 'bg-red-50', 'shake'); isValid = false; } 
+            else { document.getElementById('field-name').classList.remove('border-red-500', 'bg-red-50', 'shake'); }
+            
+            if(!phone) { document.getElementById('field-phone').classList.add('border-red-500', 'bg-red-50', 'shake'); isValid = false; } 
+            else { document.getElementById('field-phone').classList.remove('border-red-500', 'bg-red-50', 'shake'); }
+            
+            if(!isValid) { setTimeout(() => { document.querySelectorAll('.shake').forEach(el => el.classList.remove('shake')); }, 500); return; }
+
+            document.getElementById('loadingOverlay').classList.remove('hidden'); 
+            document.getElementById('loadingOverlay').classList.add('flex');
+            
+            const activeItems = cart.filter(i => i.checked); 
+            const totalUsd = activeItems.reduce((acc, item) => acc + (item.price * item.qty), 0); 
+            const totalPrice = formatCurrency(totalUsd);
+            
+            const tempDiv = document.createElement('div'); 
+            tempDiv.className = 'screenshot-frame'; 
+            
+            let html = `<div style="text-align: center; margin-bottom: 20px;"><h1 style="color: #000; font-weight: 900; font-size: 24px; margin-bottom: 4px; letter-spacing: -1px;">SOMPHEA REAK</h1><p style="color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 2px;">Official Invoice</p></div><div style="background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0;"><div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;"><span style="color: #64748b;">Date</span><span style="font-weight: 700; color: #1e293b;">${new Date().toLocaleDateString()}</span></div><div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;"><span style="color: #64748b;">Customer</span><span style="font-weight: 700; color: #1e293b;">${name}</span></div><div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;"><span style="color: #64748b;">Phone</span><span style="font-weight: 700; color: #1e293b;">${phone}</span></div>${address ? `<div style="font-size: 10px; color: #64748b; margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">${address}</div>` : ''}</div><div style="margin-bottom: 20px;"><table style="width: 100%; font-size: 11px; border-collapse: collapse;"><thead><tr style="border-bottom: 1px solid #e2e8f0;"><th style="text-align: left; padding-bottom: 8px; color: #64748b;">Item</th><th style="text-align: center; padding-bottom: 8px; color: #64748b;">Qty</th><th style="text-align: right; padding-bottom: 8px; color: #64748b;">Price</th></tr></thead><tbody>`;
+            activeItems.forEach(item => { html += `<tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; display: flex; align-items: center; gap: 8px;"><img src="${item.image}" onerror="this.src='${PLACEHOLDER_IMG}'" style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover; flex-shrink: 0;"><div><div style="font-weight: 700; color: #1e293b; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</div><div style="font-size: 9px; color: #94a3b8;">${item.variantName}</div></div></td><td style="text-align: center; vertical-align: middle; color: #475569; font-weight: 600;">${item.qty}</td><td style="text-align: right; vertical-align: middle; font-weight: 700; color: #1e293b;">$${(item.price * item.qty).toFixed(2)}</td></tr>`; });
+            html += `</tbody></table></div><div style="border-top: 2px dashed #e2e8f0; padding-top: 15px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;"><span style="font-weight: 700; color: #64748b; font-size: 12px;">Total USD</span><span style="font-weight: 900; color: #1e293b; font-size: 16px;">${totalPrice.usd}</span></div><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 700; color: #64748b; font-size: 12px;">Total Riel</span><span style="font-weight: 900; color: #ff5000; font-size: 20px;">${totalPrice.riel}</span></div></div>`;
+            
+            tempDiv.innerHTML = html; 
+            document.body.appendChild(tempDiv);
+            
+            await Promise.all(Array.from(tempDiv.querySelectorAll('img')).map(img => { 
+                img.crossOrigin = "anonymous"; 
+                if(img.complete) return Promise.resolve(); 
+                return new Promise(r => { img.onload = img.onerror = r; }); 
+            }));
+
+            try {
+                const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 3, backgroundColor: "#ffffff" }); 
+                const imgData = canvas.toDataURL("image/png");
+                document.getElementById('generated-invoice-img').src = imgData; 
+                document.getElementById('download-link').href = imgData;
+                
+                document.getElementById('checkout-form').classList.add('hidden'); 
+                document.getElementById('checkout-result').classList.remove('hidden'); 
+                document.getElementById('checkout-result').classList.add('flex');
+                
+                const btn = document.getElementById('btn-generate'); 
+                btn.innerHTML = `<i class="fa-brands fa-telegram text-xl"></i><span>Open Telegram & Send</span>`; 
+                btn.classList.remove('bg-black'); btn.classList.add('bg-[#0088cc]'); 
+                btn.onclick = () => openTelegramWithText(name, phone, address);
+            } catch(err) { 
+                showToast("Generation failed. Please try again.", true); 
+            } finally { 
+                document.body.removeChild(tempDiv); 
+                document.getElementById('loadingOverlay').classList.remove('flex'); 
+                document.getElementById('loadingOverlay').classList.add('hidden'); 
+            }
+        }
+
+        function openTelegramWithText(name, phone, address) {
+            let msg = `🧾 *INVOICE ATTACHED*\n👤 ${name}\n📞 ${phone}\n`; 
+            if(address) msg += `📍 ${address}\n`; 
+            msg += `\n*Please see the attached image for order details.*`;
+            
+            cart = cart.filter(i => !i.checked); 
+            saveCart(); 
+            window.open(`https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        // LANGUAGE LOGIC
         let currentLang = 'en';
         function toggleLang() {
             currentLang = currentLang === 'en' ? 'kh' : 'en';
@@ -129,11 +376,7 @@
             });
         }
         
-        updateHomeBadge();
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'somphea_global_cart') updateHomeBadge();
-        });
-        setInterval(updateHomeBadge, 1000);
+        initCart();
     </script>
 </body>
 </html>
