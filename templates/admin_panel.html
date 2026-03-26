@@ -14,42 +14,51 @@
         .input-box:focus { border-color: #ff5000; outline: none; box-shadow: 0 0 0 3px rgba(255, 80, 0, 0.1); }
         .btn-taobao { background: linear-gradient(90deg, #ff9000 0%, #ff5000 100%); color: white; font-weight: 800; border-radius: 8px; transition: transform 0.1s; }
         .btn-taobao:active { transform: scale(0.97); }
+        
+        /* Filter Pill Style */
+        .filter-pill { transition: all 0.2s; cursor: pointer; white-space: nowrap; }
+        .filter-pill.active { background-color: #ff5000; color: white; border-color: #ff5000; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="pb-20">
 
     <header class="bg-white border-b px-6 py-3 flex justify-between items-center sticky top-0 z-50">
         <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-[#ff5000] rounded-lg flex items-center justify-center text-white font-black shadow-lg">S</div>
-            <h1 class="font-extrabold text-gray-800 tracking-tight">Studio Manager</h1>
+            <a href="/" class="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center text-gray-800 hover:bg-gray-200 transition-all">
+                <i class="fa-solid fa-house text-sm"></i>
+            </a>
+            <div class="flex flex-col leading-tight">
+                <h1 class="font-extrabold text-gray-800 tracking-tight text-sm uppercase">Studio Manager</h1>
+                <span class="text-[9px] font-bold text-gray-400">SOMPHEA REAK</span>
+            </div>
         </div>
         <div class="flex items-center gap-4">
-            <span class="text-[10px] font-black bg-gray-100 px-2 py-1 rounded text-gray-500 uppercase tracking-widest">v2.0 PRO</span>
+            <span class="text-[10px] font-black bg-orange-50 px-2 py-1 rounded text-[#ff5000] uppercase tracking-widest">v2.0 PRO</span>
             <a href="/admin/logout" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-power-off"></i></a>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- LEFT: ADD PRODUCT (TAOBAO STYLE) -->
+        <!-- LEFT: ADD PRODUCT -->
         <section class="lg:col-span-4 space-y-6">
-            <div class="taobao-card p-6">
+            <div class="taobao-card p-6 sticky top-[80px]">
                 <h2 class="font-extrabold text-lg mb-6 flex items-center gap-2">
                     <i class="fa-solid fa-circle-plus text-[#ff5000]"></i> Create Item
                 </h2>
                 
                 <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-4">
-                    
                     <!-- 10 IMAGE UPLOAD AREA -->
                     <div class="space-y-2">
                         <label class="text-[10px] font-black text-gray-400 uppercase">Gallery (Max 10 Images)</label>
-                        <div onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-[#ff5000] hover:bg-orange-50 cursor-pointer transition-all bg-gray-50">
+                        <div onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-[#ff5000] hover:bg-orange-50 cursor-pointer transition-all bg-gray-50 h-32 flex items-center justify-center overflow-hidden">
                             <input type="file" name="images" id="file-input" accept="image/*" multiple required class="hidden">
                             <div id="upload-prompt">
                                 <i class="fa-solid fa-images text-2xl text-gray-300 mb-2"></i>
                                 <p class="text-[11px] font-bold text-gray-500">Tap to select photos</p>
                             </div>
-                            <div id="preview-grid" class="grid grid-cols-4 gap-2 hidden"></div>
+                            <div id="preview-grid" class="grid grid-cols-4 gap-2 hidden w-full"></div>
                         </div>
                     </div>
 
@@ -87,7 +96,7 @@
 
                     <div class="space-y-1">
                         <label class="text-[10px] font-black text-gray-400 uppercase">Custom Category</label>
-                        <input list="category-list" name="category" required placeholder="Type or Select Category" class="w-full input-box">
+                        <input list="category-list" name="category" required placeholder="Type (Ninjago, One Piece...)" class="w-full input-box">
                         <datalist id="category-list">
                             {% for cat in categories %}
                             <option value="{{ cat }}">
@@ -95,59 +104,66 @@
                         </datalist>
                     </div>
 
-                    <button type="submit" class="w-full btn-taobao py-4 mt-2 shadow-lg shadow-orange-200">
+                    <button type="submit" class="w-full btn-taobao py-4 mt-2 shadow-lg shadow-orange-100">
                         PUBLISH TO SHOP
                     </button>
                 </form>
             </div>
         </section>
 
-        <!-- RIGHT: INVENTORY LIST -->
-        <section class="lg:col-span-8">
+        <!-- RIGHT: INVENTORY LIST WITH FILTER -->
+        <section class="lg:col-span-8 space-y-4">
+            <!-- Filter Bar -->
+            <div class="taobao-card p-4 flex items-center gap-2 overflow-x-auto hide-scrollbar border-b border-gray-50">
+                <button onclick="filterInventory('All')" class="filter-pill active px-4 py-2 rounded-full border border-gray-200 text-xs font-bold">All Items</button>
+                {% for cat in categories %}
+                <button onclick="filterInventory('{{ cat }}')" class="filter-pill px-4 py-2 rounded-full border border-gray-200 text-xs font-bold">{{ cat }}</button>
+                {% endfor %}
+            </div>
+
             <div class="taobao-card overflow-hidden">
                 <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
-                    <h3 class="font-black text-gray-800">Live Inventory ({{ products|length }})</h3>
-                    <div class="flex gap-2">
-                        <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">Database Connected</span>
+                    <h3 class="font-black text-gray-800 text-sm">Database Inventory</h3>
+                    <div class="flex gap-2 items-center">
+                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">Live ({{ products|length }})</span>
                     </div>
                 </div>
 
-                <div class="divide-y">
+                <div class="divide-y" id="inventory-list">
                     {% if products|length == 0 %}
                     <div class="p-20 text-center text-gray-300 font-bold">
-                        <i class="fa-solid fa-box-archive text-4xl mb-4 opacity-20"></i>
-                        <p>No items in stock yet.</p>
+                        <p>No items found.</p>
                     </div>
                     {% endif %}
 
                     {% for p in products %}
-                    <div class="p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors">
-                        <div class="w-16 h-16 rounded-lg overflow-hidden border bg-white relative">
+                    <div class="product-row p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors" data-category="{{ p.category }}">
+                        <div class="w-16 h-16 rounded-lg overflow-hidden border bg-white relative flex-shrink-0">
                             <img src="{{ p.image }}" class="w-full h-full object-cover">
                             {% if p.stock <= 0 %}
-                            <div class="absolute inset-0 bg-black/60 flex items-center justify-center text-[8px] text-white font-black">OUT</div>
+                            <div class="absolute inset-0 bg-black/60 flex items-center justify-center text-[8px] text-white font-black uppercase">Sold Out</div>
                             {% endif %}
                         </div>
                         
-                        <div class="flex-1">
+                        <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 mb-1">
-                                <span class="text-[9px] font-black text-white px-1.5 py-0.5 rounded bg-gray-800 uppercase">{{ p.store }}</span>
-                                <span class="text-[9px] font-black text-[#ff5000] px-1.5 py-0.5 rounded bg-orange-50 uppercase">{{ p.category }}</span>
+                                <span class="text-[8px] font-black text-white px-1.5 py-0.5 rounded bg-gray-800 uppercase">{{ p.store }}</span>
+                                <span class="text-[8px] font-black text-[#ff5000] px-1.5 py-0.5 rounded bg-orange-50 uppercase">{{ p.category }}</span>
                             </div>
-                            <h4 class="font-bold text-gray-900 text-sm">{{ p.title }}</h4>
+                            <h4 class="font-bold text-gray-900 text-sm truncate">{{ p.title }}</h4>
                             <div class="flex gap-4 mt-1">
-                                <span class="text-xs font-bold text-gray-500"><i class="fa-solid fa-tag mr-1 opacity-50"></i> ${{ "%.2f"|format(p.price) }}</span>
-                                <span class="text-xs font-bold {% if p.stock > 0 %}text-green-500{% else %}text-red-500{% endif %}">
-                                    <i class="fa-solid fa-boxes-stacked mr-1 opacity-50"></i> {{ p.stock }} units
+                                <span class="text-[10px] font-bold text-gray-500">$ {{ "%.2f"|format(p.price) }}</span>
+                                <span class="text-[10px] font-bold {% if p.stock > 0 %}text-green-500{% else %}text-red-500{% endif %}">
+                                    Stock: {{ p.stock }}
                                 </span>
                             </div>
                         </div>
 
                         <div class="flex gap-2">
-                            <form action="/admin/product/delete/{{ p.id }}" method="POST" onsubmit="return confirm('Delete this item?')">
-                                <button type="submit" class="w-9 h-9 border rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:border-red-100 transition-all">
-                                    <i class="fa-solid fa-trash-can text-sm"></i>
+                            <form action="/admin/product/delete/{{ p.id }}" method="POST" onsubmit="return confirm('Delete this item permanently?')">
+                                <button type="submit" class="w-9 h-9 border rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:border-red-100 transition-all bg-white">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
                                 </button>
                             </form>
                         </div>
@@ -159,15 +175,33 @@
     </main>
 
     <script>
-        // Currency Exchange Logic (USD to KHR)
+        // 1. Currency Exchange Logic (Fixed 4000 KHR = $1)
         const usdInput = document.getElementById('price-usd');
         const khrOutput = document.getElementById('price-khr');
         usdInput.addEventListener('input', (e) => {
             const val = parseFloat(e.target.value) || 0;
-            khrOutput.innerText = (val * 4100).toLocaleString();
+            khrOutput.innerText = (val * 4000).toLocaleString();
         });
 
-        // Multi-image Preview Logic
+        // 2. Inventory Filtering Logic
+        function filterInventory(category) {
+            // Update UI buttons
+            document.querySelectorAll('.filter-pill').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText === category || (category === 'All' && btn.innerText === 'All Items'));
+            });
+
+            // Filter the rows
+            const rows = document.querySelectorAll('.product-row');
+            rows.forEach(row => {
+                if (category === 'All' || row.getAttribute('data-category') === category) {
+                    row.style.display = 'flex';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // 3. Multi-image Preview Logic
         const fileInput = document.getElementById('file-input');
         const prompt = document.getElementById('upload-prompt');
         const grid = document.getElementById('preview-grid');
@@ -182,7 +216,7 @@
                     const r = new FileReader();
                     r.onload = (re) => {
                         const div = document.createElement('div');
-                        div.className = "aspect-square rounded-md overflow-hidden border";
+                        div.className = "aspect-square rounded-md overflow-hidden border bg-white shadow-sm";
                         div.innerHTML = `<img src="${re.target.result}" class="w-full h-full object-cover">`;
                         grid.appendChild(div);
                     }
