@@ -9,117 +9,284 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        #drop-zone { transition: all 0.2s ease-in-out; }
+        .drag-active { background-color: #fff7ed; border-color: #f97316 !important; transform: scale(1.02); }
     </style>
 </head>
 <body class="pb-20">
 
     <!-- Navbar -->
-    <header class="bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+    <header class="bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-black rounded-lg flex items-center justify-center text-white font-black">S</div>
+            <div class="w-10 h-10 bg-black rounded-lg flex items-center justify-center text-white font-black shadow-md">S</div>
             <div>
-                <h1 class="font-black text-gray-900 leading-tight">Dashboard</h1>
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Store Manager</p>
+                <h1 class="font-black text-gray-900 leading-tight">Pro Dashboard</h1>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Inventory Manager</p>
             </div>
         </div>
-        <a href="/admin/logout" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors">
+        <a href="/admin/logout" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-red-500 hover:bg-red-50 hover:scale-105 transition-all">
             <i class="fa-solid fa-power-off"></i>
         </a>
     </header>
 
-    <main class="p-6 max-w-4xl mx-auto space-y-8">
+    <main class="p-4 md:p-6 max-w-6xl mx-auto space-y-6">
         
         <!-- Alerts -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="p-4 rounded-xl text-sm font-bold flex items-center gap-2 {% if category == 'error' %}bg-red-50 text-red-600 border border-red-100{% else %}bg-green-50 text-green-600 border border-green-100{% endif %}">
-                        <i class="fa-solid {% if category == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i> {{ message }}
+                    <div class="p-4 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm {% if category == 'error' %}bg-red-50 text-red-600 border border-red-100{% else %}bg-green-50 text-green-600 border border-green-100{% endif %}">
+                        <i class="fa-solid {% if category == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %} text-lg"></i> {{ message }}
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
 
-        <!-- ADD NEW PRODUCT FORM -->
-        <section class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-            <h2 class="font-black text-lg mb-4 flex items-center gap-2"><i class="fa-solid fa-plus-circle text-orange-500"></i> Add New Product</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <!-- LEFT COLUMN: ADD PRODUCT FORM -->
+            <section class="lg:col-span-1 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 h-fit sticky top-[100px]">
+                <h2 class="font-black text-lg mb-5 flex items-center gap-2 text-gray-800">
+                    <i class="fa-solid fa-cloud-arrow-up text-orange-500"></i> New Product
+                </h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    
+                    <!-- DRAG AND DROP MULTI-IMAGE ZONE -->
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Product Name</label>
-                        <input type="text" name="title" required placeholder="e.g. WWII Army Truck" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-orange-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Price (USD)</label>
-                        <input type="number" step="0.01" name="price" required placeholder="e.g. 12.50" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-orange-500">
-                    </div>
-                </div>
+                        <div class="flex justify-between items-end mb-2">
+                            <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">1. Upload Images</label>
+                            <span class="text-[10px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded" id="img-count">0 / 10 MAX</span>
+                        </div>
+                        
+                        <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-2xl p-2 text-center cursor-pointer hover:border-orange-400 hover:bg-orange-50 bg-gray-50 relative flex flex-col items-center justify-center h-48 transition-all">
+                            <!-- Notice name="images" (plural) and multiple -->
+                            <input type="file" name="images" id="file-input" accept="image/*" multiple required class="hidden">
+                            
+                            <!-- Empty State -->
+                            <div id="upload-prompt" class="flex flex-col items-center pointer-events-none py-6">
+                                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm mb-3 text-orange-500">
+                                    <i class="fa-solid fa-images text-xl"></i>
+                                </div>
+                                <p class="text-sm font-bold text-gray-700">Tap or Drag up to 10 Photos</p>
+                                <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest">Gallery generates automatically</p>
+                            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Store Assignment</label>
-                        <select name="store" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-orange-500 appearance-none">
-                            <option value="toy">Toy Universe</option>
-                            <option value="bracelet">Jewelry Studio</option>
-                        </select>
+                            <!-- Preview Grid -->
+                            <div id="preview-container" class="hidden w-full h-full overflow-y-auto hide-scrollbar p-1 z-10">
+                                <div id="preview-grid" class="grid grid-cols-3 gap-2"></div>
+                            </div>
+                            
+                            <!-- Clear All Button -->
+                            <button type="button" id="remove-img-btn" class="hidden absolute top-2 right-2 w-8 h-8 bg-black/60 backdrop-blur text-white rounded-full z-20 flex items-center justify-center shadow-md hover:bg-red-500 transition-colors">
+                                <i class="fa-solid fa-trash-can text-[10px]"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Category / Tag</label>
-                        <input type="text" name="category" required placeholder="e.g. WWII, Jade, Silver" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-orange-500">
-                    </div>
-                </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Product Image</label>
-                    <input type="file" name="image" accept="image/*" required class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100 cursor-pointer border border-gray-200 rounded-xl bg-gray-50">
-                </div>
-
-                <button type="submit" class="w-full bg-black text-white font-bold rounded-xl px-4 py-3.5 mt-2 active:scale-95 transition-transform">
-                    Upload & Save Product
-                </button>
-            </form>
-        </section>
-
-        <!-- PRODUCT LIST -->
-        <section class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-                <h2 class="font-black text-lg text-gray-800"><i class="fa-solid fa-boxes-stacked mr-2 text-gray-400"></i> Manage Products</h2>
-            </div>
-            
-            <div class="divide-y divide-gray-100">
-                {% if products|length == 0 %}
-                    <div class="p-8 text-center text-gray-400 font-bold">
-                        <i class="fa-solid fa-box-open text-4xl mb-3 opacity-50"></i>
-                        <p>No products uploaded yet.</p>
-                    </div>
-                {% else %}
-                    {% for p in products %}
-                    <div class="p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors">
-                        <img src="/{{ p.image }}" class="w-16 h-16 rounded-lg object-cover border border-gray-200 flex-shrink-0 bg-white">
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-black text-gray-800 text-sm line-clamp-1">{{ p.title }}</h3>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs font-bold text-orange-600">${{ "%.2f"|format(p.price) }}</span>
-                                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider {% if p.store == 'toy' %}bg-blue-50 text-blue-600{% else %}bg-purple-50 text-purple-600{% endif %}">
-                                    {{ p.store }}
-                                </span>
-                                <span class="px-2 py-0.5 rounded text-[9px] font-bold text-gray-500 bg-gray-100">{{ p.category }}</span>
+                    <!-- PRODUCT DETAILS -->
+                    <div class="pt-2">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">2. Details</label>
+                        <input type="text" name="title" required placeholder="Product Title (e.g. WWII Tank)" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-orange-500 shadow-sm mb-3 transition-colors">
+                        
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div class="relative">
+                                <span class="absolute left-4 top-3.5 text-gray-400 font-bold">$</span>
+                                <input type="number" step="0.01" name="price" required placeholder="Price" class="w-full bg-white border border-gray-200 rounded-xl pl-8 pr-4 py-3 text-sm font-bold focus:outline-none focus:border-orange-500 shadow-sm transition-colors">
+                            </div>
+                            <div class="relative">
+                                <span class="absolute left-4 top-3.5 text-gray-400 font-bold"><i class="fa-solid fa-boxes-stacked"></i></span>
+                                <input type="number" name="stock" required placeholder="Qty" value="1" class="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm font-bold focus:outline-none focus:border-orange-500 shadow-sm transition-colors">
                             </div>
                         </div>
-                        <form action="/admin/product/delete/{{ p.id }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this product?');">
-                            <button type="submit" class="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </form>
-                    </div>
-                    {% endfor %}
-                {% endif %}
-            </div>
-        </section>
 
+                        <!-- DYNAMIC SMART CATEGORIES -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="relative">
+                                <select name="store" id="store-select" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-orange-500 shadow-sm appearance-none cursor-pointer text-gray-700">
+                                    <option value="toy">🧸 Toys</option>
+                                    <option value="bracelet">💎 Jewelry</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-gray-400 text-xs pointer-events-none"></i>
+                            </div>
+                            <div class="relative">
+                                <select name="category" id="category-select" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-orange-500 shadow-sm appearance-none cursor-pointer text-gray-700">
+                                    <!-- Populated by JS -->
+                                </select>
+                                <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-gray-400 text-xs pointer-events-none"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-black text-white font-bold rounded-xl px-4 py-4 mt-4 active:scale-95 transition-transform flex items-center justify-center gap-2 shadow-lg hover:bg-gray-800">
+                        <span>Save to Database</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+            </section>
+
+            <!-- RIGHT COLUMN: INVENTORY LIST -->
+            <section class="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 py-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <h2 class="font-black text-lg text-gray-800"><i class="fa-solid fa-database mr-2 text-gray-400"></i> Live Inventory</h2>
+                    <span class="bg-black text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">{{ products|length }} Items</span>
+                </div>
+                
+                <div class="divide-y divide-gray-100">
+                    {% if products|length == 0 %}
+                        <div class="p-12 text-center text-gray-400 font-bold flex flex-col items-center">
+                            <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-200 shadow-inner">
+                                <i class="fa-solid fa-box-open text-3xl opacity-50"></i>
+                            </div>
+                            <p>Your database is empty.</p>
+                            <p class="text-xs font-normal mt-1 opacity-70">Use the panel on the left to add products.</p>
+                        </div>
+                    {% else %}
+                        {% for p in products %}
+                        <div class="p-4 sm:px-6 flex items-center gap-4 hover:bg-gray-50 transition-colors group">
+                            <div class="relative w-16 h-16 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0 bg-white shadow-sm">
+                                <img src="/{{ p.image }}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-black text-gray-800 text-sm md:text-base line-clamp-1">{{ p.title }}</h3>
+                                <div class="flex flex-wrap items-center gap-2 mt-1.5">
+                                    <span class="text-xs font-black text-orange-600">${{ "%.2f"|format(p.price) }}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 {% if p.stock > 0 %}bg-green-50 text-green-600{% else %}bg-red-50 text-red-600{% endif %}">
+                                        <i class="fa-solid fa-layer-group text-[9px]"></i> {{ p.stock }} in stock
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shadow-sm {% if p.store == 'toy' %}bg-blue-500 text-white{% else %}bg-purple-500 text-white{% endif %}">
+                                        {{ p.store }}
+                                    </span>
+                                    <span class="text-[10px] font-bold text-gray-400"><i class="fa-solid fa-tag"></i> {{ p.category }}</span>
+                                </div>
+                            </div>
+                            <form action="/admin/product/delete/{{ p.id }}" method="POST" onsubmit="return confirm('Delete {{ p.title }} forever?');">
+                                <button type="submit" class="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 hover:shadow-sm transition-all shadow-sm">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </section>
+        </div>
     </main>
+
+    <!-- ADVANCED JAVASCRIPT -->
+    <script>
+        // 1. SMART CATEGORIES LOGIC
+        const storeSelect = document.getElementById('store-select');
+        const categorySelect = document.getElementById('category-select');
+        
+        const smartCategories = {
+            toy: ['WWII Soldier', 'Ninjago', 'City', 'Action Figure', 'Mecha/Robot', 'Vehicle', 'Other'],
+            bracelet: ['Jade', 'Silver 925', 'Gold', 'Diamond', 'Beaded', 'Custom', 'Other']
+        };
+
+        function updateCategories() {
+            const store = storeSelect.value;
+            const options = smartCategories[store] || ['Other'];
+            categorySelect.innerHTML = options.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        }
+        
+        storeSelect.addEventListener('change', updateCategories);
+        updateCategories(); // Run once on load
+
+        // 2. MULTI-IMAGE DRAG & DROP LOGIC
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const previewContainer = document.getElementById('preview-container');
+        const previewGrid = document.getElementById('preview-grid');
+        const prompt = document.getElementById('upload-prompt');
+        const removeBtn = document.getElementById('remove-img-btn');
+        const imgCount = document.getElementById('img-count');
+        
+        let dt = new DataTransfer(); // Holds our selected files
+
+        // Handle Clicking
+        dropZone.addEventListener('click', (e) => {
+            if (e.target !== removeBtn && !removeBtn.contains(e.target) && !e.target.closest('button')) {
+                fileInput.click();
+            }
+        });
+
+        // Drag Events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => { dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false); });
+        ['dragenter', 'dragover'].forEach(eventName => { dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-active'), false); });
+        ['dragleave', 'drop'].forEach(eventName => { dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-active'), false); });
+
+        // Add Files
+        dropZone.addEventListener('drop', e => handleFiles(e.dataTransfer.files), false);
+        fileInput.addEventListener('change', function() { handleFiles(this.files); });
+
+        function handleFiles(files) {
+            for(let i = 0; i < files.length; i++) {
+                if(dt.items.length < 10) {
+                    if(files[i].type.startsWith('image/')) dt.items.add(files[i]);
+                } else {
+                    alert("You can only upload a maximum of 10 images!");
+                    break;
+                }
+            }
+            fileInput.files = dt.files;
+            updateUI();
+        }
+
+        // Remove Single File
+        window.removeSingleFile = function(index) {
+            let newDt = new DataTransfer();
+            for(let i = 0; i < dt.files.length; i++) {
+                if(i !== index) newDt.items.add(dt.files[i]);
+            }
+            dt = newDt;
+            fileInput.files = dt.files;
+            updateUI();
+        };
+
+        // Clear All
+        removeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dt = new DataTransfer();
+            fileInput.files = dt.files;
+            updateUI();
+        });
+
+        // Update Interface
+        function updateUI() {
+            imgCount.innerText = `${dt.items.length} / 10 MAX`;
+            
+            if (dt.items.length > 0) {
+                prompt.classList.add('hidden');
+                previewContainer.classList.remove('hidden');
+                removeBtn.classList.remove('hidden');
+                previewGrid.innerHTML = '';
+                
+                for(let i = 0; i < dt.files.length; i++) {
+                    let reader = new FileReader();
+                    reader.onload = function(e) {
+                        let div = document.createElement('div');
+                        div.className = "relative aspect-square rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-white";
+                        div.innerHTML = `
+                            <img src="${e.target.result}" class="w-full h-full object-cover">
+                            <button type="button" onclick="event.stopPropagation(); removeSingleFile(${i})" class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] hover:bg-red-600 shadow">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        `;
+                        previewGrid.appendChild(div);
+                    }
+                    reader.readAsDataURL(dt.files[i]);
+                }
+            } else {
+                prompt.classList.remove('hidden');
+                previewContainer.classList.add('hidden');
+                removeBtn.classList.add('hidden');
+                previewGrid.innerHTML = '';
+            }
+        }
+    </script>
 </body>
 </html>
+
 
