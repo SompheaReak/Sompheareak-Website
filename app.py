@@ -6,7 +6,7 @@ import cloudinary
 import cloudinary.uploader
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_final_pro_2025')
+app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_ultra_pro_2025')
 
 # --- 1. CLOUDINARY CONFIG ---
 cloudinary.config( 
@@ -55,31 +55,48 @@ def login():
 def admin_panel():
     if not session.get('admin'): return redirect(url_for('login'))
     products = Product.query.order_by(Product.id.desc()).all()
+    
+    # Pre-parse variants for the template
+    for p in products:
+        p.parsed_variants = json.loads(p.variants) if p.variants else []
+        
     unique_cats = db.session.query(Product.category).distinct().all()
     categories = [c[0] for c in unique_cats]
     return render_template('admin_panel.html', products=products, categories=categories)
 
-# --- 5. THE FULL UPDATE ROUTE ---
+# --- 5. THE ULTIMATE UPDATE ROUTE (Variant by Variant) ---
 @app.route('/admin/product/update/<int:id>', methods=['POST'])
 def update_product(id):
     if not session.get('admin'): return redirect(url_for('login'))
     p = Product.query.get_or_404(id)
     
-    # Update main info
+    # 1. Update Core Info
     p.title = request.form.get('title')
-    p.price = float(request.form.get('price'))
     p.stock = int(request.form.get('stock'))
     p.category = request.form.get('category')
     p.store = request.form.get('store')
     
-    # Update variants prices to match the new main price
-    vars_list = json.loads(p.variants)
-    for v in vars_list:
-        v['price'] = p.price
-    p.variants = json.dumps(vars_list)
+    # 2. Update Variants individually
+    v_names = request.form.getlist('v_names[]')
+    v_prices = request.form.getlist('v_prices[]')
+    
+    old_variants = json.loads(p.variants)
+    new_variants = []
+    
+    for i, old_v in enumerate(old_variants):
+        new_variants.append({
+            "id": old_v['id'],
+            "image": old_v['image'], # Keep original image
+            "name": v_names[i] if i < len(v_names) else old_v['name'],
+            "price": float(v_prices[i]) if i < len(v_prices) else old_v['price']
+        })
+    
+    p.variants = json.dumps(new_variants)
+    # Set main display price to the first variant's price
+    p.price = new_variants[0]['price'] if new_variants else p.price
     
     db.session.commit()
-    flash('Product Updated Successfully!', 'success')
+    flash('Inventory Updated Successfully!', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/product/add', methods=['POST'])
