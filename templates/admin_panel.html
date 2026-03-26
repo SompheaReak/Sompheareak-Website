@@ -3,128 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Admin | Somphea Reak</title>
+    <title>Somphea Reak | Pro Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        #drop-zone.drag-active { border-color: #f97316; background-color: #fff7ed; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f7f6; }
+        .taobao-card { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+        .input-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; font-weight: 600; font-size: 14px; transition: all 0.2s; }
+        .input-box:focus { border-color: #ff5000; outline: none; box-shadow: 0 0 0 3px rgba(255, 80, 0, 0.1); }
+        .btn-taobao { background: linear-gradient(90deg, #ff9000 0%, #ff5000 100%); color: white; font-weight: 800; border-radius: 8px; transition: transform 0.1s; }
+        .btn-taobao:active { transform: scale(0.97); }
     </style>
 </head>
 <body class="pb-20">
 
-    <header class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+    <header class="bg-white border-b px-6 py-3 flex justify-between items-center sticky top-0 z-50">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-black rounded-lg flex items-center justify-center text-white font-black">S</div>
-            <h1 class="font-black text-gray-900">Inventory Pro</h1>
+            <div class="w-9 h-9 bg-[#ff5000] rounded-lg flex items-center justify-center text-white font-black shadow-lg">S</div>
+            <h1 class="font-extrabold text-gray-800 tracking-tight">Studio Manager</h1>
         </div>
-        <a href="/admin/logout" class="text-red-500 font-bold text-sm">Logout</a>
+        <div class="flex items-center gap-4">
+            <span class="text-[10px] font-black bg-gray-100 px-2 py-1 rounded text-gray-500 uppercase tracking-widest">v2.0 PRO</span>
+            <a href="/admin/logout" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-power-off"></i></a>
+        </div>
     </header>
 
-    <main class="p-4 md:p-6 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <main class="max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- UPLOAD SECTION -->
-        <section class="lg:col-span-1 bg-white p-6 rounded-3xl shadow-sm border h-fit">
-            <h2 class="font-black text-lg mb-5"><i class="fa-solid fa-plus mr-2 text-orange-500"></i>Add Product</h2>
-            
-            <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-4">
+        <!-- LEFT: ADD PRODUCT (TAOBAO STYLE) -->
+        <section class="lg:col-span-4 space-y-6">
+            <div class="taobao-card p-6">
+                <h2 class="font-extrabold text-lg mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-plus text-[#ff5000]"></i> Create Item
+                </h2>
                 
-                <div id="drop-zone" class="border-2 border-dashed border-gray-200 rounded-2xl p-4 text-center cursor-pointer bg-gray-50 h-40 flex flex-col items-center justify-center relative overflow-hidden">
-                    <input type="file" name="images" id="file-input" accept="image/*" multiple required class="hidden">
-                    <div id="upload-prompt" class="pointer-events-none">
-                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-400 mb-2"></i>
-                        <p class="text-xs font-bold text-gray-500">Tap to Upload up to 10 Images</p>
+                <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-4">
+                    
+                    <!-- 10 IMAGE UPLOAD AREA -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase">Gallery (Max 10 Images)</label>
+                        <div onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center hover:border-[#ff5000] hover:bg-orange-50 cursor-pointer transition-all bg-gray-50">
+                            <input type="file" name="images" id="file-input" accept="image/*" multiple required class="hidden">
+                            <div id="upload-prompt">
+                                <i class="fa-solid fa-images text-2xl text-gray-300 mb-2"></i>
+                                <p class="text-[11px] font-bold text-gray-500">Tap to select photos</p>
+                            </div>
+                            <div id="preview-grid" class="grid grid-cols-4 gap-2 hidden"></div>
+                        </div>
                     </div>
-                    <div id="preview-grid" class="grid grid-cols-3 gap-2 w-full hidden"></div>
-                </div>
 
-                <input type="text" name="title" required placeholder="Product Title" class="w-full border rounded-xl px-4 py-3 text-sm font-bold focus:border-orange-500 outline-none">
-                
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="number" step="0.01" name="price" required placeholder="Price ($)" class="w-full border rounded-xl px-4 py-3 text-sm font-bold focus:border-orange-500 outline-none">
-                    <input type="number" name="stock" required placeholder="Stock Qty" class="w-full border rounded-xl px-4 py-3 text-sm font-bold focus:border-orange-500 outline-none">
-                </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-gray-400 uppercase">Title</label>
+                        <input type="text" name="title" required placeholder="e.g. Vintage Toy Soldier" class="w-full input-box">
+                    </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <select name="store" id="store-select" class="w-full border rounded-xl px-4 py-3 text-sm font-bold bg-white outline-none">
-                        <option value="toy">Toy Store</option>
-                        <option value="bracelet">Bracelet Store</option>
-                    </select>
-                    <select name="category" id="category-select" class="w-full border rounded-xl px-4 py-3 text-sm font-bold bg-white outline-none">
-                        <!-- Filled by JS -->
-                    </select>
-                </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-gray-400 uppercase">Price (USD)</label>
+                            <input type="number" step="0.01" name="price" id="price-usd" required placeholder="0.00" class="w-full input-box">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-gray-400 uppercase">Exchange (KHR)</label>
+                            <div class="w-full input-box bg-gray-50 text-gray-400 flex items-center justify-between">
+                                <span>៛</span> <span id="price-khr">0</span>
+                            </div>
+                        </div>
+                    </div>
 
-                <button type="submit" class="w-full bg-black text-white font-bold rounded-xl py-4 shadow-lg active:scale-95 transition-all">Save to Database</button>
-            </form>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-gray-400 uppercase">Store Type</label>
+                            <select name="store" class="w-full input-box bg-white">
+                                <option value="toy">Toy Store</option>
+                                <option value="bracelet">Bracelet Store</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-gray-400 uppercase">Stock Count</label>
+                            <input type="number" name="stock" value="1" required class="w-full input-box">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-black text-gray-400 uppercase">Custom Category</label>
+                        <input list="category-list" name="category" required placeholder="Type or Select Category" class="w-full input-box">
+                        <datalist id="category-list">
+                            {% for cat in categories %}
+                            <option value="{{ cat }}">
+                            {% endfor %}
+                        </datalist>
+                    </div>
+
+                    <button type="submit" class="w-full btn-taobao py-4 mt-2 shadow-lg shadow-orange-200">
+                        PUBLISH TO SHOP
+                    </button>
+                </form>
+            </div>
         </section>
 
-        <!-- LIST SECTION -->
-        <section class="lg:col-span-2 bg-white rounded-3xl shadow-sm border overflow-hidden">
-            <div class="p-5 border-b bg-gray-50 font-black flex justify-between">
-                <span>Current Inventory</span>
-                <span class="text-orange-500">{{ products|length }} Items</span>
-            </div>
-            <div class="divide-y">
-                {% for p in products %}
-                <div class="p-4 flex items-center gap-4">
-                    <img src="{{ p.image }}" class="w-14 h-14 rounded-lg object-cover border">
-                    <div class="flex-1">
-                        <p class="font-bold text-sm text-gray-800">{{ p.title }}</p>
-                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tight">{{ p.store }} • {{ p.category }}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-black text-sm">${{ "%.2f"|format(p.price) }}</p>
-                        <form action="/admin/product/delete/{{ p.id }}" method="POST">
-                            <button type="submit" class="text-red-400 text-xs font-bold hover:text-red-600">Delete</button>
-                        </form>
+        <!-- RIGHT: INVENTORY LIST -->
+        <section class="lg:col-span-8">
+            <div class="taobao-card overflow-hidden">
+                <div class="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
+                    <h3 class="font-black text-gray-800">Live Inventory ({{ products|length }})</h3>
+                    <div class="flex gap-2">
+                        <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">Database Connected</span>
                     </div>
                 </div>
-                {% endfor %}
+
+                <div class="divide-y">
+                    {% if products|length == 0 %}
+                    <div class="p-20 text-center text-gray-300 font-bold">
+                        <i class="fa-solid fa-box-archive text-4xl mb-4 opacity-20"></i>
+                        <p>No items in stock yet.</p>
+                    </div>
+                    {% endif %}
+
+                    {% for p in products %}
+                    <div class="p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors">
+                        <div class="w-16 h-16 rounded-lg overflow-hidden border bg-white relative">
+                            <img src="{{ p.image }}" class="w-full h-full object-cover">
+                            {% if p.stock <= 0 %}
+                            <div class="absolute inset-0 bg-black/60 flex items-center justify-center text-[8px] text-white font-black">OUT</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[9px] font-black text-white px-1.5 py-0.5 rounded bg-gray-800 uppercase">{{ p.store }}</span>
+                                <span class="text-[9px] font-black text-[#ff5000] px-1.5 py-0.5 rounded bg-orange-50 uppercase">{{ p.category }}</span>
+                            </div>
+                            <h4 class="font-bold text-gray-900 text-sm">{{ p.title }}</h4>
+                            <div class="flex gap-4 mt-1">
+                                <span class="text-xs font-bold text-gray-500"><i class="fa-solid fa-tag mr-1 opacity-50"></i> ${{ "%.2f"|format(p.price) }}</span>
+                                <span class="text-xs font-bold {% if p.stock > 0 %}text-green-500{% else %}text-red-500{% endif %}">
+                                    <i class="fa-solid fa-boxes-stacked mr-1 opacity-50"></i> {{ p.stock }} units
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <form action="/admin/product/delete/{{ p.id }}" method="POST" onsubmit="return confirm('Delete this item?')">
+                                <button type="submit" class="w-9 h-9 border rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:border-red-100 transition-all">
+                                    <i class="fa-solid fa-trash-can text-sm"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </section>
     </main>
 
     <script>
-        const store = document.getElementById('store-select');
-        const cat = document.getElementById('category-select');
-        const cats = {
-            toy: ['Soldier', 'Action Figure', 'LEGO', 'Vehicle', 'Other'],
-            bracelet: ['Jade', 'Silver 925', 'Gold', 'Beaded', 'Other']
-        };
+        // Currency Exchange Logic (USD to KHR)
+        const usdInput = document.getElementById('price-usd');
+        const khrOutput = document.getElementById('price-khr');
+        usdInput.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value) || 0;
+            khrOutput.innerText = (val * 4100).toLocaleString();
+        });
 
-        function update() {
-            cat.innerHTML = cats[store.value].map(c => `<option value="${c}">${c}</option>`).join('');
-        }
-        store.onchange = update;
-        update();
-
-        const input = document.getElementById('file-input');
-        const zone = document.getElementById('drop-zone');
-        const grid = document.getElementById('preview-grid');
+        // Multi-image Preview Logic
+        const fileInput = document.getElementById('file-input');
         const prompt = document.getElementById('upload-prompt');
+        const grid = document.getElementById('preview-grid');
 
-        zone.onclick = () => input.click();
-        input.onchange = (e) => {
+        fileInput.addEventListener('change', (e) => {
             const files = e.target.files;
             if(files.length > 0) {
                 prompt.classList.add('hidden');
                 grid.classList.remove('hidden');
                 grid.innerHTML = '';
                 [...files].slice(0, 10).forEach(f => {
-                    const reader = new FileReader();
-                    reader.onload = (re) => {
-                        const img = document.createElement('img');
-                        img.src = re.target.result;
-                        img.className = "w-full aspect-square object-cover rounded-md border";
-                        grid.appendChild(img);
+                    const r = new FileReader();
+                    r.onload = (re) => {
+                        const div = document.createElement('div');
+                        div.className = "aspect-square rounded-md overflow-hidden border";
+                        div.innerHTML = `<img src="${re.target.result}" class="w-full h-full object-cover">`;
+                        grid.appendChild(div);
                     }
-                    reader.readAsDataURL(f);
+                    r.readAsDataURL(f);
                 });
             }
-        };
+        });
     </script>
 </body>
 </html>
