@@ -7,10 +7,11 @@ import cloudinary.uploader
 import cloudinary.api
 
 app = Flask(__name__)
+# Secure secret key from environment or default
 app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_studio_pro_2025')
 
-# --- 1. SECURE CLOUDINARY CLOUD ---
-# Fetches keys securely from Render!
+# --- 1. SECURE CLOUDINARY CONFIGURATION ---
+# Fetches keys securely from your Render Environment Variables
 cloudinary.config( 
   cloud_name = "dwwearehy", 
   api_key = os.environ.get("CLOUDINARY_API_KEY"), 
@@ -18,26 +19,27 @@ cloudinary.config(
   secure = True
 )
 
-# --- 2. SECURE NEON DATABASE ---
-# Fetches the Neon Database URL securely from Render!
+# --- 2. SECURE DATABASE CONFIGURATION (NEON CLOUD) ---
+# Fetches the Database URL securely from Render
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///fallback.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+# Your Admin Password
 ADMIN_PASS = 'Thesong_Admin@2022?!$'
 
-# --- 3. MODELS ---
+# --- 3. DATABASE MODEL ---
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, default=1) 
-    image = db.Column(db.String(500), nullable=False) 
+    image = db.Column(db.String(500), nullable=False) # Main Thumbnail URL
     category = db.Column(db.String(100), nullable=False)
     store = db.Column(db.String(50), nullable=False) 
-    variants = db.Column(db.Text, nullable=True) 
+    variants = db.Column(db.Text, nullable=True) # Stores all 10 images as JSON
 
-# --- PUBLIC ROUTES ---
+# --- 4. ROUTES ---
 @app.route('/')
 def index(): return render_template('index.html')
 
@@ -50,7 +52,7 @@ def shop(): return render_template('bracelet.html')
 @app.route('/toy-universe')
 def toy_universe(): return render_template('toy.html')
 
-# --- ADMIN SYSTEM ---
+# --- 5. ADMIN DASHBOARD LOGIC ---
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -82,30 +84,33 @@ def add_product():
     category = request.form.get('category')
     store = request.form.get('store')
     
+    # Receive up to 10 images
     files = request.files.getlist('images')
     if not files or files[0].filename == '':
-        flash('No image uploaded', 'error')
+        flash('No image selected', 'error')
         return redirect(url_for('admin_panel'))
         
     uploaded_urls = []
     
+    # Upload each file to Cloudinary
     for file in files:
         if file and file.filename != '':
             try:
                 upload_result = cloudinary.uploader.upload(file)
                 uploaded_urls.append(upload_result['secure_url'])
             except Exception as e:
-                print("Cloudinary Upload Error:", e)
+                print("Upload Error:", e)
             
     if not uploaded_urls:
-        flash('Failed to upload images. Check Cloudinary API Keys in Render!', 'error')
+        flash('Upload failed. Check your Cloudinary keys in Render.', 'error')
         return redirect(url_for('admin_panel'))
         
     main_thumbnail = uploaded_urls[0] 
     
-    variants = []
+    # Prepare the gallery JSON
+    variants_list = []
     for i, url in enumerate(uploaded_urls):
-        variants.append({
+        variants_list.append({
             "id": f"v{i+1}",
             "name": f"View {i+1}",
             "price": price,
@@ -114,11 +119,11 @@ def add_product():
         
     new_product = Product(
         title=title, price=price, stock=stock, image=main_thumbnail, 
-        category=category, store=store, variants=json.dumps(variants)
+        category=category, store=store, variants=json.dumps(variants_list)
     )
     db.session.add(new_product)
     db.session.commit()
-    flash(f'Successfully saved product and {len(uploaded_urls)} images to the Cloud!', 'success')
+    flash(f'Product added with {len(uploaded_urls)} images!', 'success')
         
     return redirect(url_for('admin_panel'))
 
@@ -128,10 +133,10 @@ def delete_product(id):
     product = Product.query.get_or_404(id)
     db.session.delete(product)
     db.session.commit()
-    flash('Product removed from database!', 'success')
+    flash('Product deleted!', 'success')
     return redirect(url_for('admin_panel'))
 
-# --- APIs FOR FRONTEND ---
+# --- 6. API FOR THE WEBSITE ---
 @app.route('/api/products/<store_name>')
 def get_store_products(store_name):
     products = Product.query.filter_by(store=store_name).order_by(Product.id.desc()).all()
@@ -144,10 +149,10 @@ def get_store_products(store_name):
         })
     return jsonify(output)
 
+# Create tables in Neon if they don't exist
 with app.app_context():
     db.create_all()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
 
