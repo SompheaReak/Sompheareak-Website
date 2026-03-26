@@ -4,14 +4,11 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 from flask_sqlalchemy import SQLAlchemy
 import cloudinary
 import cloudinary.uploader
-import cloudinary.api
 
 app = Flask(__name__)
-# Secure secret key from environment or default
-app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_studio_pro_2025')
+app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_pro_2025')
 
-# --- 1. SECURE CLOUDINARY CONFIGURATION ---
-# Fetches keys securely from your Render Environment Variables
+# --- 1. CLOUDINARY CONFIG ---
 cloudinary.config( 
   cloud_name = "dwwearehy", 
   api_key = os.environ.get("CLOUDINARY_API_KEY"), 
@@ -19,52 +16,42 @@ cloudinary.config(
   secure = True
 )
 
-# --- 2. SECURE DATABASE CONFIGURATION (NEON CLOUD) ---
-# Fetches the Database URL securely from Render
+# --- 2. DATABASE CONFIG ---
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///fallback.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
-# Your Admin Password
 ADMIN_PASS = 'Thesong_Admin@2022?!$'
 
-# --- 3. DATABASE MODEL ---
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
-    price = db.Column(db.Float, nullable=False)
+    price = db.Column(db.Float, nullable=False) # Base price
     stock = db.Column(db.Integer, default=1) 
-    image = db.Column(db.String(500), nullable=False) # Main Thumbnail URL
+    image = db.Column(db.String(500), nullable=False) 
     category = db.Column(db.String(100), nullable=False)
     store = db.Column(db.String(50), nullable=False) 
-    variants = db.Column(db.Text, nullable=True) # Stores all 10 images as JSON
+    variants = db.Column(db.Text, nullable=True) 
 
-# --- 4. ROUTES ---
+# --- PUBLIC ROUTES ---
 @app.route('/')
 def index(): return render_template('index.html')
-
-@app.route('/custom-bracelet')
-def custom_bracelet(): return render_template('custom_bracelet.html')
-
-@app.route('/bracelet')
-def shop(): return render_template('bracelet.html')
 
 @app.route('/toy-universe')
 def toy_universe(): return render_template('toy.html')
 
-# --- 5. ADMIN DASHBOARD LOGIC ---
+@app.route('/bracelet')
+def shop(): return render_template('bracelet.html')
+
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
-    if request.method == 'POST':
-        if request.form.get('password') == ADMIN_PASS:
-            session['admin'] = True
-            return redirect(url_for('admin_panel'))
-        else:
-            flash("Invalid Password", "error")
+    if request.method == 'POST' and request.form.get('password') == ADMIN_PASS:
+        session['admin'] = True
+        return redirect(url_for('admin_panel'))
     return render_template('admin_login.html')
 
 @app.route('/admin/logout')
-def admin_logout():
+def logout():
     session.pop('admin', None)
     return redirect(url_for('admin_login'))
 
@@ -72,84 +59,78 @@ def admin_logout():
 def admin_panel():
     if not session.get('admin'): return redirect(url_for('admin_login'))
     products = Product.query.order_by(Product.id.desc()).all()
-    return render_template('admin_panel.html', products=products)
+    unique_cats = db.session.query(Product.category).distinct().all()
+    categories = [c[0] for c in unique_cats]
+    return render_template('admin_panel.html', products=products, categories=categories)
 
 @app.route('/admin/product/add', methods=['POST'])
 def add_product():
     if not session.get('admin'): return redirect(url_for('admin_login'))
     
     title = request.form.get('title')
-    price = float(request.form.get('price', 0))
-    stock = int(request.form.get('stock', 1)) 
+    stock = int(request.form.get('stock', 0))
     category = request.form.get('category')
     store = request.form.get('store')
     
-    # Receive up to 10 images
+    # These are lists from the form
+    variant_names = request.form.getlist('variant_names[]')
+    variant_prices = request.form.getlist('variant_prices[]')
     files = request.files.getlist('images')
-    if not files or files[0].filename == '':
-        flash('No image selected', 'error')
-        return redirect(url_for('admin_panel'))
-        
-    uploaded_urls = []
     
-    # Upload each file to Cloudinary
+    uploaded_urls = []
     for file in files:
         if file and file.filename != '':
-            try:
-                upload_result = cloudinary.uploader.upload(file)
-                uploaded_urls.append(upload_result['secure_url'])
-            except Exception as e:
-                print("Upload Error:", e)
+            res = cloudinary.uploader.upload(file)
+            uploaded_urls.append(res['secure_url'])
             
     if not uploaded_urls:
-        flash('Upload failed. Check your Cloudinary keys in Render.', 'error')
+        flash('No images uploaded!', 'error')
         return redirect(url_for('admin_panel'))
         
-    main_thumbnail = uploaded_urls[0] 
+    # Build the Taobao variant list
+    variants_json = []
+    base_price = float(variant_prices[0]) if variant_prices else 0
     
-    # Prepare the gallery JSON
-    variants_list = []
     for i, url in enumerate(uploaded_urls):
-        variants_list.append({
-            "id": f"v{i+1}",
-            "name": f"View {i+1}",
+        name = variant_names[i] if i < len(variant_names) else f"Option {i+1}"
+        price = float(variant_prices[i]) if i < len(variant_prices) else base_price
+        variants_json.append({
+            "id": i,
+            "name": name,
             "price": price,
             "image": url
         })
         
-    new_product = Product(
-        title=title, price=price, stock=stock, image=main_thumbnail, 
-        category=category, store=store, variants=json.dumps(variants_list)
+    new_p = Product(
+        title=title, 
+        price=base_price, 
+        stock=stock, 
+        image=uploaded_urls[0], 
+        category=category, 
+        store=store, 
+        variants=json.dumps(variants_json)
     )
-    db.session.add(new_product)
+    db.session.add(new_p)
     db.session.commit()
-    flash(f'Product added with {len(uploaded_urls)} images!', 'success')
-        
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/product/delete/<int:id>', methods=['POST'])
-def delete_product(id):
+def delete(id):
     if not session.get('admin'): return redirect(url_for('admin_login'))
-    product = Product.query.get_or_404(id)
-    db.session.delete(product)
-    db.session.commit()
-    flash('Product deleted!', 'success')
+    p = Product.query.get(id)
+    if p:
+        db.session.delete(p)
+        db.session.commit()
     return redirect(url_for('admin_panel'))
 
-# --- 6. API FOR THE WEBSITE ---
 @app.route('/api/products/<store_name>')
-def get_store_products(store_name):
+def api_store(store_name):
     products = Product.query.filter_by(store=store_name).order_by(Product.id.desc()).all()
-    output = []
-    for p in products:
-        output.append({
-            "id": p.id, "title": p.title, "sold": f"{p.stock} left", 
-            "category": p.category, "thumbnail": p.image, 
-            "variants": json.loads(p.variants) if p.variants else []
-        })
-    return jsonify(output)
+    return jsonify([{
+        "id": p.id, "title": p.title, "price": p.price, "stock": p.stock, 
+        "category": p.category, "thumbnail": p.image, "variants": json.loads(p.variants)
+    } for p in products])
 
-# Create tables in Neon if they don't exist
 with app.app_context():
     db.create_all()
 
