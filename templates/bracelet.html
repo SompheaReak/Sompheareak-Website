@@ -16,18 +16,24 @@
         /* Modern App Tabs */
         .cat-pill { position: relative; color: #64748b; transition: all 0.3s; }
         .cat-pill.active { color: #0f172a; font-weight: 800; transform: scale(1.05); }
-        .cat-pill.active::after { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background-color: #1a1a1a; border-radius: 4px; }
+        .cat-pill.active::after { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background-color: #000; border-radius: 4px; }
         
         #modal { transition: transform 0.35s cubic-bezier(0.2, 1, 0.3, 1); transform: translateY(100%); }
         #modal.active { transform: translateY(0); }
         .snap-scroll { scroll-snap-type: x mandatory; }
-        .snap-item { scroll-snap-align: start; }
-        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.1); background: #22c55e; } 100% { transform: scale(1); } }
-        .btn-success { animation: pop 0.4s ease; background: #22c55e !important; }
+        .snap-item { scroll-snap-align: center; }
+        
+        #toast { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .toast-show { transform: translate(-50%, 0) !important; opacity: 1 !important; }
     </style>
 </head>
 <body class="pb-6">
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 bg-[#1a1a1a] text-white px-6 py-3.5 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.3)] font-black text-[10px] uppercase tracking-widest opacity-0 pointer-events-none z-[300] translate-y-[-20px] flex items-center gap-3 w-max border border-gray-700">
+        <i class="fa-solid fa-gem text-base"></i>
+        <span>Added to bag successfully</span>
+    </div>
 
     <!-- APP HEADER -->
     <header class="sticky top-0 w-full bg-white/95 backdrop-blur-md z-40 px-4 pt-4 pb-2 shadow-sm">
@@ -43,10 +49,9 @@
             </div>
             <button onclick="toggleCart()" class="relative p-2 text-gray-800 hover:text-gray-500 transition-colors">
                 <i class="fa-solid fa-bag-shopping text-xl"></i>
-                <span id="cart-badge" class="absolute top-1 right-0 bg-red-500 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm transition-transform duration-300">0</span>
+                <span id="cart-badge" class="absolute top-1 right-0 bg-black text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm transition-transform duration-300 scale-0">0</span>
             </button>
         </div>
-
         <div class="flex gap-6 overflow-x-auto hide-scrollbar pb-1 pt-1" id="dynamic-filter-bar"></div>
     </header>
 
@@ -59,21 +64,54 @@
         </div>
     </main>
 
-    <!-- FULL SCREEN MODAL -->
-    <div id="modal" class="fixed inset-0 z-[100] bg-[#faf9f8] flex flex-col hidden">
-        <button onclick="closeModal()" class="absolute top-4 left-4 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white z-[110] active:scale-90">
-            <i class="fa-solid fa-chevron-left text-sm"></i>
+    <!-- TAOBAO STYLE FULL SCREEN MODAL WITH STICKY PARALLAX IMAGE -->
+    <div id="modal" class="fixed inset-0 z-[100] bg-gray-100 flex flex-col hidden">
+        <button onclick="closeModal()" class="absolute top-6 left-4 w-10 h-10 bg-black/30 backdrop-blur-md rounded-full flex items-center justify-center text-white z-[120] active:scale-90 transition-transform shadow-lg">
+            <i class="fa-solid fa-chevron-down text-sm"></i>
         </button>
 
-        <div id="modal-scroll-area" class="flex-1 overflow-y-auto pb-28 hide-scrollbar"></div>
+        <div id="modal-scroll-area" class="flex-1 overflow-y-auto hide-scrollbar relative">
+            <!-- 1. STICKY BACKGROUND IMAGE (Swipeable) -->
+            <div class="sticky top-0 w-full aspect-[4/5] md:aspect-square z-0 flex overflow-x-auto snap-scroll hide-scrollbar bg-[#faf9f8]" id="modal-carousel" onscroll="onCarouselScroll()">
+                <!-- Images injected via JS -->
+            </div>
 
-        <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 px-4 py-3 pb-8 md:pb-4 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-[110] flex gap-3 items-center">
+            <!-- 2. FOREGROUND CONTENT -->
+            <div class="relative z-10 bg-white rounded-t-[32px] shadow-[0_-15px_40px_rgba(0,0,0,0.08)] -mt-8 min-h-[70vh] pb-32">
+                <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mt-4 mb-4"></div>
+                
+                <div class="px-6 pt-2">
+                    <div class="flex items-end gap-2 mb-2">
+                        <span id="modal-price-usd" class="text-3xl font-black text-black leading-none">$0.00</span>
+                        <span id="modal-price-khr" class="text-xs font-bold text-gray-400 mb-1">៛0</span>
+                    </div>
+                    <h2 id="modal-title" class="text-base font-bold text-gray-800 leading-snug">Product Title</h2>
+                    
+                    <div class="mt-4 flex gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        <span id="modal-stock" class="bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100"><i class="fa-solid fa-box mr-1"></i> Stock: 0</span>
+                        <span id="modal-category" class="bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100"><i class="fa-solid fa-tag mr-1"></i> Cat</span>
+                    </div>
+                </div>
+
+                <div class="mt-6 px-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Select Variant</h3>
+                        <span id="modal-variant-name" class="text-[10px] font-bold text-gray-500">Style Name</span>
+                    </div>
+                    <div class="flex gap-3 overflow-x-auto pb-4 hide-scrollbar" id="modal-thumbs">
+                        <!-- Thumbs injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="absolute bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-gray-100 px-4 py-3 pb-8 md:pb-4 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-[110] flex gap-3 items-center">
             <div class="flex items-center justify-between bg-gray-100 rounded-full px-4 py-3 w-32 border border-gray-200">
                 <button onclick="updateQty(-1)" class="font-black text-gray-500 w-6 active:text-black text-lg leading-none">-</button>
                 <span id="modal-qty" class="font-black text-sm">1</span>
                 <button onclick="updateQty(1)" class="font-black text-gray-500 w-6 active:text-black text-lg leading-none">+</button>
             </div>
-            <button id="add-btn" onclick="addToBag()" class="flex-1 bg-black text-white font-black py-4 rounded-full shadow-xl shadow-gray-300 uppercase text-[11px] tracking-widest active:scale-95 transition-all">
+            <button onclick="addToBag()" class="flex-1 bg-black text-white font-black py-4 rounded-full shadow-lg shadow-gray-300 uppercase text-[11px] tracking-widest active:scale-95 transition-all">
                 Add to Bag
             </button>
         </div>
@@ -86,7 +124,7 @@
             <button onclick="toggleCart()" class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
-        <div class="p-5 bg-white shadow-[0_-10px_20px_rgba(0,0,0,0.03)] space-y-3 rounded-t-[24px]">
+        <div class="p-5 bg-white shadow-[0_-10px_20px_rgba(0,0,0,0.03)] space-y-3 rounded-t-[24px] z-10">
             <div class="flex justify-between text-xs font-bold text-gray-500"><span>Subtotal</span><span id="side-sub-khr">៛0</span></div>
             <div class="flex justify-between text-xs font-bold text-blue-500"><span>Delivery</span><span id="side-delivery-khr">៛0</span></div>
             <div class="flex justify-between font-black items-end pt-2 border-t border-gray-100">
@@ -96,28 +134,35 @@
                     <div id="total-usd" class="text-[10px] text-gray-400">$0.00</div>
                 </div>
             </div>
-            <button onclick="toggleCheckout()" class="w-full bg-black text-white font-black py-4 rounded-full shadow-xl shadow-gray-200 uppercase text-[11px] tracking-widest active:scale-95">Secure Checkout</button>
+            <button onclick="toggleCheckout()" class="w-full bg-black text-white font-black py-4 rounded-full shadow-xl shadow-gray-200 uppercase text-[11px] tracking-widest active:scale-95 transition-all">Secure Checkout</button>
         </div>
     </div>
 
-    <!-- CHECKOUT MODAL -->
-    <div id="checkout-modal" class="fixed inset-0 z-[160] flex items-end md:items-center justify-center hidden bg-black/60 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-md rounded-t-[32px] md:rounded-[32px] overflow-hidden relative p-6 pt-8 animate-[slideUp_0.3s_ease-out]">
-            <button onclick="toggleCheckout()" class="absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500"><i class="fa-solid fa-xmark"></i></button>
-            <h2 class="text-xl font-black mb-1">Delivery Info</h2>
-            <p class="text-[10px] font-bold text-gray-400 mb-5 uppercase tracking-widest">Complete your order</p>
+    <!-- MODERN CHECKOUT BOTTOM SHEET -->
+    <div id="checkout-modal" class="fixed inset-0 z-[160] flex items-end justify-center hidden bg-black/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white w-full max-w-md rounded-t-[32px] overflow-hidden relative shadow-2xl p-6 pt-4 animate-[slideUp_0.3s_ease-out]">
+            <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 cursor-pointer" onclick="toggleCheckout()"></div>
             
-            <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-2 mb-5">
-                <div class="flex justify-between text-[11px] font-bold text-gray-500"><span>Items:</span><span id="check-subtotal">៛0</span></div>
-                <div class="flex justify-between text-[11px] font-bold text-blue-600"><span>Shipping:</span><span id="check-delivery">៛0</span></div>
-                <div class="flex justify-between text-sm font-black text-gray-900 border-t border-gray-200 pt-2 mt-2"><span>Total:</span><span id="check-total-khr" class="text-black">៛0</span></div>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black">Checkout</h2>
+                <button onclick="toggleCheckout()" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
-            <div class="space-y-3">
-                <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-xl p-3.5 font-bold text-sm outline-none focus:border-black" placeholder="Receiver Name">
-                <input type="text" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-xl p-3.5 font-bold text-sm outline-none focus:border-black" placeholder="Phone Number">
-                <textarea id="cust-address" rows="2" class="w-full bg-white border border-gray-200 rounded-xl p-3.5 font-bold text-sm outline-none focus:border-black" placeholder="Full Address"></textarea>
-                <button onclick="processOrder()" id="confirm-btn" class="w-full bg-black text-white font-black py-4 rounded-xl shadow-lg uppercase text-[11px] tracking-widest active:scale-95 mt-2">Submit Order</button>
+            <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100 mb-6 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-black"></div>
+                <div class="flex justify-between text-[11px] font-bold text-gray-500 mb-2"><span>Items Subtotal:</span><span id="check-subtotal">៛0</span></div>
+                <div class="flex justify-between text-[11px] font-bold text-blue-600 mb-3"><span>Delivery Fee:</span><span id="check-delivery">៛0</span></div>
+                <div class="flex justify-between text-sm font-black text-gray-900 border-t border-gray-200 pt-3">
+                    <span>Amount to Pay:</span>
+                    <span id="check-total-khr" class="text-xl text-black leading-none">៛0</span>
+                </div>
+            </div>
+            
+            <div class="space-y-3 pb-4">
+                <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-black focus:ring-4 focus:ring-gray-100 transition-all" placeholder="Receiver Name">
+                <input type="text" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-black focus:ring-4 focus:ring-gray-100 transition-all" placeholder="Phone Number (Telegram)">
+                <textarea id="cust-address" rows="2" class="w-full bg-white border border-gray-200 rounded-xl p-4 font-bold text-sm outline-none focus:border-black focus:ring-4 focus:ring-gray-100 transition-all" placeholder="Full Delivery Address"></textarea>
+                <button onclick="processOrder()" id="confirm-btn" class="w-full bg-black text-white font-black py-4 rounded-xl shadow-lg uppercase text-[11px] tracking-widest active:scale-95 mt-2 transition-all">Submit Order Now</button>
             </div>
         </div>
     </div>
@@ -168,12 +213,12 @@
                 const soldOut = p.stock <= 0;
                 grid.innerHTML += `
                     <div class="bg-white rounded-[16px] overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.03)] cursor-pointer relative ${soldOut ? 'opacity-50 grayscale' : ''}" onclick='openModal(${JSON.stringify(p)})'>
-                        <div class="aspect-[4/5] w-full bg-gray-50 relative">
+                        <div class="aspect-[4/5] w-full bg-[#faf9f8] relative">
                             <img src="${p.thumbnail}" class="w-full h-full object-cover">
                             ${soldOut ? '<div class="absolute inset-0 bg-black/50 flex items-center justify-center"><span class="bg-white text-black px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Sold Out</span></div>' : ''}
                         </div>
                         <div class="p-3">
-                            <h3 class="font-bold text-[11px] text-gray-800 line-clamp-2 leading-snug h-[30px]">${p.title}</h3>
+                            <h3 class="font-bold text-[11px] text-gray-800 truncate leading-snug">${p.title}</h3>
                             <div class="mt-2 flex justify-between items-end">
                                 <div class="flex flex-col leading-none">
                                     <span class="text-[8px] font-bold text-gray-400">៛${(p.price * RATE).toLocaleString()}</span>
@@ -187,16 +232,34 @@
             });
         }
 
-        let currentP = null, vIdx = 0, qty = 1;
+        // --- SYNCED MODAL LOGIC ---
+        let currentP = null, vIdx = 0, qty = 1, isAutoScrolling = false;
         
         function openModal(p) {
             if(p.stock <= 0) return;
             currentP = p; vIdx = 0; qty = 1;
             document.getElementById('modal-qty').innerText = qty;
+            
+            document.getElementById('modal-title').innerText = p.title;
+            document.getElementById('modal-category').innerHTML = `<i class="fa-solid fa-tag mr-1"></i> ${p.category}`;
+            
+            const carousel = document.getElementById('modal-carousel');
+            carousel.innerHTML = p.variants.map(v => `<img src="${v.image}" class="w-full h-full object-contain flex-shrink-0 snap-item">`).join('');
+            
+            const thumbs = document.getElementById('modal-thumbs');
+            thumbs.innerHTML = p.variants.map((v, i) => `
+                <button id="thumb-${i}" onclick="selectVariant(${i}, true)" class="w-16 h-16 rounded-xl flex-shrink-0 overflow-hidden relative border-2 transition-all border-transparent opacity-50">
+                    <img src="${v.image}" class="w-full h-full object-cover">
+                </button>
+            `).join('');
+
             const modal = document.getElementById('modal');
             modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('active'), 10);
-            updateModalUI();
+            setTimeout(() => {
+                modal.classList.add('active');
+                carousel.scrollLeft = 0;
+                selectVariant(0, false);
+            }, 10);
         }
 
         function closeModal() {
@@ -210,40 +273,47 @@
             document.getElementById('modal-qty').innerText = qty;
         }
 
-        function updateModalUI() {
+        function selectVariant(idx, scrollCarousel = false) {
+            vIdx = idx;
             const v = currentP.variants[vIdx];
-            document.getElementById('modal-scroll-area').innerHTML = `
-                <div class="w-full aspect-square bg-white relative">
-                    <img src="${v.image}" class="w-full h-full object-contain">
-                </div>
-                
-                <div class="bg-white relative -mt-4 rounded-t-[20px] px-5 pt-6 pb-2">
-                    <div class="flex items-end gap-2 mb-2">
-                        <span class="text-3xl font-black text-black leading-none">$${v.price.toFixed(2)}</span>
-                        <span class="text-xs font-bold text-gray-400 mb-1">៛${(v.price * RATE).toLocaleString()}</span>
-                    </div>
-                    <h2 class="text-sm font-bold text-gray-800 leading-snug">${currentP.title}</h2>
-                    <div class="mt-4 flex gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                        <span class="bg-gray-50 px-2 py-1 rounded border border-gray-100"><i class="fa-solid fa-box mr-1"></i> Stock: ${v.stock}</span>
-                    </div>
-                </div>
+            
+            document.getElementById('modal-price-usd').innerText = `$${v.price.toFixed(2)}`;
+            document.getElementById('modal-price-khr').innerText = `៛${(v.price * RATE).toLocaleString()}`;
+            document.getElementById('modal-variant-name').innerText = v.name;
+            document.getElementById('modal-stock').innerHTML = `<i class="fa-solid fa-box mr-1"></i> Stock: ${v.stock}`;
 
-                <div class="bg-white mt-2 px-5 py-5">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-[11px] font-black text-gray-900 uppercase tracking-widest">Select Variant</h3>
-                        <span class="text-[10px] font-bold text-gray-500">${v.name}</span>
-                    </div>
-                    
-                    <div class="flex gap-3 overflow-x-auto pb-2 snap-scroll hide-scrollbar">
-                        ${currentP.variants.map((varItem, i) => `
-                            <button onclick="vIdx=${i};updateModalUI()" class="snap-item w-20 h-20 rounded-xl flex-shrink-0 overflow-hidden relative border-2 transition-all ${vIdx===i?'border-black':'border-gray-100 opacity-60'}">
-                                <img src="${varItem.image}" class="w-full h-full object-cover">
-                                ${vIdx===i?'<div class="absolute bottom-0 w-full bg-black text-white text-[8px] font-black py-0.5 text-center"><i class="fa-solid fa-check"></i></div>':''}
-                            </button>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
+            currentP.variants.forEach((_, i) => {
+                const btn = document.getElementById(`thumb-${i}`);
+                if (i === idx) {
+                    btn.classList.remove('border-transparent', 'opacity-50');
+                    btn.classList.add('border-black', 'opacity-100');
+                } else {
+                    btn.classList.add('border-transparent', 'opacity-50');
+                    btn.classList.remove('border-black', 'opacity-100');
+                }
+            });
+
+            if (scrollCarousel) {
+                isAutoScrolling = true;
+                const carousel = document.getElementById('modal-carousel');
+                carousel.scrollTo({ left: idx * carousel.clientWidth, behavior: 'smooth' });
+                setTimeout(() => isAutoScrolling = false, 400); 
+            }
+        }
+
+        function onCarouselScroll() {
+            if (isAutoScrolling) return;
+            const carousel = document.getElementById('modal-carousel');
+            const newIdx = Math.round(carousel.scrollLeft / carousel.clientWidth);
+            if (newIdx !== vIdx && newIdx >= 0 && newIdx < currentP.variants.length) {
+                selectVariant(newIdx, false);
+            }
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('toast-show');
+            setTimeout(() => toast.classList.remove('toast-show'), 2500);
         }
 
         function addToBag() {
@@ -254,19 +324,20 @@
             else cart.push({cartId:id, title:currentP.title, style:v.name, price:v.price, image:v.image, qty});
             
             saveCart(); updateCartUI();
-            
-            const btn = document.getElementById('add-btn');
-            btn.innerText = "ADDED TO BAG ✓";
-            btn.classList.add('btn-success');
-            setTimeout(() => { btn.innerText = "ADD TO BAG"; btn.classList.remove('btn-success'); }, 800);
-            
+            showToast();
             qty = 1; document.getElementById('modal-qty').innerText = qty;
         }
 
         function toggleCart() { document.getElementById('cart').classList.toggle('translate-x-full'); }
         function toggleCheckout() { 
             if(cart.length === 0) return;
-            updateCheckoutSummary(); document.getElementById('checkout-modal').classList.toggle('hidden'); 
+            updateCheckoutSummary(); 
+            const chk = document.getElementById('checkout-modal');
+            if(chk.classList.contains('hidden')) {
+                chk.classList.remove('hidden'); chk.style.display = 'flex';
+            } else {
+                chk.style.display = 'none'; chk.classList.add('hidden');
+            }
         }
 
         function updateCartUI() {
@@ -286,10 +357,9 @@
             document.getElementById('total-usd').innerText = `$${((subKHR + delivery) / RATE).toFixed(2)}`;
             
             badge.innerText = totalQty;
-            if(totalQty > 0) {
-                badge.classList.remove('scale-0'); badge.classList.add('scale-100', 'badge-bounce'); 
-                setTimeout(() => badge.classList.remove('badge-bounce'), 400);
-            } else { badge.classList.add('scale-0'); }
+            if(totalQty > 0) { badge.classList.remove('scale-0'); badge.classList.add('scale-100', 'badge-bounce'); setTimeout(() => badge.classList.remove('badge-bounce'), 400); } 
+            else { badge.classList.add('scale-0'); badge.classList.remove('scale-100'); }
+            
             if (cart.length === 0) list.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-gray-300 font-bold text-xs uppercase tracking-widest pt-10"><i class="fa-solid fa-basket-shopping text-4xl mb-3 opacity-30"></i>Bag is Empty</div>`;
         }
 
@@ -316,7 +386,7 @@
                 const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, address, items: cart, total: totalUSD }) });
                 if(res.ok) { alert("Order Successful! We will contact you soon."); cart = []; saveCart(); updateCartUI(); toggleCheckout(); toggleCart(); }
             } catch(e) { alert("Error sending order."); }
-            btn.innerText = "SUBMIT ORDER"; btn.disabled = false;
+            btn.innerText = "SUBMIT ORDER NOW"; btn.disabled = false;
         }
 
         window.onload = loadStore;
