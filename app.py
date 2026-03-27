@@ -2,6 +2,7 @@ import os
 import json
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 import cloudinary
 import cloudinary.uploader
 
@@ -32,13 +33,14 @@ class Product(db.Model):
     image = db.Column(db.String(500), nullable=False) 
     category = db.Column(db.String(100), nullable=False)
     store = db.Column(db.String(50), nullable=False) 
-    variants = db.Column(db.Text, nullable=True) 
+    variants = db.Column(db.Text, nullable=True)
+    sort_order = db.Column(db.Integer, default=0) # Remembers your drag-and-drop order
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     store = db.Column(db.String(50), nullable=False)
-    image = db.Column(db.String(500), nullable=True, default="https://via.placeholder.com/150?text=Upload+Image")
+    image = db.Column(db.String(500), nullable=True, default="https://via.placeholder.com/150?text=Upload")
     sort_order = db.Column(db.Integer, default=0)
 
 # --- 4. ROUTES ---
@@ -62,25 +64,24 @@ def login():
 def admin_panel():
     if not session.get('admin'): return redirect(url_for('login'))
     
-    # Auto-Sync Categories: Ensure all used categories exist in the Category table
     unique_cats = db.session.query(Product.category, Product.store).distinct().all()
     for c_name, c_store in unique_cats:
-        if not Category.query.filter_by(name=c_name, store=c_store).first():
+        if c_name != "Other" and not Category.query.filter_by(name=c_name, store=c_store).first():
             db.session.add(Category(name=c_name, store=c_store, sort_order=999))
     db.session.commit()
     
-    products = Product.query.order_by(Product.id.desc()).all()
+    # Load products sorted by your custom drag-and-drop order!
+    products = Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
     for p in products:
         p.parsed_variants = json.loads(p.variants) if p.variants else []
         
     categories = Category.query.order_by(Category.sort_order).all()
     return render_template('admin_panel.html', products=products, categories=categories)
 
-# --- 5. CATEGORY MANAGEMENT (Thumbnails & Order) ---
+# --- 5. CATEGORY MANAGER (Thumbnails, Order, Delete) ---
 @app.route('/admin/categories/update', methods=['POST'])
 def update_categories():
     if not session.get('admin'): return redirect(url_for('login'))
-    
     cat_ids = request.form.getlist('cat_ids[]')
     cat_names = request.form.getlist('cat_names[]')
     
@@ -88,19 +89,38 @@ def update_categories():
         cat = Category.query.get(int(cid))
         if cat:
             cat.name = cat_names[i]
-            cat.sort_order = i # Saves the new Drag-and-Drop order!
-            
-            # Check if a new thumbnail was uploaded for this category
+            cat.sort_order = i
             file = request.files.get(f'cat_image_{cid}')
             if file and file.filename != '':
                 res = cloudinary.uploader.upload(file)
                 cat.image = res['secure_url']
-                
     db.session.commit()
-    flash('Categories Updated!', 'success')
     return redirect(url_for('admin_panel'))
 
-# --- 6. PRODUCT MANAGEMENT (Variants Drag/Drop/Delete) ---
+@app.route('/admin/category/delete/<int:id>', methods=['POST'])
+def delete_category(id):
+    if not session.get('admin'): return redirect(url_for('login'))
+    c = Category.query.get(id)
+    if c:
+        # Move items in this category to "Other" so they aren't lost
+        products = Product.query.filter_by(category=c.name, store=c.store).all()
+        for p in products: p.category = "Other"
+        db.session.delete(c)
+        db.session.commit()
+    return redirect(url_for('admin_panel'))
+
+# --- 6. DRAG & DROP PRODUCT REORDER API ---
+@app.route('/admin/product/reorder', methods=['POST'])
+def reorder_products():
+    if not session.get('admin'): return jsonify({'status': 'unauthorized'}), 401
+    data = request.json
+    for i, pid in enumerate(data.get('ids', [])):
+        p = Product.query.get(int(pid))
+        if p: p.sort_order = i
+    db.session.commit()
+    return jsonify({'status': 'success'})
+
+# --- 7. PRODUCT MANAGEMENT ---
 @app.route('/admin/product/update/<int:id>', methods=['POST'])
 def update_product(id):
     if not session.get('admin'): return redirect(url_for('login'))
@@ -110,7 +130,6 @@ def update_product(id):
     p.category = request.form.get('category')
     p.store = request.form.get('store')
     
-    # Read the sorted arrays directly from the form
     v_ids = request.form.getlist('v_ids[]')
     v_images = request.form.getlist('v_images[]')
     v_names = request.form.getlist('v_names[]')
@@ -120,19 +139,14 @@ def update_product(id):
     updated_variants = []
     total_stock = 0
     
-    # Process existing styles (preserves new order and ignores deleted ones)
     for i in range(len(v_ids)):
         stock = int(v_stocks[i])
         updated_variants.append({
-            "id": int(v_ids[i]),
-            "image": v_images[i],
-            "name": v_names[i],
-            "price": float(v_prices[i]),
-            "stock": stock
+            "id": int(v_ids[i]), "image": v_images[i], "name": v_names[i],
+            "price": float(v_prices[i]), "stock": stock
         })
         total_stock += stock
 
-    # Upload NEW styles added to this product
     new_files = request.files.getlist('new_images')
     if new_files and new_files[0].filename != '':
         last_id = max([v['id'] for v in updated_variants]) if updated_variants else 0
@@ -140,25 +154,16 @@ def update_product(id):
             if f and f.filename != '':
                 res = cloudinary.uploader.upload(f)
                 last_id += 1
-                new_stock = 1
-                updated_variants.append({
-                    "id": last_id,
-                    "name": f"New Style {last_id}",
-                    "price": updated_variants[0]['price'] if updated_variants else 0,
-                    "stock": new_stock,
-                    "image": res['secure_url']
-                })
-                total_stock += new_stock
+                updated_variants.append({"id": last_id, "name": f"New Style {last_id}", "price": updated_variants[0]['price'] if updated_variants else 0, "stock": 1, "image": res['secure_url']})
+                total_stock += 1
 
     p.variants = json.dumps(updated_variants)
     p.stock = total_stock
-    # Set main display image and price to the FIRST item in the newly sorted list
     if updated_variants:
         p.image = updated_variants[0]['image']
         p.price = updated_variants[0]['price']
     
     db.session.commit()
-    flash('Product & Inventory Updated!', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/product/add', methods=['POST'])
@@ -188,7 +193,8 @@ def add_product():
             vars_json.append({"id": i, "name": v_names[i] if i < len(v_names) else f"Style {i+1}", "price": price, "stock": stock, "image": url})
             total_stock += stock
         
-        new_p = Product(title=title, price=vars_json[0]['price'], stock=total_stock, image=uploaded_urls[0], category=category, store=store, variants=json.dumps(vars_json))
+        # New products go to the top (sort_order = -1)
+        new_p = Product(title=title, price=vars_json[0]['price'], stock=total_stock, image=uploaded_urls[0], category=category, store=store, variants=json.dumps(vars_json), sort_order=-1)
         db.session.add(new_p)
         db.session.commit()
     return redirect(url_for('admin_panel'))
@@ -204,8 +210,9 @@ def delete_product(id):
 
 @app.route('/api/products/<store_name>')
 def get_api(store_name):
-    products = Product.query.filter_by(store=store_name).order_by(Product.id.desc()).all()
-    categories = Category.query.filter_by(store=store_name).order_by(Category.sort_order).all()
+    # Returns items sorted exactly as you arranged them
+    products = Product.query.filter_by(store=store_name).order_by(Product.sort_order.asc(), Product.id.desc()).all()
+    categories = Category.query.filter_by(store=store_name).order_by(Category.sort_order.asc()).all()
     
     return jsonify({
         "products": [{"id": p.id, "title": p.title, "price": p.price, "stock": p.stock, "category": p.category, "thumbnail": p.image, "variants": json.loads(p.variants)} for p in products],
@@ -214,6 +221,12 @@ def get_api(store_name):
 
 with app.app_context():
     db.create_all()
+    # Safely add sort_order if it doesn't exist yet
+    try:
+        db.session.execute(text("ALTER TABLE product ADD COLUMN sort_order INTEGER DEFAULT 0"))
+        db.session.commit()
+    except:
+        db.session.rollback()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
