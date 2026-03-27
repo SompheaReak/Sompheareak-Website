@@ -1,4 +1,3 @@
-<!-- [I am adding the Checkout Form and API logic here] -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,63 +11,82 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f9fafb; }
         .khmer { font-family: 'Kantumruy Pro', sans-serif; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .cat-pill.active { background: #000; color: #fff; }
+        .cat-pill.active { background: #000; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        #modal-content-area { transition: all 0.3s ease-out; transform: translateY(20px); opacity: 0; }
+        #modal.active #modal-content-area { transform: translateY(0); opacity: 1; }
+        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        .badge-bounce { animation: bounce 0.4s ease; }
     </style>
 </head>
 <body class="pb-20">
 
-    <!-- [NAVBAR AND GRID ARE SAME AS PREVIOUS] -->
+    <!-- NAVIGATION -->
     <nav class="fixed top-0 w-full bg-white/90 backdrop-blur-xl z-50 border-b h-16 flex items-center px-4 justify-between">
         <div class="flex items-center gap-3">
-            <a href="/" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50"><i class="fa-solid fa-house text-sm"></i></a>
+            <a href="/" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 hover:bg-black hover:text-white transition-all"><i class="fa-solid fa-house text-sm"></i></a>
             <div class="flex items-center gap-2">
-                <img src="/static/image/logo.png" alt="Logo" class="w-8 h-8 object-contain">
+                <img src="/static/image/logo.png" alt="Logo" class="w-8 h-8 object-contain rounded-md shadow-sm" onerror="this.style.display='none'">
                 <div class="flex flex-col leading-none">
                     <span class="khmer font-bold text-gray-900 text-sm">សម្ភារៈ</span>
                     <span class="text-[9px] font-black text-gray-400 tracking-tighter uppercase">Somphea Reak</span>
                 </div>
             </div>
         </div>
-        <button onclick="toggleCart()" class="relative w-10 h-10 flex items-center justify-center rounded-full bg-gray-50">
-            <i class="fa-solid fa-cart-shopping"></i>
+        <button onclick="toggleCart()" class="relative w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 border border-gray-100">
+            <i class="fa-solid fa-cart-shopping text-gray-700"></i>
             <span id="cart-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
         </button>
     </nav>
 
+    <!-- FILTERS -->
     <div class="mt-16 bg-white border-b sticky top-16 z-40 overflow-x-auto flex gap-2 p-4 hide-scrollbar" id="dynamic-filter-bar">
         <button onclick="filter('All')" class="cat-pill active whitespace-nowrap px-6 py-2 rounded-full border text-xs font-bold transition-all">All Inventory</button>
     </div>
 
-    <main class="max-w-7xl mx-auto px-4 py-8"><div id="grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"></div></main>
+    <!-- GRID -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div id="grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"></div>
+    </main>
 
     <!-- CHECKOUT MODAL -->
     <div id="checkout-modal" class="fixed inset-0 z-[70] flex items-center justify-center p-4 hidden">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-md" onclick="toggleCheckout()"></div>
         <div class="bg-white w-full max-w-md rounded-[32px] overflow-hidden relative shadow-2xl p-6">
-            <h2 class="text-2xl font-black mb-1">Shipping Details</h2>
-            <p class="text-xs font-bold text-gray-400 mb-6 uppercase tracking-widest">Complete your order</p>
+            <h2 class="text-xl font-black mb-1">Final Checkout</h2>
+            <p class="text-[10px] font-bold text-gray-400 mb-6 uppercase tracking-widest">Delivery & Contact</p>
             
             <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Full Name</label>
-                    <input type="text" id="cust-name" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 font-bold text-sm outline-none focus:border-black" placeholder="John Doe">
+                <!-- Order Summary Mini Card -->
+                <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-2">
+                    <div class="flex justify-between text-xs font-bold text-gray-500">
+                        <span>Items Subtotal:</span>
+                        <span id="check-subtotal">៛0</span>
+                    </div>
+                    <div class="flex justify-between text-xs font-bold text-blue-600">
+                        <span>Delivery Fee:</span>
+                        <span id="check-delivery">៛0</span>
+                    </div>
+                    <div class="flex justify-between text-sm font-black text-gray-900 border-t pt-2 mt-2">
+                        <span>Grand Total:</span>
+                        <div class="text-right">
+                            <div id="check-total-khr">៛0</div>
+                            <div id="check-total-usd" class="text-[9px] text-gray-400 leading-none">$0.00</div>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Phone Number</label>
-                    <input type="text" id="cust-phone" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 font-bold text-sm outline-none focus:border-black" placeholder="012 345 678">
-                </div>
-                <div>
-                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Delivery Address</label>
-                    <textarea id="cust-address" rows="3" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 font-bold text-sm outline-none focus:border-black" placeholder="Street, City..."></textarea>
-                </div>
-                <button onclick="processOrder()" id="confirm-btn" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95 transition-all">
-                    Finish & Send Order
+
+                <input type="text" id="cust-name" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 font-bold text-sm outline-none focus:border-black" placeholder="Your Name">
+                <input type="text" id="cust-phone" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 font-bold text-sm outline-none focus:border-black" placeholder="Phone (Telegram)">
+                <textarea id="cust-address" rows="2" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 font-bold text-sm outline-none focus:border-black" placeholder="Full Delivery Address"></textarea>
+                
+                <button onclick="processOrder()" id="confirm-btn" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95">
+                    Send Order to Shop
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- SELECTION MODAL AND CART PANEL -->
+    <!-- SELECTION MODAL -->
     <div id="modal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 hidden">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal()"></div>
         <div class="bg-white w-full max-w-md rounded-[32px] overflow-hidden relative shadow-2xl" id="modal-container">
@@ -77,35 +95,147 @@
         </div>
     </div>
 
+    <!-- CART PANEL -->
     <div id="cart" class="fixed inset-y-0 right-0 w-full max-w-sm bg-white shadow-2xl z-50 translate-x-full transition-transform duration-500 border-l flex flex-col">
         <div class="p-6 border-b flex justify-between items-center bg-gray-50">
             <h2 class="font-black text-lg uppercase tracking-tight">Shopping Bag</h2>
             <button onclick="toggleCart()" class="text-gray-400"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
         <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
-        <div class="p-6 border-t bg-gray-50 space-y-4">
-            <div class="flex justify-between font-black">
-                <span class="text-gray-400 text-[10px] uppercase">Subtotal</span>
-                <div class="text-right leading-none">
-                    <div id="total-usd" class="text-xl">$0.00</div>
-                    <div id="total-khr" class="text-[10px] text-gray-500 font-bold">៛0</div>
+        <div class="p-6 border-t bg-gray-50 space-y-3">
+            <div class="space-y-1.5 border-b pb-3 mb-2">
+                <div class="flex justify-between text-xs font-bold text-gray-400">
+                    <span>Items Subtotal</span>
+                    <span id="side-sub-khr">៛0</span>
+                </div>
+                <div class="flex justify-between text-xs font-bold text-blue-500">
+                    <span>Estimated Delivery</span>
+                    <span id="side-delivery-khr">៛0</span>
                 </div>
             </div>
-            <button onclick="toggleCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-lg uppercase text-xs tracking-widest active:scale-95">Checkout</button>
+            <div class="flex justify-between font-black">
+                <span class="text-xs uppercase">Grand Total</span>
+                <div class="text-right leading-none">
+                    <div id="total-khr" class="text-xl">៛0</div>
+                    <div id="total-usd" class="text-[10px] text-gray-400 font-bold">$0.00</div>
+                </div>
+            </div>
+            <button onclick="toggleCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-lg uppercase text-xs tracking-widest active:scale-95">Go to Checkout</button>
         </div>
     </div>
 
     <script>
-        let products = []; let cart = []; const RATE = 4000;
+        let products = [];
+        let categories = [];
+        let cart = [];
+        let currentCat = 'All';
+        const RATE = 4000;
+
+        // --- DELIVERY FEE LOGIC ---
+        function calculateDelivery(subtotalKHR) {
+            if (subtotalKHR === 0) return 0;
+            if (subtotalKHR < 20000) return 8000;
+            if (subtotalKHR < 40000) return 6000;
+            if (subtotalKHR < 60000) return 4000;
+            if (subtotalKHR < 80000) return 2000;
+            return 0; // Free delivery over 80k
+        }
+
         async function load() {
-            const res = await fetch('/api/products/toy'); const data = await res.json();
-            products = data.products; render();
+            const res = await fetch('/api/products/toy');
+            const data = await res.json();
+            products = data.products || [];
+            categories = data.categories || [];
+            buildFilters();
+            render();
+        }
+
+        function buildFilters() {
+            const bar = document.getElementById('dynamic-filter-bar');
+            bar.innerHTML = `<button onclick="filter('All')" class="cat-pill ${currentCat === 'All' ? 'active' : ''} whitespace-nowrap px-6 py-2 rounded-full border text-xs font-bold transition-all">All Inventory</button>`;
+            categories.forEach(cat => {
+                if(cat.name) bar.innerHTML += `<button onclick="filter('${cat.name}')" class="cat-pill ${currentCat === cat.name ? 'active' : ''} whitespace-nowrap px-6 py-2 rounded-full border text-xs font-bold transition-all">${cat.name}</button>`;
+            });
+        }
+
+        function filter(c) {
+            currentCat = c;
+            buildFilters();
+            render();
+        }
+
+        function render() {
+            const grid = document.getElementById('grid');
+            const data = currentCat === 'All' ? products : products.filter(p => p.category === currentCat);
+            grid.innerHTML = data.length ? '' : '<div class="col-span-full py-20 text-center text-gray-300 font-bold">Category is empty</div>';
+            data.forEach(p => {
+                const soldOut = p.stock <= 0;
+                grid.innerHTML += `
+                    <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden group shadow-sm hover:shadow-md transition-all cursor-pointer ${soldOut ? 'opacity-60 grayscale' : ''}" onclick='openModal(${JSON.stringify(p)})'>
+                        <div class="aspect-square relative overflow-hidden bg-gray-50">
+                            <img src="${p.thumbnail}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="p-4">
+                            <span class="text-[8px] font-black text-[#ff5000] uppercase tracking-widest">${p.category}</span>
+                            <h3 class="font-bold text-sm text-gray-800 truncate mt-0.5">${p.title}</h3>
+                            <div class="mt-3 flex justify-between items-end border-t border-gray-50 pt-3">
+                                <div class="flex flex-col leading-none">
+                                    <span class="font-black text-base">$${p.price.toFixed(2)}</span>
+                                    <span class="text-[9px] font-bold text-gray-400 mt-1">៛${(p.price * RATE).toLocaleString()}</span>
+                                </div>
+                                <div class="w-7 h-7 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 text-[10px] group-hover:bg-black group-hover:text-white transition-all"><i class="fa-solid fa-plus"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
         function toggleCart() { document.getElementById('cart').classList.toggle('translate-x-full'); }
-        function toggleCheckout() { 
-            if(cart.length === 0) return alert("Your bag is empty!");
-            document.getElementById('checkout-modal').classList.toggle('hidden'); 
+
+        function toggleCheckout() {
+            if(cart.length === 0) return alert("Bag is empty");
+            updateCheckoutSummary();
+            document.getElementById('checkout-modal').classList.toggle('hidden');
+        }
+
+        function updateCart() {
+            const list = document.getElementById('cart-items');
+            const badge = document.getElementById('cart-badge');
+            
+            list.innerHTML = ''; let subUSD = 0; let totalQty = 0;
+            
+            cart.forEach((i, idx) => {
+                subUSD += i.price * i.qty; totalQty += i.qty;
+                list.innerHTML += `<div class="flex gap-4 items-center bg-gray-50 p-3 rounded-2xl border border-gray-100"><img src="${i.image}" class="w-14 h-14 rounded-xl object-cover"><div class="flex-1"><h4 class="font-black text-xs text-gray-800">${i.title}</h4><p class="text-[9px] font-bold text-gray-400 mt-0.5">${i.style} x ${i.qty}</p></div><button onclick="cart.splice(${idx},1);updateCart()" class="text-gray-300 hover:text-red-500"><i class="fa-solid fa-trash-can text-sm"></i></button></div>`;
+            });
+
+            // Calc Delivery
+            const subKHR = subUSD * RATE;
+            const deliveryKHR = calculateDelivery(subKHR);
+            const grandTotalKHR = subKHR + deliveryKHR;
+            const grandTotalUSD = grandTotalKHR / RATE;
+
+            // UI Update
+            document.getElementById('side-sub-khr').innerText = `៛${subKHR.toLocaleString()}`;
+            document.getElementById('side-delivery-khr').innerText = deliveryKHR === 0 ? "FREE" : `៛${deliveryKHR.toLocaleString()}`;
+            document.getElementById('total-khr').innerText = `៛${grandTotalKHR.toLocaleString()}`;
+            document.getElementById('total-usd').innerText = `$${grandTotalUSD.toFixed(2)}`;
+            badge.innerText = totalQty;
+            badge.classList.add('badge-bounce'); setTimeout(() => badge.classList.remove('badge-bounce'), 400);
+        }
+
+        function updateCheckoutSummary() {
+            const subUSD = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            const subKHR = subUSD * RATE;
+            const deliveryKHR = calculateDelivery(subKHR);
+            const grandTotalKHR = subKHR + deliveryKHR;
+            const grandTotalUSD = grandTotalKHR / RATE;
+
+            document.getElementById('check-subtotal').innerText = `៛${subKHR.toLocaleString()}`;
+            document.getElementById('check-delivery').innerText = deliveryKHR === 0 ? "FREE DELIVERY" : `៛${deliveryKHR.toLocaleString()}`;
+            document.getElementById('check-total-khr').innerText = `៛${grandTotalKHR.toLocaleString()}`;
+            document.getElementById('check-total-usd').innerText = `$${grandTotalUSD.toFixed(2)}`;
         }
 
         async function processOrder() {
@@ -114,59 +244,37 @@
             const phone = document.getElementById('cust-phone').value;
             const address = document.getElementById('cust-address').value;
             
-            if(!name || !phone || !address) return alert("Please fill all details!");
+            if(!name || !phone || !address) return alert("Fill all details");
             
-            btn.innerText = "SENDING..."; btn.disabled = true;
+            btn.innerText = "SENDING ORDER..."; btn.disabled = true;
 
-            const total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-            
+            const subUSD = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            const subKHR = subUSD * RATE;
+            const delKHR = calculateDelivery(subKHR);
+            const totalUSD = (subKHR + delKHR) / RATE;
+
             const res = await fetch('/api/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, phone, address, items: cart, total: total })
+                body: JSON.stringify({ name, phone, address, items: cart, total: totalUSD })
             });
             
-            const result = await res.json();
-            if(result.status === 'success') {
-                alert("Order Sent Successfully! We will contact you soon.");
-                cart = []; updateCart();
-                toggleCheckout(); toggleCart();
-                btn.innerText = "FINISH & SEND ORDER"; btn.disabled = false;
-            } else {
-                alert("Error sending order. Please try again.");
-                btn.innerText = "FINISH & SEND ORDER"; btn.disabled = false;
+            if(res.ok) {
+                alert("Order Successful! Thank you.");
+                cart = []; updateCart(); toggleCheckout(); toggleCart();
             }
+            btn.innerText = "SEND ORDER TO SHOP"; btn.disabled = false;
         }
 
-        function updateCart() {
-            const list = document.getElementById('cart-items');
-            const usd = document.getElementById('total-usd');
-            const khr = document.getElementById('total-khr');
-            const badge = document.getElementById('cart-badge');
-            list.innerHTML = ''; let t = 0; let c = 0;
-            cart.forEach((i, idx) => {
-                t += i.price * i.qty; c += i.qty;
-                list.innerHTML += `<div class="flex gap-4 items-center bg-gray-50 p-3 rounded-2xl border border-gray-100"><img src="${i.image}" class="w-12 h-12 rounded-xl object-cover"><div class="flex-1"><h4 class="font-black text-xs">${i.title}</h4><p class="text-[9px] font-bold text-gray-400">${i.style} x ${i.qty}</p></div><button onclick="cart.splice(${idx},1);updateCart()" class="text-gray-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></div>`;
-            });
-            usd.innerText = `$${t.toFixed(2)}`; khr.innerText = `៛${(t * RATE).toLocaleString()}`; badge.innerText = c;
-        }
-
-        // [Remaining openModal and updateModal functions as defined before...]
-        function render() {
-            const grid = document.getElementById('grid'); grid.innerHTML = '';
-            products.forEach(p => {
-                grid.innerHTML += `<div class="bg-white rounded-[24px] border border-gray-100 overflow-hidden group shadow-sm hover:shadow-md cursor-pointer" onclick='openModal(${JSON.stringify(p)})'><div class="aspect-square relative overflow-hidden"><img src="${p.thumbnail}" class="w-full h-full object-cover group-hover:scale-105 transition-all"></div><div class="p-4"><span class="text-[8px] font-black text-[#ff5000] uppercase">${p.category}</span><h3 class="font-bold text-sm text-gray-800 truncate mt-0.5">${p.title}</h3><div class="mt-3 flex justify-between items-end border-t pt-3"><div class="flex flex-col"><span class="font-black text-base">$${p.price.toFixed(2)}</span><span class="text-[9px] font-bold text-gray-400">៛${(p.price * RATE).toLocaleString()}</span></div><div class="w-7 h-7 bg-gray-50 rounded-full flex items-center justify-center text-[10px]"><i class="fa-solid fa-plus"></i></div></div></div></div>`;
-            });
-        }
-        
-        let currentP = null, variantIdx = 0, qty = 1;
-        function openModal(p) { currentP = p; variantIdx = 0; qty = 1; document.getElementById('modal').classList.remove('hidden'); updateModalUI(); }
-        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+        // [MODAL LOGIC REMAINS SAME]
+        let currentP = null, vIdx = 0, qty = 1;
+        function openModal(p) { if(p.stock <= 0) return; currentP = p; vIdx = 0; qty = 1; document.getElementById('modal').classList.remove('hidden'); setTimeout(() => document.getElementById('modal').classList.add('active'), 10); updateModalUI(); }
+        function closeModal() { document.getElementById('modal').classList.remove('active'); setTimeout(() => document.getElementById('modal').classList.add('hidden'), 300); }
         function updateModalUI() {
-            const v = currentP.variants[variantIdx];
-            document.getElementById('modal-content-area').innerHTML = `<img src="${v.image}" class="w-full aspect-square object-cover"><div class="p-6"><h2 class="text-xl font-black">${currentP.title}</h2><p class="text-2xl font-black text-black">$${v.price.toFixed(2)}</p><div class="mt-6"><p class="text-[10px] font-black uppercase text-gray-400">Styles</p><div class="flex gap-2 mt-2">${currentP.variants.map((v, i) => `<button onclick="variantIdx=${i};updateModalUI()" class="w-12 h-12 rounded-xl border-2 overflow-hidden ${variantIdx===i?'border-black':'border-gray-100 opacity-40'}"><img src="${v.image}" class="w-full h-full object-cover"></button>`).join('')}</div></div><div class="mt-8 flex gap-4"><div class="flex items-center gap-4 bg-gray-100 rounded-xl px-4 py-2"><button onclick="qty=Math.max(1,qty-1);updateModalUI()">-</button><span>${qty}</span><button onclick="qty++;updateModalUI()">+</button></div><button onclick="addToBag()" class="flex-1 bg-black text-white font-black py-4 rounded-xl uppercase text-xs">Add to Bag</button></div></div>`;
+            const v = currentP.variants[vIdx];
+            document.getElementById('modal-content-area').innerHTML = `<img src="${v.image}" class="w-full aspect-square object-cover"><div class="p-6"><div class="flex justify-between items-start"><div><span class="text-[10px] font-black text-[#ff5000] uppercase">${currentP.category}</span><h2 class="text-xl font-black">${currentP.title}</h2></div><div class="text-right"><div class="text-2xl font-black">$${v.price.toFixed(2)}</div><div class="text-[10px] text-gray-400 font-bold">៛${(v.price*RATE).toLocaleString()}</div></div></div><div class="mt-6 flex gap-3 overflow-x-auto pb-2 hide-scrollbar">${currentP.variants.map((v, i) => `<button onclick="vIdx=${i};updateModalUI()" class="w-14 h-14 rounded-2xl border-2 flex-shrink-0 overflow-hidden ${vIdx===i?'border-black scale-105':'border-gray-100 opacity-40'}"><img src="${v.image}" class="w-full h-full object-cover"></button>`).join('')}</div><div class="mt-8 flex items-center justify-between border-t pt-6"><div class="flex items-center gap-4 bg-gray-100 rounded-2xl px-4 py-2"><button onclick="qty=Math.max(1,qty-1);updateModalUI()">-</button><span class="w-4 text-center font-black">${qty}</span><button onclick="qty++;updateModalUI()">+</button></div><button onclick="addToBag()" class="flex-1 ml-4 bg-[#ff5000] text-white font-black py-4 rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95">Add to Bag</button></div></div>`;
         }
-        function addToBag() { const v = currentP.variants[variantIdx]; const id = `${currentP.id}-${variantIdx}`; const ex = cart.find(i => i.cartId === id); if(ex) ex.qty += qty; else cart.push({cartId:id, title:currentP.title, style:v.name, price:v.price, image:v.image, qty}); closeModal(); updateCart(); }
+        function addToBag() { const v = currentP.variants[vIdx]; const id = `${currentP.id}-${vIdx}`; const ex = cart.find(i => i.cartId === id); if(ex) ex.qty += qty; else cart.push({cartId:id, title:currentP.title, style:v.name, price:v.price, image:v.image, qty}); closeModal(); updateCart(); }
 
         window.onload = load;
     </script>
