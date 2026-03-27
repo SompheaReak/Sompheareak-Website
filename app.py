@@ -34,7 +34,7 @@ class Product(db.Model):
     category = db.Column(db.String(100), nullable=False)
     store = db.Column(db.String(50), nullable=False) 
     variants = db.Column(db.Text, nullable=True)
-    sort_order = db.Column(db.Integer, default=0) # Remembers your drag-and-drop order
+    sort_order = db.Column(db.Integer, default=0)
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -43,7 +43,7 @@ class Category(db.Model):
     image = db.Column(db.String(500), nullable=True, default="https://via.placeholder.com/150?text=Upload")
     sort_order = db.Column(db.Integer, default=0)
 
-# --- 4. ROUTES ---
+# --- 4. PUBLIC ROUTES ---
 @app.route('/')
 def index(): return render_template('index.html')
 
@@ -53,6 +53,12 @@ def toy_universe(): return render_template('toy.html')
 @app.route('/bracelet')
 def shop(): return render_template('bracelet.html')
 
+# === I ADDED THIS BACK! ===
+@app.route('/custom-bracelet')
+def custom_bracelet(): return render_template('custom_bracelet.html')
+# ==========================
+
+# --- 5. ADMIN AUTH ---
 @app.route('/admin/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST' and request.form.get('password') == ADMIN_PASS:
@@ -70,7 +76,6 @@ def admin_panel():
             db.session.add(Category(name=c_name, store=c_store, sort_order=999))
     db.session.commit()
     
-    # Load products sorted by your custom drag-and-drop order!
     products = Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
     for p in products:
         p.parsed_variants = json.loads(p.variants) if p.variants else []
@@ -78,7 +83,7 @@ def admin_panel():
     categories = Category.query.order_by(Category.sort_order).all()
     return render_template('admin_panel.html', products=products, categories=categories)
 
-# --- 5. CATEGORY MANAGER (Thumbnails, Order, Delete) ---
+# --- 6. CATEGORY MANAGER ---
 @app.route('/admin/categories/update', methods=['POST'])
 def update_categories():
     if not session.get('admin'): return redirect(url_for('login'))
@@ -102,14 +107,13 @@ def delete_category(id):
     if not session.get('admin'): return redirect(url_for('login'))
     c = Category.query.get(id)
     if c:
-        # Move items in this category to "Other" so they aren't lost
         products = Product.query.filter_by(category=c.name, store=c.store).all()
         for p in products: p.category = "Other"
         db.session.delete(c)
         db.session.commit()
     return redirect(url_for('admin_panel'))
 
-# --- 6. DRAG & DROP PRODUCT REORDER API ---
+# --- 7. DRAG & DROP REORDER API ---
 @app.route('/admin/product/reorder', methods=['POST'])
 def reorder_products():
     if not session.get('admin'): return jsonify({'status': 'unauthorized'}), 401
@@ -120,7 +124,7 @@ def reorder_products():
     db.session.commit()
     return jsonify({'status': 'success'})
 
-# --- 7. PRODUCT MANAGEMENT ---
+# --- 8. PRODUCT MANAGEMENT ---
 @app.route('/admin/product/update/<int:id>', methods=['POST'])
 def update_product(id):
     if not session.get('admin'): return redirect(url_for('login'))
@@ -193,7 +197,6 @@ def add_product():
             vars_json.append({"id": i, "name": v_names[i] if i < len(v_names) else f"Style {i+1}", "price": price, "stock": stock, "image": url})
             total_stock += stock
         
-        # New products go to the top (sort_order = -1)
         new_p = Product(title=title, price=vars_json[0]['price'], stock=total_stock, image=uploaded_urls[0], category=category, store=store, variants=json.dumps(vars_json), sort_order=-1)
         db.session.add(new_p)
         db.session.commit()
@@ -210,7 +213,6 @@ def delete_product(id):
 
 @app.route('/api/products/<store_name>')
 def get_api(store_name):
-    # Returns items sorted exactly as you arranged them
     products = Product.query.filter_by(store=store_name).order_by(Product.sort_order.asc(), Product.id.desc()).all()
     categories = Category.query.filter_by(store=store_name).order_by(Category.sort_order.asc()).all()
     
@@ -221,7 +223,6 @@ def get_api(store_name):
 
 with app.app_context():
     db.create_all()
-    # Safely add sort_order if it doesn't exist yet
     try:
         db.session.execute(text("ALTER TABLE product ADD COLUMN sort_order INTEGER DEFAULT 0"))
         db.session.commit()
