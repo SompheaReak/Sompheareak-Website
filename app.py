@@ -9,8 +9,6 @@ import cloudinary.uploader
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_ultra_pro_2025')
-
-# --- NEW: UNLOCK 50MB UPLOADS FOR HIGH QUALITY PHONE PHOTOS ---
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024 
 
 # --- 1. CLOUDINARY CONFIG ---
@@ -21,9 +19,20 @@ cloudinary.config(
   secure = True
 )
 
-# --- 2. DATABASE CONFIG ---
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///fallback.db')
+# --- 2. PERMANENT DATABASE CONFIG FIX ---
+db_url = os.environ.get('DATABASE_URL', 'sqlite:///fallback.db')
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# --- NEW: THE "WAKE UP" FIX FOR SLEEPING DATABASES ---
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,  # Always check if database is awake before asking for data
+    "pool_recycle": 300,    # Reconnect automatically every 5 minutes
+    "pool_timeout": 30      # Wait up to 30 seconds for the database to wake up from its nap
+}
 
 db = SQLAlchemy(app)
 ADMIN_PASS = 'Thesong_Admin@2022?!$'
@@ -116,7 +125,7 @@ def admin_panel():
 
     return render_template('admin_panel.html', products=products, categories=categories, orders=orders)
 
-# --- 6. ADMIN ACTIONS (WITH UPLOAD FIXES) ---
+# --- 6. ADMIN ACTIONS ---
 @app.route('/admin/order/status/<int:id>/<string:status>', methods=['POST'])
 def update_order_status(id, status):
     if not session.get('admin'): return redirect(url_for('login'))
@@ -225,7 +234,7 @@ def update_product(id):
         db.session.commit()
         flash('Product updated successfully!', 'success')
     except Exception as e:
-        flash(f'Cloud Error: Cannot upload new styles. Check internet or API keys. ({str(e)})', 'error')
+        flash(f'Cloud Error: Cannot upload new styles. ({str(e)})', 'error')
         
     return redirect(url_for('admin_panel'))
 
@@ -265,7 +274,7 @@ def add_product():
             flash('Warning: No valid images found to upload.', 'error')
             
     except Exception as e:
-        flash(f'Upload Failed! Please check your Cloudinary API keys or if image is too large. Details: {str(e)}', 'error')
+        flash(f'Upload Failed! Please check your Cloudinary API keys. Details: {str(e)}', 'error')
 
     return redirect(url_for('admin_panel'))
 
@@ -281,14 +290,16 @@ def delete_product(id):
 
 @app.route('/api/products/<store_name>')
 def get_api(store_name):
-    products = Product.query.filter_by(store=store_name).order_by(Product.sort_order.asc(), Product.id.desc()).all()
-    categories = Category.query.filter_by(store=store_name).order_by(Category.sort_order.asc()).all()
-    return jsonify({
-        "products": [{"id": p.id, "title": p.title, "price": p.price, "stock": p.stock, "category": p.category, "thumbnail": p.image, "variants": json.loads(p.variants)} for p in products],
-        "categories": [{"name": c.name, "image": c.image} for c in categories]
-    })
+    try:
+        products = Product.query.filter_by(store=store_name).order_by(Product.sort_order.asc(), Product.id.desc()).all()
+        categories = Category.query.filter_by(store=store_name).order_by(Category.sort_order.asc()).all()
+        return jsonify({
+            "products": [{"id": p.id, "title": p.title, "price": p.price, "stock": p.stock, "category": p.category, "thumbnail": p.image, "variants": json.loads(p.variants)} for p in products],
+            "categories": [{"name": c.name, "image": c.image} for c in categories]
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-# Add custom handler for file size limit errors
 @app.errorhandler(413)
 def request_entity_too_large(error):
     flash('File too large! Please upload fewer images or compress them (Max 50MB combined).', 'error')
