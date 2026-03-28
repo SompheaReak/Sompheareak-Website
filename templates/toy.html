@@ -2,33 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Somphea Reak | Toy Universe</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Kantumruy+Pro:wght@400;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f9fafb; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f9fafb; -webkit-tap-highlight-color: transparent; }
         .khmer { font-family: 'Kantumruy Pro', sans-serif; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .cat-pill.active { background: #000; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         
-        /* FULL SCREEN MODAL ANIMATION */
-        #modal { transition: opacity 0.3s ease; }
-        #modal-container { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateY(100%); }
-        #modal.active #modal-container { transform: translateY(0); }
+        /* Modal & Carousel Animations */
+        #modal { transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(100%); }
+        #modal.active { transform: translateY(0); }
+        .snap-x-mandatory { scroll-snap-type: x mandatory; }
+        .snap-center { scroll-snap-align: center; }
         
-        /* Feedback Animation for "Add to Bag" */
-        @keyframes success-pop { 0% { transform: scale(1); } 50% { transform: scale(1.05); background: #22c55e; } 100% { transform: scale(1); } }
-        .added-success { animation: success-pop 0.5s ease; }
-        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+        /* Success Toast */
+        #toast { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .badge-bounce { animation: bounce 0.4s ease; }
+        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
     </style>
 </head>
 <body class="pb-24 overflow-x-hidden">
 
+    <!-- SUCCESS TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-12 left-1/2 -translate-x-1/2 bg-[#22c55e] text-white px-6 py-3 rounded-full shadow-[0_10px_30px_rgba(34,197,94,0.4)] font-black text-[10px] uppercase tracking-widest opacity-0 pointer-events-none z-[300] translate-y-[-20px] flex items-center gap-2 w-max">
+        <i class="fa-solid fa-circle-check"></i> Added to bag
+    </div>
+
     <!-- NAVIGATION -->
-    <nav class="fixed top-0 w-full bg-white/90 backdrop-blur-xl z-50 border-b h-16 flex items-center px-4 justify-between">
+    <nav class="fixed top-0 w-full bg-white/90 backdrop-blur-xl z-40 border-b h-16 flex items-center px-4 justify-between">
         <div class="flex items-center gap-3">
             <a href="/" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 hover:bg-black hover:text-white transition-all">
                 <i class="fa-solid fa-house text-sm"></i>
@@ -49,7 +55,7 @@
     </nav>
 
     <!-- DYNAMIC FILTER BAR -->
-    <div class="mt-16 bg-white border-b sticky top-16 z-40 overflow-x-auto flex gap-2 p-4 hide-scrollbar" id="dynamic-filter-bar">
+    <div class="mt-16 bg-white border-b sticky top-16 z-30 overflow-x-auto flex gap-2 p-4 hide-scrollbar" id="dynamic-filter-bar">
         <button onclick="filter('All')" class="cat-pill active whitespace-nowrap px-6 py-2 rounded-full border text-xs font-bold transition-all">All Inventory</button>
     </div>
 
@@ -60,46 +66,85 @@
         </div>
     </main>
 
-    <!-- FULL SCREEN SELECTION MODAL -->
-    <div id="modal" class="fixed inset-0 z-[100] hidden flex flex-col bg-white">
-        <!-- Close Button Top Right -->
-        <button onclick="closeModal()" class="absolute top-6 right-6 w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center z-[110] active:scale-90 transition-all shadow-sm">
-            <i class="fa-solid fa-xmark text-xl"></i>
+    <!-- 1-SCREEN COMPACT SELECTION MODAL -->
+    <div id="modal" class="fixed inset-0 z-[100] hidden flex-col bg-white">
+        <!-- Close Button -->
+        <button onclick="closeModal()" class="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white z-[110] active:scale-90 shadow-md">
+            <i class="fa-solid fa-xmark text-lg"></i>
         </button>
 
-        <div id="modal-container" class="flex-1 flex flex-col h-full overflow-y-auto">
-            <div id="modal-content-area" class="pb-10">
-                <!-- Content injected here -->
+        <div class="flex-1 overflow-y-auto pb-24 hide-scrollbar">
+            <!-- Swipeable Main Image Carousel -->
+            <div id="modal-carousel" class="w-full aspect-square bg-gray-50 flex overflow-x-auto snap-x-mandatory hide-scrollbar" onscroll="onCarouselScroll()">
+                <!-- Images injected here -->
             </div>
+            
+            <!-- Compact Info Area -->
+            <div class="px-5 pt-4 pb-1">
+                <div class="flex justify-between items-start gap-4">
+                    <div class="flex-1">
+                        <span id="modal-category" class="text-[10px] font-black text-[#ff5000] uppercase tracking-widest">Category</span>
+                        <h2 id="modal-title" class="text-xl font-black text-gray-900 leading-tight mt-0.5">Title</h2>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="text-[10px] font-bold text-gray-400 uppercase">Style:</span>
+                            <span id="modal-variant-name" class="text-[11px] font-black text-gray-800">Style Name</span>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <div id="modal-price-usd" class="text-3xl font-black text-black leading-none">$0.00</div>
+                        <div id="modal-price-khr" class="text-[10px] font-bold text-gray-400 mt-1">៛0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Syncing Thumbnails -->
+            <div class="px-5 mt-3">
+                <div id="modal-thumbs" class="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
+                    <!-- Thumbs injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Sticky Bottom Action Bar -->
+        <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 px-5 py-4 pb-8 md:pb-4 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] flex gap-4 items-center z-[110]">
+            <div class="flex items-center justify-between bg-gray-100 rounded-2xl px-4 py-3 w-32">
+                <button onclick="updateQty(-1)" class="font-black text-gray-500 w-6 active:text-black text-xl leading-none">-</button>
+                <span id="modal-qty" class="font-black text-base">1</span>
+                <button onclick="updateQty(1)" class="font-black text-gray-500 w-6 active:text-black text-xl leading-none">+</button>
+            </div>
+            <button onclick="addToBag()" class="flex-1 bg-[#ff5000] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-200/50 uppercase text-xs tracking-widest active:scale-95 transition-all">
+                Add to Bag
+            </button>
         </div>
     </div>
 
-    <!-- CHECKOUT MODAL -->
+    <!-- MODERN CHECKOUT MODAL -->
     <div id="checkout-modal" class="fixed inset-0 z-[120] flex items-center justify-center p-4 hidden">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-md" onclick="toggleCheckout()"></div>
         <div class="bg-white w-full max-w-md rounded-[32px] overflow-hidden relative shadow-2xl p-6">
             <div class="flex justify-between items-center mb-1">
-                <h2 class="text-xl font-black">Shipping Details</h2>
+                <h2 class="text-xl font-black">Delivery Details</h2>
                 <button onclick="toggleCheckout()" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
-            <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-2 mb-6 mt-4">
-                <div class="flex justify-between text-xs font-bold text-gray-500"><span>Subtotal:</span><span id="check-subtotal">៛0</span></div>
-                <div class="flex justify-between text-xs font-bold text-blue-600"><span>Delivery:</span><span id="check-delivery">៛0</span></div>
-                <div class="flex justify-between text-sm font-black text-gray-900 border-t pt-2 mt-2"><span>Grand Total:</span><span id="check-total-khr">៛0</span></div>
+            <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-2 mb-6 mt-4 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-[#ff5000]"></div>
+                <div class="flex justify-between text-[11px] font-bold text-gray-500"><span>Items Subtotal:</span><span id="check-subtotal">៛0</span></div>
+                <div class="flex justify-between text-[11px] font-bold text-blue-600"><span>Delivery Fee:</span><span id="check-delivery">៛0</span></div>
+                <div class="flex justify-between text-sm font-black text-gray-900 border-t pt-2 mt-2"><span>Total to Pay:</span><span id="check-total-khr" class="text-[#ff5000]">៛0</span></div>
             </div>
-            <div class="space-y-4">
-                <input type="text" id="cust-name" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 font-bold text-sm outline-none focus:border-black" placeholder="Your Name">
-                <input type="text" id="cust-phone" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 font-bold text-sm outline-none focus:border-black" placeholder="Phone Number">
-                <textarea id="cust-address" rows="2" class="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 font-bold text-sm outline-none focus:border-black" placeholder="Full Delivery Address"></textarea>
-                <button onclick="processOrder()" id="confirm-btn" class="w-full bg-black text-white font-black py-5 rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95 transition-all">Send Order</button>
+            <div class="space-y-3">
+                <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-xl p-3.5 font-bold text-sm outline-none focus:border-[#ff5000]" placeholder="Your Name">
+                <input type="text" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-xl p-3.5 font-bold text-sm outline-none focus:border-[#ff5000]" placeholder="Phone Number">
+                <textarea id="cust-address" rows="2" class="w-full bg-white border border-gray-200 rounded-xl p-3.5 font-bold text-sm outline-none focus:border-[#ff5000]" placeholder="Full Delivery Address"></textarea>
+                <button onclick="processOrder()" id="confirm-btn" class="w-full bg-[#ff5000] text-white font-black py-4 rounded-xl shadow-[0_10px_20px_rgba(255,80,0,0.2)] uppercase text-xs tracking-widest active:scale-95 transition-all mt-2">Send Order</button>
             </div>
         </div>
     </div>
 
     <!-- CART PANEL -->
     <div id="cart" class="fixed inset-y-0 right-0 w-full max-w-sm bg-white shadow-2xl z-[150] translate-x-full transition-transform duration-500 border-l flex flex-col">
-        <div class="p-6 border-b flex justify-between items-center bg-gray-50">
+        <div class="p-5 border-b flex justify-between items-center bg-gray-50">
             <h2 class="font-black text-lg uppercase tracking-tight">Your Bag</h2>
             <button onclick="toggleCart()" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
@@ -117,13 +162,9 @@
     </div>
 
     <script>
-        let products = [];
-        let categories = [];
-        let cart = [];
-        let currentCat = 'All';
+        let products = [], categories = [], cart = [], currentCat = 'All';
         const RATE = 4000;
 
-        // --- DELIVERY FEE LOGIC ---
         function calculateDelivery(subtotalKHR) {
             if (subtotalKHR === 0) return 0;
             if (subtotalKHR < 20000) return 8000;
@@ -133,37 +174,22 @@
             return 0;
         }
 
-        // --- CART PERSISTENCE (Memory) ---
-        function saveCart() {
-            localStorage.setItem('somphea_reak_cart', JSON.stringify(cart));
-        }
-
-        function loadCart() {
-            const saved = localStorage.getItem('somphea_reak_cart');
-            if(saved) {
-                cart = JSON.parse(saved);
-                updateCartUI();
-            }
-        }
+        function saveCart() { localStorage.setItem('somphea_reak_cart', JSON.stringify(cart)); }
+        function loadCart() { const saved = localStorage.getItem('somphea_reak_cart'); if(saved) { cart = JSON.parse(saved); updateCartUI(); } }
 
         async function load() {
             try {
                 const res = await fetch('/api/products/toy');
                 const data = await res.json();
-                products = data.products || [];
-                categories = data.categories || [];
-                loadCart(); // Sync memory
-                buildFilters();
-                render();
+                products = data.products || []; categories = data.categories || [];
+                loadCart(); buildFilters(); render();
             } catch (e) { console.error(e); }
         }
 
         function buildFilters() {
             const bar = document.getElementById('dynamic-filter-bar');
             bar.innerHTML = `<button onclick="filter('All')" class="cat-pill active whitespace-nowrap px-6 py-2 rounded-full border text-xs font-bold transition-all">All Inventory</button>`;
-            categories.forEach(cat => {
-                if(cat.name) bar.innerHTML += `<button onclick="filter('${cat.name}')" class="cat-pill ${currentCat === cat.name ? 'active' : ''} whitespace-nowrap px-6 py-2 rounded-full border text-xs font-bold transition-all">${cat.name}</button>`;
-            });
+            categories.forEach(cat => { if(cat.name) bar.innerHTML += `<button onclick="filter('${cat.name}')" class="cat-pill ${currentCat === cat.name ? 'active' : ''} whitespace-nowrap px-6 py-2 rounded-full border text-xs font-bold transition-all">${cat.name}</button>`; });
         }
 
         function filter(c) { currentCat = c; buildFilters(); render(); }
@@ -196,93 +222,111 @@
             });
         }
 
-        let currentP = null, vIdx = 0, qty = 1;
+        // --- NEW COMPACT & SYNCED MODAL LOGIC ---
+        let currentP = null, vIdx = 0, qty = 1, isAutoScrolling = false;
         
         function openModal(p) {
             if(p.stock <= 0) return;
             currentP = p; vIdx = 0; qty = 1;
+            document.getElementById('modal-qty').innerText = qty;
+            
+            document.getElementById('modal-title').innerText = p.title;
+            document.getElementById('modal-category').innerText = p.category;
+            
+            const carousel = document.getElementById('modal-carousel');
+            carousel.innerHTML = p.variants.map(v => `<img src="${v.image}" class="min-w-full aspect-square object-contain snap-center bg-gray-50">`).join('');
+            
+            const thumbs = document.getElementById('modal-thumbs');
+            thumbs.innerHTML = p.variants.map((v, i) => `
+                <button id="thumb-${i}" onclick="selectVariant(${i}, true)" class="w-16 h-16 rounded-2xl border-[3px] transition-all flex-shrink-0 overflow-hidden border-transparent opacity-50">
+                    <img src="${v.image}" class="w-full h-full object-cover">
+                </button>
+            `).join('');
+
             const modal = document.getElementById('modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.classList.add('active'), 10);
-            updateModalUI();
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('active');
+                carousel.scrollLeft = 0;
+                selectVariant(0, false);
+            }, 10);
         }
 
         function closeModal() {
             const modal = document.getElementById('modal');
             modal.classList.remove('active');
-            setTimeout(() => modal.classList.add('hidden'), 400);
+            setTimeout(() => modal.style.display = 'none', 300);
         }
 
-        function updateModalUI() {
-            const v = currentP.variants[vIdx];
-            document.getElementById('modal-content-area').innerHTML = `
-                <div class="relative w-full aspect-square md:aspect-video bg-gray-50">
-                    <img src="${v.image}" class="w-full h-full object-contain md:object-cover">
-                </div>
-                
-                <div class="max-w-xl mx-auto p-8">
-                    <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
-                        <div class="flex-1">
-                            <span class="text-[12px] font-black text-[#ff5000] uppercase tracking-widest">${currentP.category}</span>
-                            <h2 class="text-3xl font-black text-gray-900 mt-1">${currentP.title}</h2>
-                            <p class="text-sm font-bold text-gray-400 mt-2">Currently selecting: ${v.name}</p>
-                        </div>
-                        <div class="bg-gray-50 px-6 py-4 rounded-3xl border border-gray-100 flex-shrink-0">
-                            <div class="text-3xl font-black text-black">$${v.price.toFixed(2)}</div>
-                            <div class="text-xs font-bold text-gray-400 mt-1">៛${(v.price * RATE).toLocaleString()}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-10">
-                        <label class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 block">Select Style / Model</label>
-                        <div class="flex gap-4 overflow-x-auto py-2 hide-scrollbar">
-                            ${currentP.variants.map((v, i) => `
-                                <button onclick="vIdx=${i};updateModalUI()" class="w-20 h-20 rounded-[24px] border-4 transition-all flex-shrink-0 overflow-hidden ${vIdx===i?'border-[#ff5000] scale-105':'border-transparent opacity-40'}">
-                                    <img src="${v.image}" class="w-full h-full object-cover">
-                                </button>
-                            `).join('')}
-                        </div>
-                    </div>
+        function updateQty(change) {
+            qty = Math.max(1, qty + change);
+            document.getElementById('modal-qty').innerText = qty;
+        }
 
-                    <div class="mt-12 flex flex-col sm:flex-row items-center gap-6 pt-10 border-t border-gray-50">
-                        <div class="flex items-center gap-8 bg-gray-100 rounded-[28px] px-8 py-5 border border-gray-200">
-                            <button onclick="qty=Math.max(1,qty-1);updateModalUI()" class="font-black text-2xl w-6 hover:text-red-500 transition-colors">-</button>
-                            <span class="font-black w-8 text-center text-xl">${qty}</span>
-                            <button onclick="qty++;updateModalUI()" class="font-black text-2xl w-6 hover:text-green-500 transition-colors">+</button>
-                        </div>
-                        <button id="add-btn" onclick="addToBag()" class="w-full bg-black text-white font-black py-6 rounded-[28px] shadow-2xl uppercase text-sm tracking-[0.2em] active:scale-95 transition-all">
-                            Add to Bag
-                        </button>
-                    </div>
-                    <p class="text-center text-[10px] text-gray-300 font-bold uppercase mt-6 tracking-widest">Click the X at top right to return to shop</p>
-                </div>
-            `;
+        function selectVariant(idx, scrollCarousel = false) {
+            vIdx = idx;
+            const v = currentP.variants[vIdx];
+            
+            document.getElementById('modal-price-usd').innerText = `$${v.price.toFixed(2)}`;
+            document.getElementById('modal-price-khr').innerText = `៛${(v.price * RATE).toLocaleString()}`;
+            document.getElementById('modal-variant-name').innerText = v.name;
+
+            currentP.variants.forEach((_, i) => {
+                const btn = document.getElementById(`thumb-${i}`);
+                if (i === idx) {
+                    btn.classList.remove('border-transparent', 'opacity-50');
+                    btn.classList.add('border-[#ff5000]', 'scale-105', 'opacity-100');
+                } else {
+                    btn.classList.add('border-transparent', 'opacity-50');
+                    btn.classList.remove('border-[#ff5000]', 'scale-105', 'opacity-100');
+                }
+            });
+
+            if (scrollCarousel) {
+                isAutoScrolling = true;
+                const carousel = document.getElementById('modal-carousel');
+                carousel.scrollTo({ left: idx * carousel.clientWidth, behavior: 'smooth' });
+                setTimeout(() => isAutoScrolling = false, 400); 
+            }
+        }
+
+        function onCarouselScroll() {
+            if (isAutoScrolling) return;
+            const carousel = document.getElementById('modal-carousel');
+            const newIdx = Math.round(carousel.scrollLeft / carousel.clientWidth);
+            if (newIdx !== vIdx && newIdx >= 0 && newIdx < currentP.variants.length) {
+                selectVariant(newIdx, false);
+            }
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.style.opacity = '1';
+            toast.style.transform = 'translate(-50%, 0)';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, -20px)';
+            }, 2000);
         }
 
         function addToBag() {
             const v = currentP.variants[vIdx];
             const id = `${currentP.id}-${vIdx}`;
             const ex = cart.find(i => i.cartId === id);
-            if(ex) ex.qty += qty; 
-            else cart.push({cartId:id, title:currentP.title, style:v.name, price:v.price, image:v.image, qty});
+            if(ex) ex.qty += qty; else cart.push({cartId:id, title:currentP.title, style:v.name, price:v.price, image:v.image, qty});
             
-            saveCart(); // Sync to memory
-            updateCartUI(); 
-            
-            const btn = document.getElementById('add-btn');
-            btn.innerText = "ADDED TO BAG ✓";
-            btn.classList.add('added-success');
-            setTimeout(() => {
-                btn.innerText = "ADD MORE OF THIS";
-                btn.classList.remove('added-success');
-            }, 800);
+            saveCart(); updateCartUI(); showToast();
+            qty = 1; document.getElementById('modal-qty').innerText = qty;
         }
 
+        // --- CART & CHECKOUT ---
         function toggleCart() { document.getElementById('cart').classList.toggle('translate-x-full'); }
         function toggleCheckout() { 
             if(cart.length === 0) return;
-            updateCheckoutSummary();
-            document.getElementById('checkout-modal').classList.toggle('hidden'); 
+            updateCheckoutSummary(); 
+            const chk = document.getElementById('checkout-modal');
+            if(chk.classList.contains('hidden')) { chk.classList.remove('hidden'); chk.style.display = 'flex'; } 
+            else { chk.style.display = 'none'; chk.classList.add('hidden'); }
         }
 
         function updateCartUI() {
@@ -292,27 +336,23 @@
             
             cart.forEach((i, idx) => {
                 subUSD += i.price * i.qty; totalQty += i.qty;
-                list.innerHTML += `<div class="flex gap-4 items-center bg-gray-50 p-3 rounded-2xl border border-gray-100"><img src="${i.image}" class="w-14 h-14 rounded-xl object-cover border"><div class="flex-1"><h4 class="font-black text-xs text-gray-800">${i.title}</h4><p class="text-[9px] font-bold text-gray-400 mt-0.5">${i.style} x ${i.qty}</p></div><button onclick="cart.splice(${idx},1);saveCart();updateCartUI()" class="text-gray-300 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can text-sm"></i></button></div>`;
+                list.innerHTML += `<div class="flex gap-4 items-center bg-gray-50 p-3 rounded-2xl border border-gray-100"><img src="${i.image}" class="w-14 h-14 rounded-xl object-cover border"><div class="flex-1"><h4 class="font-black text-xs text-gray-800">${i.title}</h4><p class="text-[9px] font-bold text-gray-400 mt-0.5">${i.style} x ${i.qty}</p></div><button onclick="cart.splice(${idx},1);saveCart();updateCartUI()" class="text-gray-300 hover:text-red-500"><i class="fa-solid fa-trash-can text-sm"></i></button></div>`;
             });
 
-            const subKHR = subUSD * RATE;
-            const delivery = calculateDelivery(subKHR);
+            const subKHR = subUSD * RATE; const delivery = calculateDelivery(subKHR);
             document.getElementById('total-khr').innerText = `៛${(subKHR + delivery).toLocaleString()}`;
             document.getElementById('total-usd').innerText = `$${((subKHR + delivery) / RATE).toFixed(2)}`;
             
             badge.innerText = totalQty;
-            if(totalQty > 0) {
-                badge.classList.remove('scale-0'); badge.classList.add('scale-100', 'badge-bounce'); 
-                setTimeout(() => badge.classList.remove('badge-bounce'), 400);
-            } else { badge.classList.add('scale-0'); badge.classList.remove('scale-100'); }
+            if(totalQty > 0) { badge.classList.remove('scale-0'); badge.classList.add('scale-100', 'badge-bounce'); setTimeout(() => badge.classList.remove('badge-bounce'), 400); } 
+            else { badge.classList.add('scale-0'); badge.classList.remove('scale-100'); }
             
-            if (cart.length === 0) list.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-gray-300 font-black text-[10px] uppercase opacity-40 tracking-widest">Bag is Empty</div>`;
+            if (cart.length === 0) list.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-gray-300 font-black text-[10px] uppercase tracking-widest opacity-40">Bag is Empty</div>`;
         }
 
         function updateCheckoutSummary() {
             const subUSD = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-            const subKHR = subUSD * RATE;
-            const del = calculateDelivery(subKHR);
+            const subKHR = subUSD * RATE; const del = calculateDelivery(subKHR);
             document.getElementById('check-subtotal').innerText = `៛${subKHR.toLocaleString()}`;
             document.getElementById('check-delivery').innerText = del === 0 ? "FREE" : `៛${del.toLocaleString()}`;
             document.getElementById('check-total-khr').innerText = `៛${(subKHR + del).toLocaleString()}`;
@@ -327,20 +367,11 @@
             
             btn.innerText = "SENDING..."; btn.disabled = true;
             const subUSD = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-            const subKHR = subUSD * RATE;
-            const totalUSD = (subKHR + calculateDelivery(subKHR)) / RATE;
+            const subKHR = subUSD * RATE; const totalUSD = (subKHR + calculateDelivery(subKHR)) / RATE;
 
             try {
-                const res = await fetch('/api/checkout', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, phone, address, items: cart, total: totalUSD })
-                });
-                
-                if(res.ok) {
-                    alert("Order Successful!");
-                    cart = []; saveCart(); updateCartUI(); toggleCheckout(); toggleCart();
-                }
+                const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, address, items: cart, total: totalUSD }) });
+                if(res.ok) { alert("Order Successful!"); cart = []; saveCart(); updateCartUI(); toggleCheckout(); toggleCart(); }
             } catch (e) { alert("Error sending order"); }
             btn.innerText = "SEND ORDER"; btn.disabled = false;
         }
