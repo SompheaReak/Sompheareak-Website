@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
 from flask_sqlalchemy import SQLAlchemy
@@ -19,7 +20,7 @@ cloudinary.config(
   secure = True
 )
 
-# --- 2. PERMANENT DATABASE CONFIG FIX ---
+# --- 2. PERMANENT DATABASE CONFIG ---
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///fallback.db')
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
@@ -27,15 +28,19 @@ if db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# --- NEW: THE "WAKE UP" FIX FOR SLEEPING DATABASES ---
+# THE "WAKE UP" FIX FOR SLEEPING DATABASES
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    "pool_pre_ping": True,  # Always check if database is awake before asking for data
-    "pool_recycle": 300,    # Reconnect automatically every 5 minutes
-    "pool_timeout": 30      # Wait up to 30 seconds for the database to wake up from its nap
+    "pool_pre_ping": True,  
+    "pool_recycle": 300,    
+    "pool_timeout": 30      
 }
 
 db = SQLAlchemy(app)
 ADMIN_PASS = 'Thesong_Admin@2022?!$'
+
+# --- ANTI-SPAM MEMORY TRACKER ---
+# Remembers IP addresses to stop trolls from spamming checkout
+spam_tracker = {}
 
 # --- 3. MODELS ---
 class Product(db.Model):
@@ -64,6 +69,7 @@ class Order(db.Model):
     items_json = db.Column(db.Text, nullable=False) 
     total_usd = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="Pending")
+    stock_deducted = db.Column(db.Boolean, default=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 # --- 4. PUBLIC ROUTES ---
@@ -81,11 +87,37 @@ def custom_bracelet(): return render_template('custom_bracelet.html')
 
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
+    # --- ANTI-SPAM IP BLOCKER LOGIC ---
+    # Get the real IP address of the user
+    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    # If using a proxy/load-balancer like Render, grab the first IP
+    if client_ip and ',' in client_ip:
+        client_ip = client_ip.split(',')[0].strip()
+        
+    current_time = time.time()
+    
+    # Check if this IP is in our spam tracker
+    if client_ip in spam_tracker:
+        last_time, count = spam_tracker[client_ip]
+        # If their last order was within the last 5 minutes (300 seconds)
+        if current_time - last_time < 300:
+            if count >= 2: # Max 2 orders allowed per 5 minutes
+                return jsonify({'status': 'error', 'message': 'Too many orders placed. Please try again in 5 minutes.'}), 429
+            # Update count
+            spam_tracker[client_ip] = (last_time, count + 1)
+        else:
+            # 5 minutes have passed, reset their tracker
+            spam_tracker[client_ip] = (current_time, 1)
+    else:
+        # First time ordering
+        spam_tracker[client_ip] = (current_time, 1)
+    # --- END ANTI-SPAM LOGIC ---
+
     data = request.json
     try:
         new_order = Order(
             customer_name=data['name'], customer_phone=data['phone'], customer_address=data['address'],
-            items_json=json.dumps(data['items']), total_usd=float(data['total']), status="Pending"
+            items_json=json.dumps(data['items']), total_usd=float(data['total']), status="Pending", stock_deducted=False
         )
         db.session.add(new_order)
         db.session.commit()
@@ -131,6 +163,28 @@ def update_order_status(id, status):
     if not session.get('admin'): return redirect(url_for('login'))
     order = Order.query.get(id)
     if order:
+        if status == 'Completed' and not order.stock_deducted:
+            try:
+                items = json.loads(order.items_json)
+                for item in items:
+                    parts = str(item.get('cartId', '')).split('-')
+                    if len(parts) == 2:
+                        p_id = int(parts[0])
+                        v_idx = int(parts[1])
+                        qty_bought = int(item.get('qty', 1))
+                        
+                        product = Product.query.get(p_id)
+                        if product and product.variants:
+                            variants = json.loads(product.variants)
+                            if 0 <= v_idx < len(variants):
+                                variants[v_idx]['stock'] = max(0, variants[v_idx]['stock'] - qty_bought)
+                                product.variants = json.dumps(variants)
+                                product.stock = sum(v.get('stock', 0) for v in variants)
+            except Exception as e:
+                print("Error updating stock:", e)
+            
+            order.stock_deducted = True
+
         order.status = status
         db.session.commit()
     return redirect(url_for('admin_panel'))
@@ -309,6 +363,12 @@ with app.app_context():
     db.create_all()
     try:
         db.session.execute(text("ALTER TABLE product ADD COLUMN sort_order INTEGER DEFAULT 0"))
+        db.session.commit()
+    except:
+        db.session.rollback()
+        
+    try:
+        db.session.execute(text('ALTER TABLE "order" ADD COLUMN stock_deducted BOOLEAN DEFAULT FALSE'))
         db.session.commit()
     except:
         db.session.rollback()
