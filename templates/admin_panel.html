@@ -125,19 +125,39 @@
 
                 <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden divide-y" id="main-inventory-list">
                     {% for p in products %}
-                    <div class="product-item p-4" id="item-{{p.id}}" data-store="{{p.store}}">
+                    <div class="product-item p-4 {% if not p.is_visible %}bg-gray-50/50{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}">
                         <div class="view-mode flex items-center gap-3">
                             <i class="fa-solid fa-arrows-up-down text-gray-200 product-handle p-2 hover:text-[#ff5000]"></i>
-                            <img src="{{p.image}}" class="w-14 h-14 rounded-xl object-cover border bg-gray-50 shadow-sm">
+                            <img src="{{p.image}}" class="w-14 h-14 rounded-xl object-cover border bg-gray-50 shadow-sm {% if not p.is_visible %}grayscale opacity-60{% endif %}">
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1">
                                     <span class="text-[8px] font-black text-white bg-gray-900 px-1.5 py-0.5 rounded uppercase">{{p.store}}</span>
                                     <span class="text-[8px] font-black text-[#ff5000] bg-orange-50 px-1.5 py-0.5 rounded uppercase">{{p.category}}</span>
+                                    
+                                    <!-- HIDDEN BADGE -->
+                                    {% if not p.is_visible %}
+                                    <span class="text-[8px] font-black text-red-500 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded uppercase"><i class="fa-solid fa-eye-slash mr-1"></i>Hidden</span>
+                                    {% endif %}
                                 </div>
-                                <h4 class="font-bold text-sm truncate leading-none">{{p.title}}</h4>
+                                <h4 class="font-bold text-sm truncate leading-none {% if not p.is_visible %}text-gray-400 line-through{% endif %}">{{p.title}}</h4>
                                 <div class="flex gap-4 mt-2"><span class="text-xs font-black">$ {{ "%.2f"|format(p.price) }}</span><span class="text-xs font-bold {% if p.stock > 0 %}text-green-500{% else %}text-red-500{% endif %}">Qty: {{p.stock}}</span></div>
                             </div>
-                            <button onclick="toggleEdit({{p.id}})" class="w-10 h-10 border rounded-xl flex items-center justify-center text-gray-400 hover:text-orange-500 shadow-sm"><i class="fa-solid fa-gear"></i></button>
+                            
+                            <!-- ACTIONS: GHOST TOGGLE & EDIT -->
+                            <div class="flex items-center gap-2">
+                                <form action="/admin/product/toggle/{{ p.id }}" method="POST" class="m-0">
+                                    {% if p.is_visible %}
+                                        <button type="submit" class="w-10 h-10 bg-green-50 border border-green-200 rounded-xl flex items-center justify-center text-green-600 hover:bg-green-100 transition-colors shadow-sm" title="Visible (Click to hide)">
+                                            <i class="fa-solid fa-eye text-sm"></i>
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="w-10 h-10 bg-gray-100 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors shadow-sm" title="Hidden (Click to show)">
+                                            <i class="fa-solid fa-eye-slash text-sm"></i>
+                                        </button>
+                                    {% endif %}
+                                </form>
+                                <button onclick="toggleEdit({{p.id}})" class="w-10 h-10 border border-gray-200 rounded-xl flex items-center justify-center text-gray-400 hover:text-orange-500 hover:border-orange-200 shadow-sm transition-colors"><i class="fa-solid fa-gear"></i></button>
+                            </div>
                         </div>
 
                         <div class="edit-mode">
@@ -190,9 +210,8 @@
             </section>
         </div>
 
-        <!-- 2. ORDERS VIEW (Unchanged) -->
+        <!-- 2. ORDERS VIEW -->
         <div id="view-orders" class="hidden-view space-y-4">
-            <!-- [Your Orders view code goes here perfectly as generated previously] -->
              {% if orders|length == 0 %}
             <div class="py-20 text-center text-gray-300">
                 <i class="fa-solid fa-receipt text-5xl mb-4 opacity-20"></i>
