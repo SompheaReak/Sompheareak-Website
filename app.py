@@ -20,7 +20,7 @@ cloudinary.config(
   secure = True
 )
 
-# AUTO-COMPRESSOR ENGINE
+# --- AUTO-COMPRESSOR ENGINE ---
 def optimize_and_upload(file):
     return cloudinary.uploader.upload(
         file,
@@ -39,7 +39,7 @@ if db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# THE "WAKE UP" FIX
+# THE "WAKE UP" FIX FOR SLEEPING DATABASES
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_pre_ping": True,  
     "pool_recycle": 300,    
@@ -49,7 +49,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 db = SQLAlchemy(app)
 ADMIN_PASS = 'Thesong_Admin@2022?!$'
 
-# ANTI-SPAM MEMORY TRACKER
+# --- ANTI-SPAM MEMORY TRACKER ---
 spam_tracker = {}
 
 # --- 3. MODELS ---
@@ -63,7 +63,8 @@ class Product(db.Model):
     store = db.Column(db.String(50), nullable=False) 
     variants = db.Column(db.Text, nullable=True)
     sort_order = db.Column(db.Integer, default=0)
-    is_visible = db.Column(db.Boolean, default=True) # NEW: Ghost Mode Toggle!
+    # THIS IS THE MISSING GHOST MODE RULE!
+    is_visible = db.Column(db.Boolean, default=True) 
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -98,11 +99,13 @@ def custom_bracelet(): return render_template('custom_bracelet.html')
 
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
+    # --- ANTI-SPAM IP BLOCKER LOGIC ---
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip and ',' in client_ip:
         client_ip = client_ip.split(',')[0].strip()
         
     current_time = time.time()
+    
     if client_ip in spam_tracker:
         last_time, count = spam_tracker[client_ip]
         if current_time - last_time < 300:
@@ -183,6 +186,7 @@ def update_order_status(id, status):
                                 product.stock = sum(v.get('stock', 0) for v in variants)
             except Exception as e:
                 pass
+            
             order.stock_deducted = True
 
         order.status = status
@@ -212,6 +216,7 @@ def update_categories():
                 cat.sort_order = i
                 file = request.files.get(f'cat_image_{cid}')
                 if file and file.filename != '':
+                    # AUTO COMPRESSION TRIGGER
                     res = optimize_and_upload(file)
                     cat.image = res['secure_url']
         db.session.commit()
@@ -242,7 +247,7 @@ def reorder_products():
     db.session.commit()
     return jsonify({'status': 'success'})
 
-# --- NEW: GHOST MODE TOGGLE ---
+# --- GHOST MODE BUTTON ROUTE ---
 @app.route('/admin/product/toggle/<int:id>', methods=['POST'])
 def toggle_product(id):
     if not session.get('admin'): return redirect(url_for('login'))
@@ -250,7 +255,7 @@ def toggle_product(id):
     if p:
         p.is_visible = not p.is_visible
         db.session.commit()
-        flash(f'Product visibility changed.', 'success')
+        flash(f'Product visibility updated.', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/product/update/<int:id>', methods=['POST'])
@@ -285,6 +290,7 @@ def update_product(id):
             last_id = max([v['id'] for v in updated_variants]) if updated_variants else 0
             for f in new_files:
                 if f and f.filename != '':
+                    # AUTO COMPRESSION TRIGGER
                     res = optimize_and_upload(f)
                     last_id += 1
                     updated_variants.append({"id": last_id, "name": f"New Style {last_id}", "price": updated_variants[0]['price'] if updated_variants else 0, "stock": 1, "image": res['secure_url']})
@@ -319,6 +325,7 @@ def add_product():
     try:
         for f in files:
             if f and f.filename != '':
+                # AUTO COMPRESSION TRIGGER
                 res = optimize_and_upload(f)
                 uploaded_urls.append(res['secure_url'])
                 
@@ -331,6 +338,7 @@ def add_product():
                 vars_json.append({"id": i, "name": v_names[i] if i < len(v_names) else f"Style {i+1}", "price": price, "stock": stock, "image": url})
                 total_stock += stock
             
+            # DEFAULT IS_VISIBLE=TRUE FOR NEW PRODUCTS
             new_p = Product(title=title, price=vars_json[0]['price'], stock=total_stock, image=uploaded_urls[0], category=category, store=store, variants=json.dumps(vars_json), sort_order=-1, is_visible=True)
             db.session.add(new_p)
             db.session.commit()
@@ -356,7 +364,7 @@ def delete_product(id):
 @app.route('/api/products/<store_name>')
 def get_api(store_name):
     try:
-        # NEW: ONLY RETURN VISIBLE PRODUCTS!
+        # ONLY RETURN VISIBLE PRODUCTS TO THE WEBSITE
         products = Product.query.filter_by(store=store_name, is_visible=True).order_by(Product.sort_order.asc(), Product.id.desc()).all()
         categories = Category.query.filter_by(store=store_name).order_by(Category.sort_order.asc()).all()
         return jsonify({
@@ -371,24 +379,27 @@ def request_entity_too_large(error):
     flash('File too large! Please upload fewer images or compress them (Max 50MB combined).', 'error')
     return redirect(url_for('admin_panel'))
 
+# DATABASE UPGRADE SCRIPTS
 with app.app_context():
     db.create_all()
     try:
         db.session.execute(text("ALTER TABLE product ADD COLUMN sort_order INTEGER DEFAULT 0"))
         db.session.commit()
     except:
-        pass
+        db.session.rollback()
+        
     try:
         db.session.execute(text('ALTER TABLE "order" ADD COLUMN stock_deducted BOOLEAN DEFAULT FALSE'))
         db.session.commit()
     except:
-        pass
-    # ADD NEW VISIBILITY COLUMN
+        db.session.rollback()
+        
+    # THIS CREATES THE GHOST MODE COLUMN IN YOUR POSTGRES DATABASE
     try:
         db.session.execute(text('ALTER TABLE product ADD COLUMN is_visible BOOLEAN DEFAULT TRUE'))
         db.session.commit()
     except:
-        pass
+        db.session.rollback()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
