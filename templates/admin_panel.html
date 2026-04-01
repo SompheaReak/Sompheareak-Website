@@ -170,7 +170,16 @@
                                     {% endif %}
                                 </div>
                                 <h4 class="font-bold text-sm truncate leading-none {% if not p.is_visible %}text-gray-400 line-through{% endif %}">{{p.title}}</h4>
-                                <div class="flex gap-4 mt-2"><span class="text-xs font-black">$ {{ "%.2f"|format(p.price) }}</span><span class="text-xs font-bold {% if p.stock > 0 %}text-green-500{% else %}text-red-500{% endif %}">Qty: {{p.stock}}</span></div>
+                                <div class="flex items-center gap-4 mt-2">
+                                    <span class="text-xs font-black">$ {{ "%.2f"|format(p.price) }}</span>
+                                    {% if p.stock > 0 %}
+                                        <span class="text-xs font-bold text-green-500">Qty: {{p.stock}}</span>
+                                    {% else %}
+                                        <span class="text-[9px] font-black text-white bg-red-600 px-2 py-1 rounded-md uppercase tracking-widest animate-pulse shadow-md shadow-red-500/30">
+                                            <i class="fa-solid fa-triangle-exclamation mr-1"></i> Out of Stock
+                                        </span>
+                                    {% endif %}
+                                </div>
                             </div>
                             
                             <div class="flex items-center gap-2">
@@ -223,7 +232,10 @@
                                                 <input type="text" name="v_names[]" value="{{v.name}}" placeholder="Name" class="text-[10px] font-bold border-b outline-none pb-1">
                                                 <div class="flex items-center gap-1 border-b pb-1"><span class="text-[9px] font-black text-gray-400">$</span><input type="number" step="any" name="v_prices[]" value="{{v.price}}" class="w-full text-[10px] font-black outline-none usd-input" oninput="updatePrice(this, 'USD')"></div>
                                                 <div class="flex items-center gap-1 border-b pb-1"><span class="text-[9px] font-black text-gray-400">៛</span><input type="number" step="any" value="{{ (v.price * 4000) | int }}" class="w-full text-[10px] font-black outline-none khr-input" oninput="updatePrice(this, 'KHR')"></div>
-                                                <div class="flex items-center gap-1 border-b pb-1"><span class="text-[9px] font-black text-gray-400">Qty</span><input type="number" name="v_stocks[]" value="{{v.stock}}" class="w-full text-[10px] font-black outline-none"></div>
+                                                <div class="flex items-center gap-1 border-b pb-1 {% if v.stock|int <= 0 %}bg-red-50 rounded px-1{% endif %}">
+                                                    <span class="text-[9px] font-black {% if v.stock|int <= 0 %}text-red-500{% else %}text-gray-400{% endif %}">Qty</span>
+                                                    <input type="number" name="v_stocks[]" value="{{v.stock}}" class="w-full text-[10px] font-black outline-none {% if v.stock|int <= 0 %}text-red-600 bg-transparent{% endif %}">
+                                                </div>
                                             </div>
 
                                             <button type="button" onclick="this.closest('.variant-row').remove()" class="p-2 text-gray-300 hover:text-red-500"><i class="fa-solid fa-trash-can text-sm"></i></button>
@@ -551,5 +563,6 @@
     </script>
 </body>
 </html>
+
 
 
