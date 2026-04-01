@@ -220,7 +220,7 @@
       </div>
   </div>
 
-  <!-- CHECKOUT MODAL -->
+  <!-- CHECKOUT MODAL WITH QUANTITY SELECTOR -->
   <div id="checkout-modal" class="fixed inset-0 z-[2000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
       <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
           <h2 class="text-xl font-black" data-i18n="delivery_details">ព័ត៌មានដឹកជញ្ជូន</h2>
@@ -228,7 +228,7 @@
       </div>
       
       <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50">
-          <div class="flex gap-4 items-center bg-white p-4 rounded-2xl border border-gray-100 mb-6 shadow-sm">
+          <div class="flex gap-4 items-center bg-white p-4 rounded-2xl border border-gray-100 mb-4 shadow-sm">
               <div class="w-16 h-16 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex-shrink-0">
                   <img id="check-preview-img" src="" class="w-full h-full object-cover">
               </div>
@@ -238,6 +238,16 @@
                   <div class="flex items-center gap-2 mt-2">
                       <span class="text-xs font-black text-[#ff5000]" id="check-item-price">...</span>
                   </div>
+              </div>
+          </div>
+
+          <!-- QUANTITY SELECTOR -->
+          <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 mb-6 shadow-sm">
+              <span class="text-[10px] font-black text-gray-800 uppercase tracking-widest">បរិមាណ (Quantity)</span>
+              <div class="flex items-center gap-4 bg-gray-50 rounded-xl p-1 border border-gray-100">
+                  <button onclick="changeOrderQty(-1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-600 shadow-sm active:scale-95 transition-transform"><i class="fa-solid fa-minus"></i></button>
+                  <span id="order-qty-display" class="font-black text-sm text-gray-900 w-4 text-center">1</span>
+                  <button onclick="changeOrderQty(1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-600 shadow-sm active:scale-95 transition-transform"><i class="fa-solid fa-plus"></i></button>
               </div>
           </div>
 
@@ -580,6 +590,9 @@
     let selectedCharmUids = []; 
     let currentOrderTotalKHR = 0;
     let currentPkgName = "";
+    
+    // FOR THE QUANTITY SELECTOR
+    let orderQuantity = 1;
 
     function t(key) { return translations[currentLang][key] || key; }
 
@@ -616,7 +629,6 @@
             const data = await res.json();
             
             allCharms = [];
-            // MAGIC FIX: Force absolutely unique IDs for every single variant so they never get confused!
             data.products.forEach(p => {
                 let variants = [];
                 try {
@@ -627,7 +639,8 @@
                 if (variants && variants.length > 0) {
                     variants.forEach((v, idx) => {
                         allCharms.push({
-                            id: `p${p.id}_v${idx}`, // GUARANTEED UNIQUE ID
+                            db_id: v.id || p.id, // REAL ID for stock deduction
+                            ui_id: `p${p.id}_v${idx}`, // UNIQUE string for exact charm selection
                             price: parseFloat(v.price || 0) * RATE,
                             image: v.image || p.image || p.thumbnail,
                             categories: [p.category || 'Other'],
@@ -637,7 +650,8 @@
                     });
                 } else {
                     allCharms.push({
-                        id: `p${p.id}_main`, // GUARANTEED UNIQUE ID
+                        db_id: p.id,
+                        ui_id: `p${p.id}_main`,
                         price: parseFloat(p.price || 0) * RATE,
                         image: p.image || p.thumbnail || 'https://via.placeholder.com/150?text=No+Image',
                         categories: [p.category || 'Other'],
@@ -647,10 +661,9 @@
                 }
             });
             
-            // Clear any old broken carts from localStorage that used old IDs
             if (selectedCharms.length > 0) {
                 const firstCharm = selectedCharms[0];
-                if (!firstCharm.id.toString().includes('p')) {
+                if (!firstCharm.ui_id) {
                     selectedCharms = []; 
                     localStorage.removeItem('customCharms');
                 }
@@ -717,7 +730,7 @@
         grid.innerHTML = allCharms.filter(c => c.categories.includes(cat)).map(c => {
             let isOut = (c.stock !== undefined && c.stock <= 0);
             return `
-                <div onclick="${isOut ? '' : `addCharmById('${c.id}')`}" class="relative flex flex-col items-center gap-1 p-1 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer'}">
+                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" class="relative flex flex-col items-center gap-1 p-1 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer'}">
                     ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1.5 py-0.5 rounded shadow-sm z-20 font-black tracking-widest uppercase font-['Kantumruy_Pro']">${t('sold_out')}</div>` : ''}
                     <img src="${c.image}" class="w-full aspect-square object-contain drop-shadow-sm">
                     <div class="w-full text-center border-t border-gray-50 pt-0.5 mt-0.5">
@@ -738,8 +751,8 @@
         drawer.classList.add('translate-y-full', 'pointer-events-none'); drawer.classList.remove('pointer-events-auto');
     }
 
-    function addCharmById(id) {
-        const charm = allCharms.find(c => c.id === id);
+    function addCharmById(ui_id) {
+        const charm = allCharms.find(c => c.ui_id === ui_id);
         if(!charm || (charm.stock !== undefined && charm.stock <= 0)) return;
         const newUid = Math.random().toString(36).substr(2, 9);
         selectedCharms.push({ ...charm, uid: newUid });
@@ -787,7 +800,7 @@
 
     function getDesignCode() {
         if(selectedCharms.length > 0) {
-            let code = selectedCharms.map(c => { const idx = allCharms.findIndex(x => x.id === c.id); return idx !== -1 ? idx.toString().padStart(3, '0') : '999'; }).join('');
+            let code = selectedCharms.map(c => { const idx = allCharms.findIndex(x => x.ui_id === c.ui_id); return idx !== -1 ? idx.toString().padStart(3, '0') : '999'; }).join('');
             while (code.length < 12) { code += '999'; } return code;
         } return "";
     }
@@ -1081,7 +1094,7 @@
         finally { overlay.classList.add('hidden'); overlay.style.display = 'none'; }
     }
 
-    // --- CHECKOUT LOGIC ---
+    // --- CHECKOUT LOGIC WITH QUANTITY ---
     function calculateDelivery(subtotalKHR) {
         if (subtotalKHR === 0) return 0;
         if (subtotalKHR < 20000) return 8000;
@@ -1091,16 +1104,32 @@
         return 0;
     }
 
-    function openCheckout() {
-        const del = calculateDelivery(currentOrderTotalKHR);
-        document.getElementById('check-subtotal').innerText = `៛${currentOrderTotalKHR.toLocaleString()}`;
-        document.getElementById('check-delivery').innerText = del === 0 ? t('free') : `៛${del.toLocaleString()}`;
-        document.getElementById('check-total-khr').innerText = `៛${(currentOrderTotalKHR + del).toLocaleString()}`;
+    function changeOrderQty(delta) {
+        orderQuantity += delta;
+        if(orderQuantity < 1) orderQuantity = 1;
+        if(orderQuantity > 10) orderQuantity = 10;
+        document.getElementById('order-qty-display').innerText = orderQuantity;
+        updateCheckoutTotals();
+    }
+
+    function updateCheckoutTotals() {
+        const itemsSubtotal = currentOrderTotalKHR * orderQuantity;
+        const del = calculateDelivery(itemsSubtotal);
         
-        const charmLeng = selectedCharms.length;
+        document.getElementById('check-subtotal').innerText = `៛${itemsSubtotal.toLocaleString()}`;
+        document.getElementById('check-delivery').innerText = del === 0 ? t('free') : `៛${del.toLocaleString()}`;
+        document.getElementById('check-total-khr').innerText = `៛${(itemsSubtotal + del).toLocaleString()}`;
+        
+        document.getElementById('check-item-price').innerText = `៛${itemsSubtotal.toLocaleString()}`;
+        document.getElementById('check-details').innerText = `Code: ${getDesignCode()} | Charms: ${selectedCharms.length} | Pkg: ${currentPkgName} | Qty: ${orderQuantity}`;
+    }
+
+    function openCheckout() {
+        orderQuantity = 1;
+        document.getElementById('order-qty-display').innerText = orderQuantity;
+        
         document.getElementById('check-preview-img').src = currentReceiptDataUrl;
-        document.getElementById('check-details').innerText = `Code: ${getDesignCode()} | Charms: ${charmLeng}\nPkg: ${currentPkgName}`;
-        document.getElementById('check-item-price').innerText = `៛${currentOrderTotalKHR.toLocaleString()}`;
+        updateCheckoutTotals();
 
         document.getElementById('checkout-modal').classList.remove('translate-y-full'); 
     }
@@ -1121,21 +1150,44 @@
         
         btn.innerText = "SENDING..."; btn.disabled = true;
 
-        const del = calculateDelivery(currentOrderTotalKHR);
-        const totalUSD = (currentOrderTotalKHR + del) / RATE;
+        const itemsSubtotal = currentOrderTotalKHR * orderQuantity;
+        const del = calculateDelivery(itemsSubtotal);
+        const totalUSD = (itemsSubtotal + del) / RATE;
 
         const dateStr = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
         const styleText = `Code: ${getDesignCode()} | Charms: ${selectedCharms.length} | Pkg: ${currentPkgName} | Date: ${dateStr}`;
 
-        const orderItems = [{
+        const orderItems = [];
+        
+        // 1. Send the Main Visual Bracelet item
+        orderItems.push({
             cartId: "custom-" + Date.now(),
             title: "Custom DIY Bracelet",
             style: styleText,
             price: currentOrderTotalKHR / RATE,
-            qty: 1,
+            qty: orderQuantity,
             image: currentReceiptDataUrl, 
             maxStock: 99
-        }];
+        });
+        
+        // 2. MAGICAL INVISIBLE INVENTORY HELPER: 
+        // Sends every individual charm ID so the server can deduct stock automatically!
+        const charmCounts = {};
+        selectedCharms.forEach(c => {
+            charmCounts[c.db_id] = (charmCounts[c.db_id] || 0) + 1;
+        });
+        
+        for (const [id, count] of Object.entries(charmCounts)) {
+            orderItems.push({
+                cartId: id,
+                title: "DIY-Part",
+                style: "Hidden component for stock deduction",
+                price: 0, 
+                qty: count * orderQuantity,
+                image: "hidden",
+                maxStock: 99
+            });
+        }
 
         try {
             const res = await fetch('/api/checkout', { 
@@ -1177,7 +1229,7 @@
         const available = allCharms.filter(c => c.stock > 0);
         if(available.length === 0) return;
         const rand = available[Math.floor(Math.random() * available.length)]; 
-        if(rand) addCharmById(rand.id); 
+        if(rand) addCharmById(rand.ui_id); 
     }
 
     init();
