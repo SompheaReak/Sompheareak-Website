@@ -220,7 +220,7 @@
       </div>
   </div>
 
-  <!-- CHECKOUT MODAL (SMART DESIGN) -->
+  <!-- CHECKOUT MODAL -->
   <div id="checkout-modal" class="fixed inset-0 z-[2000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
       <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
           <h2 class="text-xl font-black" data-i18n="delivery_details">ព័ត៌មានដឹកជញ្ជូន</h2>
@@ -228,8 +228,6 @@
       </div>
       
       <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50">
-          
-          <!-- Product Summary Box -->
           <div class="flex gap-4 items-center bg-white p-4 rounded-2xl border border-gray-100 mb-6 shadow-sm">
               <div class="w-16 h-16 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex-shrink-0">
                   <img id="check-preview-img" src="" class="w-full h-full object-cover">
@@ -243,7 +241,6 @@
               </div>
           </div>
 
-          <!-- Total Calculation Box -->
           <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
               <div class="absolute top-0 left-0 w-1 h-full bg-[#ff5000]"></div>
               <div class="flex justify-between text-xs font-bold text-gray-500"><span data-i18n="subtotal">តម្លៃសរុប:</span><span id="check-subtotal">៛0</span></div>
@@ -254,7 +251,6 @@
               </div>
           </div>
 
-          <!-- Address Form -->
           <div class="space-y-4">
               <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2" data-i18n="contact_info">ព័ត៌មានទំនាក់ទំនង</label>
               <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក" data-i18n-placeholder="name_ph">
@@ -358,11 +354,15 @@
                  </div>
             </div>
             
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1.5">
+                <!-- NEW BULK DELETE BUTTON -->
+                <button id="delete-selected-btn" onclick="deleteSelectedCharms()" class="hidden bg-red-50 text-red-500 hover:bg-red-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 items-center gap-1 font-['Kantumruy_Pro']">
+                    <i class="fa-solid fa-trash-can"></i> <span data-i18n="delete">លុប</span>
+                </button>
                 <button id="duplicate-btn" onclick="duplicateSelectedCharms()" class="hidden bg-blue-50 text-blue-500 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 items-center gap-1 font-['Kantumruy_Pro']">
                     <i class="fa-solid fa-copy"></i> <span data-i18n="duplicate">ចម្លង</span>
                 </button>
-                <button onclick="clearBracelet()" class="bg-red-50 text-red-500 hover:bg-red-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 flex items-center gap-1 font-['Kantumruy_Pro']">
+                <button onclick="clearBracelet()" class="bg-gray-50 text-gray-500 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 flex items-center gap-1 font-['Kantumruy_Pro']">
                     <i class="fa-solid fa-rotate-left"></i> <span data-i18n="reset">ជម្រះ</span>
                 </button>
             </div>
@@ -458,6 +458,7 @@
             header_price: "តម្លៃ",
             reset: "ជម្រះ",
             duplicate: "ចម្លង",
+            delete: "លុប",
             start_design: "ចាប់ផ្តើមឌីហ្សាញ់",
             copy: "Copy",
             load: "បញ្ជូន",
@@ -517,6 +518,7 @@
             header_price: "Price",
             reset: "Reset",
             duplicate: "Duplicate",
+            delete: "Delete",
             start_design: "Start Designing",
             copy: "Copy",
             load: "Load",
@@ -575,7 +577,6 @@
         if (saved) selectedCharms = JSON.parse(saved);
     } catch(e) { localStorage.removeItem('customCharms'); }
 
-    // GLOBALS FOR CHECKOUT
     let currentReceiptDataUrl = null; 
     let selectedCharmUids = []; 
     let currentOrderTotalKHR = 0;
@@ -616,7 +617,11 @@
             const data = await res.json();
             
             allCharms = data.products.map(p => ({
-                id: p.id, price: p.price, image: p.thumbnail, categories: [p.category], stock: p.stock
+                id: p.id, 
+                price: parseFloat(p.price) * RATE, // Keep core logic in KHR mathematically
+                image: p.thumbnail, 
+                categories: [p.category], 
+                stock: p.stock
             }));
         } catch(e) { console.log("Error loading charms:", e); } 
         finally { document.getElementById('loadingOverlay').style.display = 'none'; }
@@ -684,6 +689,7 @@
                     <img src="${c.image}" class="w-full aspect-square object-contain drop-shadow-sm">
                     <div class="w-full text-center border-t border-gray-50 pt-0.5 mt-0.5">
                         <p class="text-[7px] font-black text-gray-900">${c.price.toLocaleString()}៛</p>
+                        <p class="text-[6px] font-bold text-gray-400">$${(c.price / RATE).toFixed(2)}</p>
                     </div>
                 </div>`;
         }).join('');
@@ -715,6 +721,14 @@
         selectedCharmUids = selectedCharmUids.filter(id => id !== uid); updateUI();
     }
     
+    function deleteSelectedCharms() {
+        if (selectedCharmUids.length === 0) return;
+        selectedCharms = selectedCharms.filter(c => !selectedCharmUids.includes(c.uid));
+        selectedCharmUids = [];
+        updateUI();
+        showToast(t('cleared'), 'text-red-400', 'fa-trash');
+    }
+
     function duplicateSelectedCharms(event) {
         if (event) event.stopPropagation(); if (selectedCharmUids.length === 0) return;
         const itemsToDuplicate = selectedCharms.filter(c => selectedCharmUids.includes(c.uid));
@@ -756,8 +770,15 @@
         document.getElementById('share-code-input').value = getDesignCode();
         
         const duplicateBtn = document.getElementById('duplicate-btn');
-        if (selectedCharmUids.length > 0) { duplicateBtn.classList.remove('hidden'); duplicateBtn.classList.add('flex'); } 
-        else { duplicateBtn.classList.add('hidden'); duplicateBtn.classList.remove('flex'); }
+        const deleteSelBtn = document.getElementById('delete-selected-btn');
+        
+        if (selectedCharmUids.length > 0) { 
+            duplicateBtn.classList.remove('hidden'); duplicateBtn.classList.add('flex'); 
+            deleteSelBtn.classList.remove('hidden'); deleteSelBtn.classList.add('flex');
+        } else { 
+            duplicateBtn.classList.add('hidden'); duplicateBtn.classList.remove('flex'); 
+            deleteSelBtn.classList.add('hidden'); deleteSelBtn.classList.remove('flex');
+        }
 
         if (selectedCharms.length === 0) {
             preview.className = "flex overflow-x-auto py-8 px-4 scrollbar-hide min-h-[120px] items-center justify-center bg-slate-50 gap-0 transition-all";
@@ -780,37 +801,103 @@
         document.getElementById('screenshot-btn').disabled = false;
     }
 
-    let touchStartX = 0, touchStartY = 0, touchStartTime = 0, isDragging = false, draggedItem = null;
+    // MULTI-SELECT DRAG & DROP LOGIC
+    let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+    let isDragging = false, potentialDrag = false, draggedItem = null;
 
     function handleTouchStart(e) {
-        if (e.target.closest('button')) return; const container = e.target.closest('.bracelet-link-container'); if (!container) return;
+        if (e.target.closest('button')) return; 
+        const container = e.target.closest('.bracelet-link-container'); 
+        if (!container) return;
+        
         const uid = container.dataset.uid;
-        if (selectedCharmUids.includes(uid) && selectedCharmUids.length === 1) { isDragging = true; draggedItem = container; container.classList.add('dragging'); } 
-        else { isDragging = false; }
-        touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; touchStartTime = new Date().getTime();
+        if (selectedCharmUids.includes(uid) || selectedCharmUids.length === 0) {
+            potentialDrag = true; 
+            draggedItem = container; 
+        }
+        
+        touchStartX = e.touches[0].clientX; 
+        touchStartY = e.touches[0].clientY; 
+        touchStartTime = new Date().getTime();
     }
 
     function handleTouchMove(e) {
-        if (!isDragging || !draggedItem) return; e.preventDefault(); 
-        const touch = e.touches[0]; const target = document.elementFromPoint(touch.clientX, touch.clientY); const targetContainer = target?.closest('.bracelet-link-container');
-        document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('drag-over'));
-        if (targetContainer && targetContainer !== draggedItem) { targetContainer.classList.add('drag-over'); draggedItem.dataset.swapIndex = targetContainer.dataset.index; }
+        if (!potentialDrag || !draggedItem) return;
+        const touch = e.touches[0];
+        const distX = Math.abs(touch.clientX - touchStartX);
+        const distY = Math.abs(touch.clientY - touchStartY);
+        
+        // Start dragging if moved intentionally
+        if (!isDragging && (distX > 10 || distY > 10)) {
+            isDragging = true;
+            const uid = draggedItem.dataset.uid;
+            
+            // If dragging an unselected item, select only it.
+            if (!selectedCharmUids.includes(uid)) {
+                selectedCharmUids = [uid]; 
+                document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('selected'));
+                draggedItem.classList.add('selected');
+            }
+            
+            // Mark all selected items visually as dragging
+            document.querySelectorAll('.bracelet-link-container').forEach(el => {
+                if (selectedCharmUids.includes(el.dataset.uid)) el.classList.add('dragging');
+            });
+        }
+
+        if (isDragging) {
+            e.preventDefault(); 
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            const targetContainer = target?.closest('.bracelet-link-container');
+            
+            document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('drag-over'));
+            if (targetContainer && !selectedCharmUids.includes(targetContainer.dataset.uid)) {
+                targetContainer.classList.add('drag-over');
+            }
+        }
     }
 
     function handleTouchEnd(e) {
-        if (e.target.closest('button')) return; const container = e.target.closest('.bracelet-link-container'); if(!container) return;
-        const timeDiff = new Date().getTime() - touchStartTime; const touchEndX = e.changedTouches[0].clientX; const dist = Math.abs(touchEndX - touchStartX);
+        if (e.target.closest('button')) return; 
+        const container = e.target.closest('.bracelet-link-container'); 
+        if(!container) return;
+        
+        const timeDiff = new Date().getTime() - touchStartTime; 
+        const touchEndX = e.changedTouches[0].clientX; 
+        const dist = Math.abs(touchEndX - touchStartX);
 
-        if (timeDiff < 200 && dist < 10 && !isDragging) {
+        if (timeDiff < 200 && dist < 10) {
+             // It's a TAP - toggle selection
              const uid = container.dataset.uid;
-             if (selectedCharmUids.includes(uid)) selectedCharmUids = selectedCharmUids.filter(id => id !== uid);
-             else selectedCharmUids.push(uid);
+             if (selectedCharmUids.includes(uid)) {
+                 selectedCharmUids = selectedCharmUids.filter(id => id !== uid);
+             } else {
+                 selectedCharmUids.push(uid);
+             }
              updateUI();
-        } else if (isDragging && draggedItem) {
-            const fromIndex = parseInt(draggedItem.dataset.index); const toIndex = parseInt(draggedItem.dataset.swapIndex);
-            if (!isNaN(toIndex) && fromIndex !== toIndex) reorderArray(fromIndex, toIndex);
+        } 
+        else if (isDragging) {
+            // It's a DROP - move all selected
+            const targetContainer = document.querySelector('.bracelet-link-container.drag-over');
+            if (targetContainer) {
+                const targetUid = targetContainer.dataset.uid;
+                const itemsToMove = selectedCharms.filter(c => selectedCharmUids.includes(c.uid));
+                
+                // Remove selected from original spots
+                selectedCharms = selectedCharms.filter(c => !selectedCharmUids.includes(c.uid));
+                
+                // Find where the drop target is now
+                let insertIdx = selectedCharms.findIndex(c => c.uid === targetUid);
+                if (insertIdx === -1) insertIdx = selectedCharms.length; 
+                
+                // Insert all selected items
+                selectedCharms.splice(insertIdx, 0, ...itemsToMove);
+                updateUI();
+            }
         }
-        document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('dragging', 'drag-over')); isDragging = false; draggedItem = null;
+        
+        document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('dragging', 'drag-over')); 
+        isDragging = false; potentialDrag = false; draggedItem = null;
     }
 
     function copyDesignCode() {
@@ -985,7 +1072,6 @@
         document.getElementById('check-delivery').innerText = del === 0 ? t('free') : `៛${del.toLocaleString()}`;
         document.getElementById('check-total-khr').innerText = `៛${(currentOrderTotalKHR + del).toLocaleString()}`;
         
-        // Populate the Preview details on the checkout page
         const charmLeng = selectedCharms.length;
         document.getElementById('check-preview-img').src = currentReceiptDataUrl;
         document.getElementById('check-details').innerText = `Code: ${getDesignCode()} | Charms: ${charmLeng}\nPkg: ${currentPkgName}`;
@@ -1013,7 +1099,6 @@
         const del = calculateDelivery(currentOrderTotalKHR);
         const totalUSD = (currentOrderTotalKHR + del) / RATE;
 
-        // Build the magical details string
         const dateStr = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
         const styleText = `Code: ${getDesignCode()} | Charms: ${selectedCharms.length} | Pkg: ${currentPkgName} | Date: ${dateStr}`;
 
@@ -1023,7 +1108,7 @@
             style: styleText,
             price: currentOrderTotalKHR / RATE,
             qty: 1,
-            image: currentReceiptDataUrl, // The picture
+            image: currentReceiptDataUrl, 
             maxStock: 99
         }];
 
@@ -1062,7 +1147,6 @@
         const percentage = (el.scrollLeft / scrollWidth) * 100; thumb.style.width = '30%'; thumb.style.left = `${percentage * 0.7}%`;
     }
     function scrollManual(val) { document.getElementById('bracelet-preview').scrollBy({ left: val, behavior: 'smooth' }); }
-    function reorderArray(from, to) { const item = selectedCharms.splice(from, 1)[0]; selectedCharms.splice(to, 0, item); selectedCharmUids = []; updateUI(); }
     
     function addRandom() { 
         const available = allCharms.filter(c => c.stock > 0);
