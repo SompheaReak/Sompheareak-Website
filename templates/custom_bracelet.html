@@ -355,7 +355,6 @@
             </div>
             
             <div class="flex items-center gap-1.5">
-                <!-- NEW BULK DELETE BUTTON -->
                 <button id="delete-selected-btn" onclick="deleteSelectedCharms()" class="hidden bg-red-50 text-red-500 hover:bg-red-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 items-center gap-1 font-['Kantumruy_Pro']">
                     <i class="fa-solid fa-trash-can"></i> <span data-i18n="delete">លុប</span>
                 </button>
@@ -617,7 +616,7 @@
             const data = await res.json();
             
             allCharms = [];
-            // MAGIC FIX: Extract the variants to become the individual charms!
+            // MAGIC FIX: Force absolutely unique IDs for every single variant so they never get confused!
             data.products.forEach(p => {
                 let variants = [];
                 try {
@@ -628,7 +627,7 @@
                 if (variants && variants.length > 0) {
                     variants.forEach((v, idx) => {
                         allCharms.push({
-                            id: v.id || `${p.id}-${idx}`,
+                            id: `p${p.id}_v${idx}`, // GUARANTEED UNIQUE ID
                             price: parseFloat(v.price || 0) * RATE,
                             image: v.image || p.image || p.thumbnail,
                             categories: [p.category || 'Other'],
@@ -638,7 +637,7 @@
                     });
                 } else {
                     allCharms.push({
-                        id: p.id,
+                        id: `p${p.id}_main`, // GUARANTEED UNIQUE ID
                         price: parseFloat(p.price || 0) * RATE,
                         image: p.image || p.thumbnail || 'https://via.placeholder.com/150?text=No+Image',
                         categories: [p.category || 'Other'],
@@ -647,6 +646,15 @@
                     });
                 }
             });
+            
+            // Clear any old broken carts from localStorage that used old IDs
+            if (selectedCharms.length > 0) {
+                const firstCharm = selectedCharms[0];
+                if (!firstCharm.id.toString().includes('p')) {
+                    selectedCharms = []; 
+                    localStorage.removeItem('customCharms');
+                }
+            }
             
         } catch(e) { console.log("Error loading charms:", e); } 
         finally { document.getElementById('loadingOverlay').style.display = 'none'; }
@@ -731,7 +739,7 @@
     }
 
     function addCharmById(id) {
-        const charm = allCharms.find(c => c.id == id);
+        const charm = allCharms.find(c => c.id === id);
         if(!charm || (charm.stock !== undefined && charm.stock <= 0)) return;
         const newUid = Math.random().toString(36).substr(2, 9);
         selectedCharms.push({ ...charm, uid: newUid });
@@ -779,7 +787,7 @@
 
     function getDesignCode() {
         if(selectedCharms.length > 0) {
-            let code = selectedCharms.map(c => { const idx = allCharms.findIndex(x => x.id == c.id); return idx !== -1 ? idx.toString().padStart(3, '0') : '999'; }).join('');
+            let code = selectedCharms.map(c => { const idx = allCharms.findIndex(x => x.id === c.id); return idx !== -1 ? idx.toString().padStart(3, '0') : '999'; }).join('');
             while (code.length < 12) { code += '999'; } return code;
         } return "";
     }
