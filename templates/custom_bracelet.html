@@ -616,13 +616,38 @@
             const res = await fetch('/api/products/custom_bracelet');
             const data = await res.json();
             
-            allCharms = data.products.map(p => ({
-                id: p.id, 
-                price: parseFloat(p.price) * RATE, // Keep core logic in KHR mathematically
-                image: p.thumbnail, 
-                categories: [p.category], 
-                stock: p.stock
-            }));
+            allCharms = [];
+            // MAGIC FIX: Extract the variants to become the individual charms!
+            data.products.forEach(p => {
+                let variants = [];
+                try {
+                    if (p.parsed_variants) variants = p.parsed_variants;
+                    else if (p.variants) variants = typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants;
+                } catch(e) {}
+                
+                if (variants && variants.length > 0) {
+                    variants.forEach((v, idx) => {
+                        allCharms.push({
+                            id: v.id || `${p.id}-${idx}`,
+                            price: parseFloat(v.price || 0) * RATE,
+                            image: v.image || p.image || p.thumbnail,
+                            categories: [p.category || 'Other'],
+                            stock: v.stock !== undefined ? parseInt(v.stock) : 99,
+                            name: v.name || `${p.title} - ${idx+1}`
+                        });
+                    });
+                } else {
+                    allCharms.push({
+                        id: p.id,
+                        price: parseFloat(p.price || 0) * RATE,
+                        image: p.image || p.thumbnail || 'https://via.placeholder.com/150?text=No+Image',
+                        categories: [p.category || 'Other'],
+                        stock: p.stock !== undefined ? parseInt(p.stock) : 99,
+                        name: p.title
+                    });
+                }
+            });
+            
         } catch(e) { console.log("Error loading charms:", e); } 
         finally { document.getElementById('loadingOverlay').style.display = 'none'; }
         
@@ -665,7 +690,7 @@
         const categories = Array.from(new Set(allCharms.flatMap(c => c.categories)));
         document.getElementById('categoryGallery').innerHTML = categories.map(cat => {
             const charm = allCharms.find(c => c.categories.includes(cat));
-            if(!charm) return '';
+            if(!charm || !charm.image) return '';
             return `
                 <div onclick="openDrawer('${cat}')" class="flex flex-col gap-1 active:scale-95 transition-transform cursor-pointer group">
                     <div class="w-full aspect-square bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden p-1 flex items-center justify-center group-hover:shadow-md transition-shadow relative">
@@ -684,7 +709,7 @@
         grid.innerHTML = allCharms.filter(c => c.categories.includes(cat)).map(c => {
             let isOut = (c.stock !== undefined && c.stock <= 0);
             return `
-                <div onclick="${isOut ? '' : `addCharmById(${c.id})`}" class="relative flex flex-col items-center gap-1 p-1 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer'}">
+                <div onclick="${isOut ? '' : `addCharmById('${c.id}')`}" class="relative flex flex-col items-center gap-1 p-1 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer'}">
                     ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1.5 py-0.5 rounded shadow-sm z-20 font-black tracking-widest uppercase font-['Kantumruy_Pro']">${t('sold_out')}</div>` : ''}
                     <img src="${c.image}" class="w-full aspect-square object-contain drop-shadow-sm">
                     <div class="w-full text-center border-t border-gray-50 pt-0.5 mt-0.5">
@@ -706,7 +731,7 @@
     }
 
     function addCharmById(id) {
-        const charm = allCharms.find(c => c.id === id);
+        const charm = allCharms.find(c => c.id == id);
         if(!charm || (charm.stock !== undefined && charm.stock <= 0)) return;
         const newUid = Math.random().toString(36).substr(2, 9);
         selectedCharms.push({ ...charm, uid: newUid });
@@ -754,7 +779,7 @@
 
     function getDesignCode() {
         if(selectedCharms.length > 0) {
-            let code = selectedCharms.map(c => { const idx = allCharms.findIndex(x => x.id === c.id); return idx !== -1 ? idx.toString().padStart(3, '0') : '999'; }).join('');
+            let code = selectedCharms.map(c => { const idx = allCharms.findIndex(x => x.id == c.id); return idx !== -1 ? idx.toString().padStart(3, '0') : '999'; }).join('');
             while (code.length < 12) { code += '999'; } return code;
         } return "";
     }
@@ -827,19 +852,16 @@
         const distX = Math.abs(touch.clientX - touchStartX);
         const distY = Math.abs(touch.clientY - touchStartY);
         
-        // Start dragging if moved intentionally
         if (!isDragging && (distX > 10 || distY > 10)) {
             isDragging = true;
             const uid = draggedItem.dataset.uid;
             
-            // If dragging an unselected item, select only it.
             if (!selectedCharmUids.includes(uid)) {
                 selectedCharmUids = [uid]; 
                 document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('selected'));
                 draggedItem.classList.add('selected');
             }
             
-            // Mark all selected items visually as dragging
             document.querySelectorAll('.bracelet-link-container').forEach(el => {
                 if (selectedCharmUids.includes(el.dataset.uid)) el.classList.add('dragging');
             });
@@ -867,7 +889,6 @@
         const dist = Math.abs(touchEndX - touchStartX);
 
         if (timeDiff < 200 && dist < 10) {
-             // It's a TAP - toggle selection
              const uid = container.dataset.uid;
              if (selectedCharmUids.includes(uid)) {
                  selectedCharmUids = selectedCharmUids.filter(id => id !== uid);
@@ -877,20 +898,16 @@
              updateUI();
         } 
         else if (isDragging) {
-            // It's a DROP - move all selected
             const targetContainer = document.querySelector('.bracelet-link-container.drag-over');
             if (targetContainer) {
                 const targetUid = targetContainer.dataset.uid;
                 const itemsToMove = selectedCharms.filter(c => selectedCharmUids.includes(c.uid));
                 
-                // Remove selected from original spots
                 selectedCharms = selectedCharms.filter(c => !selectedCharmUids.includes(c.uid));
                 
-                // Find where the drop target is now
                 let insertIdx = selectedCharms.findIndex(c => c.uid === targetUid);
                 if (insertIdx === -1) insertIdx = selectedCharms.length; 
                 
-                // Insert all selected items
                 selectedCharms.splice(insertIdx, 0, ...itemsToMove);
                 updateUI();
             }
