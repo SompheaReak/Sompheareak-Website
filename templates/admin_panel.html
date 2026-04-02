@@ -24,6 +24,12 @@
         /* Toast & Loading Animations */
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
+
+        /* Custom Tag Input Styles */
+        .tag-container { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1.5px solid #fed7aa; border-radius: 12px; background: white; min-height: 42px; align-items: center; cursor: text; }
+        .tag-container:focus-within { border-color: #ff5000; box-shadow: 0 0 0 4px rgba(255, 80, 0, 0.05); }
+        .tag-badge { background: #fff7ed; color: #ff5000; border: 1px solid #fed7aa; border-radius: 6px; padding: 2px 8px; font-size: 10px; font-weight: 800; display: flex; align-items: center; gap: 4px; text-transform: uppercase; }
+        .tag-input { border: none; outline: none; flex: 1; min-width: 60px; font-size: 12px; font-weight: 600; padding: 4px; background: transparent; }
     </style>
 </head>
 <body class="pb-20">
@@ -96,8 +102,8 @@
                     <h2 class="font-black text-lg mb-6"><i class="fa-solid fa-cloud-arrow-up text-[#ff5000] mr-2"></i>Quick Upload</h2>
                     <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-4 submit-form">
                         
-                        <!-- HIGH PRIORITY: STORE AND CATEGORY -->
-                        <div class="grid grid-cols-2 gap-3 mb-2 bg-orange-50/50 p-3 rounded-2xl border border-orange-100">
+                        <!-- HIGH PRIORITY: STORE AND CATEGORY (MODIFIED) -->
+                        <div class="space-y-3 mb-2 bg-orange-50/50 p-3 rounded-2xl border border-orange-100">
                             <div class="space-y-1">
                                 <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">1. Select Store</label>
                                 <select name="store" class="input-box border-2 border-orange-200" id="add-store-select" onchange="updateCatList(this, 'add-cats')">
@@ -107,9 +113,19 @@
                                 </select>
                             </div>
                             <div class="space-y-1">
-                                <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">2. Category</label>
-                                <input list="add-cats" name="category" required placeholder="Type or Select..." class="input-box border-2 border-orange-200">
-                                <datalist id="add-cats"></datalist>
+                                <div class="flex justify-between items-end">
+                                    <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">2. Categories (Add multiple)</label>
+                                    <span class="text-[8px] text-gray-400 font-bold pr-1">Press Comma (,) to add</span>
+                                </div>
+                                
+                                <!-- Hidden input that submits comma-separated tags to backend -->
+                                <input type="hidden" name="category" id="hidden-category-input" required>
+                                
+                                <!-- Visual Tag Input -->
+                                <div class="tag-container" id="tag-container" onclick="document.getElementById('tag-input-field').focus()">
+                                    <input type="text" id="tag-input-field" list="add-cats" placeholder="e.g. Animal, Cat" class="tag-input" autocomplete="off">
+                                    <datalist id="add-cats"></datalist>
+                                </div>
                             </div>
                         </div>
 
@@ -129,7 +145,7 @@
                             <div id="variant-list" class="space-y-3 max-h-48 overflow-y-auto pr-2 hide-scrollbar"></div>
                         </div>
 
-                        <!-- OPTIONAL TITLE (MOVED TO BOTTOM) -->
+                        <!-- OPTIONAL TITLE -->
                         <div class="pt-2">
                             <input type="text" name="title" placeholder="Product Title (Optional - Auto generated)" class="input-box text-sm bg-gray-50 border-gray-100 text-gray-500 focus:bg-white">
                         </div>
@@ -162,9 +178,17 @@
                                 <img src="{{p.image}}" class="w-full h-auto max-h-20 rounded-xl object-contain border bg-white p-1 shadow-sm {% if not p.is_visible %}grayscale opacity-60{% endif %}">
                             </div>
                             <div class="flex-1 min-w-0 pl-1">
-                                <div class="flex items-center gap-2 mb-1">
+                                <div class="flex flex-wrap items-center gap-1 mb-1">
                                     <span class="text-[8px] font-black text-white bg-gray-900 px-1.5 py-0.5 rounded uppercase">{{p.store}}</span>
-                                    <span class="text-[8px] font-black text-[#ff5000] bg-orange-50 px-1.5 py-0.5 rounded uppercase">{{p.category}}</span>
+                                    
+                                    <!-- MODIFIED TO DISPLAY MULTIPLE TAGS -->
+                                    {% set cat_list = p.category.split(',') %}
+                                    {% for single_cat in cat_list %}
+                                        {% if single_cat.strip() != "" %}
+                                            <span class="text-[8px] font-black text-[#ff5000] bg-orange-50 px-1.5 py-0.5 rounded uppercase">{{ single_cat.strip() }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+
                                     {% if not p.is_visible %}
                                     <span class="text-[8px] font-black text-red-500 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded uppercase"><i class="fa-solid fa-eye-slash mr-1"></i>Hidden</span>
                                     {% endif %}
@@ -215,7 +239,9 @@
                                         <option value="bracelet" {% if p.store == 'bracelet' %}selected{% endif %}>Bracelet Store</option>
                                         <option value="custom_bracelet" {% if p.store == 'custom_bracelet' %}selected{% endif %}>Custom Charms</option>
                                     </select>
-                                    <input list="edit-cats-{{p.id}}" name="category" value="{{p.category}}" class="input-box shadow-sm" placeholder="Category">
+                                    
+                                    <!-- MODIFIED TO HINT AT COMMA SEPARATION -->
+                                    <input list="edit-cats-{{p.id}}" name="category" value="{{p.category}}" class="input-box shadow-sm" placeholder="Categories (Comma separated)">
                                     <datalist id="edit-cats-{{p.id}}"></datalist>
                                 </div>
                                 
@@ -399,6 +425,78 @@
     </div>
 
     <script>
+        // TAGGING SYSTEM LOGIC
+        let tags = [];
+        const tagInput = document.getElementById('tag-input-field');
+        const tagContainer = document.getElementById('tag-container');
+        const hiddenCategoryInput = document.getElementById('hidden-category-input');
+
+        function updateTagsUI() {
+            // Remove old visual tags
+            document.querySelectorAll('.tag-badge').forEach(el => el.remove());
+            
+            // Re-render
+            tags.forEach((tag, index) => {
+                const span = document.createElement('span');
+                span.className = 'tag-badge';
+                span.innerHTML = `${tag} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500" onclick="removeTag(${index})"></i>`;
+                tagContainer.insertBefore(span, tagInput);
+            });
+            
+            // Fill hidden input for backend submission (comma separated)
+            if(hiddenCategoryInput) {
+                hiddenCategoryInput.value = tags.join(', ');
+            }
+            
+            // Toggle HTML validation
+            if (tags.length > 0 && tagInput) {
+                tagInput.removeAttribute('required');
+            } else if (tagInput) {
+                tagInput.setAttribute('required', 'true');
+            }
+        }
+
+        function removeTag(index) {
+            tags.splice(index, 1);
+            updateTagsUI();
+        }
+
+        if(tagInput) {
+            tagInput.addEventListener('keydown', function(e) {
+                // If they press Comma or Enter
+                if (e.key === ',' || e.key === 'Enter') {
+                    e.preventDefault();
+                    // Remove any stray commas from the word
+                    const val = this.value.trim().replace(/,/g, '');
+                    if (val && !tags.includes(val)) {
+                        tags.push(val);
+                        this.value = '';
+                        updateTagsUI();
+                    }
+                } 
+                // Remove last tag if pressing backspace on empty input
+                else if (e.key === 'Backspace' && this.value === '' && tags.length > 0) {
+                    tags.pop();
+                    updateTagsUI();
+                }
+            });
+
+            // Handle selection from dropdown (datalist)
+            tagInput.addEventListener('input', function(e) {
+                const val = this.value.trim();
+                const options = Array.from(document.getElementById('add-cats').options).map(o => o.value);
+                if (options.includes(val)) {
+                    if (!tags.includes(val)) {
+                        tags.push(val);
+                    }
+                    this.value = '';
+                    updateTagsUI();
+                }
+            });
+        }
+
+
+        // STANDARD UI SCRIPTS
         function openImageViewer(src) {
             document.getElementById('viewer-img').src = src;
             document.getElementById('viewer-download').href = src;
@@ -468,22 +566,35 @@
             }
         }
 
-        // SMART UPLOAD: AUTO-FILL EMPTY NAMES
+        // SMART UPLOAD: AUTO-FILL EMPTY NAMES (Updated for Tags)
         document.querySelectorAll('.submit-form').forEach(form => {
             form.addEventListener('submit', function(e) {
                 const titleInput = this.querySelector('input[name="title"]');
                 const catInput = this.querySelector('input[name="category"]');
                 
+                // Get the primary string to use for auto-naming
+                let categoryName = "";
+                if(this.id !== "delete-cat-form" && this.action.includes("categories/update") === false){
+                    // For the main add form
+                    if(tags.length > 0) {
+                        categoryName = tags[0];
+                    } 
+                    // For the edit form
+                    else if (catInput && catInput.value) {
+                        categoryName = catInput.value.split(',')[0].trim();
+                    }
+                }
+                
                 // If title is left blank, auto-generate it!
-                if (titleInput && !titleInput.value.trim() && catInput && catInput.value) {
-                    titleInput.value = catInput.value + ' Item';
+                if (titleInput && !titleInput.value.trim() && categoryName) {
+                    titleInput.value = categoryName + ' Item';
                 }
                 
                 // If variants don't have a name, auto-generate them!
                 const vNames = this.querySelectorAll('input[name="v_names[]"], input[name="variant_names[]"]');
                 vNames.forEach((vn, idx) => {
                     if (!vn.value.trim()) {
-                        vn.value = (catInput && catInput.value ? catInput.value : 'Variant') + ' ' + (idx + 1);
+                        vn.value = (categoryName ? categoryName : 'Variant') + ' ' + (idx + 1);
                     }
                 });
 
@@ -563,6 +674,5 @@
     </script>
 </body>
 </html>
-
 
 
