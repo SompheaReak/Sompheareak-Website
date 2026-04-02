@@ -103,15 +103,21 @@
                     <h2 class="font-black text-lg mb-6"><i class="fa-solid fa-cloud-arrow-up text-[#ff5000] mr-2"></i>Quick Upload</h2>
                     <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-5 submit-form">
                         
-                        <!-- STEP 1: STORE -->
-                        <div class="bg-orange-50/50 p-4 rounded-2xl border border-orange-100">
-                            <div class="space-y-1.5">
+                        <!-- STEP 1: STORE & MAIN CATEGORY -->
+                        <div class="grid grid-cols-2 gap-3 mb-2 bg-orange-50/50 p-3 rounded-2xl border border-orange-100">
+                            <div class="space-y-1">
                                 <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">1. Select Store</label>
                                 <select name="store" class="input-box border-2 border-orange-200 bg-white" id="add-store-select" onchange="updateCatList(this, 'add-cats')">
                                     <option value="toy">Toy Store</option>
                                     <option value="bracelet">Bracelet Store</option>
                                     <option value="custom_bracelet">Custom Charms</option>
                                 </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">2. Main Category</label>
+                                <!-- THIS PREVENTS THE DB CRASH -->
+                                <input list="add-cats" name="category" id="main-category-input" required placeholder="Required..." class="input-box border-2 border-orange-200 bg-white">
+                                <datalist id="add-cats"></datalist>
                             </div>
                         </div>
 
@@ -121,21 +127,17 @@
                             <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm group-hover:scale-110 transition-transform">
                                 <i class="fa-solid fa-images text-2xl text-gray-400 group-hover:text-[#ff5000]"></i>
                             </div>
-                            <p class="text-[11px] font-black text-gray-700 mt-4 uppercase tracking-widest">2. Select Photos</p>
+                            <p class="text-[11px] font-black text-gray-700 mt-4 uppercase tracking-widest">3. Select Photos</p>
                             <p class="text-[9px] font-bold text-gray-400 mt-1">Upload images to configure variants & categories</p>
                         </div>
                         
-                        <!-- STEP 3: VARIANT CONFIG (CATEGORIES ARE NOW IN HERE) -->
+                        <!-- STEP 3: VARIANT CONFIG -->
                         <div id="variant-config" class="hidden space-y-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 mt-2">
                             <div class="flex justify-between items-center">
-                                <label class="text-[10px] font-black text-gray-800 uppercase tracking-widest">3. Variant Settings</label>
+                                <label class="text-[10px] font-black text-gray-800 uppercase tracking-widest">4. Variant Settings</label>
                                 <span class="text-[8px] font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded border border-orange-100">Set Categories Per Image!</span>
                             </div>
-                            <!-- Variant rows will be injected here with their own tag boxes -->
                             <div id="variant-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2 hide-scrollbar"></div>
-                            
-                            <!-- Hidden datalist so the JS can pull from it for auto-complete -->
-                            <datalist id="add-cats"></datalist>
                         </div>
 
                         <!-- OPTIONAL TITLE -->
@@ -176,6 +178,9 @@
                             <div class="flex-1 min-w-0 pl-1">
                                 <div class="flex flex-wrap items-center gap-1.5 mb-2">
                                     <span class="text-[9px] font-black text-white bg-gray-900 px-2 py-1 rounded-md uppercase">{{p.store}}</span>
+                                    
+                                    <span class="text-[9px] font-black text-gray-600 bg-gray-100 px-2 py-1 rounded-md uppercase"><i class="fa-regular fa-folder mr-1"></i>{{p.category}}</span>
+
                                     {% if not p.is_visible %}
                                     <span class="text-[9px] font-black text-red-500 bg-red-50 border border-red-100 px-2 py-1 rounded-md uppercase"><i class="fa-solid fa-eye-slash mr-1"></i>Hidden</span>
                                     {% endif %}
@@ -211,7 +216,7 @@
                                     <button type="button" onclick="toggleEdit({{p.id}})" class="text-[10px] font-black text-gray-400 uppercase hover:text-red-500 bg-white px-3 py-1.5 rounded-lg border shadow-sm">Cancel</button>
                                 </div>
                                 
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                     <div class="space-y-1">
                                         <label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Store</label>
                                         <select name="store" class="input-box shadow-sm edit-store-select" data-target="edit-cats-{{p.id}}" onchange="updateCatList(this, 'edit-cats-{{p.id}}')">
@@ -221,16 +226,20 @@
                                         </select>
                                     </div>
                                     <div class="space-y-1">
-                                        <label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Product Group Title</label>
+                                        <label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Main Category</label>
+                                        <!-- THIS PREVENTS THE DB CRASH IN EDIT MODE -->
+                                        <input type="text" list="edit-cats-{{p.id}}" name="category" value="{{p.category}}" required class="input-box shadow-sm" placeholder="Required...">
+                                        <datalist id="edit-cats-{{p.id}}"></datalist>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Group Title</label>
                                         <input type="text" name="title" value="{{p.title}}" class="input-box shadow-sm" placeholder="Title">
                                     </div>
-                                    <!-- Hidden Datalist for variant tagging suggestions -->
-                                    <datalist id="edit-cats-{{p.id}}"></datalist>
                                 </div>
                                 
                                 <div class="space-y-3 pt-2 border-t border-gray-200">
                                     <div class="flex items-center justify-between">
-                                        <label class="text-[10px] font-black text-gray-900 uppercase">Manage Variants & Variant Categories</label>
+                                        <label class="text-[10px] font-black text-gray-900 uppercase">Manage Variants & Specific Categories</label>
                                     </div>
                                     
                                     <div id="sortable-variants-{{p.id}}" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2 hide-scrollbar">
@@ -454,7 +463,6 @@
         // ==========================================
 
         document.addEventListener('click', function(e) {
-            // Focus logic
             if (e.target.closest('.tag-container')) {
                 const container = e.target.closest('.tag-container');
                 const input = container.querySelector('.tag-input');
@@ -462,8 +470,6 @@
                     input.focus();
                 }
             }
-
-            // Remove tag logic
             if (e.target.closest('.remove-tag-btn')) {
                 const badge = e.target.closest('.tag-badge');
                 const wrapper = badge.closest('.tag-wrapper');
@@ -472,7 +478,6 @@
             }
         });
 
-        // Add highlight effect when focused
         document.addEventListener('focusin', function(e) {
             if (e.target.classList.contains('tag-input')) {
                 e.target.closest('.tag-container').classList.add('highlight');
@@ -489,12 +494,10 @@
 
         document.addEventListener('keydown', function(e) {
             if (e.target.classList.contains('tag-input')) {
-                // Add tag on Enter or Comma
                 if (e.key === ',' || e.key === 'Enter') {
                     e.preventDefault();
                     addTag(e.target);
                 } 
-                // Remove last tag on Backspace if input is empty
                 else if (e.key === 'Backspace' && e.target.value === '') {
                     const wrapper = e.target.closest('.tag-wrapper');
                     const badges = wrapper.querySelectorAll('.tag-badge');
@@ -506,7 +509,6 @@
             }
         });
 
-        // Handle selecting from datalist dropdown
         document.addEventListener('input', function(e) {
             if (e.target.classList.contains('tag-input')) {
                 const val = e.target.value.trim();
@@ -528,7 +530,6 @@
             if (!val) return;
             const wrapper = inputElement.closest('.tag-wrapper');
             
-            // Prevent duplicate tags in the same input box
             const existingTags = getTags(wrapper);
             if (existingTags.includes(val.toLowerCase())) {
                 inputElement.value = '';
@@ -552,10 +553,9 @@
         function updateHiddenTags(wrapper) {
             const hiddenInput = wrapper.querySelector('.hidden-category-input');
             const tags = Array.from(wrapper.querySelectorAll('.tag-badge')).map(b => b.textContent.trim());
-            hiddenInput.value = tags.join(', '); // Comma separated string for backend
+            hiddenInput.value = tags.join(', '); 
         }
 
-        // Initialize required states on page load
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.tag-wrapper').forEach(wrapper => {
                 updateHiddenTags(wrapper);
@@ -612,16 +612,25 @@
         }
 
         // ==========================================
-        // MULTI-UPLOAD VARIANT GENERATOR (Includes Tags!)
+        // MULTI-UPLOAD VARIANT GENERATOR
+        // AUTO-FILLS TAG BOXES WITH MAIN CATEGORY
         // ==========================================
         const fileInput = document.getElementById('file-input');
         const configArea = document.getElementById('variant-config');
         const variantList = document.getElementById('variant-list');
+        const mainCatInput = document.getElementById('main-category-input');
         
         fileInput.addEventListener('change', function() {
             const files = Array.from(this.files).slice(0, 10);
             if(files.length > 0) {
                 configArea.classList.remove('hidden'); variantList.innerHTML = '';
+
+                // Get the main category to auto-fill the variants
+                const defaultTag = mainCatInput.value.trim();
+                let initialTagHtml = '';
+                if(defaultTag) {
+                    initialTagHtml = `<span class="tag-badge">${defaultTag} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i></span>`;
+                }
 
                 files.forEach((file, idx) => {
                     const reader = new FileReader();
@@ -655,8 +664,9 @@
                                 <!-- VARIANT SPECIFIC CATEGORY TAG UI -->
                                 <div class="tag-wrapper pt-1">
                                     <span class="text-[8px] font-black text-[#ff5000] uppercase tracking-widest mb-1 block">Categories for this image:</span>
-                                    <input type="hidden" name="variant_categories[]" class="hidden-category-input" value="">
+                                    <input type="hidden" name="variant_categories[]" class="hidden-category-input" value="${defaultTag}">
                                     <div class="tag-container border-gray-200 bg-gray-50/50">
+                                        ${initialTagHtml}
                                         <input type="text" list="add-cats" class="tag-input" placeholder="Type Category & press Enter..." autocomplete="off">
                                     </div>
                                 </div>
@@ -676,22 +686,16 @@
         document.querySelectorAll('.submit-form').forEach(form => {
             form.addEventListener('submit', function(e) {
                 const titleInput = this.querySelector('input[name="title"]');
-                let firstVariantCategory = "";
-                
-                // Try to find the category of the FIRST variant to use as an auto-fill fallback
-                const firstTagInput = this.querySelector('.hidden-category-input');
-                if (firstTagInput && firstTagInput.value) {
-                    firstVariantCategory = firstTagInput.value.split(',')[0].trim();
-                }
+                const mainCategory = this.querySelector('input[name="category"]').value.trim();
 
-                if (titleInput && !titleInput.value.trim() && firstVariantCategory) {
-                    titleInput.value = firstVariantCategory + ' Group';
+                if (titleInput && !titleInput.value.trim() && mainCategory) {
+                    titleInput.value = mainCategory + ' Group';
                 }
                 
                 const vNames = this.querySelectorAll('input[name="v_names[]"], input[name="variant_names[]"]');
                 vNames.forEach((vn, idx) => {
                     if (!vn.value.trim()) {
-                        vn.value = (firstVariantCategory ? firstVariantCategory : 'Variant') + ' ' + (idx + 1);
+                        vn.value = (mainCategory ? mainCategory : 'Variant') + ' ' + (idx + 1);
                     }
                 });
 
