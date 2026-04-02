@@ -25,11 +25,12 @@
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
 
-        /* Custom Tag Input Styles */
-        .tag-container { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: white; min-height: 38px; align-items: center; cursor: text; transition: 0.2s; }
-        .tag-container:focus-within { border-color: #ff5000; box-shadow: 0 0 0 4px rgba(255, 80, 0, 0.05); }
-        .tag-badge { background: #fff7ed; color: #ff5000; border: 1px solid #fed7aa; border-radius: 6px; padding: 2px 8px; font-size: 10px; font-weight: 800; display: flex; align-items: center; gap: 4px; text-transform: uppercase; white-space: nowrap; }
-        .tag-input { border: none; outline: none; flex: 1; min-width: 80px; font-size: 12px; font-weight: 600; padding: 2px 4px; background: transparent; }
+        /* Unified Multi-Tag UI Styles */
+        .tag-container { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: white; min-height: 44px; align-items: center; cursor: text; transition: 0.2s; }
+        .tag-container.highlight { border-color: #ff5000; box-shadow: 0 0 0 4px rgba(255, 80, 0, 0.05); }
+        .tag-badge { background: #fff7ed; color: #ff5000; border: 1px solid #fed7aa; border-radius: 8px; padding: 4px 10px; font-size: 10px; font-weight: 800; display: flex; align-items: center; gap: 6px; text-transform: uppercase; white-space: nowrap; box-shadow: 0 2px 4px rgba(255,80,0,0.05); }
+        .tag-input { border: none; outline: none; flex: 1; min-width: 120px; font-size: 12px; font-weight: 600; padding: 4px; background: transparent; color: #1e293b; }
+        .tag-input::placeholder { color: #94a3b8; font-weight: 600; }
     </style>
 </head>
 <body class="pb-20">
@@ -47,6 +48,20 @@
         <img id="viewer-img" src="" class="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl mb-6">
         <a id="viewer-download" href="" download="Customer_Receipt.jpg" class="bg-[#ff5000] text-white px-8 py-4 rounded-full text-[11px] font-black tracking-widest uppercase shadow-lg shadow-orange-500/30 hover:scale-105 active:scale-95 transition-all"><i class="fa-solid fa-download mr-2"></i> Download Receipt</a>
     </div>
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="fixed top-20 right-4 z-[150] flex flex-col gap-2 pointer-events-none">
+        {% for category, message in messages %}
+          <div class="px-6 py-4 rounded-2xl shadow-2xl text-white text-[11px] font-black tracking-widest uppercase animate-slide-up {{ 'bg-red-500' if category == 'error' else 'bg-green-500' }}">
+            <i class="fa-solid {{ 'fa-triangle-exclamation' if category == 'error' else 'fa-circle-check' }} mr-2"></i>
+            {{ message }}
+          </div>
+        {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
 
     <header class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
         <div class="flex items-center gap-4">
@@ -86,52 +101,56 @@
             <section class="lg:col-span-5">
                 <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 sticky top-24">
                     <h2 class="font-black text-lg mb-6"><i class="fa-solid fa-cloud-arrow-up text-[#ff5000] mr-2"></i>Quick Upload</h2>
-                    <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-4 submit-form">
+                    <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-5 submit-form">
                         
-                        <div class="grid grid-cols-1 gap-3 mb-2 bg-orange-50/50 p-3 rounded-2xl border border-orange-100">
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">1. Select Main Store</label>
-                                <select name="store" class="input-box border-2 border-orange-200" id="add-store-select" onchange="updateCatList(this, 'add-cats')">
+                        <!-- STEP 1 & 2: STORE & MULTI-CATEGORIES -->
+                        <div class="space-y-4 bg-orange-50/50 p-4 rounded-2xl border border-orange-100">
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">1. Select Store</label>
+                                <select name="store" class="input-box border-2 border-orange-200 bg-white" id="add-store-select" onchange="updateCatList(this, 'add-cats')">
                                     <option value="toy">Toy Store</option>
                                     <option value="bracelet">Bracelet Store</option>
                                     <option value="custom_bracelet">Custom Charms</option>
                                 </select>
                             </div>
-                            
-                            <!-- Global tags applied to new variants automatically -->
-                            <div class="space-y-1 tag-wrapper" id="global-tag-wrapper">
-                                <div class="flex justify-between items-end">
-                                    <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">Default Categories (Applies to all images)</label>
-                                    <span class="text-[8px] text-gray-400 font-bold pr-1">Press Comma to add</span>
+
+                            <div class="space-y-1.5 tag-wrapper">
+                                <div class="flex justify-between items-end pl-1">
+                                    <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest">2. Product Categories</label>
+                                    <span class="text-[8px] text-gray-500 font-bold bg-white px-2 py-1 rounded-md border border-orange-100 shadow-sm"><i class="fa-solid fa-keyboard mr-1"></i>Press Comma ( , ) or Enter to add</span>
                                 </div>
-                                <input type="hidden" name="category" class="hidden-category-input">
-                                <div class="tag-container border-2 border-orange-200 bg-white">
-                                    <input type="text" list="add-cats" placeholder="e.g. Animal, Cat" class="tag-input global-tag-input" autocomplete="off">
+                                <!-- This hidden input holds the comma separated string for Flask -->
+                                <input type="hidden" name="category" class="hidden-category-input" required>
+                                
+                                <div class="tag-container border-2 border-orange-200">
+                                    <input type="text" list="add-cats" placeholder="e.g. Dog, Animal" class="tag-input" autocomplete="off">
                                     <datalist id="add-cats"></datalist>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- IMAGE UPLOAD -->
-                        <div onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-gray-200 rounded-2xl p-6 text-center bg-gray-50 cursor-pointer hover:border-[#ff5000] transition-all group">
+                        <!-- STEP 3: IMAGE UPLOAD -->
+                        <div onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center bg-gray-50 cursor-pointer hover:border-[#ff5000] transition-all group">
                             <input type="file" name="images" id="file-input" accept="image/*" multiple required class="hidden">
-                            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm group-hover:scale-110 transition-transform">
-                                <i class="fa-solid fa-images text-xl text-gray-400 group-hover:text-[#ff5000]"></i>
+                            <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-images text-2xl text-gray-400 group-hover:text-[#ff5000]"></i>
                             </div>
-                            <p class="text-[10px] font-bold text-gray-500 mt-3 uppercase tracking-widest">3. Select Photos (1-10)</p>
+                            <p class="text-[11px] font-black text-gray-700 mt-4 uppercase tracking-widest">3. Select Photos (Up to 10)</p>
+                            <p class="text-[9px] font-bold text-gray-400 mt-1">Upload the images for this group</p>
                         </div>
                         
-                        <!-- VARIANT CONFIG -->
-                        <div id="variant-config" class="hidden space-y-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 mt-2">
-                            <label class="text-[10px] font-black text-gray-800 uppercase tracking-widest">4. Details per Image</label>
-                            <div id="variant-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2 hide-scrollbar"></div>
+                        <!-- STEP 4: VARIANT CONFIG -->
+                        <div id="variant-config" class="hidden space-y-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                            <label class="text-[10px] font-black text-gray-800 uppercase tracking-widest">4. Set Prices & Stock</label>
+                            <div id="variant-list" class="space-y-3 max-h-[50vh] overflow-y-auto pr-2 hide-scrollbar"></div>
                         </div>
 
+                        <!-- OPTIONAL TITLE -->
                         <div class="pt-2">
-                            <input type="text" name="title" placeholder="Product Group Title (Optional)" class="input-box text-sm bg-gray-50 border-gray-100 text-gray-500 focus:bg-white">
+                            <input type="text" name="title" placeholder="Product Title (Optional - Auto generated based on first category)" class="input-box text-sm bg-gray-50 border-gray-100 text-gray-500 focus:bg-white">
                         </div>
 
-                        <button type="submit" class="w-full btn-taobao py-4 mt-2 shadow-xl shadow-orange-100 uppercase text-[11px] font-black tracking-widest">Publish Items to Store</button>
+                        <button type="submit" class="w-full btn-taobao py-4 mt-2 shadow-xl shadow-orange-100 uppercase text-[11px] font-black tracking-widest">Publish Group to Store</button>
                     </form>
                 </div>
             </section>
@@ -145,7 +164,7 @@
                         <button onclick="filterStore('custom_bracelet')" id="flt-custom_bracelet" class="store-flt text-gray-400 px-4 py-2 text-[9px] font-black uppercase rounded-xl hover:text-black transition-all">Custom Charms</button>
                     </div>
                     <button onclick="openCatModal()" class="px-4 py-2 bg-gray-50 text-gray-800 rounded-xl text-[9px] font-black uppercase border border-gray-100 flex-shrink-0 ml-2 shadow-sm active:scale-95 transition-transform">
-                        <i class="fa-solid fa-folder-tree mr-1"></i> Manage Cats
+                        <i class="fa-solid fa-folder-tree mr-1"></i> Manage Categories
                     </button>
                 </div>
 
@@ -154,113 +173,150 @@
                     <div class="product-item p-4 {% if not p.is_visible %}bg-gray-50/50{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}">
                         
                         <!-- VIEW MODE -->
-                        <div class="view-mode flex items-center gap-3">
+                        <div class="view-mode flex items-center gap-4">
                             <i class="fa-solid fa-arrows-up-down text-gray-200 product-handle p-2 hover:text-[#ff5000]"></i>
-                            <div class="w-16 flex-shrink-0 flex justify-center">
-                                <img src="{{p.image}}" class="w-full h-auto max-h-20 rounded-xl object-contain border bg-white p-1 shadow-sm {% if not p.is_visible %}grayscale opacity-60{% endif %}">
+                            <div class="w-20 h-20 flex-shrink-0 flex justify-center items-center bg-white border border-gray-100 rounded-xl shadow-sm p-1">
+                                <img src="{{p.image}}" class="max-w-full max-h-full object-contain rounded-lg {% if not p.is_visible %}grayscale opacity-60{% endif %}">
                             </div>
+                            
                             <div class="flex-1 min-w-0 pl-1">
-                                <div class="flex flex-wrap items-center gap-1 mb-1">
-                                    <span class="text-[8px] font-black text-white bg-gray-900 px-1.5 py-0.5 rounded uppercase">{{p.store}}</span>
+                                <div class="flex flex-wrap items-center gap-1.5 mb-2">
+                                    <span class="text-[9px] font-black text-white bg-gray-900 px-2 py-1 rounded-md uppercase">{{p.store}}</span>
+                                    
+                                    <!-- DISPLAY MULTIPLE PRODUCT-LEVEL TAGS -->
+                                    {% if p.category %}
+                                        {% set cat_list = p.category.split(',') %}
+                                        {% for single_cat in cat_list %}
+                                            {% if single_cat.strip() != "" %}
+                                                <span class="text-[9px] font-black text-[#ff5000] bg-orange-50 border border-orange-100 px-2 py-1 rounded-md uppercase"><i class="fa-solid fa-tag mr-1 opacity-50"></i>{{ single_cat.strip() }}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+
                                     {% if not p.is_visible %}
-                                    <span class="text-[8px] font-black text-red-500 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded uppercase"><i class="fa-solid fa-eye-slash mr-1"></i>Hidden</span>
+                                    <span class="text-[9px] font-black text-red-500 bg-red-50 border border-red-100 px-2 py-1 rounded-md uppercase"><i class="fa-solid fa-eye-slash mr-1"></i>Hidden</span>
                                     {% endif %}
                                 </div>
-                                <h4 class="font-bold text-sm truncate leading-none {% if not p.is_visible %}text-gray-400 line-through{% endif %}">{{p.title}}</h4>
-                                <div class="flex items-center gap-4 mt-2">
-                                    <span class="text-xs font-black">$ {{ "%.2f"|format(p.price) }}</span>
-                                    <span class="text-xs font-bold text-gray-500">{{ p.parsed_variants|length }} Variants</span>
+                                <h4 class="font-black text-[15px] truncate leading-none mb-2 text-gray-800 {% if not p.is_visible %}text-gray-400 line-through{% endif %}">{{p.title}}</h4>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-sm font-black text-green-600">$ {{ "%.2f"|format(p.price) }}</span>
+                                    <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-md">{{ p.parsed_variants|length }} Variants</span>
                                 </div>
                             </div>
                             
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-col sm:flex-row items-center gap-2">
                                 <form action="/admin/product/toggle/{{ p.id }}" method="POST" class="m-0">
                                     {% if p.is_visible %}
-                                        <button type="submit" class="w-10 h-10 bg-green-50 border border-green-200 rounded-xl flex items-center justify-center text-green-600 hover:bg-green-100 transition-colors shadow-sm"><i class="fa-solid fa-eye text-sm"></i></button>
+                                        <button type="submit" class="w-10 h-10 bg-green-50 border border-green-200 rounded-xl flex items-center justify-center text-green-600 hover:bg-green-100 transition-colors shadow-sm" title="Visible (Click to hide)"><i class="fa-solid fa-eye text-sm"></i></button>
                                     {% else %}
-                                        <button type="submit" class="w-10 h-10 bg-gray-100 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors shadow-sm"><i class="fa-solid fa-eye-slash text-sm"></i></button>
+                                        <button type="submit" class="w-10 h-10 bg-gray-100 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors shadow-sm" title="Hidden (Click to show)"><i class="fa-solid fa-eye-slash text-sm"></i></button>
                                     {% endif %}
                                 </form>
-                                <button onclick="toggleEdit({{p.id}})" class="w-10 h-10 border border-gray-200 rounded-xl flex items-center justify-center text-gray-400 hover:text-orange-500 hover:border-orange-200 shadow-sm transition-colors"><i class="fa-solid fa-gear"></i></button>
-                                <form action="/admin/product/delete/{{ p.id }}" method="POST" class="m-0" onsubmit="return confirm('Delete this product permanently?')">
-                                    <button type="submit" class="w-10 h-10 border border-red-100 bg-red-50 rounded-xl flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white shadow-sm transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                                <button onclick="toggleEdit({{p.id}})" class="w-10 h-10 border border-gray-200 bg-white rounded-xl flex items-center justify-center text-gray-600 hover:text-orange-500 hover:border-orange-500 shadow-sm transition-colors" title="Edit Group Details"><i class="fa-solid fa-gear"></i></button>
+                                <form action="/admin/product/delete/{{ p.id }}" method="POST" class="m-0" onsubmit="return confirm('Delete this entire group permanently?')">
+                                    <button type="submit" class="w-10 h-10 border border-red-100 bg-red-50 rounded-xl flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white shadow-sm transition-colors" title="Delete Group"><i class="fa-solid fa-trash-can"></i></button>
                                 </form>
                             </div>
                         </div>
 
                         <!-- EDIT MODE -->
                         <div class="edit-mode">
-                             <form action="/admin/product/update/{{p.id}}" method="POST" enctype="multipart/form-data" class="bg-gray-50 p-5 rounded-[28px] border border-orange-100 mt-2 space-y-4 submit-form">
-                                <div class="flex justify-between items-center">
-                                    <h5 class="text-[10px] font-black text-orange-500 uppercase tracking-widest">Edit Details</h5>
-                                    <button type="button" onclick="toggleEdit({{p.id}})" class="text-[10px] font-black text-gray-400 uppercase hover:text-red-500">Close</button>
+                             <form action="/admin/product/update/{{p.id}}" method="POST" enctype="multipart/form-data" class="bg-gray-50 p-6 rounded-[28px] border-2 border-orange-200 mt-3 space-y-5 submit-form shadow-md relative">
+                                
+                                <div class="flex justify-between items-center border-b border-orange-100 pb-3">
+                                    <h5 class="text-xs font-black text-orange-500 uppercase tracking-widest"><i class="fa-solid fa-pen-to-square mr-2"></i>Edit Product Group</h5>
+                                    <button type="button" onclick="toggleEdit({{p.id}})" class="text-[10px] font-black text-gray-400 uppercase hover:text-red-500 bg-white px-3 py-1.5 rounded-lg border shadow-sm">Cancel</button>
                                 </div>
                                 
-                                <div class="grid grid-cols-2 gap-3">
-                                    <input type="text" name="title" value="{{p.title}}" class="input-box shadow-sm" placeholder="Group Title">
-                                    <select name="store" class="input-box shadow-sm edit-store-select" data-target="edit-cats-{{p.id}}" onchange="updateCatList(this, 'edit-cats-{{p.id}}')">
-                                        <option value="toy" {% if p.store == 'toy' %}selected{% endif %}>Toy Store</option>
-                                        <option value="bracelet" {% if p.store == 'bracelet' %}selected{% endif %}>Bracelet Store</option>
-                                        <option value="custom_bracelet" {% if p.store == 'custom_bracelet' %}selected{% endif %}>Custom Charms</option>
-                                    </select>
-                                    <datalist id="edit-cats-{{p.id}}"></datalist>
+                                <!-- Product Group Level Settings -->
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div class="space-y-1">
+                                            <label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Store</label>
+                                            <select name="store" class="input-box shadow-sm edit-store-select" data-target="edit-cats-{{p.id}}" onchange="updateCatList(this, 'edit-cats-{{p.id}}')">
+                                                <option value="toy" {% if p.store == 'toy' %}selected{% endif %}>Toy Store</option>
+                                                <option value="bracelet" {% if p.store == 'bracelet' %}selected{% endif %}>Bracelet Store</option>
+                                                <option value="custom_bracelet" {% if p.store == 'custom_bracelet' %}selected{% endif %}>Custom Charms</option>
+                                            </select>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Group Title</label>
+                                            <input type="text" name="title" value="{{p.title}}" class="input-box shadow-sm" placeholder="Title">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- EDIT MODE MULTI-TAG UI -->
+                                    <div class="tag-wrapper bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                                        <label class="text-[10px] font-black text-gray-800 uppercase tracking-widest block mb-2"><i class="fa-solid fa-tags text-orange-400 mr-1"></i> Assign to Categories</label>
+                                        <p class="text-[9px] font-bold text-gray-400 mb-2">Type and press comma (,) to add this group to multiple categories.</p>
+                                        
+                                        <input type="hidden" name="category" class="hidden-category-input" value="{{p.category}}" required>
+                                        <div class="tag-container border-gray-200">
+                                            {% if p.category %}
+                                                {% set cat_list = p.category.split(',') %}
+                                                {% for single_cat in cat_list %}
+                                                    {% if single_cat.strip() != "" %}
+                                                    <span class="tag-badge">
+                                                        {{ single_cat.strip() }} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i>
+                                                    </span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                            <input type="text" list="edit-cats-{{p.id}}" class="tag-input" placeholder="Add Category..." autocomplete="off">
+                                            <datalist id="edit-cats-{{p.id}}"></datalist>
+                                        </div>
+                                    </div>
                                 </div>
                                 
-                                <div class="space-y-3 pt-2">
-                                    <label class="text-[10px] font-black text-gray-900 uppercase">Manage Variants & Categories</label>
-                                    <div id="sortable-variants-{{p.id}}" class="space-y-3 max-h-80 overflow-y-auto pr-2 hide-scrollbar">
+                                <div class="space-y-3 pt-2 border-t border-gray-200">
+                                    <label class="text-[10px] font-black text-gray-900 uppercase">Edit Variants (Images in this group)</label>
+                                    <div id="sortable-variants-{{p.id}}" class="space-y-2 max-h-80 overflow-y-auto pr-2 hide-scrollbar">
                                         
                                         {% for v in p.parsed_variants %}
-                                        <div class="variant-row flex gap-3 items-start bg-white p-3 rounded-xl border border-gray-200 shadow-sm relative group">
-                                            <i class="fa-solid fa-bars text-gray-300 handle p-2 text-sm hover:text-black mt-2"></i>
+                                        <div class="variant-row flex gap-3 items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm relative group">
+                                            <i class="fa-solid fa-bars text-gray-300 handle p-2 text-sm hover:text-black"></i>
                                             <input type="hidden" name="v_ids[]" value="{{v.id}}"><input type="hidden" name="v_images[]" value="{{v.image}}">
-                                            <img src="{{v.image}}" class="w-14 h-14 rounded-lg object-contain bg-gray-50 border mt-1">
+                                            <div class="w-12 h-12 bg-gray-50 border border-gray-100 rounded-lg p-0.5 flex-shrink-0">
+                                                <img src="{{v.image}}" class="w-full h-full object-contain rounded-md">
+                                            </div>
                                             
-                                            <div class="flex-1 space-y-2 price-group">
-                                                <!-- Row 1: Name and Prices -->
-                                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                                    <input type="text" name="v_names[]" value="{{v.name}}" placeholder="Name" class="text-[10px] font-bold border-b outline-none pb-1">
-                                                    <div class="flex items-center gap-1 border-b pb-1"><span class="text-[9px] font-black text-gray-400">$</span><input type="number" step="any" name="v_prices[]" value="{{v.price}}" class="w-full text-[10px] font-black outline-none usd-input" oninput="updatePrice(this, 'USD')"></div>
-                                                    <div class="flex items-center gap-1 border-b pb-1"><span class="text-[9px] font-black text-gray-400">៛</span><input type="number" step="any" value="{{ (v.price * 4000) | int }}" class="w-full text-[10px] font-black outline-none khr-input" oninput="updatePrice(this, 'KHR')"></div>
-                                                    <div class="flex items-center gap-1 border-b pb-1 {% if v.stock|int <= 0 %}bg-red-50 rounded px-1{% endif %}">
-                                                        <span class="text-[9px] font-black {% if v.stock|int <= 0 %}text-red-500{% else %}text-gray-400{% endif %}">Qty</span>
-                                                        <input type="number" name="v_stocks[]" value="{{v.stock}}" class="w-full text-[10px] font-black outline-none {% if v.stock|int <= 0 %}text-red-600 bg-transparent{% endif %}">
-                                                    </div>
+                                            <div class="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3 price-group">
+                                                <div class="space-y-1">
+                                                    <span class="text-[8px] font-black text-gray-400 uppercase">Name</span>
+                                                    <input type="text" name="v_names[]" value="{{v.name}}" placeholder="Name" class="w-full text-[11px] font-bold border-b border-gray-200 outline-none pb-1 focus:border-orange-500 bg-transparent">
                                                 </div>
-
-                                                <!-- Row 2: Tag UI FOR THIS SPECIFIC VARIANT -->
-                                                <div class="tag-wrapper mt-1">
-                                                    <label class="text-[8px] font-black text-gray-400 uppercase tracking-widest block mb-1">Variant Categories:</label>
-                                                    <input type="hidden" name="v_categories[]" class="hidden-category-input" value="{{v.category}}">
-                                                    <div class="tag-container border-gray-200">
-                                                        {% if v.category %}
-                                                            {% set v_cat_list = v.category.split(',') %}
-                                                            {% for single_v_cat in v_cat_list %}
-                                                                {% if single_v_cat.strip() != "" %}
-                                                                <span class="tag-badge">
-                                                                    {{ single_v_cat.strip() }} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i>
-                                                                </span>
-                                                                {% endif %}
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                        <input type="text" list="edit-cats-{{p.id}}" class="tag-input" placeholder="Add Tag..." autocomplete="off">
+                                                <div class="space-y-1">
+                                                    <span class="text-[8px] font-black text-gray-400 uppercase">Price (USD)</span>
+                                                    <div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">$</span><input type="number" step="any" name="v_prices[]" value="{{v.price}}" class="w-full text-[11px] font-black outline-none usd-input bg-transparent" oninput="updatePrice(this, 'USD')"></div>
+                                                </div>
+                                                <div class="space-y-1">
+                                                    <span class="text-[8px] font-black text-gray-400 uppercase">Price (KHR)</span>
+                                                    <div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">៛</span><input type="number" step="any" value="{{ (v.price * 4000) | int }}" class="w-full text-[11px] font-black outline-none khr-input bg-transparent" oninput="updatePrice(this, 'KHR')"></div>
+                                                </div>
+                                                <div class="space-y-1">
+                                                    <span class="text-[8px] font-black text-gray-400 uppercase">Stock</span>
+                                                    <div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500 {% if v.stock|int <= 0 %}border-red-300 bg-red-50 px-1 rounded-t{% endif %}">
+                                                        <input type="number" name="v_stocks[]" value="{{v.stock}}" class="w-full text-[11px] font-black outline-none bg-transparent {% if v.stock|int <= 0 %}text-red-600{% endif %}">
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <button type="button" onclick="this.closest('.variant-row').remove()" class="p-2 text-gray-300 hover:text-red-500 mt-2"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                            <button type="button" onclick="this.closest('.variant-row').remove()" class="p-2 w-8 h-8 flex items-center justify-center bg-gray-50 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"><i class="fa-solid fa-trash-can text-sm"></i></button>
                                         </div>
                                         {% endfor %}
                                         
                                     </div>
                                 </div>
 
-                                <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100">
-                                    <label class="text-[10px] font-black text-blue-500 uppercase tracking-widest block mb-2">Upload More Photos</label>
-                                    <input type="file" name="new_images" multiple class="block w-full text-[10px] text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                                <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 flex items-center gap-4">
+                                    <div class="flex-1">
+                                        <label class="text-[10px] font-black text-blue-600 uppercase tracking-widest block mb-1">Add More Images</label>
+                                        <p class="text-[9px] font-bold text-gray-500 mb-2">Upload additional variants to this group.</p>
+                                        <input type="file" name="new_images" multiple class="block w-full text-[10px] text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer transition-colors">
+                                    </div>
                                 </div>
-                                <div class="flex gap-2 pt-2">
-                                    <button type="submit" class="w-full bg-black text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-95">Save Changes</button>
+                                <div class="pt-2">
+                                    <button type="submit" class="w-full bg-black text-white py-4 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform hover:bg-gray-800">Save Group Changes</button>
                                 </div>
                              </form>
                         </div>
@@ -271,7 +327,7 @@
             </section>
         </div>
 
-        <!-- 2. ORDERS VIEW (Unchanged) -->
+        <!-- 2. ORDERS VIEW (Unchanged visually) -->
         <div id="view-orders" class="hidden-view space-y-4">
              {% if orders|length == 0 %}
             <div class="py-20 text-center text-gray-300">
@@ -366,7 +422,7 @@
 
     <form id="delete-cat-form" method="POST" class="hidden"></form>
 
-    <!-- Modal unchanged -->
+    <!-- Category Modal -->
     <div id="cat-modal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 hidden">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeCatModal()"></div>
         <div class="bg-white w-full max-w-lg rounded-[32px] overflow-hidden relative shadow-2xl flex flex-col max-h-[90vh]">
@@ -375,7 +431,14 @@
                     <h2 class="font-black text-lg">Manage Categories</h2>
                     <button type="button" onclick="closeCatModal()" class="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full text-gray-600 hover:bg-red-100 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark"></i></button>
                 </div>
+                
+                <div class="flex gap-1 bg-gray-200/50 p-1.5 rounded-xl shadow-inner">
+                    <button type="button" onclick="filterCatModal('toy')" id="modal-tab-toy" class="modal-cat-tab flex-1 py-2 text-[9px] font-black uppercase rounded-lg bg-white text-[#ff5000] shadow-sm transition-all">Toys</button>
+                    <button type="button" onclick="filterCatModal('bracelet')" id="modal-tab-bracelet" class="modal-cat-tab flex-1 py-2 text-[9px] font-black uppercase rounded-lg text-gray-500 hover:text-black transition-all">Bracelets</button>
+                    <button type="button" onclick="filterCatModal('custom_bracelet')" id="modal-tab-custom_bracelet" class="modal-cat-tab flex-1 py-2 text-[9px] font-black uppercase rounded-lg text-gray-500 hover:text-black transition-all">Custom</button>
+                </div>
             </div>
+
             <form action="/admin/categories/update" method="POST" enctype="multipart/form-data" class="p-4 flex flex-col overflow-hidden submit-form flex-1">
                 <div id="category-sortable" class="overflow-y-auto space-y-2 pr-2 hide-scrollbar flex-1 pb-4">
                     {% for cat in categories %}
@@ -404,16 +467,20 @@
 
     <script>
         // ==========================================
-        // DYNAMIC TAGGING SYSTEM (Variant Level)
+        // DYNAMIC PRODUCT-LEVEL TAGGING SYSTEM
         // ==========================================
 
         document.addEventListener('click', function(e) {
+            // Focus logic
             if (e.target.closest('.tag-container')) {
-                const input = e.target.closest('.tag-container').querySelector('.tag-input');
+                const container = e.target.closest('.tag-container');
+                const input = container.querySelector('.tag-input');
                 if (input && e.target !== input && !e.target.closest('.remove-tag-btn')) {
                     input.focus();
                 }
             }
+
+            // Remove tag logic
             if (e.target.closest('.remove-tag-btn')) {
                 const badge = e.target.closest('.tag-badge');
                 const wrapper = badge.closest('.tag-wrapper');
@@ -422,12 +489,30 @@
             }
         });
 
+        // Add highlight effect when focused
+        document.addEventListener('focusin', function(e) {
+            if (e.target.classList.contains('tag-input')) {
+                e.target.closest('.tag-container').classList.add('highlight');
+            }
+        });
+        document.addEventListener('focusout', function(e) {
+            if (e.target.classList.contains('tag-input')) {
+                e.target.closest('.tag-container').classList.remove('highlight');
+                // Auto add tag on blur if there's text left
+                if (e.target.value.trim() !== '') {
+                    addTag(e.target);
+                }
+            }
+        });
+
         document.addEventListener('keydown', function(e) {
             if (e.target.classList.contains('tag-input')) {
+                // Add tag on Enter or Comma
                 if (e.key === ',' || e.key === 'Enter') {
                     e.preventDefault();
                     addTag(e.target);
                 } 
+                // Remove last tag on Backspace if input is empty
                 else if (e.key === 'Backspace' && e.target.value === '') {
                     const wrapper = e.target.closest('.tag-wrapper');
                     const badges = wrapper.querySelectorAll('.tag-badge');
@@ -439,6 +524,7 @@
             }
         });
 
+        // Handle selecting from datalist dropdown
         document.addEventListener('input', function(e) {
             if (e.target.classList.contains('tag-input')) {
                 const val = e.target.value.trim();
@@ -460,8 +546,9 @@
             if (!val) return;
             const wrapper = inputElement.closest('.tag-wrapper');
             
+            // Prevent duplicate tags in the same input box
             const existingTags = getTags(wrapper);
-            if (existingTags.includes(val)) {
+            if (existingTags.includes(val.toLowerCase())) {
                 inputElement.value = '';
                 return;
             }
@@ -477,29 +564,36 @@
         }
 
         function getTags(wrapper) {
-            return Array.from(wrapper.querySelectorAll('.tag-badge')).map(b => b.textContent.trim().replace(' ', ''));
+            // Using toLowerCase for case-insensitive duplicate checking
+            return Array.from(wrapper.querySelectorAll('.tag-badge')).map(b => b.textContent.trim().replace(' ', '').toLowerCase());
         }
 
         function updateHiddenTags(wrapper) {
             const hiddenInput = wrapper.querySelector('.hidden-category-input');
+            // Preserve exact case for the backend
             const tags = Array.from(wrapper.querySelectorAll('.tag-badge')).map(b => b.textContent.trim());
             hiddenInput.value = tags.join(', ');
             
+            // Required validation handling
             const tagInput = wrapper.querySelector('.tag-input');
-            // If it's a variant input, we want to allow empty categories if needed
-            // If you want it required, uncomment the below lines:
-            // if (tags.length > 0) tagInput.removeAttribute('required');
-            // else tagInput.setAttribute('required', 'true');
+            if(hiddenInput.hasAttribute('required')) {
+                if (tags.length > 0) tagInput.removeAttribute('required');
+                else tagInput.setAttribute('required', 'true');
+            }
         }
 
-        // Initialize tags on page load
+        // Initialize required states on page load
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.tag-wrapper').forEach(wrapper => {
                 updateHiddenTags(wrapper);
             });
         });
 
+
+        // ==========================================
         // STANDARD UI SCRIPTS
+        // ==========================================
+
         function openImageViewer(src) { document.getElementById('viewer-img').src = src; document.getElementById('viewer-download').href = src; document.getElementById('image-viewer-modal').classList.remove('hidden'); document.getElementById('image-viewer-modal').classList.add('flex'); }
         function closeImageViewer() { document.getElementById('image-viewer-modal').classList.add('hidden'); document.getElementById('image-viewer-modal').classList.remove('flex'); }
         function openCatModal() { document.getElementById('cat-modal').classList.remove('hidden'); filterCatModal('toy'); }
@@ -544,7 +638,9 @@
             }
         }
 
-        // MULTI-UPLOAD VARIANT GENERATOR
+        // ==========================================
+        // VARIANT IMAGE UPLOAD HANDLER
+        // ==========================================
         const fileInput = document.getElementById('file-input');
         const configArea = document.getElementById('variant-config');
         const variantList = document.getElementById('variant-list');
@@ -553,36 +649,35 @@
             const files = Array.from(this.files).slice(0, 10);
             if(files.length > 0) {
                 configArea.classList.remove('hidden'); variantList.innerHTML = '';
-                
-                // Get the default tags from the top of the form
-                const globalWrapper = document.getElementById('global-tag-wrapper');
-                const globalTags = getTags(globalWrapper);
-                const globalTagsValue = globalTags.join(', ');
-                const tagsHtml = globalTags.map(tag => `<span class="tag-badge">${tag} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i></span>`).join('');
 
                 files.forEach((file, idx) => {
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         const row = document.createElement('div'); 
-                        row.className = "flex gap-3 items-start bg-white p-3 rounded-xl border border-gray-100 shadow-sm relative variant-row";
+                        row.className = "flex gap-3 items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm relative variant-row";
                         row.innerHTML = `
-                            <img src="${e.target.result}" class="w-12 h-12 rounded-lg object-contain bg-white border border-gray-100 p-0.5 mt-1">
-                            <div class="flex-1 space-y-2 price-group">
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                    <input type="text" name="variant_names[]" placeholder="Variant Name" class="text-[10px] font-bold outline-none border-b pb-1 text-gray-600">
-                                    <div class="flex items-center gap-1 border-b pb-1"><span class="text-[9px] font-black text-gray-400">$</span><input type="number" step="any" name="variant_prices[]" required placeholder="USD" class="w-full text-[10px] font-black outline-none usd-input" oninput="updatePrice(this, 'USD')"></div>
-                                    <div class="flex items-center gap-1 border-b pb-1"><span class="text-[9px] font-black text-gray-400">៛</span><input type="number" step="any" placeholder="KHR" class="w-full text-[10px] font-black outline-none khr-input" oninput="updatePrice(this, 'KHR')"></div>
-                                    <div class="flex items-center gap-1 border-b pb-1"><span class="text-[9px] font-black text-gray-400">Qty</span><input type="number" name="variant_stocks[]" value="1" required class="w-full text-[10px] font-black outline-none"></div>
+                            <div class="w-12 h-12 flex-shrink-0 bg-gray-50 border border-gray-100 rounded-lg p-0.5">
+                                <img src="${e.target.result}" class="w-full h-full object-contain rounded-md">
+                            </div>
+                            <div class="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3 price-group">
+                                <div class="space-y-1">
+                                    <span class="text-[8px] font-black text-gray-400 uppercase">Image Name</span>
+                                    <input type="text" name="variant_names[]" placeholder="Variant ${idx + 1}" class="w-full text-[11px] font-bold outline-none border-b border-gray-200 pb-1 text-gray-700 focus:border-orange-500">
                                 </div>
-                                <div class="tag-wrapper">
-                                    <input type="hidden" name="variant_categories[]" class="hidden-category-input" value="${globalTagsValue}">
-                                    <div class="tag-container border border-gray-100 bg-gray-50/50 p-1 min-h-[30px]">
-                                        ${tagsHtml}
-                                        <input type="text" list="add-cats" placeholder="Add Tag..." class="tag-input" autocomplete="off">
-                                    </div>
+                                <div class="space-y-1">
+                                    <span class="text-[8px] font-black text-gray-400 uppercase">Price (USD)</span>
+                                    <div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">$</span><input type="number" step="any" name="variant_prices[]" required placeholder="0.00" class="w-full text-[11px] font-black outline-none usd-input" oninput="updatePrice(this, 'USD')"></div>
+                                </div>
+                                <div class="space-y-1">
+                                    <span class="text-[8px] font-black text-gray-400 uppercase">Price (KHR)</span>
+                                    <div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">៛</span><input type="number" step="any" placeholder="0" class="w-full text-[11px] font-black outline-none khr-input" oninput="updatePrice(this, 'KHR')"></div>
+                                </div>
+                                <div class="space-y-1">
+                                    <span class="text-[8px] font-black text-gray-400 uppercase">Stock Qty</span>
+                                    <div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><input type="number" name="variant_stocks[]" value="1" required class="w-full text-[11px] font-black outline-none text-center"></div>
                                 </div>
                             </div>
-                            <button type="button" onclick="this.closest('.variant-row').remove()" class="p-2 text-gray-300 hover:text-red-500 mt-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                            <button type="button" onclick="this.closest('.variant-row').remove()" class="p-2 w-8 h-8 flex items-center justify-center bg-gray-50 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"><i class="fa-solid fa-trash-can text-sm"></i></button>
                         `;
                         variantList.appendChild(row);
                     };
@@ -591,26 +686,29 @@
             }
         });
 
-        // SMART UPLOAD LOGIC
+        // ==========================================
+        // SMART FORM SUBMISSION / AUTO-FILL
+        // ==========================================
         document.querySelectorAll('.submit-form').forEach(form => {
             form.addEventListener('submit', function(e) {
                 const titleInput = this.querySelector('input[name="title"]');
-                let categoryName = "";
+                const hiddenCatInput = this.querySelector('.hidden-category-input');
                 
-                // Get name from first variant if possible
-                const firstVarHidden = this.querySelector('input[name="variant_categories[]"], input[name="v_categories[]"]');
-                if (firstVarHidden && firstVarHidden.value) {
-                    categoryName = firstVarHidden.value.split(',')[0].trim();
+                let primaryCategory = "";
+                if(hiddenCatInput && hiddenCatInput.value) {
+                    primaryCategory = hiddenCatInput.value.split(',')[0].trim();
                 }
 
-                if (titleInput && !titleInput.value.trim() && categoryName) {
-                    titleInput.value = categoryName + ' Item';
+                // If Product Group title is left blank, auto-generate based on the first Category Tag
+                if (titleInput && !titleInput.value.trim() && primaryCategory) {
+                    titleInput.value = primaryCategory + ' Group';
                 }
                 
+                // If variant names are blank, auto-generate them
                 const vNames = this.querySelectorAll('input[name="v_names[]"], input[name="variant_names[]"]');
                 vNames.forEach((vn, idx) => {
                     if (!vn.value.trim()) {
-                        vn.value = (categoryName ? categoryName : 'Variant') + ' ' + (idx + 1);
+                        vn.value = (primaryCategory ? primaryCategory : 'Variant') + ' ' + (idx + 1);
                     }
                 });
 
@@ -629,6 +727,15 @@
                 fetch('/admin/product/reorder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: ids }) });
             }
         });
+
+        new Sortable(document.getElementById('category-sortable'), { handle: '.handle', animation: 150 });
+
+        function deleteCategory(id) {
+            if(confirm('Delete category? Items will move to "Other".')) {
+                const form = document.getElementById('delete-cat-form');
+                form.action = '/admin/category/delete/' + id; form.submit();
+            }
+        }
 
         function switchView(view) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
