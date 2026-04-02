@@ -25,11 +25,11 @@
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
 
-        /* Custom Tag Input Styles */
-        .tag-container { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1.5px solid #fed7aa; border-radius: 12px; background: white; min-height: 42px; align-items: center; cursor: text; }
+        /* Custom Tag Input Styles (Unified for all forms) */
+        .tag-container { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: white; min-height: 42px; align-items: center; cursor: text; transition: 0.2s; }
         .tag-container:focus-within { border-color: #ff5000; box-shadow: 0 0 0 4px rgba(255, 80, 0, 0.05); }
-        .tag-badge { background: #fff7ed; color: #ff5000; border: 1px solid #fed7aa; border-radius: 6px; padding: 2px 8px; font-size: 10px; font-weight: 800; display: flex; align-items: center; gap: 4px; text-transform: uppercase; }
-        .tag-input { border: none; outline: none; flex: 1; min-width: 60px; font-size: 12px; font-weight: 600; padding: 4px; background: transparent; }
+        .tag-badge { background: #fff7ed; color: #ff5000; border: 1px solid #fed7aa; border-radius: 6px; padding: 2px 8px; font-size: 10px; font-weight: 800; display: flex; align-items: center; gap: 4px; text-transform: uppercase; white-space: nowrap; }
+        .tag-input { border: none; outline: none; flex: 1; min-width: 80px; font-size: 12px; font-weight: 600; padding: 2px 4px; background: transparent; }
     </style>
 </head>
 <body class="pb-20">
@@ -102,7 +102,7 @@
                     <h2 class="font-black text-lg mb-6"><i class="fa-solid fa-cloud-arrow-up text-[#ff5000] mr-2"></i>Quick Upload</h2>
                     <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-4 submit-form">
                         
-                        <!-- HIGH PRIORITY: STORE AND CATEGORY (MODIFIED) -->
+                        <!-- HIGH PRIORITY: STORE AND CATEGORY (TAG UI) -->
                         <div class="space-y-3 mb-2 bg-orange-50/50 p-3 rounded-2xl border border-orange-100">
                             <div class="space-y-1">
                                 <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">1. Select Store</label>
@@ -112,18 +112,14 @@
                                     <option value="custom_bracelet">Custom Charms</option>
                                 </select>
                             </div>
-                            <div class="space-y-1">
+                            <div class="space-y-1 tag-wrapper">
                                 <div class="flex justify-between items-end">
-                                    <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">2. Categories (Add multiple)</label>
+                                    <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">2. Categories</label>
                                     <span class="text-[8px] text-gray-400 font-bold pr-1">Press Comma (,) to add</span>
                                 </div>
-                                
-                                <!-- Hidden input that submits comma-separated tags to backend -->
-                                <input type="hidden" name="category" id="hidden-category-input" required>
-                                
-                                <!-- Visual Tag Input -->
-                                <div class="tag-container" id="tag-container" onclick="document.getElementById('tag-input-field').focus()">
-                                    <input type="text" id="tag-input-field" list="add-cats" placeholder="e.g. Animal, Cat" class="tag-input" autocomplete="off">
+                                <input type="hidden" name="category" class="hidden-category-input" required>
+                                <div class="tag-container border-2 border-orange-200 bg-white">
+                                    <input type="text" list="add-cats" placeholder="e.g. Animal, Cat" class="tag-input" autocomplete="off" required>
                                     <datalist id="add-cats"></datalist>
                                 </div>
                             </div>
@@ -171,9 +167,10 @@
                 <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden divide-y" id="main-inventory-list">
                     {% for p in products %}
                     <div class="product-item p-4 {% if not p.is_visible %}bg-gray-50/50{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}">
+                        
+                        <!-- VIEW MODE -->
                         <div class="view-mode flex items-center gap-3">
                             <i class="fa-solid fa-arrows-up-down text-gray-200 product-handle p-2 hover:text-[#ff5000]"></i>
-                            <!-- AUTO SIZE IMAGE FIX -->
                             <div class="w-16 flex-shrink-0 flex justify-center">
                                 <img src="{{p.image}}" class="w-full h-auto max-h-20 rounded-xl object-contain border bg-white p-1 shadow-sm {% if not p.is_visible %}grayscale opacity-60{% endif %}">
                             </div>
@@ -181,7 +178,7 @@
                                 <div class="flex flex-wrap items-center gap-1 mb-1">
                                     <span class="text-[8px] font-black text-white bg-gray-900 px-1.5 py-0.5 rounded uppercase">{{p.store}}</span>
                                     
-                                    <!-- MODIFIED TO DISPLAY MULTIPLE TAGS -->
+                                    <!-- DISPLAY MULTIPLE TAGS -->
                                     {% set cat_list = p.category.split(',') %}
                                     {% for single_cat in cat_list %}
                                         {% if single_cat.strip() != "" %}
@@ -209,23 +206,19 @@
                             <div class="flex items-center gap-2">
                                 <form action="/admin/product/toggle/{{ p.id }}" method="POST" class="m-0">
                                     {% if p.is_visible %}
-                                        <button type="submit" class="w-10 h-10 bg-green-50 border border-green-200 rounded-xl flex items-center justify-center text-green-600 hover:bg-green-100 transition-colors shadow-sm" title="Visible (Click to hide)">
-                                            <i class="fa-solid fa-eye text-sm"></i>
-                                        </button>
+                                        <button type="submit" class="w-10 h-10 bg-green-50 border border-green-200 rounded-xl flex items-center justify-center text-green-600 hover:bg-green-100 transition-colors shadow-sm" title="Visible (Click to hide)"><i class="fa-solid fa-eye text-sm"></i></button>
                                     {% else %}
-                                        <button type="submit" class="w-10 h-10 bg-gray-100 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors shadow-sm" title="Hidden (Click to show)">
-                                            <i class="fa-solid fa-eye-slash text-sm"></i>
-                                        </button>
+                                        <button type="submit" class="w-10 h-10 bg-gray-100 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors shadow-sm" title="Hidden (Click to show)"><i class="fa-solid fa-eye-slash text-sm"></i></button>
                                     {% endif %}
                                 </form>
                                 <button onclick="toggleEdit({{p.id}})" class="w-10 h-10 border border-gray-200 rounded-xl flex items-center justify-center text-gray-400 hover:text-orange-500 hover:border-orange-200 shadow-sm transition-colors" title="Edit Product"><i class="fa-solid fa-gear"></i></button>
-                                
                                 <form action="/admin/product/delete/{{ p.id }}" method="POST" class="m-0" onsubmit="return confirm('Delete this product permanently?')">
                                     <button type="submit" class="w-10 h-10 border border-red-100 bg-red-50 rounded-xl flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white shadow-sm transition-colors" title="Delete Product"><i class="fa-solid fa-trash-can"></i></button>
                                 </form>
                             </div>
                         </div>
 
+                        <!-- EDIT MODE -->
                         <div class="edit-mode">
                              <form action="/admin/product/update/{{p.id}}" method="POST" enctype="multipart/form-data" class="bg-gray-50 p-5 rounded-[28px] border border-orange-100 mt-2 space-y-4 submit-form">
                                 <div class="flex justify-between items-center">
@@ -240,9 +233,23 @@
                                         <option value="custom_bracelet" {% if p.store == 'custom_bracelet' %}selected{% endif %}>Custom Charms</option>
                                     </select>
                                     
-                                    <!-- MODIFIED TO HINT AT COMMA SEPARATION -->
-                                    <input list="edit-cats-{{p.id}}" name="category" value="{{p.category}}" class="input-box shadow-sm" placeholder="Categories (Comma separated)">
-                                    <datalist id="edit-cats-{{p.id}}"></datalist>
+                                    <!-- EDIT MODE TAG UI -->
+                                    <div class="tag-wrapper">
+                                        <input type="hidden" name="category" class="hidden-category-input" value="{{p.category}}" required>
+                                        <div class="tag-container border-gray-200">
+                                            {% set cat_list = p.category.split(',') %}
+                                            {% for single_cat in cat_list %}
+                                                {% if single_cat.strip() != "" %}
+                                                <span class="tag-badge">
+                                                    {{ single_cat.strip() }} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i>
+                                                </span>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <input type="text" list="edit-cats-{{p.id}}" class="tag-input" placeholder="Add Category..." autocomplete="off">
+                                            <datalist id="edit-cats-{{p.id}}"></datalist>
+                                        </div>
+                                    </div>
+
                                 </div>
                                 
                                 <div class="space-y-3 pt-2">
@@ -286,7 +293,7 @@
             </section>
         </div>
 
-        <!-- 2. ORDERS VIEW -->
+        <!-- 2. ORDERS VIEW (Unchanged) -->
         <div id="view-orders" class="hidden-view space-y-4">
              {% if orders|length == 0 %}
             <div class="py-20 text-center text-gray-300">
@@ -312,7 +319,6 @@
 
                 <div class="bg-gray-50 rounded-2xl p-4 space-y-3">
                     {% for item in order.parsed_items %}
-                        <!-- FIX: Completely hides the invisible "DIY-Part" codes from showing up in Admin order list -->
                         {% if 'DIY-Part' not in item.title|string and item.image|string != 'hidden' %}
                             
                             {% if 'custom' in item.cartId|string or 'DIY' in item.title|string %}
@@ -425,75 +431,110 @@
     </div>
 
     <script>
-        // TAGGING SYSTEM LOGIC
-        let tags = [];
-        const tagInput = document.getElementById('tag-input-field');
-        const tagContainer = document.getElementById('tag-container');
-        const hiddenCategoryInput = document.getElementById('hidden-category-input');
+        // ==========================================
+        // UNIFIED DYNAMIC TAGGING SYSTEM 
+        // Works for Upload & ALL Edit Forms seamlessly
+        // ==========================================
 
-        function updateTagsUI() {
-            // Remove old visual tags
-            document.querySelectorAll('.tag-badge').forEach(el => el.remove());
-            
-            // Re-render
-            tags.forEach((tag, index) => {
-                const span = document.createElement('span');
-                span.className = 'tag-badge';
-                span.innerHTML = `${tag} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500" onclick="removeTag(${index})"></i>`;
-                tagContainer.insertBefore(span, tagInput);
-            });
-            
-            // Fill hidden input for backend submission (comma separated)
-            if(hiddenCategoryInput) {
-                hiddenCategoryInput.value = tags.join(', ');
+        document.addEventListener('click', function(e) {
+            // 1. Focus input when clicking anywhere in a tag container
+            if (e.target.closest('.tag-container')) {
+                const input = e.target.closest('.tag-container').querySelector('.tag-input');
+                if (input && e.target !== input && !e.target.closest('.remove-tag-btn')) {
+                    input.focus();
+                }
             }
-            
-            // Toggle HTML validation
-            if (tags.length > 0 && tagInput) {
-                tagInput.removeAttribute('required');
-            } else if (tagInput) {
-                tagInput.setAttribute('required', 'true');
+
+            // 2. Remove tag logic
+            if (e.target.closest('.remove-tag-btn')) {
+                const badge = e.target.closest('.tag-badge');
+                const wrapper = badge.closest('.tag-wrapper');
+                badge.remove();
+                updateHiddenTags(wrapper);
             }
-        }
+        });
 
-        function removeTag(index) {
-            tags.splice(index, 1);
-            updateTagsUI();
-        }
-
-        if(tagInput) {
-            tagInput.addEventListener('keydown', function(e) {
-                // If they press Comma or Enter
+        document.addEventListener('keydown', function(e) {
+            // 3. Add tag on Enter or Comma
+            if (e.target.classList.contains('tag-input')) {
                 if (e.key === ',' || e.key === 'Enter') {
                     e.preventDefault();
-                    // Remove any stray commas from the word
-                    const val = this.value.trim().replace(/,/g, '');
-                    if (val && !tags.includes(val)) {
-                        tags.push(val);
-                        this.value = '';
-                        updateTagsUI();
-                    }
+                    addTag(e.target);
                 } 
-                // Remove last tag if pressing backspace on empty input
-                else if (e.key === 'Backspace' && this.value === '' && tags.length > 0) {
-                    tags.pop();
-                    updateTagsUI();
-                }
-            });
-
-            // Handle selection from dropdown (datalist)
-            tagInput.addEventListener('input', function(e) {
-                const val = this.value.trim();
-                const options = Array.from(document.getElementById('add-cats').options).map(o => o.value);
-                if (options.includes(val)) {
-                    if (!tags.includes(val)) {
-                        tags.push(val);
+                // 4. Remove last tag on Backspace if input is empty
+                else if (e.key === 'Backspace' && e.target.value === '') {
+                    const wrapper = e.target.closest('.tag-wrapper');
+                    const badges = wrapper.querySelectorAll('.tag-badge');
+                    if (badges.length > 0) {
+                        badges[badges.length - 1].remove();
+                        updateHiddenTags(wrapper);
                     }
-                    this.value = '';
-                    updateTagsUI();
                 }
-            });
+            }
+        });
+
+        // 5. Add tag automatically if picked from datalist dropdown
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('tag-input')) {
+                const val = e.target.value.trim();
+                const datalistId = e.target.getAttribute('list');
+                if (datalistId) {
+                    const dl = document.getElementById(datalistId);
+                    if (dl) {
+                        const options = Array.from(dl.options).map(o => o.value);
+                        if (options.includes(val)) {
+                            addTag(e.target);
+                        }
+                    }
+                }
+            }
+        });
+
+        function addTag(inputElement) {
+            const val = inputElement.value.trim().replace(/,/g, '');
+            if (!val) return;
+            const wrapper = inputElement.closest('.tag-wrapper');
+            
+            // Check for duplicates within this specific wrapper
+            const existingTags = getTags(wrapper);
+            if (existingTags.includes(val)) {
+                inputElement.value = ''; // Clear if it already exists
+                return;
+            }
+
+            // Create tag DOM element
+            const span = document.createElement('span');
+            span.className = 'tag-badge';
+            span.innerHTML = `${val} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i>`;
+            
+            // Insert it before the text input
+            inputElement.parentNode.insertBefore(span, inputElement);
+            inputElement.value = '';
+            
+            updateHiddenTags(wrapper);
         }
+
+        function getTags(wrapper) {
+            return Array.from(wrapper.querySelectorAll('.tag-badge')).map(b => b.textContent.trim().replace(' ', ''));
+        }
+
+        function updateHiddenTags(wrapper) {
+            const hiddenInput = wrapper.querySelector('.hidden-category-input');
+            const tags = Array.from(wrapper.querySelectorAll('.tag-badge')).map(b => b.textContent.trim());
+            hiddenInput.value = tags.join(', '); // Sync with backend hidden input
+            
+            // Handle HTML5 required logic
+            const tagInput = wrapper.querySelector('.tag-input');
+            if (tags.length > 0) tagInput.removeAttribute('required');
+            else tagInput.setAttribute('required', 'true');
+        }
+
+        // Initialize required attributes on load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.tag-wrapper').forEach(wrapper => {
+                updateHiddenTags(wrapper);
+            });
+        });
 
 
         // STANDARD UI SCRIPTS
@@ -566,23 +607,16 @@
             }
         }
 
-        // SMART UPLOAD: AUTO-FILL EMPTY NAMES (Updated for Tags)
+        // SMART UPLOAD: AUTO-FILL EMPTY NAMES (Updated for the dynamic Tag UI)
         document.querySelectorAll('.submit-form').forEach(form => {
             form.addEventListener('submit', function(e) {
                 const titleInput = this.querySelector('input[name="title"]');
-                const catInput = this.querySelector('input[name="category"]');
+                const hiddenCatInput = this.querySelector('.hidden-category-input');
                 
-                // Get the primary string to use for auto-naming
                 let categoryName = "";
-                if(this.id !== "delete-cat-form" && this.action.includes("categories/update") === false){
-                    // For the main add form
-                    if(tags.length > 0) {
-                        categoryName = tags[0];
-                    } 
-                    // For the edit form
-                    else if (catInput && catInput.value) {
-                        categoryName = catInput.value.split(',')[0].trim();
-                    }
+                if(hiddenCatInput && hiddenCatInput.value) {
+                    // Grab the very first tag to use as a fallback name
+                    categoryName = hiddenCatInput.value.split(',')[0].trim();
                 }
                 
                 // If title is left blank, auto-generate it!
