@@ -2,6 +2,7 @@ import os
 import json
 import time
 from datetime import datetime
+from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
@@ -20,12 +21,10 @@ cloudinary.config(
   secure = True
 )
 
-# --- AUTO-COMPRESSOR ENGINE ---
-# Converts everything (even HEIC) to lightweight WebP!
 def optimize_and_upload(file):
     return cloudinary.uploader.upload(
         file,
-        format="webp",       # <--- FIXED: Safely converts all formats to lightweight WebP
+        format="webp",
         quality="auto",      
         width=900,           
         height=900,          
@@ -40,7 +39,6 @@ if db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# THE "WAKE UP" FIX FOR SLEEPING DATABASES
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_pre_ping": True,  
     "pool_recycle": 300,    
@@ -48,7 +46,19 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 }
 
 db = SQLAlchemy(app)
+
+# --- SECURITY CONFIG ---
+ADMIN_USERNAME = 'admin'
 ADMIN_PASS = 'Thesong_Admin@2022?!$'
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('admin'):
+            flash('Please log in to access the admin panel.', 'error')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # --- ANTI-SPAM MEMORY TRACKER ---
 spam_tracker = {}
@@ -131,20 +141,28 @@ def checkout():
 # --- 5. ADMIN AUTH ---
 @app.route('/admin/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST' and request.form.get('password') == ADMIN_PASS:
-        session['admin'] = True
-        return redirect(url_for('admin_panel'))
-    return render_template('admin_login.html')
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == ADMIN_USERNAME and password == ADMIN_PASS:
+            session['admin'] = True
+            flash('Login Successful!', 'success')
+            return redirect(url_for('admin_panel'))
+        else:
+            flash('Invalid Username or Password', 'error')
+            
+    return render_template('login.html')
 
 @app.route('/admin/logout')
 def logout():
     session.pop('admin', None)
+    flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
 
 @app.route('/admin/panel')
+@login_required
 def admin_panel():
-    if not session.get('admin'): return redirect(url_for('login'))
-    
     unique_cats = db.session.query(Product.category, Product.store).distinct().all()
     for c_name, c_store in unique_cats:
         if c_name != "Other" and not Category.query.filter_by(name=c_name, store=c_store).first():
@@ -162,8 +180,8 @@ def admin_panel():
 
 # --- 6. ADMIN ACTIONS ---
 @app.route('/admin/order/status/<int:id>/<string:status>', methods=['POST'])
+@login_required
 def update_order_status(id, status):
-    if not session.get('admin'): return redirect(url_for('login'))
     order = Order.query.get(id)
     if order:
         if status == 'Completed' and not order.stock_deducted:
@@ -190,20 +208,22 @@ def update_order_status(id, status):
 
         order.status = status
         db.session.commit()
+        flash(f'Order {id} marked as {status}.', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/order/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_order(id):
-    if not session.get('admin'): return redirect(url_for('login'))
     order = Order.query.get(id)
     if order:
         db.session.delete(order)
         db.session.commit()
+        flash('Order deleted.', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/categories/update', methods=['POST'])
+@login_required
 def update_categories():
-    if not session.get('admin'): return redirect(url_for('login'))
     cat_ids = request.form.getlist('cat_ids[]')
     cat_names = request.form.getlist('cat_names[]')
     
@@ -225,19 +245,20 @@ def update_categories():
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/category/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_category(id):
-    if not session.get('admin'): return redirect(url_for('login'))
     c = Category.query.get(id)
     if c:
         products = Product.query.filter_by(category=c.name, store=c.store).all()
         for p in products: p.category = "Other"
         db.session.delete(c)
         db.session.commit()
+        flash('Category deleted.', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/product/reorder', methods=['POST'])
+@login_required
 def reorder_products():
-    if not session.get('admin'): return jsonify({'status': 'unauthorized'}), 401
     data = request.json
     for i, pid in enumerate(data.get('ids', [])):
         p = Product.query.get(int(pid))
@@ -246,8 +267,8 @@ def reorder_products():
     return jsonify({'status': 'success'})
 
 @app.route('/admin/product/toggle/<int:id>', methods=['POST'])
+@login_required
 def toggle_product(id):
-    if not session.get('admin'): return redirect(url_for('login'))
     p = Product.query.get(id)
     if p:
         p.is_visible = not p.is_visible
@@ -256,8 +277,8 @@ def toggle_product(id):
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/product/update/<int:id>', methods=['POST'])
+@login_required
 def update_product(id):
-    if not session.get('admin'): return redirect(url_for('login'))
     p = Product.query.get_or_404(id)
     
     p.title = request.form.get('title')
@@ -269,6 +290,7 @@ def update_product(id):
     v_names = request.form.getlist('v_names[]')
     v_prices = request.form.getlist('v_prices[]')
     v_stocks = request.form.getlist('v_stocks[]')
+    v_cats = request.form.getlist('v_categories[]') # NEW: Multi-categories
     
     updated_variants = []
     total_stock = 0
@@ -276,8 +298,12 @@ def update_product(id):
     for i in range(len(v_ids)):
         stock = int(v_stocks[i])
         updated_variants.append({
-            "id": int(v_ids[i]), "image": v_images[i], "name": v_names[i],
-            "price": float(v_prices[i]), "stock": stock
+            "id": int(v_ids[i]), 
+            "image": v_images[i], 
+            "name": v_names[i],
+            "price": float(v_prices[i]), 
+            "stock": stock,
+            "category": v_cats[i] if i < len(v_cats) else p.category # Store specific categories
         })
         total_stock += stock
 
@@ -289,7 +315,14 @@ def update_product(id):
                 if f and f.filename != '':
                     res = optimize_and_upload(f)
                     last_id += 1
-                    updated_variants.append({"id": last_id, "name": f"New Style {last_id}", "price": updated_variants[0]['price'] if updated_variants else 0, "stock": 1, "image": res['secure_url']})
+                    updated_variants.append({
+                        "id": last_id, 
+                        "name": f"New Style {last_id}", 
+                        "price": updated_variants[0]['price'] if updated_variants else 0, 
+                        "stock": 1, 
+                        "image": res['secure_url'],
+                        "category": p.category # Default to main category
+                    })
                     total_stock += 1
                     
         p.variants = json.dumps(updated_variants)
@@ -306,8 +339,8 @@ def update_product(id):
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/product/add', methods=['POST'])
+@login_required
 def add_product():
-    if not session.get('admin'): return redirect(url_for('login'))
     title = request.form.get('title')
     category = request.form.get('category')
     store = request.form.get('store')
@@ -315,6 +348,7 @@ def add_product():
     v_names = request.form.getlist('variant_names[]')
     v_prices = request.form.getlist('variant_prices[]')
     v_stocks = request.form.getlist('variant_stocks[]')
+    v_categories = request.form.getlist('variant_categories[]') # NEW: Multi-categories
     files = request.files.getlist('images')
     
     uploaded_urls = []
@@ -330,7 +364,16 @@ def add_product():
             for i, url in enumerate(uploaded_urls):
                 price = float(v_prices[i]) if i < len(v_prices) else 0
                 stock = int(v_stocks[i]) if i < len(v_stocks) else 0
-                vars_json.append({"id": i, "name": v_names[i] if i < len(v_names) else f"Style {i+1}", "price": price, "stock": stock, "image": url})
+                cat_str = v_categories[i] if i < len(v_categories) else category
+                
+                vars_json.append({
+                    "id": i, 
+                    "name": v_names[i] if i < len(v_names) else f"Style {i+1}", 
+                    "price": price, 
+                    "stock": stock, 
+                    "image": url,
+                    "category": cat_str # Save specific categories to DB
+                })
                 total_stock += stock
             
             new_p = Product(title=title, price=vars_json[0]['price'], stock=total_stock, image=uploaded_urls[0], category=category, store=store, variants=json.dumps(vars_json), sort_order=-1, is_visible=True)
@@ -346,8 +389,8 @@ def add_product():
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/product/delete/<int:id>', methods=['POST'])
+@login_required
 def delete_product(id):
-    if not session.get('admin'): return redirect(url_for('login'))
     p = Product.query.get(id)
     if p:
         db.session.delete(p)
@@ -394,5 +437,4 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
 
