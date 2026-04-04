@@ -115,7 +115,6 @@
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">2. Main Category</label>
-                                <!-- THIS PREVENTS THE DB CRASH -->
                                 <input list="add-cats" name="category" id="main-category-input" required placeholder="Required..." class="input-box border-2 border-orange-200 bg-white">
                                 <datalist id="add-cats"></datalist>
                             </div>
@@ -179,7 +178,25 @@
                                 <div class="flex flex-wrap items-center gap-1.5 mb-2">
                                     <span class="text-[9px] font-black text-white bg-gray-900 px-2 py-1 rounded-md uppercase">{{p.store}}</span>
                                     
-                                    <span class="text-[9px] font-black text-gray-600 bg-gray-100 px-2 py-1 rounded-md uppercase"><i class="fa-regular fa-folder mr-1"></i>{{p.category}}</span>
+                                    <!-- SMART TAG SCANNER: Scans all variants in this group to show you exactly what saved -->
+                                    {% set group_cats = [] %}
+                                    {% if p.category %}{% set _ = group_cats.append(p.category) %}{% endif %}
+                                    
+                                    {% for v in p.parsed_variants %}
+                                        {% if v.category %}
+                                            {% set v_cats = v.category.split(',') %}
+                                            {% for vc in v_cats %}
+                                                {% set trimmed = vc.strip() %}
+                                                {% if trimmed and trimmed not in group_cats %}
+                                                    {% set _ = group_cats.append(trimmed) %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% for cat in group_cats %}
+                                        <span class="text-[9px] font-black text-[#ff5000] bg-orange-50 border border-orange-100 px-2 py-1 rounded-md uppercase"><i class="fa-solid fa-tag mr-1 opacity-50"></i>{{ cat }}</span>
+                                    {% endfor %}
 
                                     {% if not p.is_visible %}
                                     <span class="text-[9px] font-black text-red-500 bg-red-50 border border-red-100 px-2 py-1 rounded-md uppercase"><i class="fa-solid fa-eye-slash mr-1"></i>Hidden</span>
@@ -227,7 +244,6 @@
                                     </div>
                                     <div class="space-y-1">
                                         <label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Main Category</label>
-                                        <!-- THIS PREVENTS THE DB CRASH IN EDIT MODE -->
                                         <input type="text" list="edit-cats-{{p.id}}" name="category" value="{{p.category}}" required class="input-box shadow-sm" placeholder="Required...">
                                         <datalist id="edit-cats-{{p.id}}"></datalist>
                                     </div>
@@ -747,5 +763,4 @@
     </script>
 </body>
 </html>
-
 
