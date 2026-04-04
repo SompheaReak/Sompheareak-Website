@@ -152,7 +152,7 @@ def login():
         else:
             flash('Invalid Username or Password', 'error')
             
-    return render_template('login.html')
+    return render_template('admin_login.html')
 
 @app.route('/admin/logout')
 def logout():
