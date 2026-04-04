@@ -119,7 +119,6 @@
                                 </select>
                             </div>
                             
-                            <!-- UPDATED: MAIN CATEGORY IS NOW MULTI-TAG -->
                             <div class="space-y-1">
                                 <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">2. Main Categories</label>
                                 <div class="tag-wrapper pt-0.5">
@@ -151,7 +150,6 @@
                             <div id="variant-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2 hide-scrollbar"></div>
                         </div>
 
-                        <!-- OPTIONAL TITLE -->
                         <div class="pt-2">
                             <input type="text" name="title" placeholder="Product Title (Optional - Auto generated)" class="input-box text-sm bg-gray-50 border-gray-100 text-gray-500 focus:bg-white">
                         </div>
@@ -162,7 +160,6 @@
             </section>
 
             <section class="lg:col-span-7 space-y-4">
-                <!-- Filter Tabs -->
                 <div class="flex justify-between items-center bg-white border border-gray-100 p-2 rounded-2xl shadow-sm overflow-x-auto hide-scrollbar">
                     <div class="flex gap-1 flex-1 min-w-max">
                         <button onclick="filterStore('All')" id="flt-All" class="store-flt bg-black text-white px-4 py-2 text-[9px] font-black uppercase rounded-xl transition-all">All</button>
@@ -190,9 +187,7 @@
                                 <div class="flex flex-wrap items-center gap-1.5 mb-2">
                                     <span class="text-[9px] font-black text-white bg-gray-900 px-2 py-1 rounded-md uppercase">{{p.store}}</span>
                                     
-                                    <!-- SMART TAG SCANNER: Scans all variants in this group to show you exactly what saved -->
                                     {% set group_cats = [] %}
-                                    
                                     {% if p.category %}
                                         {% set m_cats = p.category.split(',') %}
                                         {% for mc in m_cats %}
@@ -264,7 +259,6 @@
                                         </select>
                                     </div>
                                     
-                                    <!-- UPDATED: EDIT MAIN CATEGORY IS MULTI-TAG -->
                                     <div class="space-y-1">
                                         <label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Main Categories</label>
                                         <div class="tag-wrapper pt-0.5">
@@ -309,7 +303,6 @@
                                             </div>
                                             
                                             <div class="flex-1 space-y-2 price-group">
-                                                <!-- Variant Info -->
                                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                                     <div class="space-y-1">
                                                         <span class="text-[8px] font-black text-gray-400 uppercase">Name</span>
@@ -331,10 +324,8 @@
                                                     </div>
                                                 </div>
 
-                                                <!-- Variant Categories Tag UI -->
                                                 <div class="tag-wrapper pt-1">
                                                     <span class="text-[8px] font-black text-[#ff5000] uppercase tracking-widest mb-1 block">Categories for this specific variant:</span>
-                                                    <!-- Sends data to backend as a list (v_categories[]) -->
                                                     <input type="hidden" name="v_categories[]" class="hidden-category-input" value="{{v.category}}">
                                                     
                                                     <div class="tag-container variant-tag-container border-gray-200 bg-gray-50/50">
@@ -380,7 +371,6 @@
             </section>
         </div>
 
-        <!-- 2. ORDERS VIEW (Unchanged visually) -->
         <div id="view-orders" class="hidden-view space-y-4">
              {% if orders|length == 0 %}
             <div class="py-20 text-center text-gray-300">
@@ -428,7 +418,6 @@
                                             <img src="{{ item.image }}" class="w-12 h-16 object-cover rounded-lg border border-gray-100 bg-gray-50">
                                             <div class="text-left">
                                                 <span class="text-[10px] font-black uppercase text-gray-800 tracking-widest block">Tap to View Receipt</span>
-                                                <span class="text-[8px] font-bold text-gray-400">View customer's generated design</span>
                                             </div>
                                         </div>
                                         <i class="fa-solid fa-expand text-[#ff5000] text-lg pr-2"></i>
@@ -475,7 +464,6 @@
 
     <form id="delete-cat-form" method="POST" class="hidden"></form>
 
-    <!-- Category Modal -->
     <div id="cat-modal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 hidden">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeCatModal()"></div>
         <div class="bg-white w-full max-w-lg rounded-[32px] overflow-hidden relative shadow-2xl flex flex-col max-h-[90vh]">
@@ -513,100 +501,60 @@
     </div>
 
     <script>
-        // ==========================================
-        // DYNAMIC TAGGING LOGIC (Global for Main & Variants)
-        // ==========================================
-
         document.addEventListener('click', function(e) {
             if (e.target.closest('.tag-container')) {
                 const container = e.target.closest('.tag-container');
                 const input = container.querySelector('.tag-input');
-                if (input && e.target !== input && !e.target.closest('.remove-tag-btn')) {
-                    input.focus();
-                }
+                if (input && e.target !== input && !e.target.closest('.remove-tag-btn')) input.focus();
             }
             if (e.target.closest('.remove-tag-btn')) {
                 const badge = e.target.closest('.tag-badge');
                 const wrapper = badge.closest('.tag-wrapper');
-                badge.remove();
-                updateHiddenTags(wrapper);
+                badge.remove(); updateHiddenTags(wrapper);
             }
         });
 
-        document.addEventListener('focusin', function(e) {
-            if (e.target.classList.contains('tag-input')) {
-                e.target.closest('.tag-container').classList.add('highlight');
-            }
-        });
+        document.addEventListener('focusin', function(e) { if (e.target.classList.contains('tag-input')) e.target.closest('.tag-container').classList.add('highlight'); });
         document.addEventListener('focusout', function(e) {
             if (e.target.classList.contains('tag-input')) {
                 e.target.closest('.tag-container').classList.remove('highlight');
-                if (e.target.value.trim() !== '') {
-                    addTag(e.target);
-                }
+                if (e.target.value.trim() !== '') addTag(e.target);
             }
         });
 
         document.addEventListener('keydown', function(e) {
             if (e.target.classList.contains('tag-input')) {
-                if (e.key === ',' || e.key === 'Enter') {
-                    e.preventDefault();
-                    addTag(e.target);
-                } 
+                if (e.key === ',' || e.key === 'Enter') { e.preventDefault(); addTag(e.target); } 
                 else if (e.key === 'Backspace' && e.target.value === '') {
-                    const wrapper = e.target.closest('.tag-wrapper');
-                    const badges = wrapper.querySelectorAll('.tag-badge');
-                    if (badges.length > 0) {
-                        badges[badges.length - 1].remove();
-                        updateHiddenTags(wrapper);
-                    }
+                    const wrapper = e.target.closest('.tag-wrapper'); const badges = wrapper.querySelectorAll('.tag-badge');
+                    if (badges.length > 0) { badges[badges.length - 1].remove(); updateHiddenTags(wrapper); }
                 }
             }
         });
 
         document.addEventListener('input', function(e) {
             if (e.target.classList.contains('tag-input')) {
-                const val = e.target.value.trim();
-                const datalistId = e.target.getAttribute('list');
+                const val = e.target.value.trim(); const datalistId = e.target.getAttribute('list');
                 if (datalistId) {
                     const dl = document.getElementById(datalistId);
-                    if (dl) {
-                        const options = Array.from(dl.options).map(o => o.value);
-                        if (options.includes(val)) {
-                            addTag(e.target);
-                        }
-                    }
+                    if (dl && Array.from(dl.options).map(o => o.value).includes(val)) addTag(e.target);
                 }
             }
         });
 
         function addTag(inputElement) {
-            const val = inputElement.value.trim().replace(/,/g, '');
-            if (!val) return;
+            const val = inputElement.value.trim().replace(/,/g, ''); if (!val) return;
             const wrapper = inputElement.closest('.tag-wrapper');
-            
-            const existingTags = getTags(wrapper);
-            if (existingTags.includes(val.toLowerCase())) {
-                inputElement.value = '';
-                return;
-            }
+            const existingTags = Array.from(wrapper.querySelectorAll('.tag-badge')).map(b => b.textContent.trim().replace(' ', '').toLowerCase());
+            if (existingTags.includes(val.toLowerCase())) { inputElement.value = ''; return; }
 
-            // Determine if it's the smaller variant tag or the bigger main tag
             const isVariant = wrapper.querySelector('.variant-tag-container') !== null;
             const badgeClass = isVariant ? 'tag-badge variant-tag-badge' : 'tag-badge';
 
-            const span = document.createElement('span');
-            span.className = badgeClass;
+            const span = document.createElement('span'); span.className = badgeClass;
             span.innerHTML = `${val} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i>`;
             
-            inputElement.parentNode.insertBefore(span, inputElement);
-            inputElement.value = '';
-            
-            updateHiddenTags(wrapper);
-        }
-
-        function getTags(wrapper) {
-            return Array.from(wrapper.querySelectorAll('.tag-badge')).map(b => b.textContent.trim().replace(' ', '').toLowerCase());
+            inputElement.parentNode.insertBefore(span, inputElement); inputElement.value = ''; updateHiddenTags(wrapper);
         }
 
         function updateHiddenTags(wrapper) {
@@ -615,65 +563,39 @@
             hiddenInput.value = tags.join(', '); 
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.tag-wrapper').forEach(wrapper => {
-                updateHiddenTags(wrapper);
-            });
-        });
-
-
-        // ==========================================
-        // STANDARD UI SCRIPTS
-        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => { document.querySelectorAll('.tag-wrapper').forEach(wrapper => { updateHiddenTags(wrapper); }); });
 
         function openImageViewer(src) { document.getElementById('viewer-img').src = src; document.getElementById('viewer-download').href = src; document.getElementById('image-viewer-modal').classList.remove('hidden'); document.getElementById('image-viewer-modal').classList.add('flex'); }
         function closeImageViewer() { document.getElementById('image-viewer-modal').classList.add('hidden'); document.getElementById('image-viewer-modal').classList.remove('flex'); }
         function openCatModal() { document.getElementById('cat-modal').classList.remove('hidden'); filterCatModal('toy'); }
         function closeCatModal() { document.getElementById('cat-modal').classList.add('hidden'); }
 
-        const allSystemCats = [
-            {% for cat in categories %}
-            { name: "{{ cat.name|replace('\"', '\\\"')|replace('\'', '\\\'') }}", store: "{{ cat.store }}" },
-            {% endfor %}
-        ];
+        const allSystemCats = [ {% for cat in categories %} { name: "{{ cat.name|replace('\"', '\\\"')|replace('\'', '\\\'') }}", store: "{{ cat.store }}" }, {% endfor %} ];
 
         function updateCatList(selectEl, datalistId) {
-            const dl = document.getElementById(datalistId);
-            if(!dl) return; dl.innerHTML = '';
-            const store = selectEl.value;
-            const cats = allSystemCats.filter(c => c.store === store);
+            const dl = document.getElementById(datalistId); if(!dl) return; dl.innerHTML = '';
+            const store = selectEl.value; const cats = allSystemCats.filter(c => c.store === store);
             const unique = [...new Set(cats.map(c => c.name))];
-            unique.forEach(name => {
-                const opt = document.createElement('option');
-                opt.value = name; dl.appendChild(opt);
-            });
+            unique.forEach(name => { const opt = document.createElement('option'); opt.value = name; dl.appendChild(opt); });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const addSelect = document.getElementById('add-store-select');
-            if(addSelect) updateCatList(addSelect, 'add-cats');
+            const addSelect = document.getElementById('add-store-select'); if(addSelect) updateCatList(addSelect, 'add-cats');
             document.querySelectorAll('.edit-store-select').forEach(sel => { updateCatList(sel, sel.dataset.target); });
         });
 
         function updatePrice(element, type) {
-            const group = element.closest('.price-group');
-            const usdInput = group.querySelector('.usd-input'); const khrInput = group.querySelector('.khr-input');
+            const group = element.closest('.price-group'); const usdInput = group.querySelector('.usd-input'); const khrInput = group.querySelector('.khr-input');
             const rate = 4000;
             if (type === 'USD') {
                 const usdVal = parseFloat(usdInput.value);
-                if (!isNaN(usdVal)) khrInput.value = (usdVal * rate).toFixed(0);
-                else khrInput.value = '';
+                if (!isNaN(usdVal)) khrInput.value = (usdVal * rate).toFixed(0); else khrInput.value = '';
             } else {
                 const khrVal = parseFloat(khrInput.value);
-                if (!isNaN(khrVal)) usdInput.value = (khrVal / rate).toFixed(2);
-                else usdInput.value = '';
+                if (!isNaN(khrVal)) usdInput.value = (khrVal / rate).toFixed(2); else usdInput.value = '';
             }
         }
 
-        // ==========================================
-        // MULTI-UPLOAD VARIANT GENERATOR
-        // AUTO-FILLS TAG BOXES WITH MAIN CATEGORY
-        // ==========================================
         const fileInput = document.getElementById('file-input');
         const configArea = document.getElementById('variant-config');
         const variantList = document.getElementById('variant-list');
@@ -684,54 +606,30 @@
             if(files.length > 0) {
                 configArea.classList.remove('hidden'); variantList.innerHTML = '';
 
-                // Get the main category (could be multiple like "Dog, Animal") to auto-fill the variants
                 const defaultTagString = mainCatInput.value.trim();
                 let initialTagHtml = '';
-                
                 if(defaultTagString) {
                     const tagsArray = defaultTagString.split(',').map(t => t.trim()).filter(Boolean);
-                    tagsArray.forEach(tag => {
-                         initialTagHtml += `<span class="tag-badge variant-tag-badge">${tag} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i></span>`;
-                    });
+                    tagsArray.forEach(tag => { initialTagHtml += `<span class="tag-badge variant-tag-badge">${tag} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i></span>`; });
                 }
 
                 files.forEach((file, idx) => {
                     const reader = new FileReader();
                     reader.onload = (e) => {
-                        const row = document.createElement('div'); 
-                        row.className = "flex gap-3 items-start bg-white p-3 rounded-xl border border-gray-200 shadow-sm relative variant-row";
+                        const row = document.createElement('div'); row.className = "flex gap-3 items-start bg-white p-3 rounded-xl border border-gray-200 shadow-sm relative variant-row";
                         row.innerHTML = `
-                            <div class="w-14 h-14 flex-shrink-0 bg-gray-50 border border-gray-100 rounded-lg p-0.5 mt-1">
-                                <img src="${e.target.result}" class="w-full h-full object-contain rounded-md">
-                            </div>
+                            <div class="w-14 h-14 flex-shrink-0 bg-gray-50 border border-gray-100 rounded-lg p-0.5 mt-1"><img src="${e.target.result}" class="w-full h-full object-contain rounded-md"></div>
                             <div class="flex-1 space-y-2 price-group">
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                    <div class="space-y-1">
-                                        <span class="text-[8px] font-black text-gray-400 uppercase">Image Name</span>
-                                        <input type="text" name="variant_names[]" placeholder="Variant ${idx + 1}" class="w-full text-[11px] font-bold outline-none border-b border-gray-200 pb-1 text-gray-700 focus:border-orange-500">
-                                    </div>
-                                    <div class="space-y-1">
-                                        <span class="text-[8px] font-black text-gray-400 uppercase">Price (USD)</span>
-                                        <div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">$</span><input type="number" step="any" name="variant_prices[]" required placeholder="0.00" class="w-full text-[11px] font-black outline-none usd-input" oninput="updatePrice(this, 'USD')"></div>
-                                    </div>
-                                    <div class="space-y-1">
-                                        <span class="text-[8px] font-black text-gray-400 uppercase">Price (KHR)</span>
-                                        <div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">៛</span><input type="number" step="any" placeholder="0" class="w-full text-[11px] font-black outline-none khr-input" oninput="updatePrice(this, 'KHR')"></div>
-                                    </div>
-                                    <div class="space-y-1">
-                                        <span class="text-[8px] font-black text-gray-400 uppercase">Stock Qty</span>
-                                        <div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><input type="number" name="variant_stocks[]" value="1" required class="w-full text-[11px] font-black outline-none text-center"></div>
-                                    </div>
+                                    <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Image Name</span><input type="text" name="variant_names[]" placeholder="Variant ${idx + 1}" class="w-full text-[11px] font-bold outline-none border-b border-gray-200 pb-1 text-gray-700 focus:border-orange-500"></div>
+                                    <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Price (USD)</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">$</span><input type="number" step="any" name="variant_prices[]" required placeholder="0.00" class="w-full text-[11px] font-black outline-none usd-input" oninput="updatePrice(this, 'USD')"></div></div>
+                                    <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Price (KHR)</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">៛</span><input type="number" step="any" placeholder="0" class="w-full text-[11px] font-black outline-none khr-input" oninput="updatePrice(this, 'KHR')"></div></div>
+                                    <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Stock Qty</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><input type="number" name="variant_stocks[]" value="1" required class="w-full text-[11px] font-black outline-none text-center"></div></div>
                                 </div>
-                                
-                                <!-- VARIANT SPECIFIC CATEGORY TAG UI -->
                                 <div class="tag-wrapper pt-1">
                                     <span class="text-[8px] font-black text-[#ff5000] uppercase tracking-widest mb-1 block">Categories for this image:</span>
                                     <input type="hidden" name="variant_categories[]" class="hidden-category-input" value="${defaultTagString}">
-                                    <div class="tag-container variant-tag-container border-gray-200 bg-gray-50/50">
-                                        ${initialTagHtml}
-                                        <input type="text" list="add-cats" class="tag-input variant-tag-input" placeholder="Tags..." autocomplete="off">
-                                    </div>
+                                    <div class="tag-container variant-tag-container border-gray-200 bg-gray-50/50">${initialTagHtml}<input type="text" list="add-cats" class="tag-input variant-tag-input" placeholder="Tags..." autocomplete="off"></div>
                                 </div>
                             </div>
                             <button type="button" onclick="this.closest('.variant-row').remove()" class="p-2 w-8 h-8 flex items-center justify-center bg-gray-50 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors mt-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
@@ -743,72 +641,40 @@
             }
         });
 
-        // ==========================================
-        // SMART FORM SUBMISSION / AUTO-FILL
-        // ==========================================
         document.querySelectorAll('.submit-form').forEach(form => {
             form.addEventListener('submit', function(e) {
                 const titleInput = this.querySelector('input[name="title"]');
                 const mainCatRaw = this.querySelector('input[name="category"]').value.trim();
-                
-                // Use just the first tag for the auto-title if multiple exist
-                let firstMainCategory = "";
-                if(mainCatRaw) {
-                    firstMainCategory = mainCatRaw.split(',')[0].trim();
-                }
-
-                if (titleInput && !titleInput.value.trim() && firstMainCategory) {
-                    titleInput.value = firstMainCategory + ' Group';
-                }
+                let firstMainCategory = ""; if(mainCatRaw) firstMainCategory = mainCatRaw.split(',')[0].trim();
+                if (titleInput && !titleInput.value.trim() && firstMainCategory) titleInput.value = firstMainCategory + ' Group';
                 
                 const vNames = this.querySelectorAll('input[name="v_names[]"], input[name="variant_names[]"]');
-                vNames.forEach((vn, idx) => {
-                    if (!vn.value.trim()) {
-                        vn.value = (firstMainCategory ? firstMainCategory : 'Variant') + ' ' + (idx + 1);
-                    }
-                });
+                vNames.forEach((vn, idx) => { if (!vn.value.trim()) vn.value = (firstMainCategory ? firstMainCategory : 'Variant') + ' ' + (idx + 1); });
 
-                document.getElementById('loading-overlay').classList.remove('hidden'); 
-                document.getElementById('loading-overlay').classList.add('flex');
+                document.getElementById('loading-overlay').classList.remove('hidden'); document.getElementById('loading-overlay').classList.add('flex');
             });
         });
 
         setTimeout(() => { document.querySelectorAll('.animate-slide-up').forEach(t => t.style.display = 'none'); }, 6000);
 
-        new Sortable(document.getElementById('main-inventory-list'), {
-            handle: '.product-handle', animation: 150,
-            onEnd: function () {
-                const items = document.querySelectorAll('.product-item');
-                const ids = Array.from(items).map(item => item.id.replace('item-', ''));
-                fetch('/admin/product/reorder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: ids }) });
-            }
-        });
+        new Sortable(document.getElementById('main-inventory-list'), { handle: '.product-handle', animation: 150, onEnd: function () {
+            const items = document.querySelectorAll('.product-item'); const ids = Array.from(items).map(item => item.id.replace('item-', ''));
+            fetch('/admin/product/reorder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: ids }) });
+        }});
 
         new Sortable(document.getElementById('category-sortable'), { handle: '.handle', animation: 150 });
 
-        function deleteCategory(id) {
-            if(confirm('Delete category? Items will move to "Other".')) {
-                const form = document.getElementById('delete-cat-form');
-                form.action = '/admin/category/delete/' + id; form.submit();
-            }
-        }
+        function deleteCategory(id) { if(confirm('Delete category? Items will move to "Other".')) { const form = document.getElementById('delete-cat-form'); form.action = '/admin/category/delete/' + id; form.submit(); } }
 
         function switchView(view) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('tab-' + view).classList.add('active');
-            if(view === 'inventory') {
-                document.getElementById('view-inventory').classList.remove('hidden-view'); document.getElementById('view-inventory').style.display = 'grid';
-                document.getElementById('view-orders').classList.add('hidden-view');
-            } else {
-                document.getElementById('view-inventory').classList.add('hidden-view'); document.getElementById('view-inventory').style.display = 'none';
-                document.getElementById('view-orders').classList.remove('hidden-view');
-            }
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById('tab-' + view).classList.add('active');
+            if(view === 'inventory') { document.getElementById('view-inventory').classList.remove('hidden-view'); document.getElementById('view-inventory').style.display = 'grid'; document.getElementById('view-orders').classList.add('hidden-view'); } 
+            else { document.getElementById('view-inventory').classList.add('hidden-view'); document.getElementById('view-inventory').style.display = 'none'; document.getElementById('view-orders').classList.remove('hidden-view'); }
         }
 
         function filterStore(store) {
             document.querySelectorAll('.store-flt').forEach(b => { b.classList.remove('bg-black', 'text-white'); b.classList.add('text-gray-400'); });
-            const activeBtn = document.getElementById('flt-' + store);
-            activeBtn.classList.remove('text-gray-400'); activeBtn.classList.add('bg-black', 'text-white');
+            const activeBtn = document.getElementById('flt-' + store); activeBtn.classList.remove('text-gray-400'); activeBtn.classList.add('bg-black', 'text-white');
             document.querySelectorAll('.product-item').forEach(i => { i.style.display = (store === 'All' || i.dataset.store === store) ? 'block' : 'none'; });
         }
 
