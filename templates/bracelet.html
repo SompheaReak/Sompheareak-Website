@@ -98,7 +98,7 @@
   <!-- PRODUCT DETAIL MODAL (UPGRADED) -->
   <div id="product-modal" class="fixed inset-0 z-[1000] flex flex-col justify-end translate-y-full">
       <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeProductModal()"></div>
-      <div class="relative w-full h-[92vh] md:max-w-md md:mx-auto bg-white rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
+      <div class="relative w-full h-[92vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
           
           <!-- Modal Header -->
           <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-[30] absolute top-0 left-0 right-0 shadow-sm">
@@ -107,22 +107,22 @@
           </div>
           
           <!-- Modal Scrollable Body -->
-          <div class="flex-1 overflow-y-auto pt-16 pb-6 scrollbar-hide relative bg-gray-50" id="modal-body">
+          <div class="flex-1 overflow-y-auto pt-14 pb-6 scrollbar-hide relative bg-gray-50" id="modal-body">
               
-              <!-- STICKY IMAGE CONTAINER -->
-              <div class="sticky top-0 z-20 bg-gray-50 pb-4 pt-2 px-5 sticky-shadow">
-                  <div class="w-full aspect-square bg-white rounded-3xl border border-gray-100 overflow-hidden relative cursor-pointer shadow-sm" onclick="openImageViewer(document.getElementById('modal-img').src)">
-                      <img id="modal-img" src="" class="w-full h-full object-contain p-2 transition-opacity duration-300">
-                      <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-sm"></i></div>
-                      <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-                          <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-0.5">Price</span>
-                          <span id="modal-price" class="text-lg font-black text-[#ff5000] leading-none">0៛</span>
-                      </div>
+              <!-- STICKY FULL-WIDTH IMAGE CAROUSEL -->
+              <div class="sticky top-0 z-20 bg-white border-b border-gray-100 sticky-shadow">
+                  <div id="modal-image-carousel" class="w-full h-[35vh] flex overflow-x-auto snap-x snap-mandatory scrollbar-hide relative" onscroll="handleCarouselScroll()">
+                      <!-- Images injected here by JS -->
+                  </div>
+                  <!-- Floating Price Badge -->
+                  <div class="absolute bottom-3 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl shadow-md border border-gray-100 flex flex-col pointer-events-none">
+                      <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-0.5">Price</span>
+                      <span id="modal-price" class="text-xl font-black text-[#ff5000] leading-none">0៛</span>
                   </div>
               </div>
 
               <!-- Content Area -->
-              <div class="px-5 space-y-6 mt-2 relative z-10">
+              <div class="px-5 space-y-6 mt-5 relative z-10">
                   
                   <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
                       <div>
@@ -140,14 +140,14 @@
                       <div id="variant-grid" class="grid grid-cols-4 gap-2.5"></div>
                   </div>
 
-                  <!-- RECOMMENDATIONS SECTION -->
+                  <!-- RECOMMENDATIONS SECTION (ALL PRODUCTS) -->
                   <div class="pt-2">
                       <div class="flex items-center gap-2 mb-4">
                           <div class="h-px bg-gray-200 flex-1"></div>
                           <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center" data-i18n="recommendations">You Might Also Like</h3>
                           <div class="h-px bg-gray-200 flex-1"></div>
                       </div>
-                      <div id="recommendations-grid" class="grid grid-cols-2 gap-3">
+                      <div id="recommendations-grid" class="grid grid-cols-2 gap-3 pb-4">
                           <!-- Filled by JS -->
                       </div>
                   </div>
@@ -237,6 +237,8 @@
     let currentModalProduct = null;
     let currentVariantIndex = 0;
     let modalQty = 1;
+    let isProgrammaticScroll = false;
+    let scrollTimeout;
 
     try {
         const savedCart = localStorage.getItem('sr_cart');
@@ -325,7 +327,7 @@
         }).join('');
     }
 
-    // Modal & Recommendation Logic
+    // Modal, Carousel & Recommendation Logic
     function openProductModal(id) {
         currentModalProduct = allProducts.find(p => p.id === id);
         if(!currentModalProduct) return;
@@ -342,10 +344,20 @@
              try { variants = typeof currentModalProduct.variants === 'string' ? JSON.parse(currentModalProduct.variants) : currentModalProduct.variants; } catch(e){}
         }
         
+        const carousel = document.getElementById('modal-image-carousel');
         const varSection = document.getElementById('variant-section');
         const varGrid = document.getElementById('variant-grid');
         
         if(variants.length > 0) {
+            // Populate Carousel
+            carousel.innerHTML = variants.map(v => `
+                <div class="min-w-full h-full snap-center relative cursor-pointer" onclick="openImageViewer('${v.image || currentModalProduct.thumbnail}')">
+                    <img src="${v.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain p-2">
+                    <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-sm"></i></div>
+                </div>
+            `).join('');
+
+            // Populate Grid Below
             varSection.classList.remove('hidden');
             varGrid.innerHTML = variants.map((v, i) => `
                 <div onclick="selectVariant(${i})" class="variant-btn w-full aspect-[4/5] bg-gray-50 rounded-xl border-2 ${i === 0 ? 'border-[#ff5000]' : 'border-gray-100 hover:border-gray-300'} overflow-hidden cursor-pointer p-1 transition-colors relative">
@@ -353,27 +365,100 @@
                     <img src="${v.image || currentModalProduct.thumbnail}" class="w-full h-full object-cover rounded-lg">
                 </div>
             `).join('');
-            updateModalUI(variants[0].price, variants[0].image || currentModalProduct.thumbnail, variants[0].stock);
+            
+            updatePriceAndStock(variants[0].price, variants[0].stock);
         } else {
+            // No Variants
             varSection.classList.add('hidden');
-            updateModalUI(currentModalProduct.price, currentModalProduct.image || currentModalProduct.thumbnail, currentModalProduct.stock);
+            carousel.innerHTML = `
+                <div class="min-w-full h-full snap-center relative cursor-pointer" onclick="openImageViewer('${currentModalProduct.image || currentModalProduct.thumbnail}')">
+                    <img src="${currentModalProduct.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain p-2">
+                    <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-sm"></i></div>
+                </div>
+            `;
+            updatePriceAndStock(currentModalProduct.price, currentModalProduct.stock);
         }
         
-        // Render Recommendations
+        // Reset Carousel Scroll
+        isProgrammaticScroll = true;
+        carousel.scrollLeft = 0;
+        setTimeout(() => isProgrammaticScroll = false, 50);
+
+        // Render ALL Recommendations
         renderRecommendations(id);
 
         const modal = document.getElementById('product-modal');
         modal.classList.remove('translate-y-full');
     }
 
+    function handleCarouselScroll() {
+        if(isProgrammaticScroll) return;
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            const carousel = document.getElementById('modal-image-carousel');
+            const index = Math.round(carousel.scrollLeft / carousel.clientWidth);
+            if (index !== currentVariantIndex && index >= 0) {
+                updateVariantUIOnly(index);
+            }
+        }, 50);
+    }
+
+    function selectVariant(idx) {
+        updateVariantUIOnly(idx);
+        
+        // Scroll the carousel to match
+        isProgrammaticScroll = true;
+        const carousel = document.getElementById('modal-image-carousel');
+        carousel.scrollTo({ left: carousel.clientWidth * idx, behavior: 'smooth' });
+        
+        // Re-enable manual scroll listener after animation
+        setTimeout(() => { isProgrammaticScroll = false; }, 400);
+    }
+
+    function updateVariantUIOnly(idx) {
+        currentVariantIndex = idx;
+        
+        // Update Borders
+        document.querySelectorAll('.variant-btn').forEach((btn, i) => {
+            if(i === idx) {
+                btn.classList.add('border-[#ff5000]');
+                btn.classList.remove('border-gray-100', 'hover:border-gray-300');
+                if(!btn.querySelector('.bg-\\[\\#ff5000\\]')) btn.innerHTML += '<div class="absolute top-1 right-1 w-2 h-2 bg-[#ff5000] rounded-full border border-white"></div>';
+            } else {
+                btn.classList.remove('border-[#ff5000]');
+                btn.classList.add('border-gray-100', 'hover:border-gray-300');
+                const dot = btn.querySelector('.bg-\\[\\#ff5000\\]');
+                if(dot) dot.remove();
+            }
+        });
+        
+        // Update Data
+        let variants = currentModalProduct.parsed_variants || [];
+        if(variants.length === 0 && currentModalProduct.variants) {
+             try { variants = typeof currentModalProduct.variants === 'string' ? JSON.parse(currentModalProduct.variants) : currentModalProduct.variants; } catch(e){}
+        }
+        if (variants.length > 0 && variants[idx]) {
+            updatePriceAndStock(variants[idx].price, variants[idx].stock);
+        }
+    }
+
+    function updatePriceAndStock(price, stock) {
+        document.getElementById('modal-price').innerText = (parseFloat(price) * RATE).toLocaleString() + '៛';
+        const stockEl = document.getElementById('modal-stock');
+        if(parseInt(stock) > 0) {
+            stockEl.innerText = "In Stock"; stockEl.className = "text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block";
+        } else {
+            stockEl.innerText = "Sold Out"; stockEl.className = "text-xs font-black text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 inline-block";
+        }
+    }
+
     function renderRecommendations(excludeId) {
         const available = allProducts.filter(p => p.id !== excludeId);
-        // Shuffle array
+        // Shuffle array and show ALL of them (removed .slice)
         const shuffled = available.sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 4);
 
         const grid = document.getElementById('recommendations-grid');
-        grid.innerHTML = selected.map(p => {
+        grid.innerHTML = shuffled.map(p => {
             const price = p.parsed_variants && p.parsed_variants.length > 0 ? (p.parsed_variants[0].price * RATE) : (p.price * RATE);
             const image = p.image || p.thumbnail;
             return `
@@ -395,47 +480,6 @@
         setTimeout(() => {
             openProductModal(newId);
         }, 100);
-    }
-
-    function selectVariant(idx) {
-        currentVariantIndex = idx;
-        document.querySelectorAll('.variant-btn').forEach((btn, i) => {
-            if(i === idx) {
-                btn.classList.add('border-[#ff5000]');
-                btn.classList.remove('border-gray-100', 'hover:border-gray-300');
-                if(!btn.querySelector('.bg-\\[\\#ff5000\\]')) btn.innerHTML += '<div class="absolute top-1 right-1 w-2 h-2 bg-[#ff5000] rounded-full border border-white"></div>';
-            } else {
-                btn.classList.remove('border-[#ff5000]');
-                btn.classList.add('border-gray-100', 'hover:border-gray-300');
-                const dot = btn.querySelector('.bg-\\[\\#ff5000\\]');
-                if(dot) dot.remove();
-            }
-        });
-        
-        let variants = currentModalProduct.parsed_variants || [];
-        if(variants.length === 0 && currentModalProduct.variants) {
-             try { variants = typeof currentModalProduct.variants === 'string' ? JSON.parse(currentModalProduct.variants) : currentModalProduct.variants; } catch(e){}
-        }
-        const v = variants[idx];
-        
-        // Add fade effect for image transition
-        const imgEl = document.getElementById('modal-img');
-        imgEl.style.opacity = '0.5';
-        setTimeout(() => {
-            updateModalUI(v.price, v.image || currentModalProduct.thumbnail, v.stock);
-            imgEl.style.opacity = '1';
-        }, 150);
-    }
-
-    function updateModalUI(price, image, stock) {
-        document.getElementById('modal-price').innerText = (parseFloat(price) * RATE).toLocaleString() + '៛';
-        document.getElementById('modal-img').src = image;
-        const stockEl = document.getElementById('modal-stock');
-        if(parseInt(stock) > 0) {
-            stockEl.innerText = "In Stock"; stockEl.className = "text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block";
-        } else {
-            stockEl.innerText = "Sold Out"; stockEl.className = "text-xs font-black text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 inline-block";
-        }
     }
 
     function updateModalQty(delta) {
@@ -488,9 +532,8 @@
         
         saveCart(); updateCartBadge();
         
-        // Removed closeProductModal() so the screen stays open!
-
-        // Show beautiful toast notification
+        // INTENTIONALLY NOT CLOSING MODAL
+        // Show beautiful toast notification instead
         const toast = document.getElementById('toast');
         document.getElementById('toast-text').innerText = "Added to Cart";
         toast.classList.remove('opacity-0', 'scale-90'); 
