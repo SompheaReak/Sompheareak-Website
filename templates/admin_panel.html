@@ -3,567 +3,786 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Somphea Reak - Secure Admin Panel</title>
+    <title>Enterprise Admin | Somphea Reak</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Include html2canvas for Receipt Generation -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- ADDED: html2canvas for Receipt Screenshot Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif; background-color: #f1f5f9; }
-        .tab-active { border-bottom: 2px solid #ea580c; color: #ea580c; font-weight: 700; }
-        .drag-item { cursor: grab; }
-        .drag-item:active { cursor: grabbing; }
-        .is-dragging { opacity: 0.5; background: #fff7ed; border: 2px dashed #ea580c; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; color: #1e293b; }
+        .input-box { border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; width: 100%; font-size: 12px; font-weight: 600; outline: none; transition: 0.2s; background: white; }
+        .input-box:focus { border-color: #ff5000; box-shadow: 0 0 0 4px rgba(255, 80, 0, 0.05); }
+        .btn-taobao { background: linear-gradient(90deg, #ff9000 0%, #ff5000 100%); color: white; font-weight: 800; border-radius: 12px; transition: all 0.2s; }
+        .tab-btn.active { background: white; color: #ff5000; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-bottom: 3px solid #ff5000; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .edit-mode { display: none; }
+        .is-editing .view-mode { display: none; }
+        .is-editing .edit-mode { display: block; }
+        .handle { cursor: grab; }
+        .hidden-view { display: none; }
         
-        /* Edit Mode Styles for Receipts */
-        .is-editing .editable {
+        /* Toast & Loading Animations */
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
+
+        /* Unified Multi-Tag UI Styles */
+        .tag-container { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: white; min-height: 42px; align-items: center; cursor: text; transition: 0.2s; }
+        .tag-container.highlight { border-color: #ff5000; box-shadow: 0 0 0 4px rgba(255, 80, 0, 0.05); }
+        .tag-badge { background: #fff7ed; color: #ff5000; border: 1px solid #fed7aa; border-radius: 6px; padding: 3px 8px; font-size: 10px; font-weight: 800; display: flex; align-items: center; gap: 4px; text-transform: uppercase; white-space: nowrap; box-shadow: 0 1px 2px rgba(255,80,0,0.05); }
+        .tag-input { border: none; outline: none; flex: 1; min-width: 80px; font-size: 12px; font-weight: 600; padding: 4px; background: transparent; color: #1e293b; }
+        .tag-input::placeholder { color: #cbd5e1; font-weight: 600; }
+        
+        /* Smaller version for inside variants */
+        .variant-tag-container { min-height: 32px; border-radius: 8px; padding: 2px; }
+        .variant-tag-badge { padding: 2px 6px; font-size: 9px; border-radius: 6px; }
+        .variant-tag-input { font-size: 11px; padding: 2px; }
+
+        /* EDITABLE RECEIPT STYLES */
+        .is-editing-receipt .editable {
             background-color: #eff6ff;
             border: 1px dashed #93c5fd;
             border-radius: 4px;
             padding: 2px 4px;
             outline: none;
+            transition: all 0.2s;
         }
-        .is-editing .editable:focus {
+        .is-editing-receipt .editable:focus {
             border-color: #3b82f6;
             background-color: #ffffff;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
     </style>
 </head>
-<body class="text-gray-800 pb-20">
+<body class="pb-20">
 
-    <!-- Top Navigation -->
-    <nav class="bg-gray-900 text-white sticky top-0 z-50 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-[#ff5000] rounded-lg flex items-center justify-center font-black text-lg">SR</div>
-                    <span class="font-bold tracking-wider uppercase text-sm">Control Panel</span>
-                </div>
-                <div class="flex items-center gap-4">
-                    <span class="text-xs text-gray-400 hidden md:block"><i class="fa-solid fa-shield-halved text-green-400 mr-1"></i> Secure Session</span>
-                    <a href="/logout" class="bg-gray-800 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors">Logout</a>
-                </div>
+    <!-- UPLOAD LOADING SCREEN -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] hidden flex-col items-center justify-center text-white">
+        <i class="fa-solid fa-cloud-arrow-up text-5xl mb-4 animate-bounce text-[#ff5000]"></i>
+        <h2 class="text-xl font-black tracking-widest uppercase">Syncing to Cloud</h2>
+        <p class="text-[10px] text-gray-300 font-bold mt-2 uppercase tracking-widest">Please wait. Do not close app...</p>
+    </div>
+
+    <!-- FULL SCREEN IMAGE VIEWER -->
+    <div id="image-viewer-modal" class="fixed inset-0 z-[3000] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <img id="viewer-img" src="" class="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl mb-6">
+        <a id="viewer-download" href="" download="Customer_Receipt.jpg" class="bg-[#ff5000] text-white px-8 py-4 rounded-full text-[11px] font-black tracking-widest uppercase shadow-lg shadow-orange-500/30 hover:scale-105 active:scale-95 transition-all"><i class="fa-solid fa-download mr-2"></i> Download Receipt</a>
+    </div>
+
+    <!-- FLASH MESSAGES -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="fixed top-20 right-4 z-[150] flex flex-col gap-2 pointer-events-none">
+        {% for category, message in messages %}
+          <div class="px-6 py-4 rounded-2xl shadow-2xl text-white text-[11px] font-black tracking-widest uppercase animate-slide-up {{ 'bg-red-500' if category == 'error' else 'bg-green-500' }}">
+            <i class="fa-solid {{ 'fa-triangle-exclamation' if category == 'error' else 'fa-circle-check' }} mr-2"></i>
+            {{ message }}
+          </div>
+        {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <header class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+        <div class="flex items-center gap-4">
+            <a href="/" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition-all"><i class="fa-solid fa-house"></i></a>
+            <div class="flex flex-col">
+                <h1 class="font-black text-gray-900 text-sm uppercase tracking-tight leading-none">Enterprise Admin</h1>
+                <span class="text-[9px] font-bold text-gray-400 mt-1 uppercase">Somphea Reak Studio</span>
             </div>
         </div>
-    </nav>
+        <div class="flex gap-4 items-center">
+            <button onclick="switchView('orders')" class="relative p-2 text-gray-400 hover:text-black transition-colors">
+                <i class="fa-solid fa-bell text-xl"></i>
+                {% if orders|selectattr('status', 'equalto', 'Pending')|list|length > 0 %}
+                <span class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                {% endif %}
+            </button>
+            <a href="/admin/logout" class="text-gray-300 hover:text-red-500"><i class="fa-solid fa-power-off text-xl"></i></a>
+        </div>
+    </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 mt-6">
+        <div class="bg-gray-200/50 p-1.5 rounded-2xl flex gap-1 shadow-inner">
+            <button onclick="switchView('inventory')" id="tab-inventory" class="tab-btn active flex-1 py-3 text-[10px] font-black uppercase rounded-xl transition-all">
+                <i class="fa-solid fa-box mr-1"></i> Inventory
+            </button>
+            <button onclick="switchView('orders')" id="tab-orders" class="tab-btn flex-1 py-3 text-[10px] font-black uppercase rounded-xl transition-all">
+                <i class="fa-solid fa-receipt mr-1"></i> Orders ({{ orders|length }})
+            </button>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-6">
         
-        <!-- Dashboard Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-xl"><i class="fa-solid fa-box-open"></i></div>
-                <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Products</p>
-                    <h3 class="text-2xl font-black text-gray-900" id="stat-products">0</h3>
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-orange-50 text-[#ff5000] flex items-center justify-center text-xl"><i class="fa-solid fa-cart-shopping"></i></div>
-                <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Pending Orders</p>
-                    <h3 class="text-2xl font-black text-gray-900" id="stat-orders">0</h3>
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-green-50 text-green-500 flex items-center justify-center text-xl"><i class="fa-solid fa-money-bill-trend-up"></i></div>
-                <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Revenue (USD)</p>
-                    <h3 class="text-2xl font-black text-gray-900" id="stat-revenue">$0.00</h3>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Workspace: Tabs -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-            <div class="flex border-b border-gray-100 overflow-x-auto scrollbar-hide">
-                <button onclick="switchTab('orders')" id="tab-btn-orders" class="px-6 py-4 text-sm font-bold text-gray-500 hover:text-gray-900 whitespace-nowrap transition-colors tab-active"><i class="fa-solid fa-receipt mr-2"></i> Order Management</button>
-                <button onclick="switchTab('inventory')" id="tab-btn-inventory" class="px-6 py-4 text-sm font-bold text-gray-500 hover:text-gray-900 whitespace-nowrap transition-colors"><i class="fa-solid fa-layer-group mr-2"></i> Inventory & Sorting</button>
-                <button onclick="switchTab('upload')" id="tab-btn-upload" class="px-6 py-4 text-sm font-bold text-gray-500 hover:text-gray-900 whitespace-nowrap transition-colors"><i class="fa-solid fa-cloud-arrow-up mr-2"></i> Quick Upload</button>
-            </div>
-
-            <div class="p-6">
-                
-                <!-- ORDERS TAB -->
-                <div id="tab-orders" class="tab-content">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-lg font-black text-gray-900">Live Orders</h2>
-                        <button onclick="loadOrders()" class="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-200"><i class="fa-solid fa-rotate-right mr-1"></i> Refresh</button>
-                    </div>
-                    <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- Orders loaded by JS -->
-                        <div class="text-center py-10 col-span-full text-gray-400 font-bold"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><br>Loading secure orders...</div>
-                    </div>
-                </div>
-
-                <!-- INVENTORY TAB -->
-                <div id="tab-inventory" class="tab-content hidden">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                        <h2 class="text-lg font-black text-gray-900">Inventory Multi-Category View</h2>
+        <!-- 1. INVENTORY VIEW -->
+        <div id="view-inventory" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <section class="lg:col-span-5">
+                <div class="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 sticky top-24">
+                    <h2 class="font-black text-lg mb-6"><i class="fa-solid fa-cloud-arrow-up text-[#ff5000] mr-2"></i>Quick Upload</h2>
+                    <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-5 submit-form">
                         
-                        <!-- Dynamic Store & Category Selector -->
-                        <div class="flex gap-2 w-full md:w-auto">
-                            <select id="store-filter" onchange="renderInventory()" class="bg-gray-50 border border-gray-200 text-gray-900 text-xs rounded-lg focus:ring-[#ff5000] focus:border-[#ff5000] block p-2.5 flex-1">
-                                <option value="custom_bracelet">Custom DIY Bracelets</option>
-                                <option value="toy">Toys Store</option>
-                                <option value="bracelet">Classic Bracelets</option>
-                            </select>
-                            <select id="category-filter" onchange="renderInventory()" class="bg-gray-50 border border-gray-200 text-gray-900 text-xs rounded-lg focus:ring-[#ff5000] focus:border-[#ff5000] block p-2.5 flex-1">
-                                <!-- Populated dynamically based on store items -->
-                                <option value="All">All Categories</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-blue-50 text-blue-700 p-3 rounded-lg text-xs font-bold mb-4 border border-blue-100 flex items-center gap-2">
-                        <i class="fa-solid fa-circle-info"></i> Drag and drop items to reorder them on the main website. Categories are automatically separated by commas.
-                    </div>
-
-                    <div class="bg-gray-50 rounded-xl p-2 border border-gray-200">
-                        <ul id="inventory-list" class="space-y-2">
-                            <!-- Items injected by JS -->
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- UPLOAD TAB -->
-                <div id="tab-upload" class="tab-content hidden">
-                    <h2 class="text-lg font-black text-gray-900 mb-6">Bulk Upload Engine</h2>
-                    <form id="upload-form" class="space-y-6 max-w-2xl">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Target Store</label>
-                                <select id="up-store" required class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-[#ff5000] focus:border-[#ff5000] block w-full p-3 font-bold shadow-sm">
-                                    <option value="custom_bracelet">Custom Bracelets (Charms)</option>
-                                    <option value="toy">Toys</option>
-                                    <option value="bracelet">Classic Bracelets</option>
+                        <!-- STEP 1: STORE & MAIN CATEGORY -->
+                        <div class="grid grid-cols-2 gap-3 mb-2 bg-orange-50/50 p-3 rounded-2xl border border-orange-100">
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">1. Select Store</label>
+                                <select name="store" class="input-box border-2 border-orange-200 bg-white" id="add-store-select" onchange="updateCatList(this, 'add-cats')">
+                                    <option value="toy">Toy Store</option>
+                                    <option value="bracelet">Bracelet Store</option>
+                                    <option value="custom_bracelet">Custom Charms</option>
                                 </select>
                             </div>
-                            <div>
-                                <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Categories (Comma separated)</label>
-                                <input type="text" id="up-tags" required placeholder="e.g. Animals, Silver, Cute" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-[#ff5000] focus:border-[#ff5000] block w-full p-3 font-bold shadow-sm placeholder:font-normal">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Price (USD)</label>
-                                <input type="number" step="0.01" id="up-price" required placeholder="0.50" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-[#ff5000] focus:border-[#ff5000] block w-full p-3 font-bold shadow-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Initial Stock</label>
-                                <input type="number" id="up-stock" required value="99" class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-[#ff5000] focus:border-[#ff5000] block w-full p-3 font-bold shadow-sm">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Images (Generates 1 variant per image)</label>
-                            <div class="flex items-center justify-center w-full">
-                                <label for="up-files" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-2xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                        <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-400 mb-3"></i>
-                                        <p class="mb-2 text-sm text-gray-500 font-bold"><span class="text-[#ff5000]">Click to upload</span> or drag and drop</p>
-                                        <p class="text-xs text-gray-400">PNG, JPG or WEBP (Max 5MB each)</p>
+                            
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">2. Main Categories</label>
+                                <div class="tag-wrapper pt-0.5">
+                                    <input type="hidden" name="category" id="main-category-input" class="hidden-category-input" value="">
+                                    <div class="tag-container border-2 border-orange-200 bg-white">
+                                        <input type="text" list="add-cats" class="tag-input" placeholder="Categories..." autocomplete="off">
                                     </div>
-                                    <input id="up-files" type="file" multiple accept="image/*" class="hidden" onchange="updateFileCount(this)" />
-                                </label>
+                                </div>
+                                <datalist id="add-cats"></datalist>
                             </div>
-                            <p id="file-count-display" class="text-sm font-bold text-gray-600 mt-2 hidden"><i class="fa-solid fa-images text-[#ff5000]"></i> <span id="f-count">0</span> files selected</p>
                         </div>
 
-                        <button type="button" onclick="submitBulkUpload()" id="btn-upload" class="w-full text-white bg-gray-900 hover:bg-black font-black rounded-xl text-sm px-5 py-4 text-center uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-rocket"></i> Launch Products
+                        <!-- STEP 2: IMAGE UPLOAD -->
+                        <div onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center bg-gray-50 cursor-pointer hover:border-[#ff5000] transition-all group">
+                            <input type="file" name="images" id="file-input" accept="image/*" multiple required class="hidden">
+                            <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-images text-2xl text-gray-400 group-hover:text-[#ff5000]"></i>
+                            </div>
+                            <p class="text-[11px] font-black text-gray-700 mt-4 uppercase tracking-widest">3. Select Photos</p>
+                            <p class="text-[9px] font-bold text-gray-400 mt-1">Upload images to configure variants</p>
+                        </div>
+                        
+                        <!-- STEP 3: VARIANT CONFIG -->
+                        <div id="variant-config" class="hidden space-y-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 mt-2">
+                            <div class="flex justify-between items-center">
+                                <label class="text-[10px] font-black text-gray-800 uppercase tracking-widest">4. Variant Settings</label>
+                                <span class="text-[8px] font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded border border-orange-100">Set specific tags per image</span>
+                            </div>
+                            <div id="variant-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2 hide-scrollbar"></div>
+                        </div>
+
+                        <div class="pt-2">
+                            <input type="text" name="title" placeholder="Product Title (Optional - Auto generated)" class="input-box text-sm bg-gray-50 border-gray-100 text-gray-500 focus:bg-white">
+                        </div>
+
+                        <button type="submit" class="w-full btn-taobao py-4 mt-2 shadow-xl shadow-orange-100 uppercase text-[11px] font-black tracking-widest">Publish Item to Store</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="lg:col-span-7 space-y-4">
+                <div class="flex justify-between items-center bg-white border border-gray-100 p-2 rounded-2xl shadow-sm overflow-x-auto hide-scrollbar">
+                    <div class="flex gap-1 flex-1 min-w-max">
+                        <button onclick="filterStore('All')" id="flt-All" class="store-flt bg-black text-white px-4 py-2 text-[9px] font-black uppercase rounded-xl transition-all">All</button>
+                        <button onclick="filterStore('toy')" id="flt-toy" class="store-flt text-gray-400 px-4 py-2 text-[9px] font-black uppercase rounded-xl hover:text-black transition-all">Toys</button>
+                        <button onclick="filterStore('bracelet')" id="flt-bracelet" class="store-flt text-gray-400 px-4 py-2 text-[9px] font-black uppercase rounded-xl hover:text-black transition-all">Bracelets</button>
+                        <button onclick="filterStore('custom_bracelet')" id="flt-custom_bracelet" class="store-flt text-gray-400 px-4 py-2 text-[9px] font-black uppercase rounded-xl hover:text-black transition-all">Custom Charms</button>
+                    </div>
+                    <button onclick="openCatModal()" class="px-4 py-2 bg-gray-50 text-gray-800 rounded-xl text-[9px] font-black uppercase border border-gray-100 flex-shrink-0 ml-2 shadow-sm active:scale-95 transition-transform">
+                        <i class="fa-solid fa-folder-tree mr-1"></i> Manage Categories
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden divide-y" id="main-inventory-list">
+                    {% for p in products %}
+                    <div class="product-item p-4 {% if not p.is_visible %}bg-gray-50/50{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}">
+                        
+                        <!-- VIEW MODE -->
+                        <div class="view-mode flex items-center gap-4">
+                            <i class="fa-solid fa-arrows-up-down text-gray-200 product-handle p-2 hover:text-[#ff5000]"></i>
+                            <div class="w-20 h-20 flex-shrink-0 flex justify-center items-center bg-white border border-gray-100 rounded-xl shadow-sm p-1">
+                                <img src="{{p.image}}" class="max-w-full max-h-full object-contain rounded-lg {% if not p.is_visible %}grayscale opacity-60{% endif %}">
+                            </div>
+                            
+                            <div class="flex-1 min-w-0 pl-1">
+                                <div class="flex flex-wrap items-center gap-1.5 mb-2">
+                                    <span class="text-[9px] font-black text-white bg-gray-900 px-2 py-1 rounded-md uppercase">{{p.store}}</span>
+                                    
+                                    {% set group_cats = [] %}
+                                    {% if p.category %}
+                                        {% set m_cats = p.category.split(',') %}
+                                        {% for mc in m_cats %}
+                                            {% set m_trim = mc.strip() %}
+                                            {% if m_trim and m_trim not in group_cats %}
+                                                {% set _ = group_cats.append(m_trim) %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    
+                                    {% for v in p.parsed_variants %}
+                                        {% if v.category %}
+                                            {% set v_cats = v.category.split(',') %}
+                                            {% for vc in v_cats %}
+                                                {% set trimmed = vc.strip() %}
+                                                {% if trimmed and trimmed not in group_cats %}
+                                                    {% set _ = group_cats.append(trimmed) %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% for cat in group_cats %}
+                                        <span class="text-[9px] font-black text-[#ff5000] bg-orange-50 border border-orange-100 px-2 py-1 rounded-md uppercase"><i class="fa-solid fa-tag mr-1 opacity-50"></i>{{ cat }}</span>
+                                    {% endfor %}
+
+                                    {% if not p.is_visible %}
+                                    <span class="text-[9px] font-black text-red-500 bg-red-50 border border-red-100 px-2 py-1 rounded-md uppercase"><i class="fa-solid fa-eye-slash mr-1"></i>Hidden</span>
+                                    {% endif %}
+                                </div>
+                                <h4 class="font-black text-[15px] truncate leading-none mb-2 text-gray-800 {% if not p.is_visible %}text-gray-400 line-through{% endif %}">{{p.title}}</h4>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-sm font-black text-green-600">$ {{ "%.2f"|format(p.price) }}</span>
+                                    <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-md">{{ p.parsed_variants|length }} Variants Attached</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-col sm:flex-row items-center gap-2">
+                                <form action="/admin/product/toggle/{{ p.id }}" method="POST" class="m-0">
+                                    {% if p.is_visible %}
+                                        <button type="submit" class="w-10 h-10 bg-green-50 border border-green-200 rounded-xl flex items-center justify-center text-green-600 hover:bg-green-100 transition-colors shadow-sm"><i class="fa-solid fa-eye text-sm"></i></button>
+                                    {% else %}
+                                        <button type="submit" class="w-10 h-10 bg-gray-100 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors shadow-sm"><i class="fa-solid fa-eye-slash text-sm"></i></button>
+                                    {% endif %}
+                                </form>
+                                <button onclick="toggleEdit({{p.id}})" class="w-10 h-10 border border-gray-200 bg-white rounded-xl flex items-center justify-center text-gray-600 hover:text-orange-500 hover:border-orange-500 shadow-sm transition-colors" title="Edit Variants"><i class="fa-solid fa-gear"></i></button>
+                                <form action="/admin/product/delete/{{ p.id }}" method="POST" class="m-0" onsubmit="return confirm('Delete this entire group permanently?')">
+                                    <button type="submit" class="w-10 h-10 border border-red-100 bg-red-50 rounded-xl flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white shadow-sm transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- EDIT MODE -->
+                        <div class="edit-mode">
+                             <form action="/admin/product/update/{{p.id}}" method="POST" enctype="multipart/form-data" class="bg-gray-50 p-6 rounded-[28px] border-2 border-orange-200 mt-3 space-y-5 submit-form shadow-md relative">
+                                
+                                <div class="flex justify-between items-center border-b border-orange-100 pb-3">
+                                    <h5 class="text-xs font-black text-orange-500 uppercase tracking-widest"><i class="fa-solid fa-pen-to-square mr-2"></i>Edit Group & Variants</h5>
+                                    <button type="button" onclick="toggleEdit({{p.id}})" class="text-[10px] font-black text-gray-400 uppercase hover:text-red-500 bg-white px-3 py-1.5 rounded-lg border shadow-sm">Cancel</button>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div class="space-y-1">
+                                        <label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Store</label>
+                                        <select name="store" class="input-box shadow-sm edit-store-select" data-target="edit-cats-{{p.id}}" onchange="updateCatList(this, 'edit-cats-{{p.id}}')">
+                                            <option value="toy" {% if p.store == 'toy' %}selected{% endif %}>Toy Store</option>
+                                            <option value="bracelet" {% if p.store == 'bracelet' %}selected{% endif %}>Bracelet Store</option>
+                                            <option value="custom_bracelet" {% if p.store == 'custom_bracelet' %}selected{% endif %}>Custom Charms</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="space-y-1">
+                                        <label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Main Categories</label>
+                                        <div class="tag-wrapper pt-0.5">
+                                            <input type="hidden" name="category" class="hidden-category-input" value="{{p.category}}">
+                                            <div class="tag-container bg-white shadow-sm">
+                                                {% if p.category %}
+                                                    {% set p_cat_list = p.category.split(',') %}
+                                                    {% for pc in p_cat_list %}
+                                                        {% if pc.strip() != "" %}
+                                                        <span class="tag-badge">
+                                                            {{ pc.strip() }} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i>
+                                                        </span>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endif %}
+                                                <input type="text" list="edit-cats-{{p.id}}" class="tag-input" placeholder="Add Category..." autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <datalist id="edit-cats-{{p.id}}"></datalist>
+                                    </div>
+                                    
+                                    <div class="space-y-1">
+                                        <label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Group Title</label>
+                                        <input type="text" name="title" value="{{p.title}}" class="input-box shadow-sm" placeholder="Title">
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-3 pt-2 border-t border-gray-200">
+                                    <div class="flex items-center justify-between">
+                                        <label class="text-[10px] font-black text-gray-900 uppercase">Manage Variants & Specific Categories</label>
+                                    </div>
+                                    
+                                    <div id="sortable-variants-{{p.id}}" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2 hide-scrollbar">
+                                        
+                                        {% for v in p.parsed_variants %}
+                                        <div class="variant-row flex gap-3 items-start bg-white p-3 rounded-xl border border-gray-200 shadow-sm relative group">
+                                            <i class="fa-solid fa-bars text-gray-300 handle p-2 text-sm hover:text-black mt-1"></i>
+                                            <input type="hidden" name="v_ids[]" value="{{v.id}}"><input type="hidden" name="v_images[]" value="{{v.image}}">
+                                            
+                                            <div class="w-14 h-14 bg-gray-50 border border-gray-100 rounded-lg p-0.5 flex-shrink-0 mt-1">
+                                                <img src="{{v.image}}" class="w-full h-full object-contain rounded-md">
+                                            </div>
+                                            
+                                            <div class="flex-1 space-y-2 price-group">
+                                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                    <div class="space-y-1">
+                                                        <span class="text-[8px] font-black text-gray-400 uppercase">Name</span>
+                                                        <input type="text" name="v_names[]" value="{{v.name}}" placeholder="Name" class="w-full text-[11px] font-bold border-b border-gray-200 outline-none pb-1 focus:border-orange-500 bg-transparent">
+                                                    </div>
+                                                    <div class="space-y-1">
+                                                        <span class="text-[8px] font-black text-gray-400 uppercase">Price (USD)</span>
+                                                        <div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">$</span><input type="number" step="any" name="v_prices[]" value="{{v.price}}" class="w-full text-[11px] font-black outline-none usd-input bg-transparent" oninput="updatePrice(this, 'USD')"></div>
+                                                    </div>
+                                                    <div class="space-y-1">
+                                                        <span class="text-[8px] font-black text-gray-400 uppercase">Price (KHR)</span>
+                                                        <div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">៛</span><input type="number" step="any" value="{{ (v.price * 4000) | int }}" class="w-full text-[11px] font-black outline-none khr-input bg-transparent" oninput="updatePrice(this, 'KHR')"></div>
+                                                    </div>
+                                                    <div class="space-y-1">
+                                                        <span class="text-[8px] font-black text-gray-400 uppercase">Stock</span>
+                                                        <div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500 {% if v.stock|int <= 0 %}border-red-300 bg-red-50 px-1 rounded-t{% endif %}">
+                                                            <input type="number" name="v_stocks[]" value="{{v.stock}}" class="w-full text-[11px] font-black outline-none bg-transparent {% if v.stock|int <= 0 %}text-red-600{% endif %}">
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="tag-wrapper pt-1">
+                                                    <span class="text-[8px] font-black text-[#ff5000] uppercase tracking-widest mb-1 block">Categories for this specific variant:</span>
+                                                    <input type="hidden" name="v_categories[]" class="hidden-category-input" value="{{v.category}}">
+                                                    
+                                                    <div class="tag-container variant-tag-container border-gray-200 bg-gray-50/50">
+                                                        {% if v.category %}
+                                                            {% set cat_list = v.category.split(',') %}
+                                                            {% for single_cat in cat_list %}
+                                                                {% if single_cat.strip() != "" %}
+                                                                <span class="tag-badge variant-tag-badge">
+                                                                    {{ single_cat.strip() }} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i>
+                                                                </span>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                        <input type="text" list="edit-cats-{{p.id}}" class="tag-input variant-tag-input" placeholder="Tags..." autocomplete="off">
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+                                            <button type="button" onclick="this.closest('.variant-row').remove()" class="p-2 w-8 h-8 flex items-center justify-center bg-gray-50 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors mt-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                        </div>
+                                        {% endfor %}
+                                        
+                                    </div>
+                                </div>
+
+                                <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 flex items-center gap-4">
+                                    <div class="flex-1">
+                                        <label class="text-[10px] font-black text-blue-600 uppercase tracking-widest block mb-1">Add More Images</label>
+                                        <p class="text-[9px] font-bold text-gray-500 mb-2">Upload additional variants to this group.</p>
+                                        <input type="file" name="new_images" multiple class="block w-full text-[10px] text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer transition-colors">
+                                    </div>
+                                </div>
+                                <div class="pt-2">
+                                    <button type="submit" class="w-full bg-black text-white py-4 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform hover:bg-gray-800">Save Group Changes</button>
+                                </div>
+                             </form>
+                        </div>
+                    </div>
+                    <script>new Sortable(document.getElementById('sortable-variants-{{p.id}}'), { handle: '.handle', animation: 150 });</script>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+
+        <!-- 2. ORDERS VIEW (UPGRADED) -->
+        <div id="view-orders" class="hidden-view space-y-4">
+             {% if orders|length == 0 %}
+            <div class="py-20 text-center text-gray-300">
+                <i class="fa-solid fa-receipt text-5xl mb-4 opacity-20"></i>
+                <p class="font-bold">No orders yet. Start promoting your shop!</p>
+            </div>
+            {% endif %}
+
+            {% for order in orders %}
+            {% set is_completed = (order.status == 'Completed' or order.status == 'completed') %}
+            
+            <!-- Added ID for html2canvas targeting -->
+            <div id="receipt-card-{{ order.id }}" class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 space-y-4 relative transition-all">
+                
+                <!-- Header -->
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order #{{ order.id }}</span>
+                        <!-- Editable Customer Name & Phone -->
+                        <h3 class="text-xl font-black text-gray-900 editable outline-none inline-block min-w-[100px]" contenteditable="false">{{ order.customer_name }}</h3>
+                        <p class="text-sm font-bold text-[#ff5000] flex items-center gap-2"><i class="fa-solid fa-phone"></i> <span class="editable outline-none flex-1" contenteditable="false">{{ order.customer_phone }}</span></p>
+                    </div>
+                    <div class="text-right flex flex-col items-end gap-1">
+                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest {% if is_completed %}bg-green-50 text-green-600{% else %}bg-orange-50 text-orange-600{% endif %}">
+                            {{ order.status }}
+                        </span>
+                        <span class="text-[8px] font-bold text-gray-400">{{ order.date }}</span>
+                    </div>
+                </div>
+
+                <!-- Editable Address -->
+                <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                    <p class="text-[10px] font-black text-blue-500 uppercase mb-1">Delivery Address:</p>
+                    <p class="text-xs font-bold text-gray-600 editable outline-none" contenteditable="false">{{ order.customer_address }}</p>
+                </div>
+
+                <!-- Items Loop -->
+                <div class="bg-gray-50 rounded-2xl p-4 space-y-3">
+                    {% for item in order.parsed_items %}
+                        {% if 'DIY-Part' not in item.title|string and item.image|string != 'hidden' %}
+                            
+                            {% if 'custom' in item.cartId|string or 'DIY' in item.title|string %}
+                            <div class="bg-orange-50/70 rounded-2xl p-4 border border-orange-200 relative mb-3">
+                                <div class="absolute top-0 left-0 w-1 h-full bg-[#ff5000] rounded-l-2xl"></div>
+                                <div class="flex justify-between items-start mb-3 pl-2">
+                                    <div>
+                                        <span class="text-[8px] font-black text-[#ff5000] uppercase tracking-widest bg-orange-100 px-2 py-1 rounded-md mb-2 inline-block"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Custom DIY Order</span>
+                                        <h4 class="text-sm font-black text-gray-900 mt-1">{{ item.title }}</h4>
+                                        <p class="text-[10px] font-bold text-gray-600 mt-1 whitespace-pre-wrap leading-relaxed border-l-2 border-orange-200 pl-2 ml-1">{{ item.style }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-sm font-black text-[#ff5000] whitespace-nowrap block">$ {{ "%.2f"|format(item.price * item.qty) }}</span>
+                                        <span class="text-[10px] font-bold text-gray-400">Qty: {{ item.qty }}</span>
+                                    </div>
+                                </div>
+                                <div class="pl-2">
+                                    <button type="button" onclick="openImageViewer('{{ item.image }}')" class="w-full flex items-center justify-between bg-white border border-orange-100 p-2 rounded-xl hover:shadow-md transition-shadow active:scale-95">
+                                        <div class="flex items-center gap-3">
+                                            <img src="{{ item.image }}" class="w-12 h-16 object-cover rounded-lg border border-gray-100 bg-gray-50">
+                                            <div class="text-left">
+                                                <span class="text-[10px] font-black uppercase text-gray-800 tracking-widest block">Tap to View Receipt</span>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-expand text-[#ff5000] text-lg pr-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="flex gap-3 items-center">
+                                <img src="{{ item.image }}" class="w-10 h-10 rounded-lg object-contain bg-white border border-gray-100 p-0.5">
+                                <div class="flex-1">
+                                    <h4 class="text-xs font-black">{{ item.title }}</h4>
+                                    <p class="text-[9px] font-bold text-gray-400">{{ item.style }} x {{ item.qty }}</p>
+                                </div>
+                                <span class="text-xs font-black">$ {{ "%.2f"|format(item.price * item.qty) }}</span>
+                            </div>
+                            {% endif %}
+                            
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- Editable Totals (KHR & USD) -->
+                    <div class="border-t border-gray-200 pt-3 flex justify-between items-end font-black">
+                        <span class="text-xs text-gray-500">GRAND TOTAL</span>
+                        <div class="text-right">
+                            <span class="block text-xl text-[#ff5000] editable outline-none" contenteditable="false">{{ "{:,.0f}".format(order.total_usd * 4000) }}៛</span>
+                            <span class="block text-[10px] text-gray-400 editable outline-none" contenteditable="false">$ {{ "%.2f"|format(order.total_usd) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Row Buttons -->
+                <div class="action-buttons flex gap-2 pt-2">
+                    
+                    <!-- Edit Button -->
+                    <button type="button" onclick="toggleReceiptEdit({{ order.id }})" title="Edit Receipt Details" class="w-12 h-12 flex-shrink-0 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 flex items-center justify-center transition-colors border border-blue-100 active:scale-95">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    
+                    <!-- Screenshot Button -->
+                    <button type="button" onclick="generateReceiptImage({{ order.id }})" title="Generate Image" class="w-12 h-12 flex-shrink-0 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 flex items-center justify-center transition-colors border border-orange-100 active:scale-95">
+                        <i class="fa-solid fa-camera"></i>
+                    </button>
+
+                    <!-- Smart Finish/Done Button -->
+                    {% if is_completed %}
+                        <button type="button" disabled class="flex-1 bg-gray-100 text-gray-400 py-3 rounded-xl text-[10px] font-black uppercase shadow-inner cursor-not-allowed flex items-center justify-center gap-2 border border-gray-200">
+                            <i class="fa-solid fa-check"></i> Done
                         </button>
+                    {% else %}
+                        <form action="/admin/order/status/{{ order.id }}/Completed" method="POST" class="flex-1 m-0" onsubmit="return confirm('Mark as finished? This will deduct stock permanently.')">
+                            <button type="submit" class="w-full h-12 bg-green-500 text-white rounded-xl text-[10px] font-black uppercase shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2 hover:bg-green-600">
+                                Finish Order
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <!-- Delete Button -->
+                    <form action="/admin/order/delete/{{ order.id }}" method="POST" onsubmit="return confirm('Delete order history?')" class="m-0">
+                        <button type="submit" class="w-12 h-12 bg-gray-50 text-gray-400 border border-gray-100 rounded-xl hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors active:scale-95"><i class="fa-solid fa-trash-can"></i></button>
                     </form>
                 </div>
 
             </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <form id="delete-cat-form" method="POST" class="hidden"></form>
+
+    <div id="cat-modal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeCatModal()"></div>
+        <div class="bg-white w-full max-w-lg rounded-[32px] overflow-hidden relative shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b bg-gray-50 flex-shrink-0">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-black text-lg">Manage Categories</h2>
+                    <button type="button" onclick="closeCatModal()" class="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full text-gray-600 hover:bg-red-100 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <form action="/admin/categories/update" method="POST" enctype="multipart/form-data" class="p-4 flex flex-col overflow-hidden submit-form flex-1">
+                <div id="category-sortable" class="overflow-y-auto space-y-2 pr-2 hide-scrollbar flex-1 pb-4">
+                    {% for cat in categories %}
+                    <div class="cat-modal-item flex gap-3 items-center bg-white p-2 rounded-2xl border border-gray-100 shadow-sm relative group" data-store="{{cat.store}}">
+                        <i class="fa-solid fa-bars text-gray-300 handle p-3 text-lg hover:text-black transition-colors"></i>
+                        <input type="hidden" name="cat_ids[]" value="{{cat.id}}">
+                        <div class="relative w-14 h-14 rounded-xl overflow-hidden border bg-gray-50 cursor-pointer hover:opacity-80" onclick="document.getElementById('cat-file-{{cat.id}}').click()">
+                            <img src="{{cat.image}}" class="w-full h-full object-cover">
+                            <input type="file" name="cat_image_{{cat.id}}" id="cat-file-{{cat.id}}" accept="image/*" class="hidden">
+                            <div class="absolute bottom-0 w-full bg-black/50 text-[6px] text-white text-center font-black py-0.5 uppercase">Edit</div>
+                        </div>
+                        <div class="flex-1">
+                            <input type="text" name="cat_names[]" value="{{cat.name}}" class="text-xs font-black border-b outline-none w-full pb-1 focus:border-orange-500">
+                            <span class="text-[8px] font-black text-gray-400 uppercase mt-1 block">{{cat.store}}</span>
+                        </div>
+                        <button type="button" onclick="deleteCategory({{cat.id}})" class="p-3 text-gray-300 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="flex gap-2 mt-4 pt-2 border-t border-gray-100">
+                    <button type="submit" class="w-full bg-[#ff5000] text-white py-4 rounded-xl text-[11px] font-black uppercase shadow-lg">Save Config</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        // -- Core State --
-        let currentProducts = [];
-        let allCategories = ['All'];
-
-        // -- Tab Switching --
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('button[id^="tab-btn-"]').forEach(el => el.classList.remove('tab-active'));
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            document.getElementById(`tab-btn-${tabId}`).classList.add('tab-active');
-            
-            if (tabId === 'orders') loadOrders();
-            if (tabId === 'inventory') fetchProductsForInventory();
-        }
-
-        // -- 1. ORDER MANAGEMENT & SMART RECEIPTS --
-        async function loadOrders() {
-            try {
-                const res = await fetch('/api/orders');
-                const data = await res.json();
-                
-                document.getElementById('stat-orders').innerText = data.filter(o => o.status !== 'completed' && o.status !== 'Completed').length;
-                let totalRev = 0;
-                data.filter(o => o.status === 'completed' || o.status === 'Completed').forEach(o => totalRev += parseFloat(o.total || 0));
-                document.getElementById('stat-revenue').innerText = `$${totalRev.toFixed(2)}`;
-
-                const container = document.getElementById('orders-container');
-                if (data.length === 0) {
-                    container.innerHTML = '<div class="col-span-full text-center text-gray-400 font-bold py-10">No orders found.</div>';
-                    return;
-                }
-
-                // Sort pending first, then by date descending
-                data.sort((a, b) => {
-                    const aC = a.status.toLowerCase() === 'completed' ? 1 : 0;
-                    const bC = b.status.toLowerCase() === 'completed' ? 1 : 0;
-                    if (aC !== bC) return aC - bC;
-                    return b.id - a.id;
-                });
-
-                container.innerHTML = data.map(order => {
-                    const isCompleted = order.status.toLowerCase() === 'completed';
-                    
-                    let itemsHtml = '';
-                    try {
-                        const items = JSON.parse(order.items_json);
-                        itemsHtml = items.map(i => `
-                            <div class="flex gap-3 items-center bg-white p-2 rounded-lg border border-gray-100">
-                                <div class="w-10 h-10 bg-gray-50 rounded flex-shrink-0 border border-gray-200 overflow-hidden">
-                                    <img src="${i.image !== 'hidden' ? i.image : 'https://cdn-icons-png.flaticon.com/512/10337/10337286.png'}" class="w-full h-full object-cover">
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-xs font-black truncate">${i.title}</p>
-                                    <p class="text-[9px] text-gray-500 truncate">${i.style || ''}</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-xs font-black text-[#ff5000]">x${i.qty}</p>
-                                </div>
-                            </div>
-                        `).join('');
-                    } catch(e) { itemsHtml = '<p class="text-xs text-red-500">Error parsing items.</p>'; }
-
-                    const totalUSD = parseFloat(order.total).toFixed(2);
-                    const totalKHR = (parseFloat(order.total) * 4000).toLocaleString();
-
-                    return `
-                    <!-- RECEIPT CARD -->
-                    <div id="receipt-card-${order.id}" class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm relative transition-all">
-                        
-                        <!-- Header -->
-                        <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-3">
-                            <div>
-                                <h3 class="font-black text-lg text-gray-900 tracking-tight">Order #${order.id}</h3>
-                                <p class="text-[10px] font-bold text-gray-400">${order.date}</p>
-                            </div>
-                            <span class="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg ${isCompleted ? 'bg-gray-100 text-gray-500' : 'bg-orange-100 text-[#ff5000]'}">
-                                ${order.status}
-                            </span>
-                        </div>
-                        
-                        <!-- Customer Info (Editable) -->
-                        <div class="mb-4 text-xs space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <p class="flex items-start"><i class="fa-solid fa-user text-gray-400 w-5 mt-0.5"></i> <span class="editable font-black text-gray-800 flex-1 outline-none" contenteditable="false">${order.customer_name}</span></p>
-                            <p class="flex items-start"><i class="fa-solid fa-phone text-gray-400 w-5 mt-0.5"></i> <span class="editable font-black text-blue-600 flex-1 outline-none" contenteditable="false">${order.customer_phone}</span></p>
-                            <p class="flex items-start"><i class="fa-solid fa-location-dot text-gray-400 w-5 mt-0.5"></i> <span class="editable font-bold text-gray-600 flex-1 outline-none" contenteditable="false">${order.shipping_address}</span></p>
-                        </div>
-                        
-                        <!-- Items list -->
-                        <div class="space-y-2 mb-4 max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
-                            ${itemsHtml}
-                        </div>
-                        
-                        <!-- Totals (Editable) -->
-                        <div class="flex justify-between items-end border-t border-dashed border-gray-200 pt-3 mb-4">
-                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Grand Total</span>
-                            <div class="text-right">
-                                <span class="block font-black text-xl text-[#ff5000] editable outline-none" contenteditable="false">${totalKHR}៛</span>
-                                <span class="block text-[10px] font-bold text-gray-400 editable outline-none" contenteditable="false">${totalUSD} USD</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Action Row -->
-                        <div class="action-buttons flex gap-2 mt-2">
-                            <button onclick="toggleEdit(${order.id})" title="Edit Receipt Text" class="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition active:scale-90 border border-blue-100">
-                                <i class="fa-solid fa-pen"></i>
-                            </button>
-                            
-                            <button onclick="generateReceiptImage(${order.id})" title="Download Receipt Image" class="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 transition active:scale-90 border border-orange-100">
-                                <i class="fa-solid fa-camera"></i>
-                            </button>
-                            
-                            <!-- GREY OUT WHEN DONE -->
-                            <button onclick="markComplete(${order.id})" 
-                                class="flex-1 rounded-xl font-black text-[10px] uppercase tracking-widest transition active:scale-95 flex items-center justify-center gap-2 ${isCompleted ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-inner border border-gray-300' : 'bg-gray-900 text-white hover:bg-black shadow-lg shadow-gray-300'}" 
-                                ${isCompleted ? 'disabled' : ''}>
-                                ${isCompleted ? '<i class="fa-solid fa-check"></i> Done' : 'Mark as Done'}
-                            </button>
-                        </div>
-                    </div>`;
-                }).join('');
-            } catch (e) {
-                console.error(e);
-                alert("Error loading orders.");
-            }
-        }
-
-        // Edit Text on Receipt Before Screenshot
-        function toggleEdit(orderId) {
+        // --- NEW RECEIPT GENERATION & EDITING ---
+        function toggleReceiptEdit(orderId) {
             const card = document.getElementById(`receipt-card-${orderId}`);
             const editables = card.querySelectorAll('.editable');
-            const isEditing = card.classList.contains('is-editing');
+            const isEditing = card.classList.contains('is-editing-receipt');
             
             if (isEditing) {
                 editables.forEach(el => { el.contentEditable = "false"; });
-                card.classList.remove('is-editing');
+                card.classList.remove('is-editing-receipt');
             } else {
                 editables.forEach(el => { el.contentEditable = "true"; });
-                card.classList.add('is-editing');
+                card.classList.add('is-editing-receipt');
             }
         }
 
-        // Generate Image via html2canvas
         function generateReceiptImage(orderId) {
             const receiptEl = document.getElementById(`receipt-card-${orderId}`);
             
-            // Turn off edit mode to look clean
-            receiptEl.classList.remove('is-editing');
+            // 1. Turn off edit mode so outlines disappear
+            receiptEl.classList.remove('is-editing-receipt');
             receiptEl.querySelectorAll('.editable').forEach(el => el.contentEditable = "false");
 
-            // Hide buttons momentarily
+            // 2. Hide the action buttons temporarily so they aren't in the screenshot
             const actionRow = receiptEl.querySelector('.action-buttons');
+            const originalDisplay = actionRow.style.display;
             actionRow.style.display = 'none';
-            
-            // Ensure no rounded corners cut off strangely in canvas
+
+            // 3. Remove border radius temporarily for a perfectly square canvas capture
             const origRadius = receiptEl.style.borderRadius;
             receiptEl.style.borderRadius = '0px';
 
+            // 4. Generate Canvas
             html2canvas(receiptEl, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `SR_Receipt_Order_${orderId}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.9);
-                link.click();
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
                 
-                // Restore UI
-                actionRow.style.display = 'flex';
+                // Use your existing fullscreen image viewer!
+                openImageViewer(dataUrl);
+                
+                // 5. Restore UI
+                actionRow.style.display = originalDisplay;
                 receiptEl.style.borderRadius = origRadius;
             }).catch(err => {
-                alert("Error generating image.");
-                actionRow.style.display = 'flex';
+                alert("Error generating receipt image.");
+                actionRow.style.display = originalDisplay;
                 receiptEl.style.borderRadius = origRadius;
             });
         }
+        // ----------------------------------------
 
-        async function markComplete(id) {
-            if(!confirm("Are you sure? This will permanently deduct stock based on the items in this order!")) return;
-            try {
-                const res = await fetch(`/api/orders/${id}/complete`, { method: 'POST' });
-                if (res.ok) {
-                    loadOrders(); // Refresh to show Grey button!
-                } else {
-                    const data = await res.json();
-                    alert(data.error || "Failed to mark as complete");
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.tag-container')) {
+                const container = e.target.closest('.tag-container');
+                const input = container.querySelector('.tag-input');
+                if (input && e.target !== input && !e.target.closest('.remove-tag-btn')) input.focus();
+            }
+            if (e.target.closest('.remove-tag-btn')) {
+                const badge = e.target.closest('.tag-badge');
+                const wrapper = badge.closest('.tag-wrapper');
+                badge.remove(); updateHiddenTags(wrapper);
+            }
+        });
+
+        document.addEventListener('focusin', function(e) { if (e.target.classList.contains('tag-input')) e.target.closest('.tag-container').classList.add('highlight'); });
+        document.addEventListener('focusout', function(e) {
+            if (e.target.classList.contains('tag-input')) {
+                e.target.closest('.tag-container').classList.remove('highlight');
+                if (e.target.value.trim() !== '') addTag(e.target);
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.target.classList.contains('tag-input')) {
+                if (e.key === ',' || e.key === 'Enter') { e.preventDefault(); addTag(e.target); } 
+                else if (e.key === 'Backspace' && e.target.value === '') {
+                    const wrapper = e.target.closest('.tag-wrapper'); const badges = wrapper.querySelectorAll('.tag-badge');
+                    if (badges.length > 0) { badges[badges.length - 1].remove(); updateHiddenTags(wrapper); }
                 }
-            } catch (e) { alert("Error completing order"); }
-        }
+            }
+        });
 
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('tag-input')) {
+                const val = e.target.value.trim(); const datalistId = e.target.getAttribute('list');
+                if (datalistId) {
+                    const dl = document.getElementById(datalistId);
+                    if (dl && Array.from(dl.options).map(o => o.value).includes(val)) addTag(e.target);
+                }
+            }
+        });
 
-        // -- 2. INVENTORY & MULTI-CATEGORY MANAGEMENT --
-        async function fetchProductsForInventory() {
-            const store = document.getElementById('store-filter').value;
-            try {
-                const res = await fetch(`/api/products/${store}`);
-                const data = await res.json();
-                currentProducts = data.products;
-                
-                document.getElementById('stat-products').innerText = currentProducts.length;
+        function addTag(inputElement) {
+            const val = inputElement.value.trim().replace(/,/g, ''); if (!val) return;
+            const wrapper = inputElement.closest('.tag-wrapper');
+            const existingTags = Array.from(wrapper.querySelectorAll('.tag-badge')).map(b => b.textContent.trim().replace(' ', '').toLowerCase());
+            if (existingTags.includes(val.toLowerCase())) { inputElement.value = ''; return; }
 
-                // Extract all unique categories by splitting commas
-                allCategories = ['All'];
-                currentProducts.forEach(p => {
-                    const cats = p.category ? p.category.split(',').map(c => c.trim()).filter(Boolean) : ['Uncategorized'];
-                    cats.forEach(c => {
-                        if (!allCategories.includes(c)) allCategories.push(c);
-                    });
-                });
+            const isVariant = wrapper.querySelector('.variant-tag-container') !== null;
+            const badgeClass = isVariant ? 'tag-badge variant-tag-badge' : 'tag-badge';
 
-                // Update Category Dropdown
-                const catFilter = document.getElementById('category-filter');
-                catFilter.innerHTML = allCategories.map(c => `<option value="${c}">${c === 'All' ? 'All Categories' : c}</option>`).join('');
-
-                renderInventory();
-            } catch (e) { console.error(e); }
-        }
-
-        function renderInventory() {
-            const list = document.getElementById('inventory-list');
-            const catFilter = document.getElementById('category-filter').value;
+            const span = document.createElement('span'); span.className = badgeClass;
+            span.innerHTML = `${val} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i>`;
             
-            // Filter by selected category (checking if category string contains the tab name)
-            const filtered = currentProducts.filter(p => {
-                if(catFilter === 'All') return true;
-                const pCats = p.category ? p.category.split(',').map(c => c.trim()) : ['Uncategorized'];
-                return pCats.includes(catFilter);
-            });
-
-            // Sort by existing order
-            filtered.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-
-            list.innerHTML = filtered.map(p => {
-                const isSoldOut = p.stock !== undefined && p.stock <= 0;
-                return `
-                <li class="drag-item flex items-center gap-4 bg-white p-3 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow group" draggable="true" data-id="${p.id}">
-                    <div class="text-gray-300 group-hover:text-gray-600 px-2 cursor-grab"><i class="fa-solid fa-grip-vertical"></i></div>
-                    <img src="${p.thumbnail || p.image || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded object-cover border border-gray-200">
-                    <div class="flex-1 min-w-0">
-                        <h4 class="font-bold text-sm text-gray-900 truncate">${p.title}</h4>
-                        <div class="flex gap-2 items-center mt-1">
-                            <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded uppercase tracking-widest">${p.category || 'None'}</span>
-                            <span class="text-[10px] font-black text-orange-600">${parseFloat(p.price).toFixed(2)} USD</span>
-                        </div>
-                    </div>
-                    <div class="text-right mr-4">
-                        <span class="text-xs font-bold ${isSoldOut ? 'text-red-500 bg-red-50' : 'text-green-600 bg-green-50'} px-2 py-1 rounded border ${isSoldOut ? 'border-red-100' : 'border-green-100'}">
-                            Stock: ${p.stock !== undefined ? p.stock : '∞'}
-                        </span>
-                    </div>
-                    <button onclick="deleteProduct(${p.id})" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition-colors"><i class="fa-solid fa-trash-can"></i></button>
-                </li>
-                `;
-            }).join('');
-
-            attachDragAndDrop();
+            inputElement.parentNode.insertBefore(span, inputElement); inputElement.value = ''; updateHiddenTags(wrapper);
         }
 
-        // HTML5 Drag and Drop logic
-        function attachDragAndDrop() {
-            const list = document.getElementById('inventory-list');
-            let draggedItem = null;
-
-            list.querySelectorAll('.drag-item').forEach(item => {
-                item.addEventListener('dragstart', function(e) {
-                    draggedItem = item;
-                    setTimeout(() => item.classList.add('is-dragging'), 0);
-                    e.dataTransfer.effectAllowed = 'move';
-                });
-
-                item.addEventListener('dragend', function() {
-                    draggedItem.classList.remove('is-dragging');
-                    draggedItem = null;
-                    saveReorder(); // Automatically save when drop completes!
-                });
-
-                item.addEventListener('dragover', function(e) {
-                    e.preventDefault();
-                    const afterElement = getDragAfterElement(list, e.clientY);
-                    if (afterElement == null) {
-                        list.appendChild(draggedItem);
-                    } else {
-                        list.insertBefore(draggedItem, afterElement);
-                    }
-                });
-            });
+        function updateHiddenTags(wrapper) {
+            const hiddenInput = wrapper.querySelector('.hidden-category-input');
+            const tags = Array.from(wrapper.querySelectorAll('.tag-badge')).map(b => b.textContent.trim());
+            hiddenInput.value = tags.join(', '); 
         }
 
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.drag-item:not(.is-dragging)')];
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
-                }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        document.addEventListener('DOMContentLoaded', () => { document.querySelectorAll('.tag-wrapper').forEach(wrapper => { updateHiddenTags(wrapper); }); });
+
+        function openImageViewer(src) { document.getElementById('viewer-img').src = src; document.getElementById('viewer-download').href = src; document.getElementById('image-viewer-modal').classList.remove('hidden'); document.getElementById('image-viewer-modal').classList.add('flex'); }
+        function closeImageViewer() { document.getElementById('image-viewer-modal').classList.add('hidden'); document.getElementById('image-viewer-modal').classList.remove('flex'); }
+        function openCatModal() { document.getElementById('cat-modal').classList.remove('hidden'); filterCatModal('toy'); }
+        function closeCatModal() { document.getElementById('cat-modal').classList.add('hidden'); }
+
+        const allSystemCats = [ {% for cat in categories %} { name: "{{ cat.name|replace('\"', '\\\"')|replace('\'', '\\\'') }}", store: "{{ cat.store }}" }, {% endfor %} ];
+
+        function updateCatList(selectEl, datalistId) {
+            const dl = document.getElementById(datalistId); if(!dl) return; dl.innerHTML = '';
+            const store = selectEl.value; const cats = allSystemCats.filter(c => c.store === store);
+            const unique = [...new Set(cats.map(c => c.name))];
+            unique.forEach(name => { const opt = document.createElement('option'); opt.value = name; dl.appendChild(opt); });
         }
 
-        async function saveReorder() {
-            const store = document.getElementById('store-filter').value;
-            const items = [...document.querySelectorAll('.drag-item')].map((el, index) => {
-                return { id: parseInt(el.dataset.id), sort_order: index };
-            });
+        document.addEventListener('DOMContentLoaded', () => {
+            const addSelect = document.getElementById('add-store-select'); if(addSelect) updateCatList(addSelect, 'add-cats');
+            document.querySelectorAll('.edit-store-select').forEach(sel => { updateCatList(sel, sel.dataset.target); });
+        });
 
-            try {
-                await fetch(`/api/products/reorder/${store}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(items)
-                });
-                // Update local array sort_orders silently
-                items.forEach(i => {
-                    const p = currentProducts.find(x => x.id === i.id);
-                    if(p) p.sort_order = i.sort_order;
-                });
-            } catch (e) { console.error("Save reorder failed", e); }
-        }
-
-        async function deleteProduct(id) {
-            if(!confirm("Delete this product permanently?")) return;
-            const store = document.getElementById('store-filter').value;
-            try {
-                const res = await fetch(`/api/products/${store}/${id}`, { method: 'DELETE' });
-                if(res.ok) fetchProductsForInventory();
-                else alert("Failed to delete");
-            } catch(e) { alert("Error deleting"); }
-        }
-
-
-        // -- 3. QUICK UPLOAD --
-        function updateFileCount(input) {
-            const display = document.getElementById('file-count-display');
-            const countSpan = document.getElementById('f-count');
-            if (input.files && input.files.length > 0) {
-                countSpan.innerText = input.files.length;
-                display.classList.remove('hidden');
+        function updatePrice(element, type) {
+            const group = element.closest('.price-group'); const usdInput = group.querySelector('.usd-input'); const khrInput = group.querySelector('.khr-input');
+            const rate = 4000;
+            if (type === 'USD') {
+                const usdVal = parseFloat(usdInput.value);
+                if (!isNaN(usdVal)) khrInput.value = (usdVal * rate).toFixed(0); else khrInput.value = '';
             } else {
-                display.classList.add('hidden');
+                const khrVal = parseFloat(khrInput.value);
+                if (!isNaN(khrVal)) usdInput.value = (khrVal / rate).toFixed(2); else usdInput.value = '';
             }
         }
 
-        async function submitBulkUpload() {
-            const btn = document.getElementById('btn-upload');
-            const store = document.getElementById('up-store').value;
-            const tags = document.getElementById('up-tags').value;
-            const price = document.getElementById('up-price').value;
-            const stock = document.getElementById('up-stock').value;
-            const files = document.getElementById('up-files').files;
+        const fileInput = document.getElementById('file-input');
+        const configArea = document.getElementById('variant-config');
+        const variantList = document.getElementById('variant-list');
+        const mainCatInput = document.getElementById('main-category-input');
+        
+        fileInput.addEventListener('change', function() {
+            const files = Array.from(this.files).slice(0, 10);
+            if(files.length > 0) {
+                configArea.classList.remove('hidden'); variantList.innerHTML = '';
 
-            if(!files.length || !tags || !price) { alert("Please fill all required fields and select images."); return; }
-
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading... Please wait';
-            btn.disabled = true;
-
-            const formData = new FormData();
-            formData.append('store', store);
-            formData.append('category', tags); // These are comma separated
-            formData.append('price', price);
-            formData.append('stock', stock);
-            for(let i=0; i<files.length; i++) {
-                formData.append('files[]', files[i]);
-            }
-
-            try {
-                const res = await fetch('/api/upload_bulk', { method: 'POST', body: formData });
-                const data = await res.json();
-                if(res.ok) {
-                    alert(`Success! Created grouping with ${data.variants_count} variants.`);
-                    document.getElementById('upload-form').reset();
-                    document.getElementById('file-count-display').classList.add('hidden');
-                } else {
-                    alert(data.error || "Upload failed");
+                const defaultTagString = mainCatInput.value.trim();
+                let initialTagHtml = '';
+                if(defaultTagString) {
+                    const tagsArray = defaultTagString.split(',').map(t => t.trim()).filter(Boolean);
+                    tagsArray.forEach(tag => { initialTagHtml += `<span class="tag-badge variant-tag-badge">${tag} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i></span>`; });
                 }
-            } catch(e) { alert("Server error during upload"); }
-            
-            btn.innerHTML = '<i class="fa-solid fa-rocket"></i> Launch Products';
-            btn.disabled = false;
+
+                files.forEach((file, idx) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const row = document.createElement('div'); row.className = "flex gap-3 items-start bg-white p-3 rounded-xl border border-gray-200 shadow-sm relative variant-row";
+                        row.innerHTML = `
+                            <div class="w-14 h-14 flex-shrink-0 bg-gray-50 border border-gray-100 rounded-lg p-0.5 mt-1"><img src="${e.target.result}" class="w-full h-full object-contain rounded-md"></div>
+                            <div class="flex-1 space-y-2 price-group">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Image Name</span><input type="text" name="variant_names[]" placeholder="Variant ${idx + 1}" class="w-full text-[11px] font-bold outline-none border-b border-gray-200 pb-1 text-gray-700 focus:border-orange-500"></div>
+                                    <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Price (USD)</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">$</span><input type="number" step="any" name="variant_prices[]" required placeholder="0.00" class="w-full text-[11px] font-black outline-none usd-input" oninput="updatePrice(this, 'USD')"></div></div>
+                                    <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Price (KHR)</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">៛</span><input type="number" step="any" placeholder="0" class="w-full text-[11px] font-black outline-none khr-input" oninput="updatePrice(this, 'KHR')"></div></div>
+                                    <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Stock Qty</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><input type="number" name="variant_stocks[]" value="1" required class="w-full text-[11px] font-black outline-none text-center"></div></div>
+                                </div>
+                                <div class="tag-wrapper pt-1">
+                                    <span class="text-[8px] font-black text-[#ff5000] uppercase tracking-widest mb-1 block">Categories for this image:</span>
+                                    <input type="hidden" name="variant_categories[]" class="hidden-category-input" value="${defaultTagString}">
+                                    <div class="tag-container variant-tag-container border-gray-200 bg-gray-50/50">${initialTagHtml}<input type="text" list="add-cats" class="tag-input variant-tag-input" placeholder="Tags..." autocomplete="off"></div>
+                                </div>
+                            </div>
+                            <button type="button" onclick="this.closest('.variant-row').remove()" class="p-2 w-8 h-8 flex items-center justify-center bg-gray-50 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors mt-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                        `;
+                        variantList.appendChild(row);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        });
+
+        document.querySelectorAll('.submit-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const titleInput = this.querySelector('input[name="title"]');
+                const mainCatRaw = this.querySelector('input[name="category"]').value.trim();
+                let firstMainCategory = ""; if(mainCatRaw) firstMainCategory = mainCatRaw.split(',')[0].trim();
+                if (titleInput && !titleInput.value.trim() && firstMainCategory) titleInput.value = firstMainCategory + ' Group';
+                
+                const vNames = this.querySelectorAll('input[name="v_names[]"], input[name="variant_names[]"]');
+                vNames.forEach((vn, idx) => { if (!vn.value.trim()) vn.value = (firstMainCategory ? firstMainCategory : 'Variant') + ' ' + (idx + 1); });
+
+                document.getElementById('loading-overlay').classList.remove('hidden'); document.getElementById('loading-overlay').classList.add('flex');
+            });
+        });
+
+        setTimeout(() => { document.querySelectorAll('.animate-slide-up').forEach(t => t.style.display = 'none'); }, 6000);
+
+        new Sortable(document.getElementById('main-inventory-list'), { handle: '.product-handle', animation: 150, onEnd: function () {
+            const items = document.querySelectorAll('.product-item'); const ids = Array.from(items).map(item => item.id.replace('item-', ''));
+            fetch('/admin/product/reorder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: ids }) });
+        }});
+
+        new Sortable(document.getElementById('category-sortable'), { handle: '.handle', animation: 150 });
+
+        function deleteCategory(id) { if(confirm('Delete category? Items will move to "Other".')) { const form = document.getElementById('delete-cat-form'); form.action = '/admin/category/delete/' + id; form.submit(); } }
+
+        function switchView(view) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById('tab-' + view).classList.add('active');
+            if(view === 'inventory') { document.getElementById('view-inventory').classList.remove('hidden-view'); document.getElementById('view-inventory').style.display = 'grid'; document.getElementById('view-orders').classList.add('hidden-view'); } 
+            else { document.getElementById('view-inventory').classList.add('hidden-view'); document.getElementById('view-inventory').style.display = 'none'; document.getElementById('view-orders').classList.remove('hidden-view'); }
         }
 
-        // Initialize default tab
-        switchTab('orders');
+        function filterStore(store) {
+            document.querySelectorAll('.store-flt').forEach(b => { b.classList.remove('bg-black', 'text-white'); b.classList.add('text-gray-400'); });
+            const activeBtn = document.getElementById('flt-' + store); activeBtn.classList.remove('text-gray-400'); activeBtn.classList.add('bg-black', 'text-white');
+            document.querySelectorAll('.product-item').forEach(i => { i.style.display = (store === 'All' || i.dataset.store === store) ? 'block' : 'none'; });
+        }
+
+        function toggleEdit(id) { document.getElementById(`item-${id}`).classList.toggle('is-editing'); }
     </script>
 </body>
 </html>
