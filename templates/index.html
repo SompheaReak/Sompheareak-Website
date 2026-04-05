@@ -3,370 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Somphea Reak | Home</title>
+    <title>Somphea Reak | Studio</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Moul&display=swap');
         
-        body { font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif; }
-        .category-card { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .category-card:active { transform: scale(0.95); }
-        .gradient-overlay { background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, transparent 100%); }
+        body { 
+            font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif; 
+            background-color: #fcfbf9;
+            -webkit-tap-highlight-color: transparent;
+        }
         
-        /* Cart Styles */
-        .hide-scrollbar::-webkit-scrollbar { display: none; } 
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-        .smooth-transform { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .taobao-orange { background: linear-gradient(135deg, #ff9000, #ff5000); } 
-        .text-taobao { color: #ff5000; } 
-        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
-        .screenshot-frame { font-family: 'Kantumruy Pro', sans-serif; background: #fff; width: 400px; padding: 30px; box-sizing: border-box; border-radius: 0; position: fixed; left: -9999px; top: 0; }
+        h1, .khmer-title { font-family: 'Moul', serif; }
+
+        /* Category Card Animations */
+        .category-card { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); transform: translateZ(0); }
+        .category-card:active { transform: scale(0.96); }
+        .category-card img { transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+        .category-card:hover img { transform: scale(1.08); }
+        
+        .gradient-overlay { background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, transparent 100%); }
+        .gradient-overlay-side { background: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%); }
+        
+        /* Unified Cart UI Styles */
+        .scrollbar-hide::-webkit-scrollbar { display: none; } 
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .cart-checkbox { 
+            appearance: none; width: 24px; height: 24px; border: 2.5px solid #cbd5e1; border-radius: 50%; 
+            outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            background: white; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .cart-checkbox:checked { 
+            background-color: #ff5000; border-color: #ff5000; box-shadow: 0 2px 8px rgba(255, 80, 0, 0.3);
+        }
+        .cart-checkbox:checked::after { 
+            content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
+            width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
+        }
+
+        #cart-drawer, #checkout-modal { transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
+        
+        /* Glass Nav */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
     </style>
 </head>
-<body class="bg-white text-gray-900 pb-24 select-none">
+<body class="text-gray-900 pb-28 select-none">
 
     <!-- HEADER -->
-    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex items-center justify-between h-[72px]">
-        <button onclick="toggleLang()" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-xs font-bold text-gray-600 border border-gray-100 active:scale-90 transition-transform">
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100 px-5 py-3 flex items-center justify-between h-[72px] shadow-sm">
+        <button onclick="toggleLang()" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-xs font-black text-gray-800 border border-gray-100 active:scale-95 transition-transform shadow-sm">
             <span id="lang-btn-text">KH</span>
         </button>
 
         <div class="flex flex-col items-center justify-center">
-            <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white font-bold mb-0.5 shadow-sm">
-                <img src="static/images/logo.png" onerror="this.style.display='none';this.parentElement.innerText='S'" class="w-full h-full object-cover rounded-lg">
+            <div class="w-8 h-8 bg-black rounded-xl flex items-center justify-center text-white font-bold mb-0.5 shadow-md">
+                <img src="static/images/logo.png" onerror="this.style.display='none';this.parentElement.innerText='SR'" class="w-full h-full object-cover rounded-xl">
             </div>
             <span class="font-black text-[10px] tracking-widest uppercase text-gray-900 leading-none">Somphea Reak</span>
         </div>
 
-        <!-- FIXED: NOW OPENS THE CART DRAWER INSTEAD OF CHANGING PAGE -->
-        <button onclick="openCart()" class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 border border-orange-100 active:scale-90 transition-transform relative shadow-sm">
-            <i class="fa-solid fa-bag-shopping"></i>
-            <span id="home-cart-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden border-2 border-white">0</span>
+        <button onclick="openCartDrawer()" class="relative w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-800 border border-gray-200 active:scale-95 transition-transform shadow-sm hover:border-orange-500 hover:text-orange-500">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span id="home-cart-badge" class="absolute -top-1 -right-1 bg-[#ff5000] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center hidden shadow-md">0</span>
         </button>
     </header>
 
     <!-- HERO -->
-    <section class="px-5 py-6">
-        <div class="relative w-full aspect-[16/9] rounded-[2rem] overflow-hidden shadow-2xl bg-gray-900">
-            <img src="https://images.unsplash.com/photo-1611085583191-a3b1a308964b?auto=format&fit=crop&q=80&w=1200" class="w-full h-full object-cover opacity-60">
-            <div class="absolute inset-0 p-6 flex flex-col justify-end">
-                <span class="text-orange-500 font-black text-[10px] tracking-[0.3em] uppercase mb-2" data-en="Collection 2025" data-kh="ការប្រមូលផ្តុំ ២០២៥">Collection 2025</span>
-                <h1 class="text-white text-2xl font-black uppercase italic leading-none mb-2" data-en="Elevate Your Daily Look" data-kh="លើកកម្ពស់សម្រស់ប្រចាំថ្ងៃ">Elevate Your<br>Daily Look</h1>
+    <section class="px-4 py-5">
+        <div class="relative w-full aspect-[4/3] sm:aspect-[16/9] rounded-[2rem] overflow-hidden shadow-xl bg-gray-900 group">
+            <img src="https://images.unsplash.com/photo-1611085583191-a3b1a308964b?auto=format&fit=crop&q=80&w=1200" class="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 flex flex-col justify-end">
+                <span class="text-[#ff5000] font-black text-[10px] tracking-[0.3em] uppercase mb-2 drop-shadow-md" data-en="Collection 2025" data-kh="ការប្រមូលផ្តុំ ២០២៥">Collection 2025</span>
+                <h1 class="text-white text-3xl font-black uppercase italic leading-tight mb-1 drop-shadow-lg" data-en="Elevate Your Daily Look" data-kh="លើកកម្ពស់សម្រស់ប្រចាំថ្ងៃ">Elevate Your<br>Daily Look</h1>
             </div>
         </div>
     </section>
 
     <!-- LINKS GRID -->
-    <section class="px-5">
-        <div class="mb-4 flex items-center justify-between">
+    <section class="px-4 space-y-4">
+        <div class="flex items-center justify-between px-1">
             <h2 class="font-black text-xs uppercase tracking-[0.2em] text-gray-400" data-en="Explore Studio" data-kh="រុករកស្ទូឌីយោ">Explore Studio</h2>
-            <div class="h-[1px] flex-grow ml-4 bg-gray-100"></div>
+            <div class="h-px flex-grow ml-4 bg-gray-200"></div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-            <a href="/custom-bracelet" class="category-card relative col-span-2 aspect-[16/9] rounded-3xl overflow-hidden shadow-sm border border-gray-100 group">
+        <div class="grid grid-cols-2 gap-3.5">
+            
+            <!-- Custom Builder (Full Width) -->
+            <a href="/custom-bracelet" class="category-card relative col-span-2 aspect-[21/9] rounded-3xl overflow-hidden shadow-md border border-gray-100 group cursor-pointer block">
                 <img src="https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover">
+                <div class="gradient-overlay-side absolute inset-0 flex flex-col justify-center p-6">
+                    <span class="bg-white/20 backdrop-blur-md text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit mb-2 border border-white/30">Interactive</span>
+                    <h3 class="text-white font-black text-xl uppercase italic leading-none" data-en="Custom Builder" data-kh="រចនាខ្សែដៃ">Custom Builder</h3>
+                    <p class="text-gray-300 text-[10px] font-bold uppercase mt-1.5 tracking-widest">Design Your Own</p>
+                </div>
+            </a>
+
+            <!-- Toys (Half Width) -->
+            <a href="/toy" class="category-card relative aspect-square rounded-3xl overflow-hidden shadow-md border border-gray-100 group cursor-pointer block">
+                <img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
                 <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-5">
-                    <h3 class="text-white font-black text-lg uppercase italic" data-en="Custom Builder" data-kh="រចនាខ្សែដៃ">Custom Builder</h3>
-                    <p class="text-gray-300 text-[10px] font-bold uppercase mt-1">Design Your Own</p>
+                    <span class="bg-[#ff5000] text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit mb-2 shadow-sm">Hot</span>
+                    <h3 class="text-white font-black text-lg uppercase leading-tight font-['Moul']" data-en="Toy Universe" data-kh="ពិភពប្រដាប់ក្មេងលេង">Toy<br>Universe</h3>
                 </div>
             </a>
 
-            <a href="/toy-universe" class="category-card relative col-span-2 aspect-[21/9] rounded-3xl overflow-hidden shadow-sm border border-gray-100 group">
-                <img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover">
-                <div class="gradient-overlay absolute inset-0 bg-gradient-to-r from-orange-900/80 to-transparent flex flex-col justify-center p-6">
-                    <span class="bg-orange-500 text-white text-[8px] font-black uppercase px-2 py-1 rounded w-fit mb-2">New</span>
-                    <h3 class="text-white font-black text-lg uppercase italic" data-en="Toy Universe" data-kh="ពិភពប្រដាប់ក្មេងលេង">Toy Universe</h3>
-                    <p class="text-gray-300 text-[10px] font-bold uppercase mt-1">Mechs & Figures</p>
+            <!-- Bracelets (Half Width) -->
+            <a href="/bracelet" class="category-card relative aspect-square rounded-3xl overflow-hidden shadow-md border border-gray-100 group cursor-pointer block">
+                <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
+                <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-5">
+                    <h3 class="text-white font-black text-lg uppercase leading-tight font-['Moul']" data-en="Classic Jewelry" data-kh="គ្រឿងអលង្ការ">Classic<br>Jewelry</h3>
+                    <p class="text-orange-200 text-[9px] font-bold uppercase mt-1 tracking-widest">Jade & Gems</p>
                 </div>
             </a>
 
-            <a href="/bracelet" class="category-card relative aspect-square rounded-3xl overflow-hidden shadow-sm border border-gray-100 group">
-                <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=500" class="w-full h-full object-cover">
-                <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-4">
-                    <h3 class="text-white font-black text-md uppercase leading-none" data-en="Jewelry" data-kh="គ្រឿងអលង្ការ">Jewelry</h3>
-                    <p class="text-orange-200 text-[8px] font-bold uppercase mt-1">Jade & Gems</p>
-                </div>
-            </a>
-
-            <div class="category-card relative aspect-square rounded-3xl overflow-hidden shadow-sm border border-gray-100 group bg-gray-50">
-                <img src="https://images.unsplash.com/photo-1585366119957-e5733f3951cf?auto=format&fit=crop&q=80&w=500" class="w-full h-full object-cover opacity-80">
-                <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-4">
-                    <h3 class="text-white font-black text-md uppercase leading-none">LEGO</h3>
-                    <p class="text-gray-400 text-[8px] font-bold uppercase mt-1">Coming Soon</p>
+            <!-- LEGO / Coming Soon (Full Width) -->
+            <div class="category-card relative col-span-2 aspect-[21/9] rounded-3xl overflow-hidden shadow-sm border border-gray-100 group bg-gray-900 flex items-center justify-center">
+                <img src="https://images.unsplash.com/photo-1585366119957-e5733f3951cf?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover opacity-40 grayscale group-hover:grayscale-0 transition-all duration-700">
+                <div class="relative z-10 text-center">
+                    <h3 class="text-white font-black text-2xl uppercase tracking-widest opacity-50">LEGO</h3>
+                    <p class="text-gray-400 text-[10px] font-bold uppercase mt-1 tracking-[0.2em]">Coming Soon</p>
                 </div>
             </div>
+
         </div>
     </section>
 
-    <!-- FOOTER NAV -->
-    <nav class="fixed bottom-6 left-6 right-6 h-16 bg-black/90 backdrop-blur-2xl rounded-2xl flex items-center justify-around px-4 shadow-2xl z-50">
-        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-orange-500"><i class="fa-solid fa-house text-xl"></i></button>
-        <a href="/custom-bracelet" class="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center text-white -translate-y-4 border-4 border-white shadow-xl active:scale-95 transition-transform">
-            <i class="fa-solid fa-plus text-xl"></i>
+    <!-- PREMIUM FLOATING BOTTOM NAV -->
+    <nav class="fixed bottom-6 left-6 right-6 h-16 glass-nav rounded-2xl flex items-center justify-around px-2 shadow-2xl z-40">
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-12 h-12 flex items-center justify-center text-[#ff5000] flex-col gap-1 active:scale-95 transition-transform">
+            <i class="fa-solid fa-house text-lg"></i>
+            <span class="text-[8px] font-black uppercase tracking-widest">Home</span>
+        </button>
+        
+        <a href="/custom-bracelet" class="w-14 h-14 bg-black rounded-full flex items-center justify-center text-white -translate-y-4 border-4 border-[#fcfbf9] shadow-xl active:scale-95 transition-transform hover:bg-[#ff5000]">
+            <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
         </a>
-        <a href="/admin/login" class="text-gray-500 hover:text-white transition-colors"><i class="fa-solid fa-user text-xl"></i></a>
+        
+        <a href="/toy" class="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-[#ff5000] flex-col gap-1 active:scale-95 transition-colors">
+            <i class="fa-solid fa-store text-lg"></i>
+            <span class="text-[8px] font-black uppercase tracking-widest">Shop</span>
+        </a>
     </nav>
 
-    <!-- SLIDE-OUT CART DRAWER -->
-    <div id="cart-drawer" class="fixed inset-0 z-[70] bg-black/60 hidden transition-opacity duration-300" onclick="if(event.target == this) closeCart()">
-        <div id="cart-content" class="absolute top-0 right-0 w-[90%] md:w-96 h-[100dvh] bg-[#f2f2f2] shadow-2xl smooth-transform translate-x-full flex flex-col">
-            <div class="px-4 py-3 bg-white flex justify-between items-center shadow-sm z-20">
-                <h2 class="font-black text-lg">My Bag <span id="cart-header-count" class="text-gray-400 text-sm font-normal">(0)</span></h2>
-                <button onclick="closeCart()" class="w-8 h-8 flex items-center justify-center text-gray-500 bg-gray-50 rounded-full hover:bg-gray-100"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4 space-y-3 pb-32" id="cart-items"></div>
-            <div class="bg-white p-4 border-t border-gray-100 z-20 pb-safe">
-                <div class="flex justify-between items-end mb-4">
-                    <span class="text-xs font-bold text-gray-500">Total:</span>
-                    <div class="text-right"><div class="text-xl font-black text-taobao" id="cart-total-riel">0៛</div><div class="text-xs text-gray-400 font-bold" id="cart-total-usd">$0.00</div></div>
+    <!-- UNIFIED CART DRAWER (Exact match with toy.html & bracelet.html) -->
+    <div id="cart-drawer" class="fixed inset-0 z-[2000] flex flex-col justify-end translate-y-full">
+        <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeCartDrawer()"></div>
+        <div class="relative w-full h-[85vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
+            
+            <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10 shadow-sm">
+                <div>
+                    <h2 class="text-xl font-black text-gray-900 font-['Moul']" data-en="Your Cart" data-kh="កន្ត្រករបស់អ្នក">កន្ត្រករបស់អ្នក</h2>
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Your Shopping Cart</p>
                 </div>
-                <button onclick="openCheckout()" class="w-full taobao-orange text-white font-bold py-3.5 rounded-full shadow-lg active:scale-95 transition-transform flex justify-between px-6 items-center">
-                    <span>Invoice & Checkout</span><i class="fa-solid fa-file-invoice"></i>
+                <button onclick="closeCartDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+
+            <div class="bg-white border-t border-gray-100 p-5 z-10 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
+                <div class="flex justify-between items-end mb-4">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Total)</span>
+                    <span id="cart-grand-total" class="text-2xl font-black text-[#ff5000] leading-none">0៛</span>
+                </div>
+                <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
+                    <i class="fa-solid fa-truck-fast"></i> បន្តទៅការដឹកជញ្ជូន
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- CHECKOUT / INVOICE MODAL -->
-    <div id="checkout-modal" class="fixed inset-0 z-[90] bg-black/80 hidden transition-opacity duration-300" onclick="if(event.target == this) closeCheckout()">
-        <div id="checkout-panel" class="absolute bottom-0 left-0 right-0 bg-white rounded-t-[1.5rem] smooth-transform translate-y-full flex flex-col p-6 pb-safe shadow-2xl max-h-[90vh] overflow-hidden">
-            <div class="flex justify-between items-center mb-4 flex-none">
-                <h2 class="text-xl font-black text-gray-800" id="checkout-title"><i class="fa-solid fa-receipt text-taobao mr-2"></i>Invoice</h2>
-                <button onclick="closeCheckout()" class="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            
-            <div id="checkout-form" class="overflow-y-auto hide-scrollbar flex-1 space-y-4 mb-4">
-                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3">
-                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Delivery Info</h3>
-                    <div class="bg-white rounded-lg px-3 py-2 border border-gray-200 focus-within:border-taobao transition-all group" id="field-name"><input type="text" id="cust-name" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 placeholder-gray-300" placeholder="Your Name *"></div>
-                    <div class="bg-white rounded-lg px-3 py-2 border border-gray-200 focus-within:border-taobao transition-all group" id="field-phone"><input type="tel" id="cust-phone" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 placeholder-gray-300" placeholder="Phone Number *"></div>
-                    <div class="bg-white rounded-lg px-3 py-2 border border-gray-200 focus-within:border-taobao transition-all group"><textarea id="cust-address" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 h-10 resize-none placeholder-gray-300" placeholder="Address..."></textarea></div>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Order Items</h3>
-                    <div id="invoice-items" class="space-y-3"></div>
-                    <div class="border-t border-dashed border-gray-300 mt-4 pt-3 flex justify-between items-end"><span class="text-xs font-bold text-gray-500">Total Amount</span><div class="text-right"><div class="text-lg font-black text-taobao" id="invoice-total-riel">0៛</div><div class="text-[10px] font-bold text-gray-400" id="invoice-total-usd">$0.00</div></div></div>
+    <!-- UNIFIED CHECKOUT / DELIVERY MODAL -->
+    <div id="checkout-modal" class="fixed inset-0 z-[3000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
+        <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm md:max-w-md md:mx-auto md:w-full">
+            <h2 class="text-xl font-black font-['Moul']" data-en="Checkout" data-kh="ព័ត៌មានដឹកជញ្ជូន">ព័ត៌មានដឹកជញ្ជូន</h2>
+            <button onclick="closeCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50 md:max-w-md md:mx-auto md:w-full md:border-x md:border-gray-100">
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
+                <div class="absolute top-0 left-0 w-1 h-full bg-[#ff5000]"></div>
+                <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប:</span><span id="check-subtotal">៛0</span></div>
+                <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">៛0</span></div>
+                <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
+                    <span class="text-sm">សរុបត្រូវបង់:</span>
+                    <span id="check-total-khr" class="text-[#ff5000] text-xl leading-none">៛0</span>
                 </div>
             </div>
 
-            <div id="checkout-result" class="overflow-y-auto hide-scrollbar flex-1 mb-4 hidden flex flex-col items-center">
-                <p class="text-xs text-gray-500 mb-2 font-bold">Long press to save or click download</p>
-                <div class="w-full border rounded-xl overflow-hidden shadow-lg"><img id="generated-invoice-img" src="" class="w-full h-auto"></div>
-                <a id="download-link" href="#" download="invoice.png" class="mt-4 text-[#0088cc] text-xs font-bold underline">Download Image</a>
+            <div class="space-y-4">
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង</label>
+                <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Name)">
+                <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone)">
+                
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន</label>
+                <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ (Full Address)"></textarea>
             </div>
+        </div>
 
-            <div class="flex-none pt-2" id="checkout-footer">
-                <button onclick="generateInvoice()" id="btn-generate" class="w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i><span>Generate Invoice Image</span>
-                </button>
-            </div>
+        <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:max-w-md md:left-1/2 md:-translate-x-1/2 md:border-x">
+            <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-[#ff5000] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
         </div>
     </div>
 
     <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-black/80 backdrop-blur text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xl hidden items-center gap-2">
-        <i id="toast-icon" class="fa-solid fa-circle-exclamation text-orange-500"></i>
-        <span id="toast-msg">Message</span>
-    </div>
-
-    <!-- LOADING OVERLAY -->
-    <div id="loadingOverlay" class="fixed inset-0 z-[110] bg-black/50 hidden items-center justify-center backdrop-blur-sm">
-        <div class="bg-white p-4 rounded-full shadow-xl"><i class="fa-solid fa-spinner fa-spin text-2xl text-taobao"></i></div>
+    <div id="toast" style="pointer-events: none;" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[4000] bg-black/90 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl opacity-0 transition-opacity duration-200 scale-90">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toast-text" class="text-xs font-bold uppercase tracking-widest font-['Kantumruy_Pro']">Copied</span>
     </div>
 
     <script>
-        // GLOBALS
-        const TELEGRAM_USERNAME = "Somphea_Reak"; 
-        const EXCHANGE_RATE = 4000;
-        const PLACEHOLDER_IMG = 'https://images.unsplash.com/photo-1596461404969-9ce205b14a1e?q=80&w=400&auto=format&fit=crop';
-        let cart = [];
+        const RATE = 4000;
+        let userCart = [];
 
-        function formatCurrency(usd) { return { riel: `${Math.round(usd * EXCHANGE_RATE).toLocaleString()}៛`, usd: `$${usd.toFixed(2)}` }; }
-
-        function showToast(msg, isError=false) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
-            document.getElementById('toast-icon').className = isError ? "fa-solid fa-circle-exclamation text-orange-500" : "fa-solid fa-check-circle text-[#90D730]";
-            toast.classList.remove('hidden'); toast.classList.add('flex');
-            setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('flex'); }, 2000);
-        }
-
-        // CART LOGIC
-        function initCart() {
-            const savedCart = localStorage.getItem('somphea_global_cart');
-            if(savedCart) { 
-                try { 
-                    cart = JSON.parse(savedCart); 
-                    updateHomeBadge(); 
-                } catch(e) {} 
-            }
-        }
-
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'somphea_global_cart') { 
-                cart = JSON.parse(e.newValue || '[]'); 
-                updateHomeBadge(); 
-                if(!document.getElementById('cart-drawer').classList.contains('hidden')) renderCartItems();
-            }
-        });
-
-        function saveCart() { 
-            localStorage.setItem('somphea_global_cart', JSON.stringify(cart)); 
-            updateHomeBadge(); 
-        }
-
-        function updateHomeBadge() {
-            const badge = document.getElementById('home-cart-badge'); 
-            const count = cart.reduce((acc, item) => acc + item.qty, 0);
-            if (count > 0) { badge.innerText = count; badge.classList.remove('hidden'); } 
-            else { badge.classList.add('hidden'); }
-        }
-
-        function openCart() {
-            renderCartItems(); 
-            document.getElementById('cart-drawer').classList.remove('hidden'); 
-            setTimeout(() => { document.getElementById('cart-content').classList.remove('translate-x-full'); }, 10);
-        }
-
-        function closeCart() { 
-            document.getElementById('cart-content').classList.add('translate-x-full'); 
-            setTimeout(() => { document.getElementById('cart-drawer').classList.add('hidden'); }, 300); 
-        }
-
-        function updateCartItemQty(index, delta) { cart[index].qty += delta; if (cart[index].qty <= 0) { cart[index].qty = 1; } saveCart(); renderCartItems(); }
-        function toggleCheck(idx) { cart[idx].checked = !cart[idx].checked; saveCart(); renderCartItems(); }
-        function removeItem(idx) { cart.splice(idx, 1); saveCart(); renderCartItems(); }
-
-        function renderCartItems() {
-            const container = document.getElementById('cart-items');
-            if(cart.length === 0) {
-                container.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-gray-300"><i class="fa-solid fa-basket-shopping text-5xl mb-3 opacity-20"></i><p class="text-xs font-bold uppercase tracking-widest opacity-50">Empty</p></div>`;
-            } else {
-                container.innerHTML = cart.map((item, idx) => {
-                    const price = formatCurrency(item.price);
-                    return `<div class="bg-white p-3 rounded-xl flex gap-3 shadow-sm items-center"><button onclick="toggleCheck(${idx})" class="text-xl ${item.checked ? 'text-taobao' : 'text-gray-200'}"><i class="fa-solid fa-circle-check"></i></button><div class="w-16 h-16 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100"><img src="${item.image}" onerror="this.src='${PLACEHOLDER_IMG}'" class="w-full h-full object-cover"></div><div class="flex-1 min-w-0"><div class="text-xs text-gray-800 font-bold line-clamp-1">${item.title}</div><div class="text-[10px] text-gray-400 mt-0.5 bg-gray-50 inline-block px-1.5 rounded border border-gray-100">${item.variantName}</div><div class="flex justify-between items-end mt-2"><div class="font-black text-taobao text-sm">${price.riel}</div><div class="flex items-center bg-gray-100 rounded-lg p-0.5"><button onclick="updateCartItemQty(${idx}, -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 font-bold active:scale-90 text-xs">-</button><span class="w-8 text-center font-bold text-xs">${item.qty}</span><button onclick="updateCartItemQty(${idx}, 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 font-bold active:scale-90 text-xs">+</button></div></div></div><button onclick="removeItem(${idx})" class="text-gray-300 hover:text-red-500 px-2 self-start"><i class="fa-solid fa-trash-can"></i></button></div>`;
-                }).join('');
-            }
-            updateCartTotal(); 
-            document.getElementById('cart-header-count').innerText = `(${cart.length})`;
-        }
-
-        function updateCartTotal() {
-            const totalUsd = cart.reduce((acc, item) => item.checked ? acc + (item.price * item.qty) : acc, 0);
-            const price = formatCurrency(totalUsd); 
-            document.getElementById('cart-total-riel').innerText = price.riel; 
-            document.getElementById('cart-total-usd').innerText = price.usd;
-        }
-
-        // CHECKOUT LOGIC
-        function openCheckout() {
-            const activeItems = cart.filter(i => i.checked); 
-            if(activeItems.length === 0) return showToast("Please select items to checkout!", true);
-            
-            document.getElementById('invoice-items').innerHTML = activeItems.map(item => {
-                const total = formatCurrency(item.price * item.qty);
-                return `<div class="flex gap-3 bg-white p-2 rounded-lg border border-gray-100"><img src="${item.image}" onerror="this.src='${PLACEHOLDER_IMG}'" class="w-12 h-12 rounded object-cover flex-shrink-0"><div class="flex-1 min-w-0"><div class="text-[11px] font-bold text-gray-800 line-clamp-1">${item.title}</div><div class="text-[10px] text-gray-400">${item.variantName}</div><div class="flex justify-between items-end mt-1"><span class="text-[10px] text-gray-500">x${item.qty}</span><span class="text-xs font-black text-gray-800">${total.riel}</span></div></div></div>`;
-            }).join('');
-            
-            const totalUsd = activeItems.reduce((acc, item) => acc + (item.price * item.qty), 0); 
-            const totalPrice = formatCurrency(totalUsd);
-            
-            document.getElementById('invoice-total-riel').innerText = totalPrice.riel; 
-            document.getElementById('invoice-total-usd').innerText = totalPrice.usd;
-            
-            document.getElementById('checkout-form').classList.remove('hidden'); 
-            document.getElementById('checkout-result').classList.add('hidden');
-            document.getElementById('btn-generate').innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i><span>Generate Invoice Image</span>`; 
-            document.getElementById('btn-generate').onclick = generateInvoice; 
-            document.getElementById('checkout-footer').classList.remove('hidden');
-            
-            document.getElementById('cart-drawer').classList.add('hidden'); 
-            const modal = document.getElementById('checkout-modal'); 
-            modal.classList.remove('hidden'); 
-            setTimeout(() => { document.getElementById('checkout-panel').classList.remove('translate-y-full'); }, 10);
-        }
-
-        function closeCheckout() { 
-            document.getElementById('checkout-panel').classList.add('translate-y-full'); 
-            setTimeout(() => { document.getElementById('checkout-modal').classList.add('hidden'); }, 300); 
-        }
-
-        async function generateInvoice() {
-            const name = document.getElementById('cust-name').value.trim(), phone = document.getElementById('cust-phone').value.trim(), address = document.getElementById('cust-address').value.trim();
-            let isValid = true;
-            
-            if(!name) { document.getElementById('field-name').classList.add('border-red-500', 'bg-red-50', 'shake'); isValid = false; } 
-            else { document.getElementById('field-name').classList.remove('border-red-500', 'bg-red-50', 'shake'); }
-            
-            if(!phone) { document.getElementById('field-phone').classList.add('border-red-500', 'bg-red-50', 'shake'); isValid = false; } 
-            else { document.getElementById('field-phone').classList.remove('border-red-500', 'bg-red-50', 'shake'); }
-            
-            if(!isValid) { setTimeout(() => { document.querySelectorAll('.shake').forEach(el => el.classList.remove('shake')); }, 500); return; }
-
-            document.getElementById('loadingOverlay').classList.remove('hidden'); 
-            document.getElementById('loadingOverlay').classList.add('flex');
-            
-            const activeItems = cart.filter(i => i.checked); 
-            const totalUsd = activeItems.reduce((acc, item) => acc + (item.price * item.qty), 0); 
-            const totalPrice = formatCurrency(totalUsd);
-            
-            const tempDiv = document.createElement('div'); 
-            tempDiv.className = 'screenshot-frame'; 
-            
-            let html = `<div style="text-align: center; margin-bottom: 20px;"><h1 style="color: #000; font-weight: 900; font-size: 24px; margin-bottom: 4px; letter-spacing: -1px;">SOMPHEA REAK</h1><p style="color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 2px;">Official Invoice</p></div><div style="background: #f8fafc; border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0;"><div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;"><span style="color: #64748b;">Date</span><span style="font-weight: 700; color: #1e293b;">${new Date().toLocaleDateString()}</span></div><div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;"><span style="color: #64748b;">Customer</span><span style="font-weight: 700; color: #1e293b;">${name}</span></div><div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;"><span style="color: #64748b;">Phone</span><span style="font-weight: 700; color: #1e293b;">${phone}</span></div>${address ? `<div style="font-size: 10px; color: #64748b; margin-top: 8px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">${address}</div>` : ''}</div><div style="margin-bottom: 20px;"><table style="width: 100%; font-size: 11px; border-collapse: collapse;"><thead><tr style="border-bottom: 1px solid #e2e8f0;"><th style="text-align: left; padding-bottom: 8px; color: #64748b;">Item</th><th style="text-align: center; padding-bottom: 8px; color: #64748b;">Qty</th><th style="text-align: right; padding-bottom: 8px; color: #64748b;">Price</th></tr></thead><tbody>`;
-            activeItems.forEach(item => { html += `<tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px 0; display: flex; align-items: center; gap: 8px;"><img src="${item.image}" onerror="this.src='${PLACEHOLDER_IMG}'" style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover; flex-shrink: 0;"><div><div style="font-weight: 700; color: #1e293b; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</div><div style="font-size: 9px; color: #94a3b8;">${item.variantName}</div></div></td><td style="text-align: center; vertical-align: middle; color: #475569; font-weight: 600;">${item.qty}</td><td style="text-align: right; vertical-align: middle; font-weight: 700; color: #1e293b;">$${(item.price * item.qty).toFixed(2)}</td></tr>`; });
-            html += `</tbody></table></div><div style="border-top: 2px dashed #e2e8f0; padding-top: 15px;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;"><span style="font-weight: 700; color: #64748b; font-size: 12px;">Total USD</span><span style="font-weight: 900; color: #1e293b; font-size: 16px;">${totalPrice.usd}</span></div><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 700; color: #64748b; font-size: 12px;">Total Riel</span><span style="font-weight: 900; color: #ff5000; font-size: 20px;">${totalPrice.riel}</span></div></div>`;
-            
-            tempDiv.innerHTML = html; 
-            document.body.appendChild(tempDiv);
-            
-            await Promise.all(Array.from(tempDiv.querySelectorAll('img')).map(img => { 
-                img.crossOrigin = "anonymous"; 
-                if(img.complete) return Promise.resolve(); 
-                return new Promise(r => { img.onload = img.onerror = r; }); 
-            }));
-
-            try {
-                const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 3, backgroundColor: "#ffffff" }); 
-                const imgData = canvas.toDataURL("image/png");
-                document.getElementById('generated-invoice-img').src = imgData; 
-                document.getElementById('download-link').href = imgData;
-                
-                document.getElementById('checkout-form').classList.add('hidden'); 
-                document.getElementById('checkout-result').classList.remove('hidden'); 
-                document.getElementById('checkout-result').classList.add('flex');
-                
-                const btn = document.getElementById('btn-generate'); 
-                btn.innerHTML = `<i class="fa-brands fa-telegram text-xl"></i><span>Open Telegram & Send</span>`; 
-                btn.classList.remove('bg-black'); btn.classList.add('bg-[#0088cc]'); 
-                btn.onclick = () => openTelegramWithText(name, phone, address);
-            } catch(err) { 
-                showToast("Generation failed. Please try again.", true); 
-            } finally { 
-                document.body.removeChild(tempDiv); 
-                document.getElementById('loadingOverlay').classList.remove('flex'); 
-                document.getElementById('loadingOverlay').classList.add('hidden'); 
-            }
-        }
-
-        function openTelegramWithText(name, phone, address) {
-            let msg = `🧾 *INVOICE ATTACHED*\n👤 ${name}\n📞 ${phone}\n`; 
-            if(address) msg += `📍 ${address}\n`; 
-            msg += `\n*Please see the attached image for order details.*`;
-            
-            cart = cart.filter(i => !i.checked); 
-            saveCart(); 
-            window.open(`https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(msg)}`, '_blank');
-        }
-
-        // LANGUAGE LOGIC
+        // Language Logic
         let currentLang = 'en';
         function toggleLang() {
             currentLang = currentLang === 'en' ? 'kh' : 'en';
@@ -374,8 +235,248 @@
             document.querySelectorAll('[data-en]').forEach(el => {
                 el.innerText = currentLang === 'kh' ? el.getAttribute('data-kh') : el.getAttribute('data-en');
             });
+            // Update cart texts if open
+            if(document.querySelector('#cart-drawer h2')) {
+                const header = document.querySelector('#cart-drawer h2');
+                header.innerText = currentLang === 'kh' ? header.getAttribute('data-kh') : header.getAttribute('data-en');
+            }
+        }
+
+        // --- CART SYSTEM (Synchronized exactly with toy.html & bracelet.html) ---
+        function initCart() {
+            try {
+                const savedCart = localStorage.getItem('sr_cart');
+                if (savedCart) {
+                    userCart = JSON.parse(savedCart);
+                    updateCartBadge();
+                }
+            } catch(e) {}
+        }
+
+        // Listen for changes from other tabs (if user adds item in toy.html, home updates instantly)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'sr_cart') {
+                userCart = JSON.parse(e.newValue || '[]');
+                updateCartBadge();
+                if(!document.getElementById('cart-drawer').classList.contains('translate-y-full')) {
+                    renderCartUI();
+                }
+            }
+        });
+
+        function updateCartBadge() {
+            const badge = document.getElementById('home-cart-badge');
+            if(userCart.length > 0) {
+                badge.innerText = userCart.length; 
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function saveCart() { 
+            localStorage.setItem('sr_cart', JSON.stringify(userCart)); 
+            updateCartBadge();
+        }
+
+        function openCartDrawer() { 
+            renderCartUI(); 
+            document.getElementById('cart-drawer').classList.remove('translate-y-full'); 
         }
         
+        function closeCartDrawer() { 
+            document.getElementById('cart-drawer').classList.add('translate-y-full'); 
+        }
+
+        function renderCartUI() {
+            const container = document.getElementById('cart-items-container');
+            if(userCart.length === 0) {
+                container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-sm uppercase tracking-widest mt-2">កន្ត្រកទទេ (Empty)</p></div>`;
+                document.getElementById('cart-grand-total').innerText = "0៛";
+                return;
+            }
+
+            let grandTotal = 0; let customIndex = 1;
+
+            container.innerHTML = userCart.map((item) => {
+                let itemTotal = 0;
+                if(item.type === 'custom_bracelet') {
+                    itemTotal = (item.baseTotal + item.pkgPrice) * item.qty;
+                    if(item.selected) grandTotal += itemTotal;
+                    
+                    return `
+                    <div class="bg-white rounded-2xl shadow-sm border ${item.selected ? 'border-[#ff5000] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col relative transition-all overflow-hidden mb-4">
+                        <div class="w-full h-36 bg-gray-50 border-b border-gray-100 relative group">
+                            <img src="${item.image}" class="w-full h-full object-contain p-2">
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 flex justify-between items-center text-white">
+                                <span class="text-[10px] font-bold tracking-widest uppercase font-['Kantumruy_Pro']"><i class="fa-solid fa-gem text-orange-400 mr-1"></i> ${item.charms.length} Charms</span>
+                                <span class="text-sm font-black text-orange-400">${itemTotal.toLocaleString()}៛</span>
+                            </div>
+                        </div>
+                        <div class="p-3">
+                            <div class="flex justify-between items-start mb-2">
+                                <label class="flex items-start gap-3 cursor-pointer flex-1">
+                                    <input type="checkbox" class="cart-checkbox mt-0.5" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
+                                    <div>
+                                        <h4 class="font-black text-sm text-gray-900 leading-tight">Custom Bracelet #${customIndex++}</h4>
+                                        <p class="text-[10px] font-bold text-gray-500 mt-1 uppercase tracking-widest flex items-center">
+                                            Code: <span class="font-mono text-gray-800 ml-1">${item.code.substring(0,8)}</span>
+                                            <button type="button" onclick="copyCode('${item.code}')" class="text-gray-400 hover:text-orange-500 ml-2 p-1 active:scale-90"><i class="fa-regular fa-copy"></i></button>
+                                        </p>
+                                    </div>
+                                </label>
+                                <button type="button" onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-2 -mt-1 -mr-1"><i class="fa-solid fa-trash-can text-lg"></i></button>
+                            </div>
+                            <div class="flex justify-between items-center mt-3">
+                                <button onclick="window.location.href='/custom_bracelet'" class="text-[10px] bg-blue-50 text-blue-600 px-3 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors font-black uppercase tracking-widest shadow-sm active:scale-95"><i class="fa-solid fa-pen-ruler mr-1"></i> Edit Design</button>
+                                <div class="flex items-center gap-2">
+                                    <div class="bg-orange-50 text-orange-600 text-[9px] font-black uppercase tracking-widest px-2 py-1.5 rounded-lg border border-orange-100 flex items-center gap-1 shadow-sm mr-1">
+                                        <i class="fa-solid ${item.pkgName === 'Premium Box' ? 'fa-gift text-orange-500' : 'fa-box-open text-gray-500'}"></i> ${item.pkgName || 'Normal'}
+                                    </div>
+                                    <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-1 border border-gray-100">
+                                        <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                        <span class="font-black text-xs w-4 text-center">${item.qty}</span>
+                                        <button onclick="updateCartQty('${item.id}', 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                } else {
+                    itemTotal = (item.price || 0) * item.qty;
+                    if(item.selected) grandTotal += itemTotal;
+
+                    return `
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ff5000] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="cart-checkbox mt-2 ml-1" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
+                        </label>
+                        <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden">
+                            <img src="${item.image}" class="max-w-full max-h-full object-contain">
+                        </div>
+                        <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-black text-xs text-gray-900 leading-tight truncate pr-2">${item.title}</h4>
+                                    <button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 -mt-1 -mr-1 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                </div>
+                                <p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">${item.style}</p>
+                            </div>
+                            <div class="flex justify-between items-end mt-2">
+                                <span class="font-black text-sm text-[#ff5000]">${itemTotal.toLocaleString()}៛</span>
+                                <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
+                                    <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                    <span class="font-black text-xs w-2 text-center">${item.qty}</span>
+                                    <button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                }
+            }).join('');
+            document.getElementById('cart-grand-total').innerText = grandTotal.toLocaleString() + "៛";
+        }
+
+        function toggleCartItem(id) { const item = userCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveCart(); renderCartUI(); } }
+        function updateCartQty(id, delta) { const item = userCart.find(i => i.id === id); if(item) { item.qty += delta; if(item.qty < 1) item.qty = 1; if(item.qty > 10) item.qty = 10; saveCart(); renderCartUI(); } }
+        function removeCartItem(id) { if(confirm("លុបចេញពីកន្ត្រក? (Remove from cart?)")) { userCart = userCart.filter(i => i.id !== id); saveCart(); renderCartUI(); } }
+        
+        function copyCode(code) { 
+            navigator.clipboard.writeText(code); 
+            const toast = document.getElementById('toast'); 
+            toast.classList.remove('opacity-0', 'scale-90'); 
+            setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500); 
+        }
+
+        // --- CHECKOUT LOGIC ---
+        function calculateDelivery(subtotalKHR) {
+            if (subtotalKHR === 0) return 0;
+            if (subtotalKHR < 20000) return 8000;
+            if (subtotalKHR < 40000) return 6000;
+            if (subtotalKHR < 60000) return 4000;
+            if (subtotalKHR < 80000) return 2000;
+            return 0;
+        }
+
+        function openCheckout() {
+            const selectedItems = userCart.filter(i => i.selected);
+            if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយដើម្បីបន្ត! (Please select an item to checkout)");
+
+            let subtotal = 0;
+            selectedItems.forEach(item => {
+                if(item.type === 'custom_bracelet') subtotal += ((item.baseTotal + item.pkgPrice) * item.qty);
+                else subtotal += (item.price * item.qty);
+            });
+            
+            const delivery = calculateDelivery(subtotal);
+            document.getElementById('check-subtotal').innerText = subtotal.toLocaleString() + "៛";
+            document.getElementById('check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ (Free)" : delivery.toLocaleString() + "៛";
+            document.getElementById('check-total-khr').innerText = (subtotal + delivery).toLocaleString() + "៛";
+
+            closeCartDrawer();
+            document.getElementById('checkout-modal').classList.remove('translate-y-full');
+        }
+
+        function closeCheckout() { document.getElementById('checkout-modal').classList.add('translate-y-full'); }
+
+        async function processFinalOrder() {
+            const selectedItems = userCart.filter(i => i.selected);
+            if(selectedItems.length === 0) return;
+
+            const name = document.getElementById('cust-name').value.trim(); 
+            const phone = document.getElementById('cust-phone').value.trim(); 
+            const address = document.getElementById('cust-address').value.trim();
+            
+            if(!name || !phone || !address) return alert("សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់! (Please fill in all details)"); 
+            if(phone.length < 8) return alert("លេខទូរស័ព្ទមិនត្រឹមត្រូវ! (Invalid phone number)");
+
+            const btn = document.getElementById('confirm-btn'); 
+            btn.innerText = "កំពុងបញ្ជូន... (Processing...)"; 
+            btn.disabled = true;
+
+            let subtotal = 0; 
+            const orderItemsPayload = []; 
+            const charmCounts = {}; 
+
+            selectedItems.forEach((cartItem, bIdx) => {
+                if(cartItem.type === 'custom_bracelet') {
+                    const itemPrice = cartItem.baseTotal + cartItem.pkgPrice; subtotal += (itemPrice * cartItem.qty);
+                    const styleText = `Bracelet #${bIdx+1} | Code: ${cartItem.code} | Charms: ${cartItem.charms.length} | Pkg: ${cartItem.pkgName}`;
+                    orderItemsPayload.push({ cartId: "custom-" + Date.now() + "-" + bIdx, title: "Custom DIY Bracelet", style: styleText, price: itemPrice / RATE, qty: cartItem.qty, image: cartItem.image, maxStock: 99 });
+                    cartItem.charms.forEach(c => { charmCounts[c.db_id] = (charmCounts[c.db_id] || 0) + (1 * cartItem.qty); });
+                } else {
+                    subtotal += (cartItem.price * cartItem.qty);
+                    orderItemsPayload.push({ cartId: cartItem.id, title: cartItem.title, style: cartItem.style, price: cartItem.price / RATE, qty: cartItem.qty, image: cartItem.image, maxStock: cartItem.maxStock });
+                }
+            });
+
+            for (const [id, count] of Object.entries(charmCounts)) { 
+                orderItemsPayload.push({ cartId: id, title: "DIY-Part", style: "Hidden stock component", price: 0, qty: count, image: "hidden", maxStock: 99 }); 
+            }
+
+            const delivery = calculateDelivery(subtotal); 
+            const totalUSD = (subtotal + delivery) / RATE;
+
+            try {
+                const res = await fetch('/api/checkout', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD }) 
+                });
+                if(res.ok) { 
+                    alert("Order Successful! We will contact you on Telegram soon."); 
+                    userCart = userCart.filter(i => !i.selected); 
+                    saveCart(); 
+                    window.location.reload(); 
+                }
+            } catch (e) { 
+                alert("Error sending order. Please try again."); 
+            }
+            btn.innerText = "បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)"; 
+            btn.disabled = false;
+        }
+
+        // Initialize on load
         initCart();
     </script>
 </body>
