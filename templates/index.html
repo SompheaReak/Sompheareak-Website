@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>សម្ភារៈ - Somphea Reak | Studio & Stores</title>
+    <title>សម្ភារៈ - Somphea Reak | Studio</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -21,8 +21,8 @@
         
         h1, .khmer-title { font-family: 'Moul', serif; }
 
-        /* Animations */
-        .category-card { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); transform: translateZ(0); cursor: pointer; }
+        /* Category Card Animations */
+        .category-card { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); transform: translateZ(0); }
         .category-card:active { transform: scale(0.96); }
         .category-card img { transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
         .category-card:hover img { transform: scale(1.08); }
@@ -30,35 +30,32 @@
         .gradient-overlay { background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, transparent 100%); }
         .gradient-overlay-side { background: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%); }
         
-        /* UI Styles */
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .cat-pill { transition: all 0.3s ease; }
-        .cat-pill.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        /* Unified Cart UI Styles */
+        .scrollbar-hide::-webkit-scrollbar { display: none; } 
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
         .cart-checkbox { 
             appearance: none; width: 24px; height: 24px; border: 2.5px solid #cbd5e1; border-radius: 50%; 
             outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-            background: white; flex-shrink: 0; 
+            background: white; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
-        .cart-checkbox:checked { background-color: #ff5000; border-color: #ff5000; }
+        .cart-checkbox:checked { 
+            background-color: #ff5000; border-color: #ff5000; box-shadow: 0 2px 8px rgba(255, 80, 0, 0.3);
+        }
         .cart-checkbox:checked::after { 
             content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
             width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
         }
 
-        /* SPA Views */
-        .view-section { display: none; animation: fadeIn 0.4s ease-out; }
-        .view-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        #cart-drawer, #checkout-modal { transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
         
-        #cart-drawer, #checkout-modal, #product-modal { transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
-        .snap-x-mandatory { scroll-snap-type: x mandatory; }
-        .snap-center { scroll-snap-align: center; }
-
-        .glass-nav { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.5); }
+        /* Glass Nav */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
     </style>
 </head>
 <body class="text-gray-900 pb-28 select-none">
@@ -69,9 +66,9 @@
             <span id="lang-btn-text">KH</span>
         </button>
 
-        <div class="flex flex-col items-center justify-center cursor-pointer" onclick="showView('home')">
-            <div class="w-8 h-8 bg-black rounded-xl flex items-center justify-center text-white font-bold mb-0.5 shadow-md overflow-hidden">
-                <span class="text-xs font-black">SR</span>
+        <div class="flex flex-col items-center justify-center">
+            <div class="w-8 h-8 bg-black rounded-xl flex items-center justify-center text-white font-bold mb-0.5 shadow-md">
+                <img src="static/images/logo.png" onerror="this.style.display='none';this.parentElement.innerText='SR'" class="w-full h-full object-cover rounded-xl">
             </div>
             <span class="font-black text-[10px] tracking-widest uppercase text-gray-900 leading-none">Somphea Reak</span>
         </div>
@@ -82,654 +79,409 @@
         </button>
     </header>
 
-    <!-- ============================================== -->
-    <!-- VIEW: HOME DASHBOARD                           -->
-    <!-- ============================================== -->
-    <main id="view-home" class="view-section active">
-        <section class="px-4 py-5">
-            <div class="relative w-full aspect-[4/3] sm:aspect-[16/9] rounded-[2rem] overflow-hidden shadow-xl bg-gray-900 group" onclick="showView('bracelet')">
-                <img src="https://images.unsplash.com/photo-1611085583191-a3b1a308964b?auto=format&fit=crop&q=80&w=1200" class="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 flex flex-col justify-end">
-                    <span class="text-[#ff5000] font-black text-[10px] tracking-[0.3em] uppercase mb-2 drop-shadow-md" data-en="Collection 2025" data-kh="ការប្រមូលផ្តុំ ២០២៥">Collection 2025</span>
-                    <h1 class="text-white text-3xl font-black uppercase italic leading-tight mb-1 drop-shadow-lg" data-en="Elevate Your Daily Look" data-kh="លើកកម្ពស់សម្រស់ប្រចាំថ្ងៃ">Elevate Your<br>Daily Look</h1>
-                </div>
+    <!-- HERO -->
+    <section class="px-4 py-5">
+        <div class="relative w-full aspect-[4/3] sm:aspect-[16/9] rounded-[2rem] overflow-hidden shadow-xl bg-gray-900 group">
+            <img src="https://images.unsplash.com/photo-1611085583191-a3b1a308964b?auto=format&fit=crop&q=80&w=1200" class="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 flex flex-col justify-end">
+                <span class="text-[#ff5000] font-black text-[10px] tracking-[0.3em] uppercase mb-2 drop-shadow-md" data-en="Collection 2025" data-kh="ការប្រមូលផ្តុំ ២០២៥">Collection 2025</span>
+                <h1 class="text-white text-3xl font-black uppercase italic leading-tight mb-1 drop-shadow-lg" data-en="Elevate Your Daily Look" data-kh="លើកកម្ពស់សម្រស់ប្រចាំថ្ងៃ">Elevate Your<br>Daily Look</h1>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="px-4 space-y-4">
-            <div class="flex items-center justify-between px-1">
-                <h2 class="font-black text-xs uppercase tracking-[0.2em] text-gray-400" data-en="Explore Studio" data-kh="រុករកស្ទូឌីយោ">Explore Studio</h2>
-                <div class="h-px flex-grow ml-4 bg-gray-200"></div>
-            </div>
+    <!-- LINKS GRID -->
+    <section class="px-4 space-y-4">
+        <div class="flex items-center justify-between px-1">
+            <h2 class="font-black text-xs uppercase tracking-[0.2em] text-gray-400" data-en="Explore Studio" data-kh="រុករកស្ទូឌីយោ">Explore Studio</h2>
+            <div class="h-px flex-grow ml-4 bg-gray-200"></div>
+        </div>
 
-            <div class="grid grid-cols-2 gap-3.5">
-                <!-- Connects to Custom Builder Store -->
-                <div onclick="showView('custom')" class="category-card relative col-span-2 aspect-[21/9] rounded-3xl overflow-hidden shadow-md border border-gray-100 group block">
-                    <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover">
-                    <div class="gradient-overlay-side absolute inset-0 flex flex-col justify-center p-6">
-                        <div class="flex gap-2 mb-2">
-                            <span class="bg-[#ff5000] text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit border border-orange-400 shadow-lg flex items-center gap-1 animate-pulse"><i class="fa-solid fa-fire"></i> Hot Sale</span>
-                            <span class="bg-white/20 backdrop-blur-md text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit border border-white/30">Interactive</span>
-                        </div>
-                        <h3 class="text-white font-black text-lg md:text-xl uppercase italic leading-tight drop-shadow-md" data-en="Customize Italy Charm Bracelet" data-kh="រចនាខ្សែដៃអុីតាលី">Customize Italy<br>Charm Bracelet</h3>
+        <div class="grid grid-cols-2 gap-3.5">
+            
+            <!-- Custom Builder (Flask route: /custom-bracelet) -->
+            <a href="/custom-bracelet" class="category-card relative col-span-2 aspect-[21/9] rounded-3xl overflow-hidden shadow-md border border-gray-100 group cursor-pointer block">
+                <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover">
+                <div class="gradient-overlay-side absolute inset-0 flex flex-col justify-center p-6">
+                    <div class="flex gap-2 mb-2">
+                        <span class="bg-[#ff5000] text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit border border-orange-400 shadow-lg flex items-center gap-1 animate-pulse">
+                            <i class="fa-solid fa-fire"></i> Hot Sale
+                        </span>
+                        <span class="bg-white/20 backdrop-blur-md text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit border border-white/30">Interactive</span>
                     </div>
+                    <h3 class="text-white font-black text-lg md:text-xl uppercase italic leading-tight drop-shadow-md" data-en="Customize Italy Charm Bracelet" data-kh="រចនាខ្សែដៃអុីតាលី">Customize Italy<br>Charm Bracelet</h3>
+                    <p class="text-gray-300 text-[10px] font-bold uppercase mt-1.5 tracking-widest">Design Your Own</p>
                 </div>
+            </a>
 
-                <!-- Connects to Toys Store -->
-                <div onclick="showView('toy')" class="category-card relative aspect-square rounded-3xl overflow-hidden shadow-md border border-gray-100 group block">
-                    <img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
-                    <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-5">
-                        <span class="bg-[#ff5000] text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit mb-2 shadow-sm">Hot</span>
-                        <h3 class="text-white font-black text-lg uppercase leading-tight font-['Moul']" data-en="Toy Universe" data-kh="ពិភពប្រដាប់ក្មេងលេង">Toy<br>Universe</h3>
-                    </div>
+            <!-- Toys (Flask route: /toy-universe) -->
+            <a href="/toy-universe" class="category-card relative aspect-square rounded-3xl overflow-hidden shadow-md border border-gray-100 group cursor-pointer block">
+                <img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
+                <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-5">
+                    <span class="bg-[#ff5000] text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit mb-2 shadow-sm">Hot</span>
+                    <h3 class="text-white font-black text-lg uppercase leading-tight font-['Moul']" data-en="Toy Universe" data-kh="ពិភពប្រដាប់ក្មេងលេង">Toy<br>Universe</h3>
                 </div>
+            </a>
 
-                <!-- Connects to Jewelry Store -->
-                <div onclick="showView('bracelet')" class="category-card relative aspect-square rounded-3xl overflow-hidden shadow-md border border-gray-100 group block">
-                    <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
-                    <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-5">
-                        <h3 class="text-white font-black text-lg uppercase leading-tight font-['Moul']" data-en="Necklace & Bracelet" data-kh="ខ្សែក និងខ្សែដៃ">Necklace &<br>Bracelet</h3>
-                        <p class="text-orange-200 text-[9px] font-bold uppercase mt-1 tracking-widest">Jade & Gems</p>
-                    </div>
+            <!-- Bracelets (Flask route: /bracelet) -->
+            <a href="/bracelet" class="category-card relative aspect-square rounded-3xl overflow-hidden shadow-md border border-gray-100 group cursor-pointer block">
+                <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
+                <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-5">
+                    <h3 class="text-white font-black text-lg uppercase leading-tight font-['Moul']" data-en="Necklace & Bracelet" data-kh="ខ្សែក និងខ្សែដៃ">Necklace &<br>Bracelet</h3>
+                    <p class="text-orange-200 text-[9px] font-bold uppercase mt-1 tracking-widest">Jade & Gems</p>
+                </div>
+            </a>
+
+            <!-- LEGO / Coming Soon -->
+            <div class="category-card relative col-span-2 aspect-[21/9] rounded-3xl overflow-hidden shadow-sm border border-gray-100 group bg-gray-900 flex items-center justify-center">
+                <img src="https://images.unsplash.com/photo-1585366119957-e5733f3951cf?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover opacity-40 grayscale group-hover:grayscale-0 transition-all duration-700">
+                <div class="relative z-10 text-center">
+                    <h3 class="text-white font-black text-2xl uppercase tracking-widest opacity-50">LEGO</h3>
+                    <p class="text-gray-400 text-[10px] font-bold uppercase mt-1 tracking-[0.2em]">Coming Soon</p>
                 </div>
             </div>
-        </section>
-    </main>
 
-    <!-- ============================================== -->
-    <!-- VIEW: JEWELRY (BRACELETS) STORE                -->
-    <!-- ============================================== -->
-    <main id="view-bracelet" class="view-section pb-8 min-h-screen">
-        <div class="px-4 py-6 bg-white flex items-center gap-4 border-b border-gray-100 sticky top-[72px] z-30">
-            <button onclick="showView('home')" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 active:scale-95"><i class="fa-solid fa-arrow-left"></i></button>
-            <div>
-                <h1 class="text-2xl font-black font-['Moul']" data-en="Jewelry Collection" data-kh="ការប្រមូលគ្រឿងអលង្ការ">Jewelry Collection</h1>
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Necklaces & Bracelets</p>
-            </div>
         </div>
-        <div class="bg-white/80 backdrop-blur-md sticky top-[152px] z-20 overflow-x-auto flex gap-2 p-4 hide-scrollbar border-b border-gray-100" id="bracelet-filters"></div>
-        <div class="max-w-7xl mx-auto px-4 py-6">
-            <div id="bracelet-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                <div class="col-span-full py-20 text-center"><i class="fa-solid fa-spinner fa-spin text-gray-400 text-2xl"></i></div>
-            </div>
-        </div>
-    </main>
+    </section>
 
-    <!-- ============================================== -->
-    <!-- VIEW: TOY UNIVERSE STORE                       -->
-    <!-- ============================================== -->
-    <main id="view-toy" class="view-section pb-8 min-h-screen">
-        <div class="px-4 py-6 bg-white flex items-center gap-4 border-b border-gray-100 sticky top-[72px] z-30">
-            <button onclick="showView('home')" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 active:scale-95"><i class="fa-solid fa-arrow-left"></i></button>
-            <div>
-                <h1 class="text-2xl font-black font-['Moul']" data-en="Toy Universe" data-kh="ពិភពប្រដាប់ក្មេងលេង">Toy Universe</h1>
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Collectibles & Plushies</p>
-            </div>
-        </div>
-        <div class="bg-white/80 backdrop-blur-md sticky top-[152px] z-20 overflow-x-auto flex gap-2 p-4 hide-scrollbar border-b border-gray-100" id="toy-filters"></div>
-        <div class="max-w-7xl mx-auto px-4 py-6">
-            <div id="toy-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-                <div class="col-span-full py-20 text-center"><i class="fa-solid fa-spinner fa-spin text-gray-400 text-2xl"></i></div>
-            </div>
-        </div>
-    </main>
-
-    <!-- ============================================== -->
-    <!-- VIEW: CUSTOM CHARM BUILDER STORE               -->
-    <!-- ============================================== -->
-    <main id="view-custom" class="view-section pb-8 min-h-screen">
-        <div class="px-4 py-6 bg-white flex items-center gap-4 border-b border-gray-100 sticky top-[72px] z-30 shadow-sm">
-            <button onclick="showView('home')" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 active:scale-95"><i class="fa-solid fa-arrow-left"></i></button>
-            <div>
-                <h1 class="text-xl font-black font-['Moul']" data-en="Charm Builder" data-kh="រចនាដោយខ្លួនឯង">Charm Builder</h1>
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Design Your Masterpiece</p>
-            </div>
-        </div>
-        <div class="p-4 md:p-8 max-w-lg mx-auto" id="custom-builder-content">
-            <div class="py-20 text-center"><i class="fa-solid fa-spinner fa-spin text-gray-400 text-2xl"></i></div>
-        </div>
-    </main>
-
-    <!-- ============================================== -->
-    <!-- FLOATING BOTTOM NAV                            -->
-    <!-- ============================================== -->
+    <!-- PREMIUM FLOATING BOTTOM NAV -->
     <nav class="fixed bottom-6 left-6 right-6 h-16 glass-nav rounded-2xl flex items-center justify-around px-2 shadow-2xl z-40">
-        <button onclick="showView('home')" class="nav-btn w-12 h-12 flex items-center justify-center text-[#ff5000] flex-col gap-1 active:scale-95 transition-colors" data-target="home">
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-12 h-12 flex items-center justify-center text-[#ff5000] flex-col gap-1 active:scale-95 transition-transform">
             <i class="fa-solid fa-house text-lg"></i>
             <span class="text-[8px] font-black uppercase tracking-widest">Home</span>
         </button>
-        <button onclick="showView('custom')" class="nav-btn w-14 h-14 bg-black rounded-full flex items-center justify-center text-white -translate-y-4 border-4 border-[#fcfbf9] shadow-xl active:scale-95 transition-transform hover:bg-[#ff5000]" data-target="custom">
+        
+        <a href="/custom-bracelet" class="w-14 h-14 bg-black rounded-full flex items-center justify-center text-white -translate-y-4 border-4 border-[#fcfbf9] shadow-xl active:scale-95 transition-transform hover:bg-[#ff5000]">
             <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
-        </button>
-        <button onclick="showView('bracelet')" class="nav-btn w-12 h-12 flex items-center justify-center text-gray-400 hover:text-[#ff5000] flex-col gap-1 active:scale-95 transition-colors" data-target="bracelet">
+        </a>
+        
+        <a href="/toy-universe" class="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-[#ff5000] flex-col gap-1 active:scale-95 transition-colors">
             <i class="fa-solid fa-store text-lg"></i>
             <span class="text-[8px] font-black uppercase tracking-widest">Shop</span>
-        </button>
+        </a>
     </nav>
 
-    <!-- ============================================== -->
-    <!-- PRODUCT DETAIL MODAL (Shared)                  -->
-    <!-- ============================================== -->
-    <div id="product-modal" class="fixed inset-0 z-[150] flex flex-col bg-white translate-y-full">
-        <button onclick="closeProductModal()" class="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white z-[160] active:scale-90 shadow-md"><i class="fa-solid fa-xmark text-lg"></i></button>
-        <div class="flex-1 overflow-y-auto pb-24 hide-scrollbar relative">
-            <div id="modal-carousel" class="w-full aspect-square bg-gray-50 flex overflow-x-auto snap-x-mandatory hide-scrollbar"></div>
-            <div class="px-5 pt-6 pb-2">
-                <div class="flex justify-between items-start gap-4">
-                    <div class="flex-1">
-                        <span id="modal-category" class="text-[10px] font-black text-[#ff5000] uppercase tracking-widest bg-orange-50 px-2 py-1 rounded-md border border-orange-100">Category</span>
-                        <h2 id="modal-title" class="text-2xl font-black text-gray-900 leading-tight mt-3">Title</h2>
-                        <div class="flex items-center gap-2 mt-3 bg-gray-50 p-2 rounded-xl w-max border border-gray-100">
-                            <span class="text-[10px] font-bold text-gray-500 uppercase">Style:</span>
-                            <span id="modal-variant-name" class="text-[11px] font-black text-gray-900">Standard</span>
-                        </div>
-                    </div>
-                    <div class="text-right flex-shrink-0 bg-gray-50 p-3 rounded-2xl border border-gray-100">
-                        <div id="modal-price-usd" class="text-2xl font-black text-black leading-none">$0.00</div>
-                        <div id="modal-price-khr" class="text-[11px] font-bold text-[#ff5000] mt-1">៛0</div>
-                    </div>
-                </div>
-            </div>
-            <div class="px-5 mt-4">
-                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Styles / Variants</label>
-                <div id="modal-thumbs" class="flex gap-3 overflow-x-auto pb-4 hide-scrollbar"></div>
-            </div>
-        </div>
-        <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 px-5 py-4 pb-8 shadow-[0_-20px_30px_rgba(0,0,0,0.04)] flex gap-4 items-center z-[160]">
-            <div class="flex items-center justify-between bg-gray-50 rounded-2xl px-4 py-3 w-32 border border-gray-200">
-                <button onclick="updateModalQty(-1)" class="font-black text-gray-500 w-6 active:text-black text-xl leading-none">-</button>
-                <span id="modal-qty" class="font-black text-base text-gray-900">1</span>
-                <button onclick="updateModalQty(1)" class="font-black text-gray-500 w-6 active:text-black text-xl leading-none">+</button>
-            </div>
-            <button id="modal-add-btn" onclick="addModalToBag()" class="flex-1 bg-[#ff5000] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all">
-                Add to Bag
-            </button>
-        </div>
-    </div>
-
-    <!-- ============================================== -->
-    <!-- UNIFIED CART & CHECKOUT DRAWER                 -->
-    <!-- ============================================== -->
+    <!-- UNIFIED CART DRAWER -->
     <div id="cart-drawer" class="fixed inset-0 z-[2000] flex flex-col justify-end translate-y-full">
         <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeCartDrawer()"></div>
         <div class="relative w-full h-[85vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
+            
             <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10 shadow-sm">
-                <div><h2 class="text-xl font-black text-gray-900 font-['Moul']" data-en="Your Cart" data-kh="កន្ត្រករបស់អ្នក">កន្ត្រករបស់អ្នក</h2></div>
-                <button onclick="closeCartDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 active:scale-90"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <div>
+                    <h2 class="text-xl font-black text-gray-900 font-['Moul']" data-en="Your Cart" data-kh="កន្ត្រករបស់អ្នក">កន្ត្រករបស់អ្នក</h2>
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Your Shopping Cart</p>
+                </div>
+                <button onclick="closeCartDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
             </div>
+
             <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+
             <div class="bg-white border-t border-gray-100 p-5 z-10 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
                 <div class="flex justify-between items-end mb-4">
-                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</span>
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Total)</span>
                     <span id="cart-grand-total" class="text-2xl font-black text-[#ff5000] leading-none">0៛</span>
                 </div>
-                <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95 transition-all">Proceed to Checkout</button>
+                <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
+                    <i class="fa-solid fa-truck-fast"></i> បន្តទៅការដឹកជញ្ជូន
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- UNIFIED CHECKOUT / DELIVERY MODAL -->
     <div id="checkout-modal" class="fixed inset-0 z-[3000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
         <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm md:max-w-md md:mx-auto md:w-full">
-            <h2 class="text-xl font-black font-['Moul']">Checkout</h2>
-            <button onclick="closeCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 active:scale-90"><i class="fa-solid fa-arrow-down text-lg"></i></button>
+            <h2 class="text-xl font-black font-['Moul']" data-en="Checkout" data-kh="ព័ត៌មានដឹកជញ្ជូន">ព័ត៌មានដឹកជញ្ជូន</h2>
+            <button onclick="closeCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
-        <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50 md:max-w-md md:mx-auto md:w-full">
+        
+        <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50 md:max-w-md md:mx-auto md:w-full md:border-x md:border-gray-100">
             <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
                 <div class="absolute top-0 left-0 w-1 h-full bg-[#ff5000]"></div>
-                <div class="flex justify-between text-xs font-bold text-gray-500"><span>Items Subtotal:</span><span id="check-subtotal">៛0</span></div>
-                <div class="flex justify-between text-xs font-bold text-blue-600"><span>Delivery Fee:</span><span id="check-delivery">៛0</span></div>
+                <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប:</span><span id="check-subtotal">៛0</span></div>
+                <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">៛0</span></div>
                 <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
-                    <span class="text-sm">Total to Pay:</span><span id="check-total-khr" class="text-[#ff5000] text-xl leading-none" data-total-usd="0">៛0</span>
+                    <span class="text-sm">សរុបត្រូវបង់:</span>
+                    <span id="check-total-khr" class="text-[#ff5000] text-xl leading-none">៛0</span>
                 </div>
             </div>
+
             <div class="space-y-4">
-                <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000]" placeholder="Your Name">
-                <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000]" placeholder="Phone Number">
-                <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000]" placeholder="Full Delivery Address"></textarea>
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង</label>
+                <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Name)">
+                <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone)">
+                
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន</label>
+                <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ (Full Address)"></textarea>
             </div>
         </div>
-        <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:max-w-md md:left-1/2 md:-translate-x-1/2">
-            <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-[#ff5000] text-white font-black py-4 rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95">Confirm Order</button>
+
+        <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:max-w-md md:left-1/2 md:-translate-x-1/2 md:border-x">
+            <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-[#ff5000] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
         </div>
     </div>
 
-    <!-- TOAST & ALERTS -->
-    <div id="toast" style="pointer-events: none;" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[4000] bg-black/90 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl opacity-0 transition-opacity duration-300 scale-90">
-        <i class="fa-solid fa-circle-check text-green-400"></i><span id="toast-text" class="text-xs font-bold uppercase tracking-widest">Success</span>
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" style="pointer-events: none;" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[4000] bg-black/90 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl opacity-0 transition-opacity duration-200 scale-90">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toast-text" class="text-xs font-bold uppercase tracking-widest font-['Kantumruy_Pro']">Copied</span>
     </div>
 
     <script>
         const RATE = 4000;
-        let userCart = JSON.parse(localStorage.getItem('sr_cart_flask') || '[]');
+        let userCart = [];
+
+        // Language Logic
         let currentLang = 'en';
-
-        // --- FETCH FROM FLASK API ---
-        let storeCache = { bracelet: null, toy: null, custom: null };
-
-        async function fetchStoreAPI(storeName) {
-            if(storeCache[storeName]) return storeCache[storeName];
-            
-            try {
-                const res = await fetch(`/api/products/${storeName}`);
-                if (!res.ok) throw new Error('API request failed');
-                const data = await res.json();
-                storeCache[storeName] = data;
-                return data;
-            } catch (err) {
-                console.error(`Failed to fetch ${storeName}:`, err);
-                return null;
-            }
-        }
-
-        // --- SPA ROUTER ---
-        async function showView(viewId) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById('view-' + viewId).classList.add('active');
-            window.scrollTo({top: 0, behavior: 'smooth'});
-
-            // Manage Bottom Nav UI
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                const target = btn.getAttribute('data-target');
-                if(target === 'custom') return; 
-                if(target === viewId) btn.classList.replace('text-gray-400', 'text-[#ff5000]');
-                else btn.classList.replace('text-[#ff5000]', 'text-gray-400');
+        function toggleLang() {
+            currentLang = currentLang === 'en' ? 'kh' : 'en';
+            document.getElementById('lang-btn-text').innerText = currentLang === 'en' ? 'KH' : 'EN';
+            document.querySelectorAll('[data-en]').forEach(el => {
+                el.innerText = currentLang === 'kh' ? el.getAttribute('data-kh') : el.getAttribute('data-en');
             });
-
-            // Trigger data load for stores
-            if(viewId === 'bracelet' || viewId === 'toy') {
-                const data = await fetchStoreAPI(viewId);
-                if (data) renderStore(viewId, data.products, 'All', data.categories);
-                else document.getElementById(`${viewId}-grid`).innerHTML = '<p class="col-span-full py-10 text-center text-red-500 font-bold uppercase text-[10px] tracking-widest"><i class="fa-solid fa-triangle-exclamation mb-2 text-xl block"></i>Failed to connect to backend.</p>';
+            if(document.querySelector('#cart-drawer h2')) {
+                const header = document.querySelector('#cart-drawer h2');
+                header.innerText = currentLang === 'kh' ? header.getAttribute('data-kh') : header.getAttribute('data-en');
             }
-            if(viewId === 'custom') {
-                const data = await fetchStoreAPI('custom');
-                if(data) initCustomBuilder(data.products);
-                else document.getElementById('custom-builder-content').innerHTML = '<p class="py-10 text-center text-red-500 font-bold uppercase text-[10px] tracking-widest"><i class="fa-solid fa-triangle-exclamation mb-2 text-xl block"></i>Failed to load Custom Builder parts.</p>';
-            }
-        }
-
-        // --- GENERIC STORE RENDERER (For Bracelets & Toys) ---
-        let activeFilters = { bracelet: 'All', toy: 'All' };
-        
-        function renderStore(type, products, activeCategory, categories = []) {
-            activeFilters[type] = activeCategory;
-            const filterDiv = document.getElementById(`${type}-filters`);
-            const gridDiv = document.getElementById(`${type}-grid`);
-            
-            // Build Filters
-            const cats = ['All', ...categories.map(c => c.name)];
-            filterDiv.innerHTML = cats.map(c => `
-                <button onclick="renderStore('${type}', storeCache['${type}'].products, '${c}', storeCache['${type}'].categories)" 
-                        class="cat-pill whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 text-[10px] font-black uppercase ${activeCategory === c ? 'active' : 'text-gray-600 bg-white hover:bg-gray-50'}">
-                    ${c}
-                </button>
-            `).join('');
-
-            // Build Grid
-            const filtered = activeCategory === 'All' ? products : products.filter(i => i.category === activeCategory);
-            gridDiv.innerHTML = filtered.length === 0 ? '<p class="col-span-full py-10 text-center text-gray-400 font-bold uppercase text-[10px] tracking-widest">No items found.</p>' : filtered.map(p => {
-                const soldOut = p.stock <= 0;
-                return `
-                <div class="bg-white rounded-[28px] border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer group ${soldOut ? 'opacity-60 grayscale' : ''}" onclick='openProductModal(${JSON.stringify(p)})'>
-                    <div class="aspect-[4/5] relative overflow-hidden bg-gray-50">
-                        ${soldOut ? '<div class="absolute top-3 left-3 bg-black text-white text-[9px] font-black px-2 py-1 rounded-md z-10 tracking-widest uppercase">Sold Out</div>' : ''}
-                        <img src="${p.thumbnail}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                    </div>
-                    <div class="p-4 md:p-5">
-                        <span class="text-[8px] font-black text-[#ff5000] uppercase tracking-widest">${p.category}</span>
-                        <h3 class="font-extrabold text-sm text-gray-900 truncate mt-1">${p.title}</h3>
-                        <div class="mt-4 flex justify-between items-end border-t border-gray-50 pt-3">
-                            <div class="flex flex-col">
-                                <span class="font-black text-base">$${p.price.toFixed(2)}</span>
-                                <span class="text-[9px] font-bold text-gray-400">៛${(p.price * RATE).toLocaleString()}</span>
-                            </div>
-                            <div class="w-8 h-8 ${soldOut ? 'bg-gray-300' : 'bg-black'} rounded-full flex items-center justify-center text-white text-[10px] group-hover:bg-[#ff5000] transition-colors"><i class="fa-solid fa-plus"></i></div>
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        // --- CUSTOM BUILDER LOGIC (Flask Data Integration) ---
-        let customState = { base: null, charms: [], availableBases: [], availableCharms: [] };
-
-        function initCustomBuilder(allCustomProducts) {
-            // Filter Flask products based on their category in DB
-            customState.availableBases = allCustomProducts.filter(p => p.category.toLowerCase() === 'base' || p.category.toLowerCase().includes('bracelet'));
-            customState.availableCharms = allCustomProducts.filter(p => p.category.toLowerCase() === 'charm');
-
-            const contentDiv = document.getElementById('custom-builder-content');
-            
-            if(customState.availableBases.length === 0 && customState.availableCharms.length === 0) {
-                contentDiv.innerHTML = `<div class="py-20 text-center"><p class="text-gray-400 font-bold uppercase tracking-widest text-xs">Please add "Base" and "Charm" products to the "custom" store via the Admin Panel to enable the builder.</p></div>`;
-                return;
-            }
-
-            if(!customState.base && customState.availableBases.length > 0) customState.base = customState.availableBases[0];
-
-            contentDiv.innerHTML = `
-                <!-- Visual Preview -->
-                <div class="bg-gray-50 aspect-square rounded-[2rem] border border-gray-200 shadow-inner flex items-center justify-center relative overflow-hidden mb-6 group">
-                    <img id="custom-preview-base" src="${customState.base ? customState.base.thumbnail : ''}" class="w-3/4 h-3/4 object-contain transition-all duration-500">
-                    <div id="custom-preview-charms" class="absolute inset-0 flex flex-wrap items-center justify-center gap-2 p-10 pointer-events-none"></div>
-                    <button onclick="resetCustomBuilder()" class="absolute top-4 right-4 w-8 h-8 bg-white rounded-full shadow flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors pointer-events-auto"><i class="fa-solid fa-rotate-left text-xs"></i></button>
-                </div>
-
-                <!-- Steps -->
-                <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm mb-6">
-                    <h3 class="font-black text-[10px] uppercase tracking-widest text-[#ff5000] mb-3">1. Select Base Bracelet</h3>
-                    <div class="grid grid-cols-2 gap-3" id="custom-bases-container"></div>
-                </div>
-
-                <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm mb-6">
-                    <div class="flex justify-between items-end mb-3">
-                        <h3 class="font-black text-[10px] uppercase tracking-widest text-[#ff5000]">2. Add Charms</h3>
-                        <span class="text-[10px] font-bold text-gray-400" id="charm-count">0 Charms added</span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-3" id="custom-charms-container"></div>
-                </div>
-
-                <!-- Footer Action -->
-                <div class="bg-black text-white p-4 rounded-3xl flex justify-between items-center shadow-2xl shadow-gray-400/40">
-                    <div>
-                        <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Build Price</p>
-                        <p class="text-2xl font-black text-[#ff5000]" id="custom-total-price">៛0</p>
-                    </div>
-                    <button onclick="addCustomToBag()" class="bg-[#ff5000] text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-transform shadow-lg shadow-orange-500/40">Add to Bag</button>
-                </div>
-            `;
-
-            renderCustomOptions();
-        }
-
-        function renderCustomOptions() {
-            document.getElementById('custom-bases-container').innerHTML = customState.availableBases.map(b => `
-                <div onclick="selectCustomBase(${b.id})" class="border-2 rounded-2xl p-2 cursor-pointer transition-all ${customState.base && customState.base.id === b.id ? 'border-[#ff5000] bg-orange-50' : 'border-gray-100 bg-white hover:border-gray-300'}">
-                    <img src="${b.thumbnail}" class="w-full h-16 object-cover rounded-xl mb-2">
-                    <p class="font-bold text-[10px] text-center truncate">${b.title}</p>
-                    <p class="font-black text-xs text-center text-[#ff5000]">$${b.price.toFixed(2)}</p>
-                </div>
-            `).join('');
-
-            document.getElementById('custom-charms-container').innerHTML = customState.availableCharms.map(c => {
-                const count = customState.charms.filter(x => x.id === c.id).length;
-                return `
-                <div onclick="addCustomCharm(${c.id})" class="border rounded-2xl p-2 flex flex-col items-center justify-center cursor-pointer hover:border-[#ff5000] bg-white relative transition-all active:scale-95">
-                    ${count > 0 ? `<div class="absolute -top-2 -right-2 bg-black text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md z-10">${count}</div>` : ''}
-                    <img src="${c.thumbnail}" class="w-10 h-10 object-contain mb-1">
-                    <p class="font-bold text-[9px] text-center leading-tight truncate w-full">${c.title}</p>
-                    <p class="font-black text-[10px] text-center text-[#ff5000] mt-1">+$${c.price.toFixed(2)}</p>
-                </div>`;
-            }).join('');
-
-            updateCustomPreview();
-        }
-
-        function selectCustomBase(id) { customState.base = customState.availableBases.find(b => b.id === id); renderCustomOptions(); }
-        function addCustomCharm(id) { 
-            if(customState.charms.length >= 8) return showToast("Maximum 8 charms allowed.");
-            customState.charms.push(customState.availableCharms.find(c => c.id === id)); 
-            renderCustomOptions(); 
-        }
-        function resetCustomBuilder() { customState.charms = []; renderCustomOptions(); }
-
-        function updateCustomPreview() {
-            if(!customState.base) return;
-            document.getElementById('custom-preview-base').src = customState.base.thumbnail;
-            
-            const charmContainer = document.getElementById('custom-preview-charms');
-            charmContainer.innerHTML = customState.charms.map((c, i) => `
-                <div class="w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-lg border border-gray-100 animate-bounce p-1" style="animation-delay: ${i*0.1}s">
-                    <img src="${c.thumbnail}" class="w-full h-full object-contain">
-                </div>
-            `).join('');
-
-            document.getElementById('charm-count').innerText = `${customState.charms.length} Charms`;
-            
-            const totalUSD = customState.base.price + customState.charms.reduce((sum, c) => sum + c.price, 0);
-            document.getElementById('custom-total-price').innerText = `៛${(totalUSD * RATE).toLocaleString()}`;
-        }
-
-        function addCustomToBag() {
-            if(!customState.base) return showToast("Select a base bracelet first!");
-            const totalUSD = customState.base.price + customState.charms.reduce((sum, c) => sum + c.price, 0);
-            const styleDesc = `${customState.base.title} w/ ${customState.charms.length} charms`;
-            
-            userCart.push({
-                cartId: `${customState.base.id}-custom-${Date.now()}`, 
-                title: 'DIY Charm Bracelet', 
-                style: styleDesc, 
-                price: totalUSD, // Storing USD natively for Flask
-                image: customState.base.thumbnail, 
-                qty: 1, maxStock: 99, selected: true, type: 'custom'
-            });
-            saveCart(); 
-            showToast("Custom design added to bag!");
-            resetCustomBuilder();
-        }
-
-
-        // --- PRODUCT MODAL (For Store items) ---
-        let currentModalProd = null, modalVIdx = 0, modalQty = 1;
-
-        function openProductModal(p) {
-            currentModalProd = p; modalVIdx = 0; modalQty = 1;
-            document.getElementById('modal-title').innerText = p.title; 
-            document.getElementById('modal-category').innerText = p.category;
-            
-            const carousel = document.getElementById('modal-carousel');
-            carousel.innerHTML = p.variants.map(v => `<img src="${v.image}" class="min-w-full aspect-square object-cover snap-center bg-gray-50">`).join('');
-            
-            const thumbs = document.getElementById('modal-thumbs');
-            thumbs.innerHTML = p.variants.map((v, i) => `
-                <button id="thumb-${i}" onclick="selectModalVariant(${i})" class="w-16 h-16 rounded-2xl border-[3px] transition-all flex-shrink-0 overflow-hidden border-transparent opacity-50"><img src="${v.image}" class="w-full h-full object-cover"></button>
-            `).join('');
-
-            document.getElementById('product-modal').classList.remove('translate-y-full');
-            selectModalVariant(0);
-        }
-
-        function closeProductModal() { document.getElementById('product-modal').classList.add('translate-y-full'); }
-
-        function selectModalVariant(idx) {
-            modalVIdx = idx; const v = currentModalProd.variants[modalVIdx];
-            document.getElementById('modal-price-usd').innerText = `$${v.price.toFixed(2)}`;
-            document.getElementById('modal-price-khr').innerText = `៛${(v.price * RATE).toLocaleString()}`;
-            document.getElementById('modal-variant-name').innerText = v.name;
-
-            const btn = document.getElementById('modal-add-btn');
-            if(v.stock <= 0) {
-                btn.innerHTML = `Sold Out <i class="fa-solid fa-ban"></i>`;
-                btn.classList.replace('bg-[#ff5000]', 'bg-gray-400');
-                btn.disabled = true; modalQty = 0;
-            } else {
-                btn.innerHTML = `Add to Bag <i class="fa-solid fa-arrow-right"></i>`;
-                btn.classList.replace('bg-gray-400', 'bg-[#ff5000]');
-                btn.disabled = false; modalQty = 1;
-            }
-            document.getElementById('modal-qty').innerText = modalQty;
-
-            currentModalProd.variants.forEach((_, i) => {
-                const t = document.getElementById(`thumb-${i}`);
-                if (i === idx) { t.classList.remove('border-transparent', 'opacity-50'); t.classList.add('border-orange-500', 'opacity-100'); } 
-                else { t.classList.add('border-transparent', 'opacity-50'); t.classList.remove('border-orange-500', 'opacity-100'); }
-            });
-        }
-
-        function updateModalQty(change) { 
-            const max = currentModalProd.variants[modalVIdx].stock;
-            if(max === 0) return;
-            modalQty = Math.max(1, Math.min(modalQty + change, max)); 
-            document.getElementById('modal-qty').innerText = modalQty; 
-        }
-
-        function addModalToBag() {
-            const v = currentModalProd.variants[modalVIdx];
-            const cartId = `${currentModalProd.id}-${modalVIdx}`; // Flask expects format "p_id-v_idx" for stock deduction
-            const existing = userCart.find(i => i.cartId === cartId);
-            
-            if(existing) { 
-                if(existing.qty + modalQty > v.stock) return showToast("Not enough stock!");
-                existing.qty += modalQty; 
-            } else { 
-                userCart.push({ 
-                    cartId: cartId, 
-                    title: currentModalProd.title, 
-                    style: v.name, 
-                    price: v.price, // Store USD for flask backend
-                    image: v.image, qty: modalQty, maxStock: v.stock, selected: true, type: 'standard'
-                }); 
-            }
-            saveCart(); showToast("Added to bag!"); closeProductModal();
         }
 
         // --- CART SYSTEM ---
+        function initCart() {
+            try {
+                const savedCart = localStorage.getItem('sr_cart');
+                if (savedCart) {
+                    userCart = JSON.parse(savedCart);
+                    updateCartBadge();
+                }
+            } catch(e) {}
+        }
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'sr_cart') {
+                userCart = JSON.parse(e.newValue || '[]');
+                updateCartBadge();
+                if(!document.getElementById('cart-drawer').classList.contains('translate-y-full')) {
+                    renderCartUI();
+                }
+            }
+        });
+
         function updateCartBadge() {
-            const b = document.getElementById('home-cart-badge');
-            b.innerText = userCart.length; 
-            userCart.length > 0 ? b.classList.remove('hidden') : b.classList.add('hidden');
+            const badge = document.getElementById('home-cart-badge');
+            if(userCart.length > 0) {
+                badge.innerText = userCart.length; 
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function saveCart() { 
+            localStorage.setItem('sr_cart', JSON.stringify(userCart)); 
+            updateCartBadge();
+        }
+
+        function openCartDrawer() { 
+            renderCartUI(); 
+            document.getElementById('cart-drawer').classList.remove('translate-y-full'); 
         }
         
-        function saveCart() { localStorage.setItem('sr_cart_flask', JSON.stringify(userCart)); updateCartBadge(); renderCartUI(); }
-        function openCartDrawer() { renderCartUI(); document.getElementById('cart-drawer').classList.remove('translate-y-full'); }
-        function closeCartDrawer() { document.getElementById('cart-drawer').classList.add('translate-y-full'); }
-
-        function toggleCartItem(cartId) { const item = userCart.find(i => i.cartId === cartId); if(item) { item.selected = !item.selected; saveCart(); } }
-        function removeCartItem(cartId) { userCart = userCart.filter(i => i.cartId !== cartId); saveCart(); }
-        function updateCartQty(cartId, change) { 
-            const item = userCart.find(i => i.cartId === cartId); 
-            if(item) { 
-                item.qty += change; 
-                if(item.qty < 1) item.qty = 1; 
-                if(item.qty > item.maxStock) { item.qty = item.maxStock; showToast("Max stock reached"); }
-                saveCart(); 
-            } 
+        function closeCartDrawer() { 
+            document.getElementById('cart-drawer').classList.add('translate-y-full'); 
         }
 
         function renderCartUI() {
             const container = document.getElementById('cart-items-container');
-            if(userCart.length === 0) { 
-                container.innerHTML = `<div class="py-20 text-center opacity-40 flex flex-col items-center"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-xs uppercase tracking-widest">Bag is Empty</p></div>`; 
-                document.getElementById('cart-grand-total').innerText = "0៛"; 
-                return; 
+            if(userCart.length === 0) {
+                container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-sm uppercase tracking-widest mt-2">កន្ត្រកទទេ (Empty)</p></div>`;
+                document.getElementById('cart-grand-total').innerText = "0៛";
+                return;
             }
 
-            let grandTotalUSD = 0; 
-            container.innerHTML = userCart.map(item => {
-                const itemTotalUSD = item.price * item.qty;
-                if(item.selected) grandTotalUSD += itemTotalUSD;
-                
-                return `
-                <div class="bg-white p-3 rounded-2xl border shadow-sm ${item.selected ? 'border-[#ff5000] ring-2 ring-orange-50' : 'border-gray-100'} flex gap-3 mb-4 transition-all">
-                    <label class="flex items-start cursor-pointer mt-2 pl-1"><input type="checkbox" class="cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.cartId}')"></label>
-                    <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center relative p-1 overflow-hidden shrink-0">
-                        ${item.type === 'custom' ? '<div class="absolute top-0 left-0 w-full text-center bg-black text-white text-[8px] font-bold py-0.5 z-10">CUSTOM</div>' : ''}
-                        <img src="${item.image}" class="max-w-full max-h-full object-contain">
-                    </div>
-                    <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
-                        <div>
-                            <div class="flex justify-between items-start">
-                                <h4 class="font-black text-xs text-gray-900 leading-tight truncate pr-2">${item.title}</h4>
-                                <button onclick="removeCartItem('${item.cartId}')" class="text-gray-300 hover:text-red-500 -mt-1 p-1 active:scale-90"><i class="fa-solid fa-trash-can text-sm"></i></button>
-                            </div>
-                            <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-widest leading-snug break-words">${item.style}</p>
-                        </div>
-                        <div class="flex justify-between items-end mt-2">
-                            <span class="font-black text-sm text-[#ff5000]">${(itemTotalUSD * RATE).toLocaleString()}៛</span>
-                            <div class="flex items-center gap-2 bg-gray-50 rounded-lg p-1 border border-gray-100">
-                                <button onclick="updateCartQty('${item.cartId}', -1)" class="w-6 h-6 bg-white rounded shadow-sm text-gray-600 active:scale-90 flex items-center justify-center"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                                <span class="font-black text-xs w-3 text-center">${item.qty}</span>
-                                <button onclick="updateCartQty('${item.cartId}', 1)" class="w-6 h-6 bg-white rounded shadow-sm text-gray-600 active:scale-90 flex items-center justify-center"><i class="fa-solid fa-plus text-[10px]"></i></button>
+            let grandTotal = 0; let customIndex = 1;
+
+            container.innerHTML = userCart.map((item) => {
+                let itemTotal = 0;
+                if(item.type === 'custom_bracelet') {
+                    itemTotal = (item.baseTotal + item.pkgPrice) * item.qty;
+                    if(item.selected) grandTotal += itemTotal;
+                    
+                    return `
+                    <div class="bg-white rounded-2xl shadow-sm border ${item.selected ? 'border-[#ff5000] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col relative transition-all overflow-hidden mb-4">
+                        <div class="w-full h-36 bg-gray-50 border-b border-gray-100 relative group">
+                            <img src="${item.image}" class="w-full h-full object-contain p-2">
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 flex justify-between items-center text-white">
+                                <span class="text-[10px] font-bold tracking-widest uppercase font-['Kantumruy_Pro']"><i class="fa-solid fa-gem text-orange-400 mr-1"></i> ${item.charms.length} Charms</span>
+                                <span class="text-sm font-black text-orange-400">${itemTotal.toLocaleString()}៛</span>
                             </div>
                         </div>
-                    </div>
-                </div>`;
+                        <div class="p-3">
+                            <div class="flex justify-between items-start mb-2">
+                                <label class="flex items-start gap-3 cursor-pointer flex-1">
+                                    <input type="checkbox" class="cart-checkbox mt-0.5" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
+                                    <div>
+                                        <h4 class="font-black text-sm text-gray-900 leading-tight">Custom Bracelet #${customIndex++}</h4>
+                                        <p class="text-[10px] font-bold text-gray-500 mt-1 uppercase tracking-widest flex items-center">
+                                            Code: <span class="font-mono text-gray-800 ml-1">${item.code.substring(0,8)}</span>
+                                            <button type="button" onclick="copyCode('${item.code}')" class="text-gray-400 hover:text-orange-500 ml-2 p-1 active:scale-90"><i class="fa-regular fa-copy"></i></button>
+                                        </p>
+                                    </div>
+                                </label>
+                                <button type="button" onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-2 -mt-1 -mr-1"><i class="fa-solid fa-trash-can text-lg"></i></button>
+                            </div>
+                            <div class="flex justify-between items-center mt-3">
+                                <button onclick="window.location.href='/custom-bracelet'" class="text-[10px] bg-blue-50 text-blue-600 px-3 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors font-black uppercase tracking-widest shadow-sm active:scale-95"><i class="fa-solid fa-pen-ruler mr-1"></i> Edit Design</button>
+                                <div class="flex items-center gap-2">
+                                    <div class="bg-orange-50 text-orange-600 text-[9px] font-black uppercase tracking-widest px-2 py-1.5 rounded-lg border border-orange-100 flex items-center gap-1 shadow-sm mr-1">
+                                        <i class="fa-solid ${item.pkgName === 'Premium Box' ? 'fa-gift text-orange-500' : 'fa-box-open text-gray-500'}"></i> ${item.pkgName || 'Normal'}
+                                    </div>
+                                    <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-1 border border-gray-100">
+                                        <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                        <span class="font-black text-xs w-4 text-center">${item.qty}</span>
+                                        <button onclick="updateCartQty('${item.id}', 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                } else {
+                    itemTotal = (item.price || 0) * item.qty;
+                    if(item.selected) grandTotal += itemTotal;
+
+                    return `
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ff5000] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="cart-checkbox mt-2 ml-1" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
+                        </label>
+                        <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden">
+                            <img src="${item.image}" class="max-w-full max-h-full object-contain">
+                        </div>
+                        <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-black text-xs text-gray-900 leading-tight truncate pr-2">${item.title}</h4>
+                                    <button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 -mt-1 -mr-1 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                </div>
+                                <p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">${item.style}</p>
+                            </div>
+                            <div class="flex justify-between items-end mt-2">
+                                <span class="font-black text-sm text-[#ff5000]">${itemTotal.toLocaleString()}៛</span>
+                                <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
+                                    <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                    <span class="font-black text-xs w-2 text-center">${item.qty}</span>
+                                    <button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                }
             }).join('');
-            document.getElementById('cart-grand-total').innerText = (grandTotalUSD * RATE).toLocaleString() + "៛";
+            document.getElementById('cart-grand-total').innerText = grandTotal.toLocaleString() + "៛";
         }
 
-        // --- CHECKOUT (Flask API Integration) ---
+        function toggleCartItem(id) { const item = userCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveCart(); renderCartUI(); } }
+        function updateCartQty(id, delta) { const item = userCart.find(i => i.id === id); if(item) { item.qty += delta; if(item.qty < 1) item.qty = 1; if(item.qty > 10) item.qty = 10; saveCart(); renderCartUI(); } }
+        function removeCartItem(id) { if(confirm("លុបចេញពីកន្ត្រក? (Remove from cart?)")) { userCart = userCart.filter(i => i.id !== id); saveCart(); renderCartUI(); } }
+        
+        function copyCode(code) { 
+            navigator.clipboard.writeText(code); 
+            const toast = document.getElementById('toast'); 
+            toast.classList.remove('opacity-0', 'scale-90'); 
+            setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500); 
+        }
+
+        // --- CHECKOUT LOGIC ---
+        function calculateDelivery(subtotalKHR) {
+            if (subtotalKHR === 0) return 0;
+            if (subtotalKHR < 20000) return 8000;
+            if (subtotalKHR < 40000) return 6000;
+            if (subtotalKHR < 60000) return 4000;
+            if (subtotalKHR < 80000) return 2000;
+            return 0;
+        }
+
         function openCheckout() {
-            const selected = userCart.filter(i => i.selected);
-            if(selected.length === 0) return showToast("Select an item first!");
+            const selectedItems = userCart.filter(i => i.selected);
+            if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយដើម្បីបន្ត! (Please select an item to checkout)");
+
+            let subtotal = 0;
+            selectedItems.forEach(item => {
+                if(item.type === 'custom_bracelet') subtotal += ((item.baseTotal + item.pkgPrice) * item.qty);
+                else subtotal += (item.price * item.qty);
+            });
             
-            let subtotalUSD = 0; selected.forEach(i => subtotalUSD += (i.price * i.qty));
-            let subtotalKHR = subtotalUSD * RATE;
-            let deliveryKHR = subtotalKHR >= 80000 ? 0 : 4000;
-            
-            document.getElementById('check-subtotal').innerText = subtotalKHR.toLocaleString() + "៛";
-            document.getElementById('check-delivery').innerText = deliveryKHR === 0 ? "FREE" : deliveryKHR.toLocaleString() + "៛";
-            
-            const totalKHR = subtotalKHR + deliveryKHR;
-            const finalTotalElement = document.getElementById('check-total-khr');
-            finalTotalElement.innerText = totalKHR.toLocaleString() + "៛";
-            finalTotalElement.setAttribute('data-total-usd', (totalKHR / RATE).toFixed(2));
-            
-            closeCartDrawer(); 
+            const delivery = calculateDelivery(subtotal);
+            document.getElementById('check-subtotal').innerText = subtotal.toLocaleString() + "៛";
+            document.getElementById('check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ (Free)" : delivery.toLocaleString() + "៛";
+            document.getElementById('check-total-khr').innerText = (subtotal + delivery).toLocaleString() + "៛";
+
+            closeCartDrawer();
             document.getElementById('checkout-modal').classList.remove('translate-y-full');
         }
 
         function closeCheckout() { document.getElementById('checkout-modal').classList.add('translate-y-full'); }
 
         async function processFinalOrder() {
-            const btn = document.getElementById('confirm-btn');
-            const n = document.getElementById('cust-name').value;
-            const p = document.getElementById('cust-phone').value;
-            const a = document.getElementById('cust-address').value;
-            
-            if(!n || !p || !a) return showToast("Please fill all details");
-            
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`; btn.disabled = true;
-
             const selectedItems = userCart.filter(i => i.selected);
-            const totalUSD = document.getElementById('check-total-khr').getAttribute('data-total-usd');
+            if(selectedItems.length === 0) return;
 
-            const payload = {
-                name: n,
-                phone: p,
-                address: a,
-                items: selectedItems,
-                total: totalUSD
-            };
+            const name = document.getElementById('cust-name').value.trim(); 
+            const phone = document.getElementById('cust-phone').value.trim(); 
+            const address = document.getElementById('cust-address').value.trim();
+            
+            if(!name || !phone || !address) return alert("សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់! (Please fill in all details)"); 
+            if(phone.length < 8) return alert("លេខទូរស័ព្ទមិនត្រឹមត្រូវ! (Invalid phone number)");
+
+            const btn = document.getElementById('confirm-btn'); 
+            btn.innerText = "កំពុងបញ្ជូន... (Processing...)"; 
+            btn.disabled = true;
+
+            let subtotal = 0; 
+            const orderItemsPayload = []; 
+            const charmCounts = {}; 
+
+            selectedItems.forEach((cartItem, bIdx) => {
+                if(cartItem.type === 'custom_bracelet') {
+                    const itemPrice = cartItem.baseTotal + cartItem.pkgPrice; subtotal += (itemPrice * cartItem.qty);
+                    const styleText = `Bracelet #${bIdx+1} | Code: ${cartItem.code} | Charms: ${cartItem.charms.length} | Pkg: ${cartItem.pkgName}`;
+                    orderItemsPayload.push({ cartId: "custom-" + Date.now() + "-" + bIdx, title: "Custom DIY Bracelet", style: styleText, price: itemPrice / RATE, qty: cartItem.qty, image: cartItem.image, maxStock: 99 });
+                    cartItem.charms.forEach(c => { charmCounts[c.db_id] = (charmCounts[c.db_id] || 0) + (1 * cartItem.qty); });
+                } else {
+                    subtotal += (cartItem.price * cartItem.qty);
+                    orderItemsPayload.push({ cartId: cartItem.id, title: cartItem.title, style: cartItem.style, price: cartItem.price / RATE, qty: cartItem.qty, image: cartItem.image, maxStock: cartItem.maxStock });
+                }
+            });
+
+            for (const [id, count] of Object.entries(charmCounts)) { 
+                orderItemsPayload.push({ cartId: id, title: "DIY-Part", style: "Hidden stock component", price: 0, qty: count, image: "hidden", maxStock: 99 }); 
+            }
+
+            const delivery = calculateDelivery(subtotal); 
+            const totalUSD = (subtotal + delivery) / RATE;
 
             try {
-                // Sent to your Flask /api/checkout endpoint
-                const res = await fetch('/api/checkout', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                const res = await fetch('/api/checkout', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD }) 
                 });
-                
-                if(res.ok) {
-                    showToast("Order Confirmed! We will contact you."); 
-                    userCart = userCart.filter(i => !i.selected); saveCart(); 
-                    document.getElementById('cust-name').value = '';
-                    document.getElementById('cust-phone').value = '';
-                    document.getElementById('cust-address').value = '';
-                    closeCheckout();
-                } else {
-                    const err = await res.json();
-                    showToast(err.message || "Order Failed. Try again.");
+                if(res.ok) { 
+                    alert("Order Successful! We will contact you on Telegram soon."); 
+                    userCart = userCart.filter(i => !i.selected); 
+                    saveCart(); 
+                    window.location.reload(); 
                 }
-            } catch (error) {
-                console.error("Checkout Error:", error);
-                showToast("Network Error. Ensure backend is running.");
+            } catch (e) { 
+                alert("Error sending order. Please try again."); 
             }
-            
-            btn.innerHTML = `Confirm Order`; btn.disabled = false;
+            btn.innerText = "បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)"; 
+            btn.disabled = false;
         }
 
-        // --- UTILS ---
-        function toggleLang() { currentLang = currentLang === 'en' ? 'kh' : 'en'; document.getElementById('lang-btn-text').innerText = currentLang === 'en' ? 'KH' : 'EN'; }
-        function showToast(msg) { 
-            const t = document.getElementById('toast'); 
-            document.getElementById('toast-text').innerText = msg;
-            t.classList.remove('opacity-0', 'scale-90'); 
-            setTimeout(() => t.classList.add('opacity-0', 'scale-90'), 2500); 
-        }
-
-        // Init App
-        updateCartBadge();
+        // Initialize on load
+        initCart();
     </script>
 </body>
 </html>
