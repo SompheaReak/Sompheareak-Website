@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,8 +21,8 @@
         
         h1, .khmer-title { font-family: 'Moul', serif; }
 
-        /* Category Card Animations */
-        .category-card { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); transform: translateZ(0); }
+        /* Animations */
+        .category-card { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); transform: translateZ(0); cursor: pointer; }
         .category-card:active { transform: scale(0.96); }
         .category-card img { transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
         .category-card:hover img { transform: scale(1.08); }
@@ -29,45 +30,47 @@
         .gradient-overlay { background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, transparent 100%); }
         .gradient-overlay-side { background: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%); }
         
-        /* Unified Cart UI Styles */
-        .scrollbar-hide::-webkit-scrollbar { display: none; } 
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        /* UI Styles */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .cat-pill.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         
         .cart-checkbox { 
             appearance: none; width: 24px; height: 24px; border: 2.5px solid #cbd5e1; border-radius: 50%; 
             outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-            background: white; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            background: white; flex-shrink: 0; 
         }
-        .cart-checkbox:checked { 
-            background-color: #ff5000; border-color: #ff5000; box-shadow: 0 2px 8px rgba(255, 80, 0, 0.3);
-        }
+        .cart-checkbox:checked { background-color: #ff5000; border-color: #ff5000; }
         .cart-checkbox:checked::after { 
             content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
             width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
         }
 
-        #cart-drawer, #checkout-modal { transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
+        /* SPA Views */
+        .view-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Glass Nav */
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-        }
+        #cart-drawer, #checkout-modal, #product-modal { transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
+        .snap-x-mandatory { scroll-snap-type: x mandatory; }
+        .snap-center { scroll-snap-align: center; }
+
+        .glass-nav { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.5); }
     </style>
 </head>
 <body class="text-gray-900 pb-28 select-none">
 
-    <!-- HEADER -->
+    <!-- HEADER (Shared across all views) -->
     <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100 px-5 py-3 flex items-center justify-between h-[72px] shadow-sm">
         <button onclick="toggleLang()" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-xs font-black text-gray-800 border border-gray-100 active:scale-95 transition-transform shadow-sm">
             <span id="lang-btn-text">KH</span>
         </button>
 
-        <div class="flex flex-col items-center justify-center">
-            <div class="w-8 h-8 bg-black rounded-xl flex items-center justify-center text-white font-bold mb-0.5 shadow-md">
-                <img src="static/images/logo.png" onerror="this.style.display='none';this.parentElement.innerText='SR'" class="w-full h-full object-cover rounded-xl">
+        <div class="flex flex-col items-center justify-center cursor-pointer" onclick="showView('home')">
+            <div class="w-8 h-8 bg-black rounded-xl flex items-center justify-center text-white font-bold mb-0.5 shadow-md overflow-hidden">
+                <span class="text-xs font-black">SR</span>
             </div>
             <span class="font-black text-[10px] tracking-widest uppercase text-gray-900 leading-none">Somphea Reak</span>
         </div>
@@ -78,411 +81,452 @@
         </button>
     </header>
 
-    <!-- HERO -->
-    <section class="px-4 py-5">
-        <div class="relative w-full aspect-[4/3] sm:aspect-[16/9] rounded-[2rem] overflow-hidden shadow-xl bg-gray-900 group">
-            <img src="https://images.unsplash.com/photo-1611085583191-a3b1a308964b?auto=format&fit=crop&q=80&w=1200" class="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 flex flex-col justify-end">
-                <span class="text-[#ff5000] font-black text-[10px] tracking-[0.3em] uppercase mb-2 drop-shadow-md" data-en="Collection 2025" data-kh="ការប្រមូលផ្តុំ ២០២៥">Collection 2025</span>
-                <h1 class="text-white text-3xl font-black uppercase italic leading-tight mb-1 drop-shadow-lg" data-en="Elevate Your Daily Look" data-kh="លើកកម្ពស់សម្រស់ប្រចាំថ្ងៃ">Elevate Your<br>Daily Look</h1>
+    <!-- ============================================== -->
+    <!-- VIEW 1: HOME (STUDIO DASHBOARD)                -->
+    <!-- ============================================== -->
+    <main id="view-home" class="view-section active">
+        <section class="px-4 py-5">
+            <div class="relative w-full aspect-[4/3] sm:aspect-[16/9] rounded-[2rem] overflow-hidden shadow-xl bg-gray-900 group" onclick="showView('shop')">
+                <img src="https://images.unsplash.com/photo-1611085583191-a3b1a308964b?auto=format&fit=crop&q=80&w=1200" class="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 flex flex-col justify-end">
+                    <span class="text-[#ff5000] font-black text-[10px] tracking-[0.3em] uppercase mb-2 drop-shadow-md" data-en="Collection 2025" data-kh="ការប្រមូលផ្តុំ ២០២៥">Collection 2025</span>
+                    <h1 class="text-white text-3xl font-black uppercase italic leading-tight mb-1 drop-shadow-lg" data-en="Elevate Your Daily Look" data-kh="លើកកម្ពស់សម្រស់ប្រចាំថ្ងៃ">Elevate Your<br>Daily Look</h1>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- LINKS GRID -->
-    <section class="px-4 space-y-4">
-        <div class="flex items-center justify-between px-1">
-            <h2 class="font-black text-xs uppercase tracking-[0.2em] text-gray-400" data-en="Explore Studio" data-kh="រុករកស្ទូឌីយោ">Explore Studio</h2>
-            <div class="h-px flex-grow ml-4 bg-gray-200"></div>
-        </div>
+        <section class="px-4 space-y-4">
+            <div class="flex items-center justify-between px-1">
+                <h2 class="font-black text-xs uppercase tracking-[0.2em] text-gray-400" data-en="Explore Studio" data-kh="រុករកស្ទូឌីយោ">Explore Studio</h2>
+                <div class="h-px flex-grow ml-4 bg-gray-200"></div>
+            </div>
 
-        <div class="grid grid-cols-2 gap-3.5">
-            
-            <!-- Custom Builder (Italy Charm Update) -->
-            <a href="./custom_bracelet.html" class="category-card relative col-span-2 aspect-[21/9] rounded-3xl overflow-hidden shadow-md border border-gray-100 group cursor-pointer block">
-                <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover">
-                <div class="gradient-overlay-side absolute inset-0 flex flex-col justify-center p-6">
-                    <div class="flex gap-2 mb-2">
-                        <span class="bg-[#ff5000] text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit border border-orange-400 shadow-lg flex items-center gap-1 animate-pulse">
-                            <i class="fa-solid fa-fire"></i> Hot Sale
-                        </span>
-                        <span class="bg-white/20 backdrop-blur-md text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit border border-white/30">Interactive</span>
+            <div class="grid grid-cols-2 gap-3.5">
+                <!-- Custom Builder Card -->
+                <div onclick="showView('custom')" class="category-card relative col-span-2 aspect-[21/9] rounded-3xl overflow-hidden shadow-md border border-gray-100 group block">
+                    <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover">
+                    <div class="gradient-overlay-side absolute inset-0 flex flex-col justify-center p-6">
+                        <div class="flex gap-2 mb-2">
+                            <span class="bg-[#ff5000] text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit border border-orange-400 shadow-lg flex items-center gap-1 animate-pulse"><i class="fa-solid fa-fire"></i> Hot Sale</span>
+                            <span class="bg-white/20 backdrop-blur-md text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit border border-white/30">Interactive</span>
+                        </div>
+                        <h3 class="text-white font-black text-lg md:text-xl uppercase italic leading-tight drop-shadow-md" data-en="Customize Italy Charm Bracelet" data-kh="រចនាខ្សែដៃអុីតាលី">Customize Italy<br>Charm Bracelet</h3>
+                        <p class="text-gray-300 text-[10px] font-bold uppercase mt-1.5 tracking-widest">Design Your Own</p>
                     </div>
-                    <h3 class="text-white font-black text-lg md:text-xl uppercase italic leading-tight drop-shadow-md" data-en="Customize Italy Charm Bracelet" data-kh="រចនាខ្សែដៃអុីតាលី">Customize Italy<br>Charm Bracelet</h3>
-                    <p class="text-gray-300 text-[10px] font-bold uppercase mt-1.5 tracking-widest">Design Your Own</p>
                 </div>
-            </a>
 
-            <!-- Toys -->
-            <a href="./toy.html" class="category-card relative aspect-square rounded-3xl overflow-hidden shadow-md border border-gray-100 group cursor-pointer block">
-                <img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
-                <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-5">
-                    <span class="bg-[#ff5000] text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit mb-2 shadow-sm">Hot</span>
-                    <h3 class="text-white font-black text-lg uppercase leading-tight font-['Moul']" data-en="Toy Universe" data-kh="ពិភពប្រដាប់ក្មេងលេង">Toy<br>Universe</h3>
+                <!-- Toys Card -->
+                <div onclick="showView('toys')" class="category-card relative aspect-square rounded-3xl overflow-hidden shadow-md border border-gray-100 group block">
+                    <img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
+                    <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-5">
+                        <span class="bg-[#ff5000] text-white text-[8px] font-black uppercase px-2 py-1 rounded-md w-fit mb-2 shadow-sm">Hot</span>
+                        <h3 class="text-white font-black text-lg uppercase leading-tight font-['Moul']" data-en="Toy Universe" data-kh="ពិភពប្រដាប់ក្មេងលេង">Toy<br>Universe</h3>
+                    </div>
                 </div>
-            </a>
 
-            <!-- Bracelets (Necklace & Bracelet Update) -->
-            <a href="./bracelet.html" class="category-card relative aspect-square rounded-3xl overflow-hidden shadow-md border border-gray-100 group cursor-pointer block">
-                <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
-                <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-5">
-                    <h3 class="text-white font-black text-lg uppercase leading-tight font-['Moul']" data-en="Necklace & Bracelet" data-kh="ខ្សែក និងខ្សែដៃ">Necklace &<br>Bracelet</h3>
-                    <p class="text-orange-200 text-[9px] font-bold uppercase mt-1 tracking-widest">Jade & Gems</p>
-                </div>
-            </a>
-
-            <!-- LEGO / Coming Soon -->
-            <div class="category-card relative col-span-2 aspect-[21/9] rounded-3xl overflow-hidden shadow-sm border border-gray-100 group bg-gray-900 flex items-center justify-center">
-                <img src="https://images.unsplash.com/photo-1585366119957-e5733f3951cf?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover opacity-40 grayscale group-hover:grayscale-0 transition-all duration-700">
-                <div class="relative z-10 text-center">
-                    <h3 class="text-white font-black text-2xl uppercase tracking-widest opacity-50">LEGO</h3>
-                    <p class="text-gray-400 text-[10px] font-bold uppercase mt-1 tracking-[0.2em]">Coming Soon</p>
+                <!-- Jewelry Card -->
+                <div onclick="showView('shop')" class="category-card relative aspect-square rounded-3xl overflow-hidden shadow-md border border-gray-100 group block">
+                    <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover">
+                    <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-5">
+                        <h3 class="text-white font-black text-lg uppercase leading-tight font-['Moul']" data-en="Necklace & Bracelet" data-kh="ខ្សែក និងខ្សែដៃ">Necklace &<br>Bracelet</h3>
+                        <p class="text-orange-200 text-[9px] font-bold uppercase mt-1 tracking-widest">Jade & Gems</p>
+                    </div>
                 </div>
             </div>
+        </section>
+    </main>
 
+    <!-- ============================================== -->
+    <!-- VIEW 2: JEWELRY SHOP (Necklace & Bracelet)     -->
+    <!-- ============================================== -->
+    <main id="view-shop" class="view-section pb-8">
+        <div class="px-4 py-6 bg-white border-b border-gray-100 flex items-center gap-4 sticky top-[72px] z-30 shadow-sm">
+            <button onclick="showView('home')" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 active:scale-95"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1 class="text-2xl font-black font-['Moul']" data-en="Jewelry Collection" data-kh="ការប្រមូលគ្រឿងអលង្ការ">Jewelry Collection</h1>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Necklaces & Bracelets</p>
+            </div>
         </div>
-    </section>
+        <div class="bg-white/70 backdrop-blur-md border-b sticky top-[150px] z-20 overflow-x-auto flex gap-2 p-4 hide-scrollbar" id="shop-filters"></div>
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8"></div>
+        </div>
+    </main>
 
-    <!-- PREMIUM FLOATING BOTTOM NAV (Admin removed, Shop added) -->
+    <!-- ============================================== -->
+    <!-- VIEW 3: TOY UNIVERSE                           -->
+    <!-- ============================================== -->
+    <main id="view-toys" class="view-section pb-8">
+        <div class="px-4 py-6 bg-white border-b border-gray-100 flex items-center gap-4 sticky top-[72px] z-30 shadow-sm">
+            <button onclick="showView('home')" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 active:scale-95"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1 class="text-2xl font-black font-['Moul']" data-en="Toy Universe" data-kh="ពិភពប្រដាប់ក្មេងលេង">Toy Universe</h1>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Collectibles & Plushies</p>
+            </div>
+        </div>
+        <div class="bg-white/70 backdrop-blur-md border-b sticky top-[150px] z-20 overflow-x-auto flex gap-2 p-4 hide-scrollbar" id="toys-filters"></div>
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div id="toys-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8"></div>
+        </div>
+    </main>
+
+    <!-- ============================================== -->
+    <!-- VIEW 4: CUSTOM BUILDER (Charm Bracelets)       -->
+    <!-- ============================================== -->
+    <main id="view-custom" class="view-section pb-8">
+        <div class="px-4 py-6 bg-white border-b border-gray-100 flex items-center gap-4 sticky top-[72px] z-30 shadow-sm">
+            <button onclick="showView('home')" class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-800 active:scale-95"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1 class="text-2xl font-black font-['Moul']" data-en="Custom Builder" data-kh="រចនាដោយខ្លួនឯង">Custom Builder</h1>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Design Your Charm Bracelet</p>
+            </div>
+        </div>
+        <div class="p-6 text-center">
+            <div class="w-24 h-24 mx-auto bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fa-solid fa-wand-magic-sparkles text-4xl text-[#ff5000]"></i>
+            </div>
+            <h2 class="text-xl font-black mb-2">Build Your Dream Bracelet</h2>
+            <p class="text-sm text-gray-500 mb-6">Select a base bracelet and add your favorite charms to make it uniquely yours.</p>
+            
+            <div class="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm text-left">
+                <h3 class="font-black text-xs uppercase tracking-widest text-gray-400 mb-3">1. Select Base</h3>
+                <div class="grid grid-cols-2 gap-3 mb-6" id="custom-bases"></div>
+                
+                <h3 class="font-black text-xs uppercase tracking-widest text-gray-400 mb-3">2. Add Charms</h3>
+                <div class="grid grid-cols-3 gap-3 mb-6" id="custom-charms"></div>
+
+                <div class="border-t border-gray-100 pt-4 flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Price</p>
+                        <p class="text-2xl font-black text-[#ff5000]" id="custom-total">៛0</p>
+                    </div>
+                    <button onclick="addCustomToCart()" class="bg-black text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95">Add to Bag</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ============================================== -->
+    <!-- FLOATING BOTTOM NAV                            -->
+    <!-- ============================================== -->
     <nav class="fixed bottom-6 left-6 right-6 h-16 glass-nav rounded-2xl flex items-center justify-around px-2 shadow-2xl z-40">
-        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-12 h-12 flex items-center justify-center text-[#ff5000] flex-col gap-1 active:scale-95 transition-transform">
+        <button onclick="showView('home')" class="w-12 h-12 flex items-center justify-center text-[#ff5000] flex-col gap-1 active:scale-95 transition-colors" id="nav-btn-home">
             <i class="fa-solid fa-house text-lg"></i>
             <span class="text-[8px] font-black uppercase tracking-widest">Home</span>
         </button>
-        
-        <a href="./custom_bracelet.html" class="w-14 h-14 bg-black rounded-full flex items-center justify-center text-white -translate-y-4 border-4 border-[#fcfbf9] shadow-xl active:scale-95 transition-transform hover:bg-[#ff5000]">
-            <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
-        </a>
-        
-        <a href="./toy.html" class="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-[#ff5000] flex-col gap-1 active:scale-95 transition-colors">
-            <i class="fa-solid fa-store text-lg"></i>
-            <span class="text-[8px] font-black uppercase tracking-widest">Shop</span>
-        </a>
+        <button onclick="showView('toys')" class="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-[#ff5000] flex-col gap-1 active:scale-95 transition-colors" id="nav-btn-toys">
+            <i class="fa-solid fa-ghost text-lg"></i>
+            <span class="text-[8px] font-black uppercase tracking-widest">Toys</span>
+        </button>
+        <button onclick="showView('shop')" class="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-[#ff5000] flex-col gap-1 active:scale-95 transition-colors" id="nav-btn-shop">
+            <i class="fa-solid fa-gem text-lg"></i>
+            <span class="text-[8px] font-black uppercase tracking-widest">Jewelry</span>
+        </button>
     </nav>
 
-    <!-- UNIFIED CART DRAWER -->
+    <!-- ============================================== -->
+    <!-- PRODUCT MODAL (Shared for Shop & Toys)         -->
+    <!-- ============================================== -->
+    <div id="product-modal" class="fixed inset-0 z-[150] flex flex-col bg-white translate-y-full">
+        <button onclick="closeProductModal()" class="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white z-[160] active:scale-90 shadow-md"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <div class="flex-1 overflow-y-auto pb-24 hide-scrollbar relative">
+            <div id="modal-carousel" class="w-full aspect-square bg-gray-50 flex overflow-x-auto snap-x-mandatory hide-scrollbar" onscroll="onCarouselScroll()"></div>
+            <div class="px-5 pt-6 pb-2">
+                <div class="flex justify-between items-start gap-4">
+                    <div class="flex-1">
+                        <span id="modal-category" class="text-[10px] font-black text-[#ff5000] uppercase tracking-widest bg-orange-50 px-2 py-1 rounded-md border border-orange-100">Category</span>
+                        <h2 id="modal-title" class="text-2xl font-black text-gray-900 leading-tight mt-3">Title</h2>
+                        <div class="flex items-center gap-2 mt-3 bg-gray-50 p-2 rounded-xl w-max border border-gray-100">
+                            <span class="text-[10px] font-bold text-gray-500 uppercase">Style:</span>
+                            <span id="modal-variant-name" class="text-[11px] font-black text-gray-900">Style Name</span>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                        <div id="modal-price-usd" class="text-2xl font-black text-black leading-none">$0.00</div>
+                        <div id="modal-price-khr" class="text-[11px] font-bold text-[#ff5000] mt-1">៛0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-5 mt-4">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Available Styles</label>
+                <div id="modal-thumbs" class="flex gap-3 overflow-x-auto pb-4 hide-scrollbar"></div>
+            </div>
+        </div>
+        <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 px-5 py-4 pb-8 md:pb-4 shadow-[0_-20px_30px_rgba(0,0,0,0.04)] flex gap-4 items-center z-[160]">
+            <div class="flex items-center justify-between bg-gray-50 rounded-2xl px-4 py-3 w-32 border border-gray-200">
+                <button onclick="updateModalQty(-1)" class="font-black text-gray-500 w-6 active:text-black text-xl leading-none">-</button>
+                <span id="modal-qty" class="font-black text-base text-gray-900">1</span>
+                <button onclick="updateModalQty(1)" class="font-black text-gray-500 w-6 active:text-black text-xl leading-none">+</button>
+            </div>
+            <button id="modal-add-btn" onclick="addToBag()" class="flex-1 bg-[#ff5000] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2">
+                <span data-en="Add to Bag" data-kh="បន្ថែមចូលកន្ត្រក">Add to Bag</span> <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- CART & CHECKOUT MODALS                         -->
+    <!-- ============================================== -->
     <div id="cart-drawer" class="fixed inset-0 z-[2000] flex flex-col justify-end translate-y-full">
         <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeCartDrawer()"></div>
         <div class="relative w-full h-[85vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
-            
             <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10 shadow-sm">
                 <div>
                     <h2 class="text-xl font-black text-gray-900 font-['Moul']" data-en="Your Cart" data-kh="កន្ត្រករបស់អ្នក">កន្ត្រករបស់អ្នក</h2>
-                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Your Shopping Cart</p>
                 </div>
-                <button onclick="closeCartDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
+                <button onclick="closeCartDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-
             <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
-
             <div class="bg-white border-t border-gray-100 p-5 z-10 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
                 <div class="flex justify-between items-end mb-4">
-                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Total)</span>
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</span>
                     <span id="cart-grand-total" class="text-2xl font-black text-[#ff5000] leading-none">0៛</span>
                 </div>
-                <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
-                    <i class="fa-solid fa-truck-fast"></i> បន្តទៅការដឹកជញ្ជូន
+                <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-truck-fast"></i> Proceed to Checkout
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- UNIFIED CHECKOUT / DELIVERY MODAL -->
     <div id="checkout-modal" class="fixed inset-0 z-[3000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
         <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm md:max-w-md md:mx-auto md:w-full">
-            <h2 class="text-xl font-black font-['Moul']" data-en="Checkout" data-kh="ព័ត៌មានដឹកជញ្ជូន">ព័ត៌មានដឹកជញ្ជូន</h2>
-            <button onclick="closeCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h2 class="text-xl font-black font-['Moul']">Checkout</h2>
+            <button onclick="closeCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 active:scale-90"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
-        
-        <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50 md:max-w-md md:mx-auto md:w-full md:border-x md:border-gray-100">
+        <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50 md:max-w-md md:mx-auto md:w-full md:border-x">
             <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
                 <div class="absolute top-0 left-0 w-1 h-full bg-[#ff5000]"></div>
-                <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប:</span><span id="check-subtotal">៛0</span></div>
-                <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">៛0</span></div>
+                <div class="flex justify-between text-xs font-bold text-gray-500"><span>Items Subtotal:</span><span id="check-subtotal">៛0</span></div>
+                <div class="flex justify-between text-xs font-bold text-blue-600"><span>Delivery Fee:</span><span id="check-delivery">៛0</span></div>
                 <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
-                    <span class="text-sm">សរុបត្រូវបង់:</span>
-                    <span id="check-total-khr" class="text-[#ff5000] text-xl leading-none">៛0</span>
+                    <span class="text-sm">Total to Pay:</span><span id="check-total-khr" class="text-[#ff5000] text-xl leading-none">៛0</span>
                 </div>
             </div>
-
             <div class="space-y-4">
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង</label>
-                <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Name)">
-                <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone)">
-                
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន</label>
-                <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ (Full Address)"></textarea>
+                <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000]" placeholder="Name">
+                <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000]" placeholder="Phone">
+                <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000]" placeholder="Address"></textarea>
             </div>
         </div>
-
         <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:max-w-md md:left-1/2 md:-translate-x-1/2 md:border-x">
-            <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-[#ff5000] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
+            <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-[#ff5000] text-white font-black py-4 rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95">Confirm Order</button>
         </div>
     </div>
 
-    <!-- TOAST NOTIFICATION -->
+    <!-- TOAST & ALERTS -->
     <div id="toast" style="pointer-events: none;" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[4000] bg-black/90 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl opacity-0 transition-opacity duration-200 scale-90">
-        <i id="toast-icon" class="fa-solid fa-circle-check text-green-400"></i>
-        <span id="toast-text" class="text-xs font-bold uppercase tracking-widest font-['Kantumruy_Pro']">Copied</span>
+        <i class="fa-solid fa-circle-check text-green-400"></i><span id="toast-text" class="text-xs font-bold uppercase tracking-widest">Success</span>
     </div>
 
     <script>
         const RATE = 4000;
-        let userCart = [];
-
-        // Language Logic
+        let userCart = JSON.parse(localStorage.getItem('sr_cart') || '[]');
         let currentLang = 'en';
-        function toggleLang() {
-            currentLang = currentLang === 'en' ? 'kh' : 'en';
-            document.getElementById('lang-btn-text').innerText = currentLang === 'en' ? 'KH' : 'EN';
-            document.querySelectorAll('[data-en]').forEach(el => {
-                el.innerText = currentLang === 'kh' ? el.getAttribute('data-kh') : el.getAttribute('data-en');
+
+        // --- NAVIGATION & VIEWS ---
+        function showView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+
+            // Reset Bottom Nav Colors
+            ['home', 'toys', 'shop'].forEach(id => {
+                const btn = document.getElementById('nav-btn-' + id);
+                if(btn) btn.className = `w-12 h-12 flex items-center justify-center flex-col gap-1 active:scale-95 transition-colors ${viewId === id ? 'text-[#ff5000]' : 'text-gray-400 hover:text-[#ff5000]'}`;
             });
-            if(document.querySelector('#cart-drawer h2')) {
-                const header = document.querySelector('#cart-drawer h2');
-                header.innerText = currentLang === 'kh' ? header.getAttribute('data-kh') : header.getAttribute('data-en');
-            }
+
+            // Initialize data if needed
+            if (viewId === 'shop' && shopData.length === 0) initShop();
+            if (viewId === 'toys' && toyData.length === 0) initToys();
+            if (viewId === 'custom') renderCustomBuilder();
         }
 
-        // --- CART SYSTEM ---
-        function initCart() {
-            try {
-                const savedCart = localStorage.getItem('sr_cart');
-                if (savedCart) {
-                    userCart = JSON.parse(savedCart);
-                    updateCartBadge();
-                }
-            } catch(e) {}
+        // --- MOCK DATABASE ---
+        const mockDB = {
+            shop: [
+                { id: 'j1', title: 'Rose Quartz Aura', category: 'Beaded', price: 15.00, thumbnail: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=400&q=80', stock: 10, variants: [{name: 'Standard', price: 15.00, stock: 10, image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=400&q=80'}] },
+                { id: 'j2', title: 'Sterling Silver Link', category: 'Silver', price: 45.00, thumbnail: 'https://images.unsplash.com/photo-1573408301145-b98c46544405?auto=format&fit=crop&w=400&q=80', stock: 5, variants: [{name: 'Silver 925', price: 45.00, stock: 5, image: 'https://images.unsplash.com/photo-1573408301145-b98c46544405?auto=format&fit=crop&w=400&q=80'}] }
+            ],
+            toys: [
+                { id: 't1', title: 'Astro Bear Plush', category: 'Plushies', price: 20.00, thumbnail: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=400&q=80', stock: 15, variants: [{name: 'Default', price: 20.00, stock: 15, image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=400&q=80'}] },
+                { id: 't2', title: 'Classic Wood Train', category: 'Wood', price: 35.00, thumbnail: 'https://images.unsplash.com/photo-1581557991964-198650ed061c?auto=format&fit=crop&w=400&q=80', stock: 8, variants: [{name: 'Oak', price: 35.00, stock: 8, image: 'https://images.unsplash.com/photo-1581557991964-198650ed061c?auto=format&fit=crop&w=400&q=80'}] }
+            ],
+            custom: {
+                bases: [
+                    { id: 'b1', name: 'Silver Chain', price: 10.00, image: 'https://images.unsplash.com/photo-1573408301145-b98c46544405?auto=format&fit=crop&w=150&q=80' },
+                    { id: 'b2', name: 'Leather Band', price: 8.00, image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=150&q=80' }
+                ],
+                charms: [
+                    { id: 'c1', name: 'Heart', price: 2.00, icon: 'fa-heart' },
+                    { id: 'c2', name: 'Star', price: 2.50, icon: 'fa-star' },
+                    { id: 'c3', name: 'Moon', price: 2.00, icon: 'fa-moon' }
+                ]
+            }
+        };
+
+        // --- SHOP CONTROLLER ---
+        let shopData = [], currentShopCat = 'All';
+        function initShop() { shopData = mockDB.shop; renderGrid('shop', shopData, currentShopCat); }
+
+        // --- TOYS CONTROLLER ---
+        let toyData = [], currentToyCat = 'All';
+        function initToys() { toyData = mockDB.toys; renderGrid('toys', toyData, currentToyCat); }
+
+        function renderGrid(type, data, category) {
+            const filtersDiv = document.getElementById(`${type}-filters`);
+            const gridDiv = document.getElementById(`${type}-grid`);
+            
+            // Build Filters
+            const cats = ['All', ...new Set(data.map(i => i.category))];
+            filtersDiv.innerHTML = cats.map(c => `<button onclick="updateCat('${type}', '${c}')" class="cat-pill ${category === c ? 'active' : ''} whitespace-nowrap px-6 py-2 rounded-full border border-gray-200 text-[10px] font-black uppercase">${c}</button>`).join('');
+
+            // Build Grid
+            const filtered = category === 'All' ? data : data.filter(i => i.category === category);
+            gridDiv.innerHTML = filtered.map(p => `
+                <div class="bg-white rounded-[28px] border border-gray-100 overflow-hidden shadow-sm hover:shadow-lg cursor-pointer group" onclick='openProductModal(${JSON.stringify(p)})'>
+                    <div class="aspect-[4/5] relative overflow-hidden bg-gray-50">
+                        <img src="${p.thumbnail}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-4 md:p-5">
+                        <span class="text-[8px] font-black text-[#ff5000] uppercase tracking-widest">${p.category}</span>
+                        <h3 class="font-extrabold text-sm text-gray-900 truncate mt-1">${p.title}</h3>
+                        <div class="mt-4 flex justify-between items-end border-t border-gray-50 pt-3">
+                            <div class="flex flex-col"><span class="font-black text-base">$${p.price.toFixed(2)}</span></div>
+                            <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white text-[10px]"><i class="fa-solid fa-plus"></i></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'sr_cart') {
-                userCart = JSON.parse(e.newValue || '[]');
-                updateCartBadge();
-                if(!document.getElementById('cart-drawer').classList.contains('translate-y-full')) {
-                    renderCartUI();
-                }
-            }
-        });
+        function updateCat(type, cat) {
+            if(type === 'shop') { currentShopCat = cat; renderGrid('shop', shopData, currentShopCat); }
+            if(type === 'toys') { currentToyCat = cat; renderGrid('toys', toyData, currentToyCat); }
+        }
 
+        // --- CUSTOM BUILDER LOGIC ---
+        let customSelection = { base: mockDB.custom.bases[0], charms: [] };
+        
+        function renderCustomBuilder() {
+            document.getElementById('custom-bases').innerHTML = mockDB.custom.bases.map(b => `
+                <div onclick="selectBase('${b.id}')" class="border-2 rounded-2xl p-2 cursor-pointer transition-all ${customSelection.base.id === b.id ? 'border-[#ff5000] bg-orange-50' : 'border-gray-100 bg-white'}">
+                    <img src="${b.image}" class="w-full h-16 object-cover rounded-xl mb-2">
+                    <p class="font-bold text-[10px] text-center">${b.name}</p>
+                    <p class="font-black text-xs text-center text-[#ff5000]">$${b.price.toFixed(2)}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('custom-charms').innerHTML = mockDB.custom.charms.map(c => {
+                const count = customSelection.charms.filter(x => x.id === c.id).length;
+                return `
+                <div onclick="addCharm('${c.id}')" class="border rounded-2xl p-3 flex flex-col items-center cursor-pointer hover:border-[#ff5000] bg-white relative">
+                    ${count > 0 ? `<div class="absolute -top-2 -right-2 bg-black text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold">${count}</div>` : ''}
+                    <i class="fa-solid ${c.icon} text-2xl text-gray-700 mb-2"></i>
+                    <p class="font-bold text-[9px] text-center">${c.name}</p>
+                    <p class="font-black text-[10px] text-center text-[#ff5000]">+$${c.price.toFixed(2)}</p>
+                </div>`;
+            }).join('');
+
+            const total = customSelection.base.price + customSelection.charms.reduce((sum, c) => sum + c.price, 0);
+            document.getElementById('custom-total').innerText = `៛${(total * RATE).toLocaleString()}`;
+        }
+
+        function selectBase(id) { customSelection.base = mockDB.custom.bases.find(b => b.id === id); renderCustomBuilder(); }
+        function addCharm(id) { customSelection.charms.push(mockDB.custom.charms.find(c => c.id === id)); renderCustomBuilder(); }
+        
+        function addCustomToCart() {
+            const total = customSelection.base.price + customSelection.charms.reduce((sum, c) => sum + c.price, 0);
+            userCart.push({
+                id: 'custom-' + Date.now(), title: 'Custom Bracelet', style: `${customSelection.base.name} + ${customSelection.charms.length} Charms`,
+                price: total * RATE, image: customSelection.base.image, qty: 1, maxStock: 99, selected: true
+            });
+            saveCart(); showToast("Custom Design Added!");
+            customSelection = { base: mockDB.custom.bases[0], charms: [] }; renderCustomBuilder();
+        }
+
+        // --- PRODUCT MODAL & CART LOGIC ---
+        let currentP = null, vIdx = 0, modalQty = 1;
+        function openProductModal(p) {
+            currentP = p; vIdx = 0; modalQty = 1;
+            document.getElementById('modal-title').innerText = p.title; 
+            document.getElementById('modal-category').innerText = p.category;
+            document.getElementById('modal-carousel').innerHTML = `<img src="${p.thumbnail}" class="min-w-full aspect-square object-cover bg-gray-50">`;
+            document.getElementById('modal-price-usd').innerText = `$${p.price.toFixed(2)}`;
+            document.getElementById('modal-price-khr').innerText = `៛${(p.price * RATE).toLocaleString()}`;
+            document.getElementById('modal-qty').innerText = modalQty;
+            document.getElementById('product-modal').classList.remove('translate-y-full');
+        }
+        function closeProductModal() { document.getElementById('product-modal').classList.add('translate-y-full'); }
+        function updateModalQty(change) { modalQty = Math.max(1, modalQty + change); document.getElementById('modal-qty').innerText = modalQty; }
+        
+        function addToBag() {
+            const id = `prod-${currentP.id}`;
+            const ex = userCart.find(i => i.id === id);
+            if(ex) { ex.qty += modalQty; } 
+            else { 
+                userCart.push({ id, title: currentP.title, style: 'Standard', price: currentP.price * RATE, image: currentP.thumbnail, qty: modalQty, maxStock: 99, selected: true }); 
+            }
+            saveCart(); showToast("Added to bag!"); closeProductModal();
+        }
+
+        // --- CART UI ---
         function updateCartBadge() {
             const badge = document.getElementById('home-cart-badge');
-            if(userCart.length > 0) {
-                badge.innerText = userCart.length; 
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
+            badge.innerText = userCart.length; 
+            userCart.length > 0 ? badge.classList.remove('hidden') : badge.classList.add('hidden');
         }
-
-        function saveCart() { 
-            localStorage.setItem('sr_cart', JSON.stringify(userCart)); 
-            updateCartBadge();
-        }
-
-        function openCartDrawer() { 
-            renderCartUI(); 
-            document.getElementById('cart-drawer').classList.remove('translate-y-full'); 
-        }
-        
-        function closeCartDrawer() { 
-            document.getElementById('cart-drawer').classList.add('translate-y-full'); 
-        }
+        function saveCart() { localStorage.setItem('sr_cart', JSON.stringify(userCart)); updateCartBadge(); renderCartUI(); }
+        function openCartDrawer() { renderCartUI(); document.getElementById('cart-drawer').classList.remove('translate-y-full'); }
+        function closeCartDrawer() { document.getElementById('cart-drawer').classList.add('translate-y-full'); }
+        function removeCartItem(id) { userCart = userCart.filter(i => i.id !== id); saveCart(); }
+        function toggleCartItem(id) { const item = userCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveCart(); } }
 
         function renderCartUI() {
             const container = document.getElementById('cart-items-container');
-            if(userCart.length === 0) {
-                container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-sm uppercase tracking-widest mt-2">កន្ត្រកទទេ (Empty)</p></div>`;
-                document.getElementById('cart-grand-total').innerText = "0៛";
-                return;
-            }
+            if(userCart.length === 0) { container.innerHTML = `<div class="py-20 text-center opacity-30">Bag is Empty</div>`; document.getElementById('cart-grand-total').innerText = "0៛"; return; }
 
-            let grandTotal = 0; let customIndex = 1;
-
+            let grandTotal = 0; 
             container.innerHTML = userCart.map((item) => {
-                let itemTotal = 0;
-                if(item.type === 'custom_bracelet') {
-                    itemTotal = (item.baseTotal + item.pkgPrice) * item.qty;
-                    if(item.selected) grandTotal += itemTotal;
-                    
-                    return `
-                    <div class="bg-white rounded-2xl shadow-sm border ${item.selected ? 'border-[#ff5000] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col relative transition-all overflow-hidden mb-4">
-                        <div class="w-full h-36 bg-gray-50 border-b border-gray-100 relative group">
-                            <img src="${item.image}" class="w-full h-full object-contain p-2">
-                            <div class="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 flex justify-between items-center text-white">
-                                <span class="text-[10px] font-bold tracking-widest uppercase font-['Kantumruy_Pro']"><i class="fa-solid fa-gem text-orange-400 mr-1"></i> ${item.charms.length} Charms</span>
-                                <span class="text-sm font-black text-orange-400">${itemTotal.toLocaleString()}៛</span>
-                            </div>
-                        </div>
-                        <div class="p-3">
-                            <div class="flex justify-between items-start mb-2">
-                                <label class="flex items-start gap-3 cursor-pointer flex-1">
-                                    <input type="checkbox" class="cart-checkbox mt-0.5" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
-                                    <div>
-                                        <h4 class="font-black text-sm text-gray-900 leading-tight">Custom Bracelet #${customIndex++}</h4>
-                                        <p class="text-[10px] font-bold text-gray-500 mt-1 uppercase tracking-widest flex items-center">
-                                            Code: <span class="font-mono text-gray-800 ml-1">${item.code.substring(0,8)}</span>
-                                            <button type="button" onclick="copyCode('${item.code}')" class="text-gray-400 hover:text-orange-500 ml-2 p-1 active:scale-90"><i class="fa-regular fa-copy"></i></button>
-                                        </p>
-                                    </div>
-                                </label>
-                                <button type="button" onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-2 -mt-1 -mr-1"><i class="fa-solid fa-trash-can text-lg"></i></button>
-                            </div>
-                            <div class="flex justify-between items-center mt-3">
-                                <button onclick="window.location.href='./custom_bracelet.html'" class="text-[10px] bg-blue-50 text-blue-600 px-3 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors font-black uppercase tracking-widest shadow-sm active:scale-95"><i class="fa-solid fa-pen-ruler mr-1"></i> Edit Design</button>
-                                <div class="flex items-center gap-2">
-                                    <div class="bg-orange-50 text-orange-600 text-[9px] font-black uppercase tracking-widest px-2 py-1.5 rounded-lg border border-orange-100 flex items-center gap-1 shadow-sm mr-1">
-                                        <i class="fa-solid ${item.pkgName === 'Premium Box' ? 'fa-gift text-orange-500' : 'fa-box-open text-gray-500'}"></i> ${item.pkgName || 'Normal'}
-                                    </div>
-                                    <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-1 border border-gray-100">
-                                        <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                                        <span class="font-black text-xs w-4 text-center">${item.qty}</span>
-                                        <button onclick="updateCartQty('${item.id}', 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[10px]"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                } else {
-                    itemTotal = (item.price || 0) * item.qty;
-                    if(item.selected) grandTotal += itemTotal;
-
-                    return `
-                    <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ff5000] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
-                        <label class="flex items-start gap-3 cursor-pointer">
-                            <input type="checkbox" class="cart-checkbox mt-2 ml-1" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
-                        </label>
-                        <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden">
-                            <img src="${item.image}" class="max-w-full max-h-full object-contain">
-                        </div>
-                        <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
-                            <div>
-                                <div class="flex justify-between items-start">
-                                    <h4 class="font-black text-xs text-gray-900 leading-tight truncate pr-2">${item.title}</h4>
-                                    <button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 -mt-1 -mr-1 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
-                                </div>
-                                <p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">${item.style}</p>
-                            </div>
-                            <div class="flex justify-between items-end mt-2">
-                                <span class="font-black text-sm text-[#ff5000]">${itemTotal.toLocaleString()}៛</span>
-                                <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
-                                    <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                                    <span class="font-black text-xs w-2 text-center">${item.qty}</span>
-                                    <button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[10px]"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                }
+                let itemTotal = item.price * item.qty;
+                if(item.selected) grandTotal += itemTotal;
+                return `
+                <div class="bg-white p-3 rounded-2xl border ${item.selected ? 'border-[#ff5000]' : 'border-gray-100'} flex gap-3 mb-4">
+                    <input type="checkbox" class="cart-checkbox mt-2 ml-1" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
+                    <img src="${item.image}" class="w-16 h-16 rounded-xl object-cover">
+                    <div class="flex-1">
+                        <div class="flex justify-between"><h4 class="font-black text-xs">${item.title}</h4><button onclick="removeCartItem('${item.id}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button></div>
+                        <p class="text-[9px] text-gray-400">${item.style}</p>
+                        <p class="font-black text-sm text-[#ff5000] mt-1">${itemTotal.toLocaleString()}៛ (x${item.qty})</p>
+                    </div>
+                </div>`;
             }).join('');
             document.getElementById('cart-grand-total').innerText = grandTotal.toLocaleString() + "៛";
         }
 
-        function toggleCartItem(id) { const item = userCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveCart(); renderCartUI(); } }
-        function updateCartQty(id, delta) { const item = userCart.find(i => i.id === id); if(item) { item.qty += delta; if(item.qty < 1) item.qty = 1; if(item.qty > 10) item.qty = 10; saveCart(); renderCartUI(); } }
-        function removeCartItem(id) { if(confirm("លុបចេញពីកន្ត្រក? (Remove from cart?)")) { userCart = userCart.filter(i => i.id !== id); saveCart(); renderCartUI(); } }
-        
-        function copyCode(code) { 
-            navigator.clipboard.writeText(code); 
-            const toast = document.getElementById('toast'); 
-            toast.classList.remove('opacity-0', 'scale-90'); 
-            setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500); 
-        }
-
-        // --- CHECKOUT LOGIC ---
-        function calculateDelivery(subtotalKHR) {
-            if (subtotalKHR === 0) return 0;
-            if (subtotalKHR < 20000) return 8000;
-            if (subtotalKHR < 40000) return 6000;
-            if (subtotalKHR < 60000) return 4000;
-            if (subtotalKHR < 80000) return 2000;
-            return 0;
-        }
-
+        // --- CHECKOUT ---
         function openCheckout() {
-            const selectedItems = userCart.filter(i => i.selected);
-            if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយដើម្បីបន្ត! (Please select an item to checkout)");
-
-            let subtotal = 0;
-            selectedItems.forEach(item => {
-                if(item.type === 'custom_bracelet') subtotal += ((item.baseTotal + item.pkgPrice) * item.qty);
-                else subtotal += (item.price * item.qty);
-            });
-            
-            const delivery = calculateDelivery(subtotal);
+            if(userCart.filter(i => i.selected).length === 0) return alert("Select an item.");
+            let subtotal = 0; userCart.filter(i => i.selected).forEach(i => subtotal += (i.price * i.qty));
             document.getElementById('check-subtotal').innerText = subtotal.toLocaleString() + "៛";
-            document.getElementById('check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ (Free)" : delivery.toLocaleString() + "៛";
-            document.getElementById('check-total-khr').innerText = (subtotal + delivery).toLocaleString() + "៛";
-
-            closeCartDrawer();
-            document.getElementById('checkout-modal').classList.remove('translate-y-full');
+            document.getElementById('check-total-khr').innerText = subtotal.toLocaleString() + "៛";
+            closeCartDrawer(); document.getElementById('checkout-modal').classList.remove('translate-y-full');
         }
-
         function closeCheckout() { document.getElementById('checkout-modal').classList.add('translate-y-full'); }
-
-        async function processFinalOrder() {
-            const selectedItems = userCart.filter(i => i.selected);
-            if(selectedItems.length === 0) return;
-
-            const name = document.getElementById('cust-name').value.trim(); 
-            const phone = document.getElementById('cust-phone').value.trim(); 
-            const address = document.getElementById('cust-address').value.trim();
-            
-            if(!name || !phone || !address) return alert("សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់! (Please fill in all details)"); 
-            if(phone.length < 8) return alert("លេខទូរស័ព្ទមិនត្រឹមត្រូវ! (Invalid phone number)");
-
-            const btn = document.getElementById('confirm-btn'); 
-            btn.innerText = "កំពុងបញ្ជូន... (Processing...)"; 
-            btn.disabled = true;
-
-            let subtotal = 0; 
-            const orderItemsPayload = []; 
-            const charmCounts = {}; 
-
-            selectedItems.forEach((cartItem, bIdx) => {
-                if(cartItem.type === 'custom_bracelet') {
-                    const itemPrice = cartItem.baseTotal + cartItem.pkgPrice; subtotal += (itemPrice * cartItem.qty);
-                    const styleText = `Bracelet #${bIdx+1} | Code: ${cartItem.code} | Charms: ${cartItem.charms.length} | Pkg: ${cartItem.pkgName}`;
-                    orderItemsPayload.push({ cartId: "custom-" + Date.now() + "-" + bIdx, title: "Custom DIY Bracelet", style: styleText, price: itemPrice / RATE, qty: cartItem.qty, image: cartItem.image, maxStock: 99 });
-                    cartItem.charms.forEach(c => { charmCounts[c.db_id] = (charmCounts[c.db_id] || 0) + (1 * cartItem.qty); });
-                } else {
-                    subtotal += (cartItem.price * cartItem.qty);
-                    orderItemsPayload.push({ cartId: cartItem.id, title: cartItem.title, style: cartItem.style, price: cartItem.price / RATE, qty: cartItem.qty, image: cartItem.image, maxStock: cartItem.maxStock });
-                }
-            });
-
-            for (const [id, count] of Object.entries(charmCounts)) { 
-                orderItemsPayload.push({ cartId: id, title: "DIY-Part", style: "Hidden stock component", price: 0, qty: count, image: "hidden", maxStock: 99 }); 
-            }
-
-            const delivery = calculateDelivery(subtotal); 
-            const totalUSD = (subtotal + delivery) / RATE;
-
-            try {
-                const res = await fetch('/api/checkout', { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD }) 
-                });
-                if(res.ok) { 
-                    alert("Order Successful! We will contact you on Telegram soon."); 
-                    userCart = userCart.filter(i => !i.selected); 
-                    saveCart(); 
-                    window.location.reload(); 
-                }
-            } catch (e) { 
-                alert("Error sending order. Please try again."); 
-            }
-            btn.innerText = "បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)"; 
-            btn.disabled = false;
+        function processFinalOrder() {
+            setTimeout(() => {
+                showToast("Order Successful!"); 
+                userCart = userCart.filter(i => !i.selected); saveCart(); 
+                closeCheckout();
+            }, 1000);
         }
-
-        // Initialize on load
-        initCart();
+        function toggleLang() { currentLang = currentLang === 'en' ? 'kh' : 'en'; document.getElementById('lang-btn-text').innerText = currentLang === 'en' ? 'KH' : 'EN'; }
+        
+        // Init
+        updateCartBadge();
     </script>
 </body>
 </html>
 
 
+```
