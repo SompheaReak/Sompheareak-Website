@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Minifigure Spinner | Somphea Reak</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;700;900&display=swap');
+    
+    body { font-family: 'Nunito', sans-serif; background-color: #0f172a; color: white; overflow-x: hidden; }
+    .title-font { font-family: 'Fredoka', sans-serif; }
+    
+    /* Background Pattern */
+    .bg-pattern { background-image: radial-gradient(#334155 2px, transparent 2px); background-size: 30px 30px; position: fixed; inset: 0; z-index: -1; opacity: 0.5; }
+
+    .rarity-Common { --r-border: #94a3b8; --r-bg: #1e293b; --r-text: #cbd5e1; }
+    .rarity-Rare { --r-border: #3b82f6; --r-bg: #1e3a8a; --r-text: #93c5fd; }
+    .rarity-Epic { --r-border: #a855f7; --r-bg: #581c87; --r-text: #d8b4fe; }
+    .rarity-Legendary { --r-border: #fbbf24; --r-bg: #78350f; --r-text: #fde68a; }
+
+    /* The Horizontal Spinner Mechanics */
+    .spinner-window { width: 100%; height: 160px; position: relative; overflow: hidden; background: #1e293b; border-radius: 16px; border: 4px solid #334155; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); }
+    .spinner-track { display: flex; height: 100%; position: absolute; left: 0; top: 0; }
+    .spinner-item { width: 140px; height: 100%; flex-shrink: 0; display: flex; flex-col items-center justify-center border-r border-gray-700 bg-gray-800 relative; }
+    .spinner-item img { width: 80%; height: 80%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); }
+    
+    /* The Center Target Line */
+    .target-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; background: #fbbf24; transform: translateX(-50%); z-index: 10; box-shadow: 0 0 15px #fbbf24; }
+    .target-line::after, .target-line::before { content: ''; position: absolute; left: 50%; transform: translateX(-50%); border: 10px solid transparent; }
+    .target-line::before { top: 0; border-top-color: #fbbf24; }
+    .target-line::after { bottom: 0; border-bottom-color: #fbbf24; }
+
+    .card-reveal { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+    
+    .glow-legendary { box-shadow: 0 0 30px rgba(251, 191, 36, 0.6), inset 0 0 20px rgba(251, 191, 36, 0.3); animation: pulse-glow 2s infinite; }
+    @keyframes pulse-glow { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.2); } }
+  </style>
+</head>
+<body class="pb-24">
+  <div class="bg-pattern"></div>
+
+  <!-- Header -->
+  <header class="bg-slate-900/90 backdrop-blur-md sticky top-0 z-50 px-4 py-3 border-b border-slate-800 flex justify-between items-center shadow-lg">
+    <div class="flex items-center gap-2">
+      <a href="/" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-lg">
+        <i class="fa-solid fa-arrow-left"></i>
+      </a>
+      <div>
+        <h1 class="title-font font-bold text-xl text-white leading-none">Minifig Spin</h1>
+        <p class="text-[10px] text-gray-400 font-bold tracking-widest uppercase">ID: <span id="player-id">--------</span></p>
+      </div>
+    </div>
+    
+    <button onclick="openRedeemModal()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl px-4 py-2 flex items-center gap-2 transition-colors active:scale-95 shadow-inner">
+      <div class="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-yellow-900 font-black text-xs">៛</div>
+      <span id="balance-display" class="font-black text-lg text-white">0</span>
+      <i class="fa-solid fa-plus text-yellow-500 text-xs ml-1"></i>
+    </button>
+  </header>
+
+  <main class="max-w-3xl mx-auto p-4 mt-4 space-y-8">
+    
+    <!-- The Spinner Stage -->
+    <div class="bg-slate-800/80 rounded-3xl p-4 md:p-8 shadow-2xl border border-slate-700 relative overflow-hidden">
+        <h2 class="title-font text-2xl text-center mb-6 text-yellow-400 drop-shadow-md">Test Your Luck</h2>
+        
+        <div class="spinner-window">
+            <div class="target-line"></div>
+            <!-- The Track that Moves -->
+            <div id="spinner-track" class="spinner-track">
+                <div class="spinner-item"><p class="text-gray-500 text-sm mt-12 font-bold uppercase tracking-widest">Loading Pool...</p></div>
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 mt-8 justify-center">
+            <button id="spin-1x-btn" onclick="executeSpin(1)" class="flex-1 bg-gradient-to-t from-blue-700 to-blue-500 hover:from-blue-600 hover:to-blue-400 text-white rounded-2xl py-4 font-black text-xl shadow-[0_5px_0_#1e3a8a] active:shadow-[0_0px_0_#1e3a8a] active:translate-y-[5px] transition-all flex flex-col items-center">
+                <span>SPIN 1x</span>
+                <span class="text-xs text-blue-200 bg-black/20 px-2 py-0.5 rounded-full mt-1">1,000 ៛</span>
+            </button>
+            <button id="spin-5x-btn" onclick="executeSpin(5)" class="flex-1 bg-gradient-to-t from-yellow-600 to-yellow-400 hover:from-yellow-500 hover:to-yellow-300 text-yellow-900 rounded-2xl py-4 font-black text-xl shadow-[0_5px_0_#b45309] active:shadow-[0_0px_0_#b45309] active:translate-y-[5px] transition-all flex flex-col items-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 -skew-x-12 translate-x-[-150%] animate-[shimmer_2s_infinite]"></div>
+                <span>SPIN 5x</span>
+                <span class="text-xs text-yellow-900 bg-white/30 px-2 py-0.5 rounded-full mt-1">5,000 ៛</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Live Prize Pool Display -->
+    <div>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="title-font text-lg text-gray-300"><i class="fa-solid fa-box-open text-gray-400 mr-2"></i>Available Prizes</h3>
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-slate-800 px-3 py-1 rounded-full border border-slate-700">Live Stock</span>
+        </div>
+        <div id="prize-pool-grid" class="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-3">
+            <!-- Rendered via JS -->
+        </div>
+    </div>
+
+  </main>
+
+  <!-- Redeem Modal -->
+  <div id="redeem-modal" class="fixed inset-0 z-[7000] bg-black/90 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+      <div class="bg-slate-800 rounded-3xl p-6 max-w-sm w-full relative text-center shadow-2xl border border-slate-700">
+          <button onclick="closeRedeemModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-slate-700 rounded-full text-gray-400 hover:text-white transition-all"><i class="fa-solid fa-xmark"></i></button>
+          <div class="w-16 h-16 bg-yellow-500/20 text-yellow-500 border-2 border-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-ticket text-3xl"></i></div>
+          <h2 class="text-2xl title-font font-black text-white mb-2">Redeem Riel</h2>
+          <p class="text-xs text-gray-400 mb-6 font-bold">Enter your 8-digit code to add Riel to your balance.</p>
+          <input type="text" id="redeem-input" maxlength="8" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-4 font-black text-2xl text-center text-white outline-none focus:border-yellow-500 transition-all uppercase tracking-widest mb-4" placeholder="XXXXXXXX">
+          <button onclick="submitRedeem()" id="verify-btn" class="w-full bg-yellow-500 text-yellow-900 text-lg font-black py-4 rounded-xl shadow-lg active:scale-95 transition-transform">VERIFY CODE</button>
+      </div>
+  </div>
+
+  <!-- Result Overlay -->
+  <div id="result-overlay" class="fixed inset-0 z-[6000] bg-slate-900/95 backdrop-blur-md hidden flex-col items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+      <h2 class="title-font text-4xl text-white mb-8 drop-shadow-lg text-center" id="result-title">REWARDS ACQUIRED!</h2>
+      <div id="result-cards-container" class="flex flex-wrap justify-center gap-4 max-w-3xl"></div>
+      <button onclick="closeResult()" class="mt-12 bg-white text-gray-900 font-black px-12 py-4 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.3)] active:scale-95 transition-transform uppercase tracking-widest">Awesome!</button>
+  </div>
+
+  <script>
+    let globalPool = [];
+    const itemWidth = 140; 
+
+    async function initGame() {
+        try {
+            const balRes = await fetch('/api/spin/balance');
+            const balData = await balRes.json();
+            document.getElementById('balance-display').innerText = balData.balance;
+            document.getElementById('player-id').innerText = balData.player_id;
+
+            const poolRes = await fetch('/api/spin/pool');
+            const poolData = await poolRes.json();
+            globalPool = poolData.pool;
+            renderPrizePool();
+            setupInitialSpinner();
+        } catch(e) { console.error("Setup Error", e); }
+    }
+
+    function renderPrizePool() {
+        const grid = document.getElementById('prize-pool-grid');
+        grid.innerHTML = globalPool.map(p => {
+            const isOut = p.stock <= 0;
+            return `
+            <div class="bg-slate-800 rounded-xl border-2 rarity-${p.rarity} overflow-hidden relative shadow-sm ${isOut ? 'opacity-40 grayscale' : ''}" style="border-color: var(--r-border)">
+                <div class="absolute top-0 left-0 w-full text-[8px] font-black text-center py-0.5 tracking-widest" style="background-color: var(--r-bg); color: var(--r-text); border-bottom: 1px solid var(--r-border)">${p.rarity}</div>
+                <div class="h-20 bg-slate-900 mt-4 p-2 flex items-center justify-center"><img src="${p.image}" class="max-h-full object-contain"></div>
+                <div class="p-2 text-center bg-slate-800 border-t border-slate-700">
+                    <p class="text-[9px] font-bold text-gray-300 truncate">${p.name}</p>
+                    <p class="text-[10px] font-black ${isOut ? 'text-red-500' : 'text-green-400'} mt-0.5">Stock: ${p.stock}</p>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function setupInitialSpinner() {
+        const track = document.getElementById('spinner-track');
+        track.style.transition = 'none'; track.style.transform = `translateX(0px)`; track.innerHTML = '';
+        if(globalPool.length === 0) {
+            track.innerHTML = '<div class="spinner-item"><p class="text-gray-500 text-sm mt-12 font-bold uppercase tracking-widest">No Prizes Available</p></div>';
+            return;
+        }
+        for(let i=0; i<30; i++) {
+            const randomItem = globalPool[Math.floor(Math.random() * globalPool.length)];
+            track.innerHTML += `<div class="spinner-item"><img src="${randomItem.image}"></div>`;
+        }
+    }
+
+    function openRedeemModal() { document.getElementById('redeem-modal').classList.remove('hidden'); document.getElementById('redeem-modal').classList.add('flex'); document.getElementById('redeem-input').value = ''; }
+    function closeRedeemModal() { document.getElementById('redeem-modal').classList.add('hidden'); document.getElementById('redeem-modal').classList.remove('flex'); }
+    
+    async function submitRedeem() {
+        const code = document.getElementById('redeem-input').value;
+        const btn = document.getElementById('verify-btn');
+        btn.innerText = "CHECKING..."; btn.disabled = true;
+        try {
+            const res = await fetch('/api/spin/redeem', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({code}) });
+            const data = await res.json();
+            if(res.ok) {
+                document.getElementById('balance-display').innerText = data.new_balance;
+                alert(`Success! Added ${data.value} Riel.`);
+                closeRedeemModal();
+            } else { alert(data.error); }
+        } catch(e) { alert("Network Error"); }
+        btn.innerText = "VERIFY CODE"; btn.disabled = false;
+    }
+
+    // ANTI-CHEAT SECURE SPIN
+    async function executeSpin(count) {
+        document.getElementById('spin-1x-btn').disabled = true; document.getElementById('spin-5x-btn').disabled = true;
+        
+        try {
+            const res = await fetch('/api/spin/play', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({count}) });
+            const data = await res.json();
+            
+            if(!res.ok) {
+                alert(data.error);
+                if(data.error.includes("Insufficient")) openRedeemModal();
+                resetButtons(); return;
+            }
+
+            document.getElementById('balance-display').innerText = data.new_balance;
+
+            if(count === 1) animateSingleSpin(data.prizes[0]);
+            else animateMultiSpin(data.prizes);
+
+            initGame();
+
+        } catch(e) { alert("Server error during spin."); resetButtons(); }
+    }
+
+    function animateSingleSpin(winningPrize) {
+        const track = document.getElementById('spinner-track');
+        track.style.transition = 'none'; track.style.transform = `translateX(0px)`;
+        track.innerHTML = '';
+        
+        const winIndex = 40;
+        for(let i=0; i<50; i++) {
+            let item = (i === winIndex) ? winningPrize : globalPool[Math.floor(Math.random() * globalPool.length)];
+            track.innerHTML += `<div class="spinner-item"><img src="${item.image}"></div>`;
+        }
+
+        void track.offsetWidth; 
+
+        const windowWidth = document.querySelector('.spinner-window').offsetWidth;
+        const randomOffsetWithinItem = Math.floor(Math.random() * 60) - 30; 
+        const finalPosition = (winIndex * itemWidth) - (windowWidth / 2) + (itemWidth / 2) + randomOffsetWithinItem;
+
+        track.style.transition = 'transform 4.5s cubic-bezier(0.1, 0.9, 0.2, 1)';
+        track.style.transform = `translateX(-${finalPosition}px)`;
+
+        setTimeout(() => { showResultCards([winningPrize]); }, 4800);
+    }
+
+    function animateMultiSpin(prizes) {
+        const track = document.getElementById('spinner-track');
+        track.style.transition = 'transform 0.5s ease-in';
+        track.style.transform = `translateX(-1000px)`; 
+        
+        setTimeout(() => { showResultCards(prizes); }, 600);
+    }
+
+    function showResultCards(prizes) {
+        const overlay = document.getElementById('result-overlay');
+        const container = document.getElementById('result-cards-container');
+        container.innerHTML = '';
+        
+        prizes.forEach((prize, index) => {
+            const isLeg = prize.rarity === 'Legendary';
+            const cardHTML = `
+            <div class="card-reveal rarity-${prize.rarity} bg-slate-800 rounded-2xl border-4 p-4 flex flex-col items-center w-36 sm:w-44 text-center ${isLeg ? 'glow-legendary' : 'shadow-2xl'}" style="border-color: var(--r-border); animation-delay: ${index * 0.15}s; opacity: 0;">
+                <span class="text-[10px] font-black uppercase px-3 py-1 rounded-full mb-3 tracking-widest" style="background-color: var(--r-bg); color: var(--r-text); border: 1px solid var(--r-border);">${prize.rarity}</span>
+                <div class="h-24 w-full flex items-center justify-center mb-3"><img src="${prize.image}" class="max-h-full object-contain filter drop-shadow-md"></div>
+                <h3 class="text-xs font-bold text-white line-clamp-2">${prize.name}</h3>
+            </div>`;
+            container.innerHTML += cardHTML;
+        });
+
+        overlay.classList.remove('hidden'); overlay.classList.add('flex');
+        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+    }
+
+    function closeResult() {
+        const overlay = document.getElementById('result-overlay');
+        overlay.classList.add('opacity-0');
+        setTimeout(() => { overlay.classList.add('hidden'); overlay.classList.remove('flex'); resetButtons(); setupInitialSpinner(); }, 300);
+    }
+
+    function resetButtons() { document.getElementById('spin-1x-btn').disabled = false; document.getElementById('spin-5x-btn').disabled = false; }
+
+    initGame();
+  </script>
+</body>
+</html>
+
+
+```
