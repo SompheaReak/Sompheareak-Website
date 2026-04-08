@@ -1,7 +1,11 @@
+```python
 import os
 import json
 import time
-from datetime import datetime
+import random
+import string
+import uuid
+from datetime import datetime, timedelta
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
 from flask_sqlalchemy import SQLAlchemy
@@ -60,10 +64,9 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# --- ANTI-SPAM MEMORY TRACKER ---
 spam_tracker = {}
 
-# --- 3. MODELS ---
+# --- 3. STORE MODELS ---
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
@@ -94,7 +97,43 @@ class Order(db.Model):
     stock_deducted = db.Column(db.Boolean, default=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-# --- 4. PUBLIC ROUTES ---
+# --- 4. SPINNER GAME MODELS ---
+class PlayerSession(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    player_id = db.Column(db.String(8), unique=True, nullable=False) 
+    balance = db.Column(db.Integer, default=0)
+
+class RedeemCode(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(8), unique=True, nullable=False)
+    value = db.Column(db.Integer, nullable=False)  
+    status = db.Column(db.String(20), default="Active") 
+    redeemed_by = db.Column(db.String(8), nullable=True) 
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class MinifigurePool(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    image = db.Column(db.String(500), nullable=False)
+    rarity = db.Column(db.String(50), nullable=False)
+    stock = db.Column(db.Integer, default=0)
+
+class DrawHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    player_id = db.Column(db.String(8), nullable=False)
+    item_name = db.Column(db.String(200), nullable=False)
+    rarity = db.Column(db.String(50), nullable=False)
+    stock_remaining = db.Column(db.Integer, nullable=False)
+    timestamp_utc = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Cambodia Time (UTC+7)
+    @property
+    def cambodia_time(self):
+        kh_time = self.timestamp_utc + timedelta(hours=7)
+        return kh_time.strftime('%d-%b-%Y %I:%M %p')
+
+
+# --- 5. PUBLIC & STORE ROUTES ---
 @app.route('/')
 def index(): return render_template('index.html')
 
@@ -138,20 +177,18 @@ def checkout():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
-# --- 5. ADMIN AUTH ---
+# --- 6. UNIFIED ADMIN ROUTES ---
 @app.route('/admin/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
         if username == ADMIN_USERNAME and password == ADMIN_PASS:
             session['admin'] = True
             flash('Login Successful!', 'success')
             return redirect(url_for('admin_panel'))
         else:
             flash('Invalid Username or Password', 'error')
-            
     return render_template('admin_login.html')
 
 @app.route('/admin/logout')
@@ -163,6 +200,7 @@ def logout():
 @app.route('/admin/panel')
 @login_required
 def admin_panel():
+    # Store Data
     unique_cats = db.session.query(Product.category, Product.store).distinct().all()
     for c_name, c_store in unique_cats:
         if c_name != "Other" and not Category.query.filter_by(name=c_name, store=c_store).first():
@@ -176,9 +214,13 @@ def admin_panel():
     orders = Order.query.order_by(Order.timestamp.desc()).all()
     for o in orders: o.parsed_items = json.loads(o.items_json)
 
-    return render_template('admin_panel.html', products=products, categories=categories, orders=orders)
+    # Spinner Game Data (for the unified admin panel)
+    codes = RedeemCode.query.order_by(RedeemCode.timestamp.desc()).all()
+    pool = MinifigurePool.query.all()
+    history = DrawHistory.query.order_by(DrawHistory.timestamp_utc.desc()).limit(100).all()
 
-# --- 6. ADMIN ACTIONS ---
+    return render_template('admin_panel.html', products=products, categories=categories, orders=orders, codes=codes, pool=pool, history=history)
+
 @app.route('/admin/order/status/<int:id>/<string:status>', methods=['POST'])
 @login_required
 def update_order_status(id, status):
@@ -280,7 +322,6 @@ def toggle_product(id):
 @login_required
 def update_product(id):
     p = Product.query.get_or_404(id)
-    
     p.title = request.form.get('title')
     p.category = request.form.get('category')
     p.store = request.form.get('store')
@@ -290,7 +331,7 @@ def update_product(id):
     v_names = request.form.getlist('v_names[]')
     v_prices = request.form.getlist('v_prices[]')
     v_stocks = request.form.getlist('v_stocks[]')
-    v_cats = request.form.getlist('v_categories[]') # NEW: Multi-categories
+    v_cats = request.form.getlist('v_categories[]')
     
     updated_variants = []
     total_stock = 0
@@ -303,7 +344,7 @@ def update_product(id):
             "name": v_names[i],
             "price": float(v_prices[i]), 
             "stock": stock,
-            "category": v_cats[i] if i < len(v_cats) else p.category # Store specific categories
+            "category": v_cats[i] if i < len(v_cats) else p.category
         })
         total_stock += stock
 
@@ -316,12 +357,9 @@ def update_product(id):
                     res = optimize_and_upload(f)
                     last_id += 1
                     updated_variants.append({
-                        "id": last_id, 
-                        "name": f"New Style {last_id}", 
+                        "id": last_id, "name": f"New Style {last_id}", 
                         "price": updated_variants[0]['price'] if updated_variants else 0, 
-                        "stock": 1, 
-                        "image": res['secure_url'],
-                        "category": p.category # Default to main category
+                        "stock": 1, "image": res['secure_url'], "category": p.category 
                     })
                     total_stock += 1
                     
@@ -348,7 +386,7 @@ def add_product():
     v_names = request.form.getlist('variant_names[]')
     v_prices = request.form.getlist('variant_prices[]')
     v_stocks = request.form.getlist('variant_stocks[]')
-    v_categories = request.form.getlist('variant_categories[]') # NEW: Multi-categories
+    v_categories = request.form.getlist('variant_categories[]')
     files = request.files.getlist('images')
     
     uploaded_urls = []
@@ -367,12 +405,8 @@ def add_product():
                 cat_str = v_categories[i] if i < len(v_categories) else category
                 
                 vars_json.append({
-                    "id": i, 
-                    "name": v_names[i] if i < len(v_names) else f"Style {i+1}", 
-                    "price": price, 
-                    "stock": stock, 
-                    "image": url,
-                    "category": cat_str # Save specific categories to DB
+                    "id": i, "name": v_names[i] if i < len(v_names) else f"Style {i+1}", 
+                    "price": price, "stock": stock, "image": url, "category": cat_str 
                 })
                 total_stock += stock
             
@@ -384,7 +418,7 @@ def add_product():
             flash('Warning: No valid images found to upload.', 'error')
             
     except Exception as e:
-        flash(f'Upload Failed! Please check your Cloudinary API keys. Details: {str(e)}', 'error')
+        flash(f'Upload Failed! Details: {str(e)}', 'error')
 
     return redirect(url_for('admin_panel'))
 
@@ -410,31 +444,162 @@ def get_api(store_name):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+# --- 7. SPINNER GAME FRONTEND & API LOGIC ---
+
+@app.route('/spin')
+def spin_game(): 
+    return render_template('spin_game.html')
+
+def get_player():
+    if 'player_id' not in session:
+        # Generate an 8-digit random ID
+        new_id = str(random.randint(10000000, 99999999))
+        session['player_id'] = new_id
+        new_player = PlayerSession(player_id=new_id, balance=0)
+        db.session.add(new_player)
+        db.session.commit()
+    
+    player = PlayerSession.query.filter_by(player_id=session['player_id']).first()
+    if not player:
+        player = PlayerSession(player_id=session['player_id'], balance=0)
+        db.session.add(player)
+        db.session.commit()
+    return player
+
+@app.route('/api/spin/balance', methods=['GET'])
+def get_balance():
+    player = get_player()
+    return jsonify({"balance": player.balance, "player_id": player.player_id})
+
+@app.route('/api/spin/redeem', methods=['POST'])
+def redeem_riel_code():
+    player = get_player()
+    code_input = request.json.get('code', '').strip().upper()
+    code_entry = RedeemCode.query.filter_by(code=code_input).first()
+    
+    if not code_entry: return jsonify({"error": "Invalid Code"}), 400
+    if code_entry.status == "Redeemed": return jsonify({"error": "Code already used"}), 400
+        
+    code_entry.status = "Redeemed"
+    code_entry.redeemed_by = player.player_id
+    player.balance += code_entry.value
+    db.session.commit()
+    return jsonify({"success": True, "new_balance": player.balance, "value": code_entry.value})
+
+@app.route('/api/spin/play', methods=['POST'])
+def execute_spin():
+    player = get_player()
+    count = int(request.json.get('count', 1)) 
+    cost = 1000 if count == 1 else 5000
+    
+    if player.balance < cost:
+        return jsonify({"error": "Insufficient Riel. Please redeem a code."}), 400
+
+    available_items = MinifigurePool.query.filter(MinifigurePool.stock > 0).all()
+    if not available_items or sum([item.stock for item in available_items]) < count:
+        return jsonify({"error": "Not enough stock in the prize pool!"}), 400
+
+    # Build Weighted Pool for Draw
+    pool = []
+    for item in available_items:
+        if item.rarity == 'Legendary': weight = 2
+        elif item.rarity == 'Epic': weight = 10
+        elif item.rarity == 'Rare': weight = 30
+        else: weight = 58 
+        pool.extend([item] * weight)
+
+    if not pool:
+        return jsonify({"error": "Error building prize pool"}), 400
+
+    prizes = []
+    for _ in range(count):
+        winner = random.choice(pool)
+        winner.stock -= 1 # DEDUCT STOCK PERMANENTLY
+        
+        # Log to Admin Panel with Cambodia Time tracking
+        history = DrawHistory(
+            player_id=player.player_id, 
+            item_name=winner.name, 
+            rarity=winner.rarity, 
+            stock_remaining=winner.stock
+        )
+        db.session.add(history)
+        
+        prizes.append({
+            "id": winner.id, "name": winner.name, 
+            "image": winner.image, "rarity": winner.rarity
+        })
+        # Remove out of stock items for the next iteration if doing 5x spin
+        pool = [i for i in pool if i.stock > 0]
+        if not pool and _ < count - 1:
+            break
+
+    player.balance -= cost # DEDUCT RIEL
+    db.session.commit()
+    return jsonify({"success": True, "new_balance": player.balance, "prizes": prizes})
+
+@app.route('/api/spin/pool', methods=['GET'])
+def get_live_pool():
+    items = MinifigurePool.query.all()
+    data = [{"id": i.id, "name": i.name, "image": i.image, "rarity": i.rarity, "stock": i.stock} for i in items]
+    return jsonify({"pool": data})
+
+
+# --- 8. SPINNER ADMIN ROUTES ---
+@app.route('/admin/spin/generate_codes', methods=['POST'])
+@login_required
+def generate_codes():
+    quantity = int(request.form.get('quantity', 5))
+    value = int(request.form.get('value', 1000))
+    characters = string.ascii_uppercase + string.digits
+    for _ in range(quantity):
+        code_str = ''.join(random.choice(characters) for i in range(8))
+        db.session.add(RedeemCode(code=code_str, value=value))
+    db.session.commit()
+    flash(f'Generated {quantity} codes!', 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/spin/add_pool', methods=['POST'])
+@login_required
+def add_spin_pool():
+    name = request.form.get('name')
+    rarity = request.form.get('rarity')
+    stock = int(request.form.get('stock', 10))
+    file = request.files.get('image')
+    
+    if file and file.filename != '':
+        try:
+            res = optimize_and_upload(file) # Uses Cloudinary
+            new_item = MinifigurePool(name=name, rarity=rarity, stock=stock, image=res['secure_url'])
+            db.session.add(new_item)
+            db.session.commit()
+            flash('Prize added to game pool!', 'success')
+        except Exception as e:
+            flash(f'Upload failed: {str(e)}', 'error')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/spin/update_stock/<int:id>', methods=['POST'])
+@login_required
+def update_spin_stock(id):
+    item = MinifigurePool.query.get(id)
+    if item:
+        item.stock = int(request.form.get('stock', 0))
+        db.session.commit()
+        flash('Prize stock updated.', 'success')
+    return redirect(url_for('admin_panel'))
+
+# --- 9. STARTUP & MIGRATIONS ---
 @app.errorhandler(413)
 def request_entity_too_large(error):
-    flash('File too large! Please upload fewer images or compress them (Max 50MB combined).', 'error')
+    flash('File too large!', 'error')
     return redirect(url_for('admin_panel'))
 
 with app.app_context():
     db.create_all()
-    try:
-        db.session.execute(text("ALTER TABLE product ADD COLUMN sort_order INTEGER DEFAULT 0"))
-        db.session.commit()
-    except:
-        db.session.rollback()
-        
-    try:
-        db.session.execute(text('ALTER TABLE "order" ADD COLUMN stock_deducted BOOLEAN DEFAULT FALSE'))
-        db.session.commit()
-    except:
-        db.session.rollback()
-        
-    try:
-        db.session.execute(text('ALTER TABLE product ADD COLUMN is_visible BOOLEAN DEFAULT TRUE'))
-        db.session.commit()
-    except:
-        db.session.rollback()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
+
+```
