@@ -1,0 +1,461 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Somphea Reak - Lucky Minifigure</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700;800&family=Moul&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    
+    body { font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #fcfbf9; }
+    h1, h2, h3, h4, .khmer-title { font-family: 'Moul', serif; }
+    
+    .pka-chan-bg { background-color: #fdfbf7; background-image: radial-gradient(#ea580c 0.5px, transparent 0.5px), radial-gradient(#ea580c 0.5px, #fdfbf7 0.5px); background-size: 20px 20px; background-position: 0 0, 10px 10px; opacity: 0.5; position: fixed; inset: 0; z-index: -1; }
+    
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .cart-checkbox { appearance: none; width: 24px; height: 24px; border: 2.5px solid #cbd5e1; border-radius: 50%; outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); background: white; flex-shrink: 0; }
+    .cart-checkbox:checked { background-color: #ea580c; border-color: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3); }
+    .cart-checkbox:checked::after { content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px; }
+
+    #cart-drawer, #checkout-modal, #khqr-modal, #unboxing-overlay { transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.4s; will-change: transform, opacity; }
+
+    .rarity-Common { --r-color: #9ca3af; --r-glow: rgba(156, 163, 175, 0.5); }
+    .rarity-Rare { --r-color: #3b82f6; --r-glow: rgba(59, 130, 246, 0.6); }
+    .rarity-Epic { --r-color: #a855f7; --r-glow: rgba(168, 85, 247, 0.7); }
+    .rarity-Legendary { --r-color: #ea580c; --r-glow: rgba(234, 88, 12, 0.8); }
+
+    .glow-effect { box-shadow: 0 0 25px var(--r-glow), inset 0 0 15px var(--r-glow); border-color: var(--r-color); }
+    .text-rarity { color: var(--r-color); }
+    .bg-rarity { background-color: var(--r-color); }
+    
+    .legendary-card { background: linear-gradient(45deg, #1f2937, #000000, #1f2937); border: 2px solid transparent; background-clip: padding-box; position: relative; }
+    .legendary-card::before { content: ''; position: absolute; top: -2px; right: -2px; bottom: -2px; left: -2px; background: linear-gradient(45deg, #ea580c, #fcd34d, #ea580c, #fcd34d); background-size: 300% 300%; z-index: -1; border-radius: inherit; animation: shimmer 2s infinite linear; }
+
+    @keyframes shimmer { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    @keyframes shake-intense { 0%, 100% { transform: translate(1px, 1px) rotate(0deg) scale(1); filter: brightness(1); } 10%, 30%, 50%, 70%, 90% { transform: translate(-4px, -2px) rotate(-3deg) scale(1.05); filter: brightness(1.2); } 20%, 40%, 60%, 80% { transform: translate(4px, 2px) rotate(3deg) scale(1.05); filter: brightness(0.8); } }
+    .anim-shake { animation: shake-intense 0.4s cubic-bezier(.36,.07,.19,.97) both infinite; }
+    
+    @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; filter: blur(10px); } 70% { transform: scale(1.05); opacity: 1; filter: blur(0px); } 100% { transform: scale(1); opacity: 1; filter: blur(0px); } }
+    .anim-pop-in { animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+    .anim-float { animation: float 3s ease-in-out infinite; }
+
+    #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+  </style>
+</head>
+<body class="text-gray-900 pb-20">
+
+  <div class="pka-chan-bg"></div>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div id="loadingOverlay" class="fixed inset-0 z-[9600] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center text-white transition-opacity">
+      <div class="w-12 h-12 border-4 border-[#ea580c] border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p class="text-xs font-black uppercase tracking-[0.3em] font-['Moul']">កំពុងរៀបចំ...</p>
+      <p class="text-[10px] text-gray-400 mt-2 font-bold tracking-widest uppercase">Fetching Live Database</p>
+  </div>
+
+  <div id="image-viewer-modal" class="fixed inset-0 z-[9500] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+      <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl mb-6">
+  </div>
+
+  <div id="toast" style="pointer-events: none;" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[9000] bg-black/90 backdrop-blur-md text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl opacity-0 transition-all duration-300 scale-90 border border-white/10">
+    <i id="toast-icon" class="fa-solid fa-circle-check text-green-400"></i>
+    <span id="toast-text" class="text-xs font-bold uppercase tracking-widest font-['Kantumruy_Pro']">Success</span>
+  </div>
+
+  <header class="sticky top-0 z-[100] bg-white/90 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
+    <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 hover:bg-black hover:text-white active:scale-90 transition-all">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <div class="flex flex-col items-center">
+        <h1 class="font-black text-lg text-gray-900 leading-none tracking-tight">សម្ភារៈ - Somphea Reak</h1>
+        <p class="text-[9px] font-bold text-[#ea580c] uppercase tracking-widest mt-0.5">Lucky Minifigure</p>
+    </div>
+    <div class="flex items-center gap-2">
+        <button onclick="openKHQRModal()" class="bg-gradient-to-r from-orange-500 to-[#ea580c] text-white px-3 py-1.5 rounded-full text-sm font-black flex items-center gap-1.5 shadow-[0_3px_10px_rgba(234,88,12,0.3)] active:scale-95 transition-all border border-orange-400 group">
+            <i class="fa-solid fa-ticket transform -rotate-45 group-hover:rotate-0 transition-transform"></i>
+            <span id="ticket-balance">0</span>
+        </button>
+        <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform hover:text-[#ea580c]">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden">0</span>
+        </button>
+    </div>
+  </header>
+
+  <main class="p-4 max-w-2xl mx-auto space-y-6 pt-6">
+      
+      <div class="bg-white rounded-[2rem] border border-gray-100 shadow-lg p-6 relative overflow-hidden flex flex-col items-center text-center">
+          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(234,88,12,0.1)_0%,transparent_70%)] pointer-events-none"></div>
+          <span class="bg-[#ea580c] text-white text-[9px] font-black uppercase px-3 py-1 rounded-full mb-3 shadow-md border border-orange-400"><i class="fa-solid fa-star text-yellow-300 mr-1"></i> Live Pool</span>
+          <h2 class="text-3xl font-black text-gray-900 font-['Moul'] leading-tight mb-2">Mystery<br>Minifigures</h2>
+          <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-8">Test your luck. Claim physical prizes.</p>
+
+          <div class="relative w-48 h-64 cursor-pointer anim-float active:scale-95 transition-transform duration-300 group" onclick="startUnboxing()">
+              <div class="absolute inset-0 bg-gradient-to-b from-blue-600 to-blue-900 rounded-2xl shadow-2xl border-4 border-blue-950 flex flex-col items-center justify-center overflow-hidden">
+                  <div class="absolute top-0 w-full h-4 bg-red-600 border-b-2 border-red-800 repeating-linear-gradient" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.2) 5px, rgba(0,0,0,0.2) 10px);"></div>
+                  <div class="w-16 h-16 bg-yellow-400 rounded-full border-4 border-white flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform mb-3">
+                      <span class="text-4xl font-black text-red-600">?</span>
+                  </div>
+                  <h3 class="text-white font-black text-xl uppercase italic tracking-wider drop-shadow-md">Mystery</h3>
+                  <h3 class="text-yellow-300 font-black text-lg uppercase tracking-widest drop-shadow-md">Prize</h3>
+              </div>
+          </div>
+
+          <button onclick="startUnboxing()" class="mt-8 w-full max-w-sm bg-[#ea580c] hover:bg-orange-500 text-white font-black text-sm py-4 rounded-2xl shadow-xl shadow-orange-500/30 active:scale-95 transition-all uppercase tracking-widest flex items-center justify-center gap-3 border border-orange-400 font-['Kantumruy_Pro']">
+              <i class="fa-solid fa-bolt"></i> បើកប្រអប់ (Open Pack)
+              <span class="bg-black/20 px-2 py-1 rounded-lg border border-black/10 text-[10px] ml-1 backdrop-blur-sm">1 Ticket</span>
+          </button>
+      </div>
+
+      <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
+          <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">
+              <h3 class="font-black text-xs uppercase tracking-widest text-gray-900 font-['Kantumruy_Pro']"><i class="fa-solid fa-list-ul text-[#ea580c] mr-2"></i> រង្វាន់ក្នុងប្រអប់ (Live Prize Pool)</h3>
+              <div class="text-[9px] font-bold uppercase tracking-widest text-gray-500 flex gap-2">
+                  <span class="text-gray-400">Com:60%</span><span class="text-blue-400">Rar:25%</span><span class="text-purple-400">Epi:10%</span><span class="text-[#ea580c]">Leg:5%</span>
+              </div>
+          </div>
+          <div id="prize-pool-grid" class="grid grid-cols-4 md:grid-cols-8 gap-3"></div>
+      </div>
+  </main>
+
+  <div id="unboxing-overlay" class="fixed inset-0 z-[6000] bg-gray-950/95 backdrop-blur-xl hidden flex-col items-center justify-center opacity-0 transition-opacity duration-500">
+      <div class="absolute top-6 right-6 z-50">
+          <button id="skip-btn" onclick="skipOrClose()" class="text-white/50 hover:text-white text-xs font-bold uppercase tracking-widest border border-white/20 px-4 py-2 rounded-full backdrop-blur-md transition-colors">Skip</button>
+      </div>
+      <div class="relative w-full max-w-sm h-96 flex items-center justify-center">
+          <div id="cinematic-bag" class="absolute w-56 h-72 bg-gradient-to-b from-blue-600 to-blue-900 rounded-2xl shadow-[0_0_50px_rgba(37,99,235,0.4)] border-4 border-blue-950 flex flex-col items-center justify-center overflow-hidden scale-110">
+              <div class="absolute top-0 w-full h-4 bg-red-600 border-b-2 border-red-800" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.2) 5px, rgba(0,0,0,0.2) 10px);"></div>
+              <div class="w-20 h-20 bg-yellow-400 rounded-full border-4 border-white flex items-center justify-center shadow-inner mb-3">
+                  <span class="text-5xl font-black text-red-600">?</span>
+              </div>
+              <h3 class="text-white font-black text-2xl uppercase italic tracking-wider drop-shadow-md">Mystery</h3>
+          </div>
+
+          <div id="cinematic-reveal" class="hidden absolute w-64 h-80 rounded-[2rem] flex flex-col items-center justify-center text-white relative z-20">
+              <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-md rounded-[2rem] border-4 glow-effect z-0" id="reveal-border"></div>
+              <div class="absolute inset-0 opacity-20 animate-[spin_10s_linear_infinite] mix-blend-overlay rounded-[2rem] overflow-hidden z-0" style="background: conic-gradient(from 0deg, transparent 0deg 20deg, white 20deg 40deg, transparent 40deg 60deg, white 60deg 80deg, transparent 80deg 100deg, white 100deg 120deg, transparent 120deg 140deg, white 140deg 160deg, transparent 160deg 180deg, white 180deg 200deg, transparent 200deg 220deg, white 220deg 240deg, transparent 240deg 260deg, white 260deg 280deg, transparent 280deg 300deg, white 300deg 320deg, transparent 320deg 340deg, white 340deg 360deg);"></div>
+              <div class="relative z-10 flex flex-col items-center p-6 w-full h-full justify-between">
+                  <span id="reveal-rarity-text" class="text-[10px] font-black uppercase tracking-[0.3em] bg-black/40 px-4 py-1.5 rounded-full border border-white/20 shadow-lg text-rarity">Rarity</span>
+                  <div class="flex-1 flex items-center justify-center w-full">
+                      <div class="w-32 h-32 rounded-full bg-white/5 border-2 glow-effect flex items-center justify-center shadow-2xl relative overflow-hidden p-2">
+                           <img id="reveal-img" src="" class="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                      </div>
+                  </div>
+                  <div class="text-center w-full">
+                      <h2 id="reveal-name" class="text-xl font-black leading-tight font-['Moul'] mb-2 drop-shadow-lg text-white">Name</h2>
+                      <p id="reveal-quote" class="text-[9px] font-bold opacity-80 uppercase tracking-widest text-gray-300">"Exclusive Prize"</p>
+                  </div>
+              </div>
+          </div>
+      </div>
+      <div id="claim-section" class="hidden absolute bottom-12 w-full px-6 max-w-sm z-50">
+          <button onclick="claimPrizeToCart()" class="w-full bg-[#ea580c] hover:bg-orange-500 text-white font-black text-sm py-4 rounded-2xl shadow-[0_0_30px_rgba(234,88,12,0.4)] active:scale-95 transition-all uppercase tracking-widest flex items-center justify-center gap-3 border border-orange-400 font-['Kantumruy_Pro']">
+              <i class="fa-solid fa-gift"></i> ទទួលយករង្វាន់ (Claim Prize)
+          </button>
+      </div>
+  </div>
+
+  <div id="khqr-modal" class="fixed inset-0 z-[7000] bg-black/80 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+      <div class="bg-white rounded-[2rem] p-6 max-w-sm w-full relative text-center shadow-2xl border border-gray-100">
+          <button onclick="closeKHQRModal()" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+          <div class="w-16 h-16 bg-orange-100 text-[#ea580c] rounded-full flex items-center justify-center mx-auto mb-3"><i class="fa-solid fa-qrcode text-3xl"></i></div>
+          <h2 class="text-xl font-black font-['Moul'] text-gray-900 mb-1">ទិញសំបុត្រ (Top-Up)</h2>
+          <p class="text-xs font-bold text-gray-500 mb-5 uppercase tracking-widest">1 Ticket = 1,000 KHR</p>
+          <div class="bg-gray-50 border border-gray-200 p-4 rounded-2xl mb-5 relative overflow-hidden">
+              <div class="absolute top-0 left-0 w-full h-1 bg-[#ea580c]"></div>
+              <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" class="w-40 h-40 mx-auto rounded-xl shadow-sm mix-blend-multiply opacity-80">
+              <p class="text-[10px] font-black text-[#ea580c] mt-3 uppercase tracking-widest">Scan to Pay via KHQR</p>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mb-5">
+              <button class="bg-white hover:bg-orange-50 text-gray-800 font-black py-3 rounded-2xl text-sm border-2 border-gray-100 hover:border-orange-200 active:scale-95 transition-all flex flex-col items-center shadow-sm" onclick="simulatePayment(1)">
+                  1 <i class="fa-solid fa-ticket text-xs mb-1 text-[#ea580c]"></i><span class="text-[9px] text-gray-400">1,000៛</span>
+              </button>
+              <button class="bg-white hover:bg-orange-50 text-gray-800 font-black py-3 rounded-2xl text-sm border-2 border-orange-400 active:scale-95 transition-all flex flex-col items-center relative shadow-sm" onclick="simulatePayment(5)">
+                  <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full animate-pulse font-sans">HOT</span>
+                  5 <i class="fa-solid fa-ticket text-xs mb-1 text-[#ea580c]"></i><span class="text-[9px] text-gray-400">5,000៛</span>
+              </button>
+              <button class="bg-white hover:bg-orange-50 text-gray-800 font-black py-3 rounded-2xl text-sm border-2 border-gray-100 hover:border-orange-200 active:scale-95 transition-all flex flex-col items-center shadow-sm" onclick="simulatePayment(10)">
+                  10 <i class="fa-solid fa-ticket text-xs mb-1 text-[#ea580c]"></i><span class="text-[9px] text-gray-400">10,000៛</span>
+              </button>
+          </div>
+      </div>
+  </div>
+
+  <div id="cart-drawer" class="fixed inset-0 z-[7000] flex flex-col justify-end translate-y-full">
+    <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeCartDrawer()"></div>
+    <div class="relative w-full h-[85vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
+        <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10">
+            <div><h2 class="text-xl font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2><p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Your Shopping Cart</p></div>
+            <button onclick="closeCartDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+        <div class="bg-white border-t border-gray-100 p-5 z-10">
+            <div class="flex justify-between items-end mb-4"><span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Total)</span><span id="cart-grand-total" class="text-2xl font-black text-[#ea580c] leading-none">0៛</span></div>
+            <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']"><i class="fa-solid fa-truck-fast"></i> បន្តទៅការដឹកជញ្ជូន</button>
+        </div>
+    </div>
+  </div>
+
+  <div id="checkout-modal" class="fixed inset-0 z-[8000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
+      <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm md:max-w-md md:mx-auto md:w-full">
+          <h2 class="text-xl font-black font-['Moul']">ព័ត៌មានដឹកជញ្ជូន</h2><button onclick="closeCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50 md:max-w-md md:mx-auto md:w-full md:border-x md:border-gray-100">
+          <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
+              <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
+              <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប:</span><span id="check-subtotal">៛0</span></div>
+              <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">៛0</span></div>
+              <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3"><span class="text-sm">សរុបត្រូវបង់:</span><span id="check-total-khr" class="text-[#ea580c] text-xl leading-none">៛0</span></div>
+          </div>
+          <div class="space-y-4">
+              <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង</label>
+              <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Name)">
+              <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone)">
+              <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន</label>
+              <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ (Address)"></textarea>
+          </div>
+      </div>
+      <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:max-w-md md:left-1/2 md:-translate-x-1/2 md:border-x">
+          <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-[#ea580c] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
+      </div>
+  </div>
+
+  <script>
+    const RATE = 4000;
+    
+    let userCart = [];
+    let tickets = 0;
+    let isUnboxing = false;
+    let lastPrize = null;
+    let animTimeout1;
+    let lootPool = []; 
+
+    const rarityChances = { "Legendary": 5, "Epic": 10, "Rare": 25, "Common": 60 };
+
+    try {
+        const savedCart = localStorage.getItem('sr_cart'); if (savedCart) userCart = JSON.parse(savedCart);
+        const savedTickets = localStorage.getItem('sr_tickets'); if (savedTickets) tickets = parseInt(savedTickets) || 0;
+    } catch(e) {}
+
+    window.addEventListener('storage', (e) => {
+        if(e.key === 'sr_cart') { userCart = JSON.parse(e.newValue || '[]'); updateCartBadge(); if(!document.getElementById('cart-drawer').classList.contains('translate-y-full')) renderCartUI(); }
+        if(e.key === 'sr_tickets') { tickets = parseInt(e.newValue || 0); updateTicketUI(); }
+    });
+
+    async function fetchLivePrizePool() {
+        const loader = document.getElementById('loadingOverlay');
+        try {
+            // Adjust the API URL if needed based on your setup.
+            const res = await fetch('/api/products/toy');
+            if(!res.ok) throw new Error("API Error");
+            const data = await res.json();
+            
+            let tempPool = [];
+            let counts = { "Legendary": 0, "Epic": 0, "Rare": 0, "Common": 0 };
+
+            data.products.forEach(p => {
+                let variants = p.parsed_variants || p.variants || [];
+                if (typeof variants === 'string') try { variants = JSON.parse(variants); } catch(e){}
+                
+                if (variants.length > 0) {
+                    variants.forEach(v => {
+                        let cats = (v.category || p.category || "").toLowerCase();
+                        if (cats.includes('mystery')) {
+                           let rarity = determineRarity(cats);
+                           counts[rarity]++;
+                           tempPool.push({ id: `v-${v.id || p.id}`, name: v.name || p.title, rarity: rarity, stock: parseInt(v.stock || 0), image: v.image || p.image || p.thumbnail });
+                        }
+                    });
+                } else {
+                    let cats = (p.category || "").toLowerCase();
+                    if (cats.includes('mystery')) {
+                       let rarity = determineRarity(cats);
+                       counts[rarity]++;
+                       tempPool.push({ id: `p-${p.id}`, name: p.title, rarity: rarity, stock: parseInt(p.stock || 0), image: p.image || p.thumbnail });
+                    }
+                }
+            });
+
+            if (tempPool.length > 0) {
+                lootPool = tempPool.map(item => { item.chance = rarityChances[item.rarity] / (counts[item.rarity] || 1); return item; });
+            } else { throw new Error("No mystery items found"); }
+        } catch(e) {
+            console.log("Using Mock Data (Backend missing or empty):", e);
+            lootPool = [
+                { id: 'mock-1', name: "Add products in Admin", rarity: "Legendary", chance: 5, stock: 10, image: "https://images.unsplash.com/photo-1580227187970-2a818c32bc65?auto=format&fit=crop&w=200&q=80" },
+                { id: 'mock-2', name: "And tag them 'Mystery'", rarity: "Rare", chance: 25, stock: 0, image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=200&q=80" },
+                { id: 'mock-3', name: "Tag rarity like 'Epic'", rarity: "Common", chance: 60, stock: 100, image: "https://images.unsplash.com/photo-1585366119957-e5733f3951cf?auto=format&fit=crop&w=200&q=80" }
+            ];
+        } finally { loader.style.opacity = '0'; setTimeout(() => { loader.style.display = 'none'; renderPrizePool(); }, 300); }
+    }
+
+    function determineRarity(categoryString) {
+        if(categoryString.includes('legendary')) return "Legendary";
+        if(categoryString.includes('epic')) return "Epic";
+        if(categoryString.includes('rare')) return "Rare";
+        return "Common";
+    }
+
+    function updateTicketUI() { document.getElementById('ticket-balance').innerText = tickets; localStorage.setItem('sr_tickets', tickets); }
+    function updateCartBadge() { const b = document.getElementById('cart-badge'); if(userCart.length > 0) { b.innerText = userCart.length; b.classList.remove('hidden'); } else b.classList.add('hidden'); }
+    function saveCart() { localStorage.setItem('sr_cart', JSON.stringify(userCart)); updateCartBadge(); }
+    function showToast(msg, icon = "fa-circle-check") { const t = document.getElementById('toast'); document.getElementById('toast-text').innerText = msg; document.getElementById('toast-icon').className = `fa-solid ${icon} text-green-400`; t.classList.remove('opacity-0', 'scale-90'); setTimeout(() => t.classList.add('opacity-0', 'scale-90'), 2000); }
+
+    function openKHQRModal() { document.getElementById('khqr-modal').classList.remove('hidden'); document.getElementById('khqr-modal').classList.add('flex'); }
+    function closeKHQRModal() { document.getElementById('khqr-modal').classList.add('hidden'); document.getElementById('khqr-modal').classList.remove('flex'); }
+    function simulatePayment(amount) { tickets += amount; updateTicketUI(); closeKHQRModal(); showToast(`+${amount} Tickets Top-Up!`); const b = document.getElementById('ticket-balance').parentElement; b.classList.add('scale-110', 'bg-orange-100'); setTimeout(() => b.classList.remove('scale-110', 'bg-orange-100'), 300); }
+
+    function renderPrizePool() {
+        const grid = document.getElementById('prize-pool-grid');
+        grid.innerHTML = lootPool.map(item => {
+            const isOut = item.stock <= 0;
+            return `
+            <div class="relative flex flex-col items-center group w-full">
+                <div class="w-full aspect-[4/5] rounded-xl overflow-hidden cursor-pointer border-2 rarity-${item.rarity} relative bg-gray-50 flex items-center justify-center ${isOut ? 'grayscale opacity-50' : 'hover:scale-105 transition-transform shadow-sm'}" onclick="openImageViewer('${item.image}')">
+                    <img src="${item.image}" class="max-w-full max-h-full object-contain">
+                    ${isOut ? '<div class="absolute inset-0 bg-black/60 flex items-center justify-center"><span class="text-white text-[8px] font-black uppercase tracking-widest rotate-[-15deg] border border-white px-1 shadow-md">Out</span></div>' : ''}
+                    <div class="absolute top-1 right-1 w-5 h-5 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm"><i class="fa-solid fa-expand text-[9px] text-gray-800"></i></div>
+                </div>
+                <div class="mt-1.5 text-center w-full"><p class="text-[8px] font-bold text-gray-800 line-clamp-1 px-1">${item.name}</p><p class="text-[7px] font-black uppercase tracking-widest text-rarity mt-0.5">${item.rarity}</p></div>
+            </div>`;
+        }).join('');
+    }
+
+    function openImageViewer(src) { document.getElementById('viewer-img').src = src; document.getElementById('image-viewer-modal').classList.remove('hidden'); document.getElementById('image-viewer-modal').classList.add('flex'); }
+    function closeImageViewer() { document.getElementById('image-viewer-modal').classList.add('hidden'); document.getElementById('image-viewer-modal').classList.remove('flex'); }
+
+    function startUnboxing() {
+        if(tickets <= 0) { openKHQRModal(); return; }
+        const availablePool = lootPool.filter(item => item.stock > 0);
+        if (availablePool.length === 0) { alert("All Mystery Prizes are currently Out of Stock!"); return; }
+        if(isUnboxing) return;
+        
+        tickets--; updateTicketUI(); isUnboxing = true; lastPrize = rollDrop();
+
+        const overlay = document.getElementById('unboxing-overlay'); const bag = document.getElementById('cinematic-bag'); const reveal = document.getElementById('cinematic-reveal'); const claimBtn = document.getElementById('claim-section'); const skipBtn = document.getElementById('skip-btn');
+        overlay.classList.remove('hidden'); overlay.classList.add('flex'); setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+        bag.classList.remove('hidden'); bag.classList.add('anim-shake'); reveal.classList.add('hidden'); reveal.classList.remove('anim-pop-in'); claimBtn.classList.add('hidden'); skipBtn.innerText = "Skip"; skipBtn.onclick = skipUnboxing;
+
+        animTimeout1 = setTimeout(() => {
+            bag.classList.remove('anim-shake'); bag.classList.add('hidden'); showRevealCard(lastPrize);
+            skipBtn.innerText = "Close"; skipBtn.onclick = closeOverlayWithoutClaiming; claimBtn.classList.remove('hidden'); isUnboxing = false;
+        }, 2000);
+    }
+
+    function rollDrop() {
+        const availablePool = lootPool.filter(item => item.stock > 0); if (availablePool.length === 0) return null;
+        const totalChance = availablePool.reduce((sum, item) => sum + item.chance, 0);
+        const rand = Math.random() * totalChance; let sum = 0;
+        for (let item of availablePool) { sum += item.chance; if (rand <= sum) return item; }
+        return availablePool[0]; 
+    }
+
+    function showRevealCard(prize) {
+        const reveal = document.getElementById('cinematic-reveal'); const border = document.getElementById('reveal-border'); const img = document.getElementById('reveal-img'); const rarityText = document.getElementById('reveal-rarity-text');
+        reveal.classList.remove('hidden'); reveal.classList.add('anim-pop-in');
+        document.getElementById('reveal-name').innerText = prize.name; rarityText.innerText = prize.rarity;
+        reveal.className = `absolute w-64 h-80 rounded-[2rem] flex flex-col items-center justify-center text-white relative z-20 rarity-${prize.rarity} anim-pop-in`; img.src = prize.image;
+        if(prize.rarity === 'Legendary') { border.classList.add('legendary-card'); border.classList.remove('border-4', 'glow-effect'); fireConfetti(); } else { border.classList.remove('legendary-card'); border.classList.add('border-4', 'glow-effect'); }
+    }
+
+    function skipUnboxing() {
+        if(!isUnboxing) return; clearTimeout(animTimeout1); document.getElementById('cinematic-bag').classList.remove('anim-shake'); document.getElementById('cinematic-bag').classList.add('hidden'); showRevealCard(lastPrize);
+        const skipBtn = document.getElementById('skip-btn'); skipBtn.innerText = "Close"; skipBtn.onclick = closeOverlayWithoutClaiming; document.getElementById('claim-section').classList.remove('hidden'); isUnboxing = false;
+    }
+
+    function closeOverlayWithoutClaiming() { const overlay = document.getElementById('unboxing-overlay'); overlay.classList.add('opacity-0'); setTimeout(() => { overlay.classList.add('hidden'); overlay.classList.remove('flex'); }, 400); }
+
+    function claimPrizeToCart() {
+        if(!lastPrize) return;
+        lastPrize.stock -= 1; renderPrizePool();
+        const gachaId = `gacha-${lastPrize.id}-${Date.now()}`;
+        userCart.push({ id: gachaId, type: 'gacha_prize', title: "Mystery Prize", style: `${lastPrize.rarity} - ${lastPrize.name}`, price: 0, image: lastPrize.image, maxStock: 99, qty: 1, selected: true, isGacha: true });
+        saveCart(); showToast("Prize added to Bag!", "fa-gift"); closeOverlayWithoutClaiming();
+    }
+
+    const canvas = document.getElementById('confetti-canvas'); const ctx = canvas.getContext('2d'); let particles = [];
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+    function fireConfetti() { particles = []; const colors = ['#ea580c', '#fcd34d', '#ffffff']; for(let i=0; i<120; i++) particles.push({ x: canvas.width/2, y: canvas.height/2 + 50, r: Math.random()*6+2, dx: Math.random()*20-10, dy: Math.random()*-25-5, color: colors[Math.floor(Math.random()*colors.length)], tilt: Math.floor(Math.random()*10)-10, tiltAngle: 0, tiltAngleInc: (Math.random()*0.07)+0.05 }); requestAnimationFrame(renderConfetti); }
+    function renderConfetti() { ctx.clearRect(0, 0, canvas.width, canvas.height); let active = false; for(let i=0; i<particles.length; i++) { let p = particles[i]; p.tiltAngle += p.tiltAngleInc; p.y += (Math.cos(p.tiltAngle) + 1 + p.r / 2) / 2; p.x += Math.sin(p.tiltAngle) * 2; p.dy += 0.5; p.y += p.dy; p.x += p.dx; if(p.y <= canvas.height) active = true; ctx.beginPath(); ctx.lineWidth = p.r; ctx.strokeStyle = p.color; ctx.moveTo(p.x + p.tilt + p.r, p.y); ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r); ctx.stroke(); } if(active) requestAnimationFrame(renderConfetti); else ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+    function openCartDrawer() { renderCartUI(); document.getElementById('cart-drawer').classList.remove('translate-y-full'); }
+    function closeCartDrawer() { document.getElementById('cart-drawer').classList.add('translate-y-full'); }
+
+    function renderCartUI() {
+        const container = document.getElementById('cart-items-container');
+        if(userCart.length === 0) { container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-sm uppercase tracking-widest mt-2">កន្ត្រកទទេ</p></div>`; document.getElementById('cart-grand-total').innerText = "0៛"; return; }
+
+        let grandTotal = 0;
+        container.innerHTML = userCart.map((item) => {
+            let itemTotal = (item.price || 0) * item.qty; if(item.selected) grandTotal += itemTotal; const isFree = item.isGacha;
+            return `
+            <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-50' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
+                <label class="flex items-start gap-3 cursor-pointer"><input type="checkbox" class="cart-checkbox mt-2 ml-1" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')"></label>
+                <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden">
+                    ${isFree ? `<div class="absolute top-0 left-0 w-full bg-yellow-400 text-black text-[8px] font-black py-0.5 text-center z-10 uppercase tracking-widest">Prize</div>` : ''}
+                    <img src="${item.image}" class="max-w-full max-h-full object-contain">
+                </div>
+                <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
+                    <div><div class="flex justify-between items-start"><h4 class="font-black text-xs text-gray-900 leading-tight truncate pr-2">${item.title}</h4><button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 -mt-1 -mr-1 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button></div><p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">${item.style}</p></div>
+                    <div class="flex justify-between items-end mt-2"><span class="font-black text-sm ${isFree ? 'text-green-500' : 'text-[#ea580c]'}">${isFree ? 'FREE' : (itemTotal * RATE).toLocaleString() + '៛'}</span>
+                        <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100"><button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90" ${isFree ? 'disabled' : ''}><i class="fa-solid fa-minus text-[10px]"></i></button><span class="font-black text-xs w-2 text-center">${item.qty}</span><button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90" ${isFree ? 'disabled' : ''}><i class="fa-solid fa-plus text-[10px]"></i></button></div>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+        document.getElementById('cart-grand-total').innerText = (grandTotal * RATE).toLocaleString() + "៛";
+    }
+
+    function toggleCartItem(id) { const item = userCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveCart(); renderCartUI(); } }
+    function updateCartQty(id, delta) { const item = userCart.find(i => i.id === id); if(item && !item.isGacha) { item.qty += delta; if(item.qty < 1) item.qty = 1; if(item.qty > 99) item.qty = 99; saveCart(); renderCartUI(); } }
+    function removeCartItem(id) { if(confirm("លុបចេញពីកន្ត្រក?")) { userCart = userCart.filter(i => i.id !== id); saveCart(); renderCartUI(); updateCartBadge(); } }
+
+    function calculateDelivery(subtotalKHR) { if (subtotalKHR === 0 && userCart.filter(i => i.selected).length > 0) return 4000; if (subtotalKHR === 0) return 0; if (subtotalKHR < 20000) return 8000; if (subtotalKHR < 40000) return 6000; return 4000; }
+    function openCheckout() {
+        const selectedItems = userCart.filter(i => i.selected); if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយដើម្បីបន្ត!");
+        let subtotalUSD = 0; selectedItems.forEach(item => { subtotalUSD += (item.price * item.qty); });
+        let subtotalKHR = subtotalUSD * RATE; const deliveryKHR = calculateDelivery(subtotalKHR); const totalKHR = subtotalKHR + deliveryKHR;
+        document.getElementById('check-subtotal').innerText = subtotalKHR.toLocaleString() + "៛"; document.getElementById('check-delivery').innerText = deliveryKHR === 0 ? "ឥតគិតថ្លៃ" : deliveryKHR.toLocaleString() + "៛"; document.getElementById('check-total-khr').innerText = totalKHR.toLocaleString() + "៛";
+        closeCartDrawer(); document.getElementById('checkout-modal').classList.remove('translate-y-full');
+    }
+    function closeCheckout() { document.getElementById('checkout-modal').classList.add('translate-y-full'); }
+    async function processFinalOrder() { 
+        const selectedItems = userCart.filter(i => i.selected);
+        if(selectedItems.length === 0) return;
+
+        const name = document.getElementById('cust-name').value.trim(); const phone = document.getElementById('cust-phone').value.trim(); const address = document.getElementById('cust-address').value.trim();
+        if(!name || !phone || !address) return alert("សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់!"); 
+
+        const btn = document.getElementById('confirm-btn'); btn.innerText = "កំពុងបញ្ជូន..."; btn.disabled = true;
+
+        let subtotal = 0; const orderItemsPayload = [];
+        selectedItems.forEach(cartItem => {
+            subtotal += (cartItem.price * cartItem.qty);
+            orderItemsPayload.push({ cartId: cartItem.id, title: cartItem.title, style: cartItem.style, price: cartItem.price, qty: cartItem.qty, image: cartItem.image, maxStock: cartItem.maxStock });
+        });
+
+        const delivery = calculateDelivery(subtotal * RATE); const totalUSD = subtotal + (delivery / RATE);
+
+        try {
+            const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD }) });
+            if(res.ok) { alert("Checkout Successful! We will contact you soon."); userCart = userCart.filter(i => !i.selected); saveCart(); window.location.reload(); }
+            else { alert("Error sending order"); }
+        } catch (e) { alert("Checkout Successful (Demo Mode)"); userCart = userCart.filter(i => !i.selected); saveCart(); window.location.reload(); }
+        btn.innerText = "បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)"; btn.disabled = false;
+    }
+
+    updateTicketUI(); updateCartBadge(); fetchLivePrizePool();
+  </script>
+</body>
+</html>
+
+```
