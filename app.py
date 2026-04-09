@@ -1,4 +1,3 @@
-```python
 import os
 import json
 import time
@@ -83,7 +82,7 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     store = db.Column(db.String(50), nullable=False)
-    image = db.Column(db.String(500), nullable=True, default="https://via.placeholder.com/150?text=Upload")
+    image = db.Column(db.String(500), nullable=True, default="[https://via.placeholder.com/150?text=Upload](https://via.placeholder.com/150?text=Upload)")
     sort_order = db.Column(db.Integer, default=0)
 
 class Order(db.Model):
