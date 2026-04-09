@@ -1,3 +1,4 @@
+```python
 import os
 import json
 import time
@@ -213,12 +214,38 @@ def admin_panel():
     orders = Order.query.order_by(Order.timestamp.desc()).all()
     for o in orders: o.parsed_items = json.loads(o.items_json)
 
-    # Spinner Game Data (for the unified admin panel)
+    # Spinner Game Data
     codes = RedeemCode.query.order_by(RedeemCode.timestamp.desc()).all()
     pool = MinifigurePool.query.all()
     history = DrawHistory.query.order_by(DrawHistory.timestamp_utc.desc()).limit(100).all()
 
     return render_template('admin_panel.html', products=products, categories=categories, orders=orders, codes=codes, pool=pool, history=history)
+
+# NEW: Quick API to edit stock instantly from the Modal
+@app.route('/admin/product/quick_stock', methods=['POST'])
+@login_required
+def quick_update_stock():
+    data = request.json
+    p_id = data.get('product_id')
+    v_idx = data.get('variant_index') 
+    new_stock = int(data.get('stock', 0))
+
+    product = Product.query.get(p_id)
+    if not product:
+        return jsonify({'success': False, 'message': 'Product not found'})
+
+    if v_idx != -1 and product.variants:
+        variants = json.loads(product.variants)
+        if 0 <= v_idx < len(variants):
+            variants[v_idx]['stock'] = new_stock
+            product.variants = json.dumps(variants)
+            product.stock = sum(int(v.get('stock', 0)) for v in variants)
+    else:
+        product.stock = new_stock
+
+    db.session.commit()
+    return jsonify({'success': True, 'new_stock': new_stock, 'total_stock': product.stock})
+
 
 @app.route('/admin/order/status/<int:id>/<string:status>', methods=['POST'])
 @login_required
