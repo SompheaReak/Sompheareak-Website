@@ -582,20 +582,35 @@ def generate_codes():
 @app.route('/admin/spin/add_pool', methods=['POST'])
 @login_required
 def add_spin_pool():
-    name = request.form.get('name')
+    name_input = request.form.get('name', '').strip()
     rarity = request.form.get('rarity')
     stock = int(request.form.get('stock', 10))
-    file = request.files.get('image')
     
-    if file and file.filename != '':
-        try:
-            res = optimize_and_upload(file) # Uses Cloudinary
-            new_item = MinifigurePool(name=name, rarity=rarity, stock=stock, image=res['secure_url'])
-            db.session.add(new_item)
+    # NEW: Fetch ALL uploaded files, not just one!
+    files = request.files.getlist('images')
+    
+    uploaded_count = 0
+    try:
+        for file in files:
+            if file and file.filename != '':
+                res = optimize_and_upload(file) # Uses Cloudinary
+                
+                # If name is blank, default to "Mystery [Rarity] Prize" 
+                item_name = name_input if name_input else f"Mystery {rarity} Prize"
+                
+                new_item = MinifigurePool(name=item_name, rarity=rarity, stock=stock, image=res['secure_url'])
+                db.session.add(new_item)
+                uploaded_count += 1
+                
+        if uploaded_count > 0:
             db.session.commit()
-            flash('Prize added to game pool!', 'success')
-        except Exception as e:
-            flash(f'Upload failed: {str(e)}', 'error')
+            flash(f'{uploaded_count} Prize(s) added to game pool!', 'success')
+        else:
+            flash('No valid images found to upload.', 'error')
+            
+    except Exception as e:
+        flash(f'Upload failed: {str(e)}', 'error')
+        
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/spin/update_stock/<int:id>', methods=['POST'])
@@ -607,6 +622,44 @@ def update_spin_stock(id):
         db.session.commit()
         flash('Prize stock updated.', 'success')
     return redirect(url_for('admin_panel'))
+
+# THE MISSING DELETE & RARITY EDIT ROUTES!
+@app.route('/admin/spin/pool/update_rarity/<int:item_id>', methods=['POST'])
+@login_required
+def admin_spin_update_rarity(item_id):
+    item = MinifigurePool.query.get_or_404(item_id)
+    item.rarity = request.form.get('rarity')
+    db.session.commit()
+    flash('Item rarity updated successfully!', 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/spin/pool/delete/<int:item_id>', methods=['POST'])
+@login_required
+def admin_spin_delete_pool(item_id):
+    item = MinifigurePool.query.get_or_404(item_id)
+    db.session.delete(item)
+    db.session.commit()
+    flash('Prize Pool item deleted!', 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/spin/history/delete/<int:draw_id>', methods=['POST'])
+@login_required
+def admin_spin_delete_history(draw_id):
+    draw = DrawHistory.query.get_or_404(draw_id)
+    db.session.delete(draw)
+    db.session.commit()
+    flash('Live draw history record deleted!', 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/spin/code/delete/<int:code_id>', methods=['POST'])
+@login_required
+def admin_spin_delete_code(code_id):
+    code = RedeemCode.query.get_or_404(code_id)
+    db.session.delete(code)
+    db.session.commit()
+    flash('Riel code deleted permanently!', 'success')
+    return redirect(url_for('admin_panel'))
+
 
 # --- 9. STARTUP & MIGRATIONS ---
 @app.errorhandler(413)
