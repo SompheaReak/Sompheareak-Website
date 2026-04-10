@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,6 +20,10 @@
         .edit-mode { display: none; }
         .is-editing .view-mode { display: none; }
         .is-editing .edit-mode { display: block; }
+        
+        /* Grid expansion for Edit Mode */
+        .is-editing { grid-column: 1 / -1 !important; }
+
         .handle { cursor: grab; }
         .hidden-view { display: none; }
         
@@ -189,54 +194,73 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden divide-y" id="main-inventory-list">
+                <!-- GRID LAYOUT FOR INVENTORY -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="main-inventory-list">
                     {% for p in products %}
                     
                     {% set group_cats = [] %}
                     {% if p.category %}{% for mc in p.category.split(',') %}{% set trimmed = mc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}
                     {% for v in p.parsed_variants %}{% if v.category %}{% for vc in v.category.split(',') %}{% set trimmed = vc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}{% endfor %}
                     
-                    <div class="product-item p-4 {% if not p.is_visible %}bg-gray-50/50{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}" data-categories="{{ group_cats | join(',') | lower }}">
-                        <!-- VIEW MODE -->
-                        <div class="view-mode flex items-center gap-4">
-                            <i class="fa-solid fa-arrows-up-down text-gray-200 product-handle p-2 hover:text-[#ff5000]"></i>
-                            <div class="w-20 h-20 flex-shrink-0 flex justify-center items-center bg-white border border-gray-100 rounded-xl shadow-sm p-1">
-                                <img src="{{p.image}}" class="max-w-full max-h-full object-contain rounded-lg {% if not p.is_visible %}grayscale opacity-60{% endif %}">
-                            </div>
-                            
-                            <div class="flex-1 min-w-0 pl-1">
-                                <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                                    <span class="text-[9px] font-black text-white bg-gray-900 px-2 py-1 rounded-md uppercase">{{p.store}}</span>
-                                    {% for cat in group_cats %}<span class="text-[9px] font-black text-[#ff5000] bg-orange-50 border border-orange-100 px-2 py-1 rounded-md uppercase"><i class="fa-solid fa-tag mr-1 opacity-50"></i>{{ cat }}</span>{% endfor %}
-                                    {% if not p.is_visible %}<span class="text-[9px] font-black text-red-500 bg-red-50 border border-red-100 px-2 py-1 rounded-md uppercase"><i class="fa-solid fa-eye-slash mr-1"></i>Hidden</span>{% endif %}
+                    <!-- PRODUCT GRID CARD -->
+                    <div class="product-item bg-white rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden transition-all duration-300 {% if not p.is_visible %}bg-gray-50/50 grayscale-[0.5]{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}" data-categories="{{ group_cats | join(',') | lower }}">
+                        
+                        <!-- VIEW MODE (SHOP STYLE CARD) -->
+                        <div class="view-mode flex flex-col h-full">
+                            <!-- Image Section -->
+                            <div class="relative h-40 w-full bg-gray-50 p-2 flex items-center justify-center border-b border-gray-100">
+                                <img src="{{ p.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply drop-shadow-sm">
+                                
+                                <!-- Tags Top Left -->
+                                <div class="absolute top-2 left-2 flex flex-col gap-1 items-start pointer-events-none">
+                                    <span class="text-[8px] font-black text-white bg-slate-900/80 backdrop-blur px-1.5 py-0.5 rounded shadow-sm uppercase tracking-widest">{{ p.store }}</span>
+                                    {% if not p.is_visible %}
+                                        <span class="text-[8px] font-black text-white bg-red-500/90 backdrop-blur px-1.5 py-0.5 rounded shadow-sm uppercase tracking-widest"><i class="fa-solid fa-eye-slash"></i> Hidden</span>
+                                    {% endif %}
                                 </div>
-                                <h4 class="font-black text-[15px] truncate leading-none mb-2 text-gray-800 {% if not p.is_visible %}text-gray-400 line-through{% endif %}">{{p.title}}</h4>
-                                <div class="flex items-center gap-4">
-                                    <span class="text-sm font-black text-green-600">$ {{ "%.2f"|format(p.price) }}</span>
-                                    <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-md">{{ p.parsed_variants|length }} Variants Attached</span>
+                                
+                                <!-- Sort Drag Handle Top Right -->
+                                <div class="absolute top-2 right-2 cursor-grab product-handle w-7 h-7 bg-white/90 backdrop-blur rounded-lg flex items-center justify-center text-gray-400 hover:text-[#ff5000] shadow-sm transition-colors border border-gray-100">
+                                    <i class="fa-solid fa-arrows-up-down text-xs"></i>
                                 </div>
                             </div>
-                            
-                            <div class="flex flex-col sm:flex-row items-center gap-2">
-                                <form action="/admin/product/toggle/{{ p.id }}" method="POST" class="m-0">
-                                    {% if p.is_visible %}<button type="submit" class="w-10 h-10 bg-green-50 border border-green-200 rounded-xl flex items-center justify-center text-green-600 hover:bg-green-100 shadow-sm"><i class="fa-solid fa-eye text-sm"></i></button>
-                                    {% else %}<button type="submit" class="w-10 h-10 bg-gray-100 border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:bg-gray-200 shadow-sm"><i class="fa-solid fa-eye-slash text-sm"></i></button>{% endif %}
+
+                            <!-- Info Section -->
+                            <div class="p-3 flex-1 flex flex-col">
+                                <h4 class="font-black text-xs text-gray-800 leading-tight mb-1 line-clamp-2 {% if not p.is_visible %}line-through text-gray-400{% endif %}">{{ p.title }}</h4>
+                                <p class="text-[9px] font-bold text-gray-400 mb-2 mt-auto">{{ p.parsed_variants|length }} Variant(s) attached</p>
+                                
+                                <div class="flex justify-between items-center mt-1">
+                                    <span class="text-sm font-black text-[#ff5000] leading-none">$ {{ "%.2f"|format(p.price) }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Quick Action Bar -->
+                            <div class="p-2 border-t border-gray-100 bg-gray-50 flex justify-between items-center gap-1.5">
+                                <form action="/admin/product/toggle/{{ p.id }}" method="POST" class="m-0 flex-1">
+                                    <button type="submit" class="w-full h-8 rounded-lg flex items-center justify-center transition-colors {% if p.is_visible %}bg-white text-gray-500 hover:text-green-500 border border-gray-200{% else %}bg-gray-200 text-gray-400{% endif %} shadow-sm" title="Toggle Visibility">
+                                        <i class="fa-solid {% if p.is_visible %}fa-eye{% else %}fa-eye-slash{% endif %} text-[10px]"></i>
+                                    </button>
                                 </form>
-                                <button onclick="toggleEdit({{p.id}})" class="w-10 h-10 border border-gray-200 bg-white rounded-xl flex items-center justify-center text-gray-600 hover:text-orange-500 hover:border-orange-500 shadow-sm transition-colors"><i class="fa-solid fa-gear"></i></button>
-                                <form action="/admin/product/delete/{{ p.id }}" method="POST" class="m-0" onsubmit="return confirm('Delete this group permanently?')">
-                                    <button type="submit" class="w-10 h-10 border border-red-100 bg-red-50 rounded-xl flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white shadow-sm transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                                <button onclick="toggleEdit({{p.id}})" class="flex-1 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center text-blue-500 hover:bg-blue-50 transition-colors shadow-sm" title="Edit Product">
+                                    <i class="fa-solid fa-gear text-xs"></i>
+                                </button>
+                                <form action="/admin/product/delete/{{ p.id }}" method="POST" class="m-0 flex-1" onsubmit="return confirm('Delete this product permanently?')">
+                                    <button type="submit" class="w-full h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors shadow-sm" title="Delete">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
                                 </form>
                             </div>
                         </div>
 
-                        <!-- EDIT MODE -->
+                        <!-- FULL WIDTH EDIT MODE -->
                         <div class="edit-mode">
-                             <form action="/admin/product/update/{{p.id}}" method="POST" enctype="multipart/form-data" class="bg-gray-50 p-6 rounded-[28px] border-2 border-orange-200 mt-3 space-y-5 submit-form shadow-md relative">
-                                <div class="flex justify-between items-center border-b border-orange-100 pb-3">
-                                    <h5 class="text-xs font-black text-orange-500 uppercase tracking-widest"><i class="fa-solid fa-pen-to-square mr-2"></i>Edit Group & Variants</h5>
-                                    <button type="button" onclick="toggleEdit({{p.id}})" class="text-[10px] font-black text-gray-400 uppercase hover:text-red-500 bg-white px-3 py-1.5 rounded-lg border shadow-sm">Cancel</button>
+                             <form action="/admin/product/update/{{p.id}}" method="POST" enctype="multipart/form-data" class="bg-gray-50 p-6 rounded-2xl border-2 border-orange-200 shadow-md relative w-full h-full">
+                                <div class="flex justify-between items-center border-b border-orange-100 pb-3 mb-4">
+                                    <h5 class="text-sm font-black text-orange-500 uppercase tracking-widest"><i class="fa-solid fa-pen-to-square mr-2"></i>Edit Group & Variants</h5>
+                                    <button type="button" onclick="toggleEdit({{p.id}})" class="text-[10px] font-black text-white bg-gray-800 hover:bg-red-500 px-4 py-2 rounded-lg shadow-sm transition-colors uppercase tracking-widest">Close Edit</button>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div class="space-y-1"><label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Store</label>
                                         <select name="store" class="input-box shadow-sm edit-store-select" data-target="edit-cats-{{p.id}}" onchange="updateCatList(this, 'edit-cats-{{p.id}}')">
                                             <option value="toy" {% if p.store == 'toy' %}selected{% endif %}>Toy Store</option>
@@ -246,7 +270,7 @@
                                     </div>
                                     <div class="space-y-1"><label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Main Categories</label>
                                         <div class="tag-wrapper pt-0.5"><input type="hidden" name="category" class="hidden-category-input" value="{{p.category}}">
-                                            <div class="tag-container bg-white shadow-sm">
+                                            <div class="tag-container bg-white shadow-sm border border-gray-200">
                                                 {% if p.category %}{% for pc in p.category.split(',') %}{% if pc.strip() != "" %}
                                                 <span class="tag-badge">{{ pc.strip() }} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i></span>
                                                 {% endif %}{% endfor %}{% endif %}
@@ -255,11 +279,11 @@
                                         </div><datalist id="edit-cats-{{p.id}}"></datalist>
                                     </div>
                                     <div class="space-y-1"><label class="text-[9px] font-black text-gray-600 uppercase tracking-widest pl-1">Group Title</label>
-                                        <input type="text" name="title" value="{{p.title}}" class="input-box shadow-sm" placeholder="Title">
+                                        <input type="text" name="title" value="{{p.title}}" class="input-box shadow-sm border-gray-200" placeholder="Title">
                                     </div>
                                 </div>
                                 
-                                <div class="space-y-3 pt-2 border-t border-gray-200">
+                                <div class="space-y-3 pt-4 mt-4 border-t border-gray-200">
                                     <div class="flex items-center justify-between"><label class="text-[10px] font-black text-gray-900 uppercase">Manage Variants</label></div>
                                     <div id="sortable-variants-{{p.id}}" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2 hide-scrollbar">
                                         {% for v in p.parsed_variants %}
@@ -268,7 +292,7 @@
                                             <input type="hidden" name="v_ids[]" value="{{v.id}}"><input type="hidden" name="v_images[]" value="{{v.image}}">
                                             <div class="w-14 h-14 bg-gray-50 border border-gray-100 rounded-lg p-0.5 flex-shrink-0 mt-1"><img src="{{v.image}}" class="w-full h-full object-contain rounded-md"></div>
                                             <div class="flex-1 space-y-2 price-group">
-                                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                                                     <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Name</span><input type="text" name="v_names[]" value="{{v.name}}" class="w-full text-[11px] font-bold border-b border-gray-200 outline-none pb-1 focus:border-orange-500 bg-transparent"></div>
                                                     <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Price (USD)</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">$</span><input type="number" step="any" name="v_prices[]" value="{{v.price}}" class="w-full text-[11px] font-black outline-none usd-input bg-transparent" oninput="updatePrice(this, 'USD')"></div></div>
                                                     <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Price (KHR)</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">៛</span><input type="number" step="any" value="{{ (v.price * 4000) | int }}" class="w-full text-[11px] font-black outline-none khr-input bg-transparent" oninput="updatePrice(this, 'KHR')"></div></div>
@@ -291,13 +315,13 @@
                                     </div>
                                 </div>
 
-                                <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 flex items-center gap-4">
+                                <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 flex flex-col md:flex-row md:items-center gap-4 mt-4">
                                     <div class="flex-1">
                                         <label class="text-[10px] font-black text-blue-600 uppercase tracking-widest block mb-1">Add More Images</label>
                                         <input type="file" name="new_images" multiple class="block w-full text-[10px] text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer transition-colors">
                                     </div>
                                 </div>
-                                <div class="pt-2">
+                                <div class="pt-4 mt-2 border-t border-orange-100">
                                     <button type="submit" class="w-full bg-black text-white py-4 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform hover:bg-gray-800">Save Group Changes</button>
                                 </div>
                              </form>
@@ -310,7 +334,7 @@
         </div>
 
         <!-- ==================== 2. ORDERS VIEW ==================== -->
-        <div id="view-orders" class="hidden-view space-y-4">
+        <div id="view-orders" class="hidden-view space-y-4 max-w-4xl mx-auto">
              {% if orders|length == 0 %}
             <div class="py-20 text-center text-gray-300">
                 <i class="fa-solid fa-receipt text-5xl mb-4 opacity-20"></i>
@@ -338,75 +362,94 @@
                     <p class="text-xs font-bold text-gray-600 editable outline-none" contenteditable="false">{{ order.customer_address }}</p>
                 </div>
 
-                <div class="bg-gray-50 rounded-2xl p-4 space-y-3">
+                <div class="bg-gray-50 rounded-2xl p-4 space-y-4">
                     {% for item in order.parsed_items %}
                         {% if 'DIY-Part' not in item.title|string and item.image|string != 'hidden' %}
                             
                             <!-- CUSTOM BRACELET RECEIPT LAYOUT -->
                             {% if 'custom' in item.cartId|string or 'DIY' in item.title|string %}
-                            <div class="bg-orange-50/70 rounded-2xl p-4 border border-orange-200 relative mb-3">
-                                <div class="absolute top-0 left-0 w-1 h-full bg-[#ff5000] rounded-l-2xl"></div>
-                                
-                                <div class="flex flex-col sm:flex-row justify-between items-start mb-3 pl-2 gap-4">
-                                    <!-- Image is now explicitly taller and rectangular -->
-                                    <img src="{{ item.image }}" class="w-24 h-auto object-contain rounded-xl border border-gray-200 bg-white shadow-sm shrink-0" onclick="openImageViewer('{{ item.image }}')" style="cursor: zoom-in;">
-                                    
-                                    <div class="flex-1 min-w-0 break-words w-full">
-                                        <span class="text-[8px] font-black text-[#ff5000] uppercase tracking-widest bg-orange-100 px-2 py-1 rounded-md mb-2 inline-block"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Custom DIY Order</span>
-                                        <h4 class="text-sm font-black text-gray-900 mt-1 break-words">{{ item.title }}</h4>
-                                        <!-- BREAK-ALL added here so long charm lists wrap perfectly -->
-                                        <p class="text-[10px] font-bold text-gray-600 mt-2 whitespace-pre-wrap leading-relaxed border-l-2 border-orange-200 pl-2 ml-1 break-all">{{ item.style }}</p>
+                            <div class="bg-orange-50/40 rounded-[24px] p-5 border border-orange-200 relative mb-4 flex flex-col items-center shadow-sm">
+                                <!-- Top: Large Explicitly Rectangular Image -->
+                                <div class="w-full relative group cursor-zoom-in" onclick="openImageViewer('{{ item.image }}')">
+                                    <div class="w-full h-48 md:h-64 bg-white border border-gray-200 rounded-[20px] shadow-sm flex items-center justify-center overflow-hidden mb-4 relative z-10">
+                                        <img src="{{ item.image }}" class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300 p-2">
                                     </div>
+                                    <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+                                        <span class="text-[9px] font-black text-white bg-slate-800 uppercase tracking-widest px-4 py-1.5 rounded-full shadow-md whitespace-nowrap"><i class="fa-solid fa-magnifying-glass mr-1"></i>Tap to Zoom/Save</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Info & Code Section -->
+                                <div class="w-full mt-4 text-left">
+                                    <h4 class="text-lg font-black text-gray-900 border-b border-orange-200 pb-2 mb-3">{{ item.title }}</h4>
                                     
-                                    <div class="text-right shrink-0">
-                                        <span class="text-sm font-black text-[#ff5000] whitespace-nowrap block">$ {{ "%.2f"|format(item.price * item.qty) }}</span>
-                                        <span class="text-[10px] font-bold text-gray-400">Qty: {{ item.qty }}</span>
+                                    <div class="w-full bg-white rounded-xl p-4 border border-orange-100 shadow-inner relative group">
+                                        <!-- Code/Charm Details with BREAK-ALL to prevent stretching -->
+                                        <p class="text-xs font-bold text-gray-700 whitespace-pre-wrap break-all leading-relaxed pr-10" id="desc-{{ order.id }}-{{ loop.index }}">{{ item.style }}</p>
+                                        
+                                        <!-- Copy Button -->
+                                        <button type="button" onclick="copyToClipboard('desc-{{ order.id }}-{{ loop.index }}')" class="absolute top-3 right-3 w-10 h-10 bg-orange-100 hover:bg-[#ff5000] hover:text-white rounded-xl flex items-center justify-center text-orange-600 transition-all shadow-sm border border-orange-200" title="Copy Code Recipe">
+                                            <i class="fa-solid fa-copy"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="w-full mt-4 flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                                        <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Price details</span>
+                                        <div class="text-right">
+                                            <span class="text-base font-black text-[#ff5000] block">{{ "{:,.0f}".format(item.price * item.qty * 4000) }} ៛</span>
+                                            <span class="text-[10px] font-bold text-gray-400 block">$ {{ "%.2f"|format(item.price * item.qty) }} (x{{ item.qty }})</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
                             {% else %}
                             <!-- NORMAL ITEM RECEIPT LAYOUT -->
-                            <div class="flex gap-3 items-center">
-                                <img src="{{ item.image }}" class="w-10 h-10 rounded-lg object-contain bg-white border border-gray-100 p-0.5">
-                                <div class="flex-1"><h4 class="text-xs font-black">{{ item.title }}</h4><p class="text-[9px] font-bold text-gray-400">{{ item.style }} x {{ item.qty }}</p></div>
-                                <span class="text-xs font-black">$ {{ "%.2f"|format(item.price * item.qty) }}</span>
+                            <div class="flex gap-4 items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                                <img src="{{ item.image }}" class="w-14 h-14 rounded-lg object-contain bg-gray-50 border border-gray-100 p-1">
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-xs font-black text-gray-800 truncate">{{ item.title }}</h4>
+                                    <p class="text-[10px] font-bold text-gray-500 mt-0.5">{{ item.style }} <span class="text-orange-500 ml-1 font-black">x {{ item.qty }}</span></p>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <span class="text-xs font-black block text-gray-900">$ {{ "%.2f"|format(item.price * item.qty) }}</span>
+                                </div>
                             </div>
                             {% endif %}
                             
                         {% endif %}
                     {% endfor %}
                     
-                    <div class="border-t border-gray-200 pt-3 flex justify-between items-end font-black">
-                        <span class="text-xs text-gray-500">GRAND TOTAL</span>
+                    <div class="border-t-2 border-dashed border-gray-300 pt-4 mt-2 flex justify-between items-end font-black px-2">
+                        <span class="text-sm text-gray-500">GRAND TOTAL</span>
                         <div class="text-right">
-                            <span class="block text-xl text-[#ff5000] editable outline-none" contenteditable="false">{{ "{:,.0f}".format(order.total_usd * 4000) }}៛</span>
-                            <span class="block text-[10px] text-gray-400 editable outline-none" contenteditable="false">$ {{ "%.2f"|format(order.total_usd) }}</span>
+                            <span class="block text-2xl text-[#ff5000] editable outline-none leading-none" contenteditable="false">{{ "{:,.0f}".format(order.total_usd * 4000) }} ៛</span>
+                            <span class="block text-xs text-gray-400 editable outline-none mt-1" contenteditable="false">$ {{ "%.2f"|format(order.total_usd) }}</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="action-buttons flex gap-2 pt-2">
-                    <button type="button" onclick="toggleReceiptEdit({{ order.id }})" title="Edit Text" class="w-12 h-12 flex-shrink-0 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 flex items-center justify-center transition-colors border border-blue-100 active:scale-95"><i class="fa-solid fa-pen"></i></button>
-                    <button type="button" onclick="generateReceiptImage({{ order.id }})" title="Screenshot Receipt" class="w-12 h-12 flex-shrink-0 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 flex items-center justify-center transition-colors border border-orange-100 active:scale-95"><i class="fa-solid fa-camera"></i></button>
+                <div class="action-buttons flex gap-3 pt-2">
+                    <button type="button" onclick="toggleReceiptEdit({{ order.id }})" title="Edit Text" class="w-14 h-14 flex-shrink-0 bg-blue-50 text-blue-600 rounded-[16px] hover:bg-blue-100 flex items-center justify-center transition-colors border border-blue-200 active:scale-95 shadow-sm"><i class="fa-solid fa-pen text-lg"></i></button>
+                    <button type="button" onclick="generateReceiptImage({{ order.id }})" title="Screenshot Receipt" class="w-14 h-14 flex-shrink-0 bg-orange-50 text-orange-600 rounded-[16px] hover:bg-orange-100 flex items-center justify-center transition-colors border border-orange-200 active:scale-95 shadow-sm"><i class="fa-solid fa-camera text-lg"></i></button>
 
                     {% if is_completed %}
-                        <button type="button" disabled class="flex-1 bg-gray-100 text-gray-400 py-3 rounded-xl text-[10px] font-black uppercase shadow-inner cursor-not-allowed flex items-center justify-center gap-2 border border-gray-200"><i class="fa-solid fa-check"></i> Done</button>
+                        <button type="button" disabled class="flex-1 bg-gray-100 text-gray-400 py-3 rounded-[16px] text-xs font-black uppercase shadow-inner cursor-not-allowed flex items-center justify-center gap-2 border border-gray-200"><i class="fa-solid fa-check text-lg"></i> Done</button>
                     {% else %}
-                        <form action="/admin/order/status/{{ order.id }}/Completed" method="POST" class="flex-1 m-0" onsubmit="return confirm('Mark as finished? This will deduct stock permanently.')">
-                            <button type="submit" class="w-full h-12 bg-green-500 text-white rounded-xl text-[10px] font-black uppercase shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2 hover:bg-green-600">Finish Order</button>
+                        <form action="/admin/order/status/{{ order.id }}/Completed" method="POST" class="flex-1 m-0 h-14" onsubmit="return confirm('Mark as finished? This will deduct stock permanently.')">
+                            <button type="submit" class="w-full h-full bg-[#10b981] text-white rounded-[16px] text-xs font-black uppercase shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2 hover:bg-[#059669]">Finish Order</button>
                         </form>
                     {% endif %}
 
                     <form action="/admin/order/delete/{{ order.id }}" method="POST" onsubmit="return confirm('Delete order history?')" class="m-0">
-                        <button type="submit" class="w-12 h-12 bg-gray-50 text-gray-400 border border-gray-100 rounded-xl hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors active:scale-95"><i class="fa-solid fa-trash-can"></i></button>
+                        <button type="submit" class="w-14 h-14 bg-gray-50 text-gray-400 border border-gray-200 rounded-[16px] hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors active:scale-95 shadow-sm"><i class="fa-solid fa-trash-can text-lg"></i></button>
                     </form>
                 </div>
             </div>
             {% endfor %}
         </div>
 
-        <!-- ==================== 3. NEW: MINIFIG SPIN VIEW ==================== -->
+        <!-- ==================== 3. MINIFIG SPIN VIEW ==================== -->
         <div id="view-spin" class="hidden-view grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             <!-- Left Column: Forms -->
@@ -659,6 +702,17 @@
     </div>
 
     <script>
+        // --- TEXT COPY LOGIC ---
+        function copyToClipboard(elementId) {
+            const textToCopy = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('Details copied successfully!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                alert('Failed to copy text. Please select and copy manually.');
+            });
+        }
+
         // --- LIVE STOCK UPDATER LOGIC ---
         async function quickUpdateStock(productId, variantIndex, change) {
             const inputEl = document.getElementById(`quick-stock-${productId}-${variantIndex}`);
@@ -867,7 +921,7 @@
                         row.innerHTML = `
                             <div class="w-14 h-14 flex-shrink-0 bg-gray-50 border border-gray-100 rounded-lg p-0.5 mt-1"><img src="${e.target.result}" class="w-full h-full object-contain rounded-md"></div>
                             <div class="flex-1 space-y-2 price-group">
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                                     <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Image Name</span><input type="text" name="variant_names[]" placeholder="Variant ${idx + 1}" class="w-full text-[11px] font-bold outline-none border-b border-gray-200 pb-1 text-gray-700 focus:border-orange-500"></div>
                                     <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Price (USD)</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">$</span><input type="number" step="any" name="variant_prices[]" required placeholder="0.00" class="w-full text-[11px] font-black outline-none usd-input" oninput="updatePrice(this, 'USD')"></div></div>
                                     <div class="space-y-1"><span class="text-[8px] font-black text-gray-400 uppercase">Price (KHR)</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-orange-500"><span class="text-[10px] font-black text-gray-400">៛</span><input type="number" step="any" placeholder="0" class="w-full text-[11px] font-black outline-none khr-input" oninput="updatePrice(this, 'KHR')"></div></div>
