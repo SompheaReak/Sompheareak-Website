@@ -463,7 +463,6 @@ def get_api(store_name):
 
 # --- 7. SPINNER GAME FRONTEND & API LOGIC ---
 
-# NEW: Tells the backend that /mystery-box connects to lucky_draw.html!
 @app.route('/mystery-box')
 @app.route('/lucky-draw')
 @app.route('/spin')
@@ -584,9 +583,8 @@ def generate_codes():
 def add_spin_pool():
     name_input = request.form.get('name', '').strip()
     rarity = request.form.get('rarity')
-    stock = int(request.form.get('stock', 10))
+    stock = int(request.form.get('stock', 1)) # Default 1 now
     
-    # NEW: Fetch ALL uploaded files, not just one!
     files = request.files.getlist('images')
     
     uploaded_count = 0
@@ -623,7 +621,8 @@ def update_spin_stock(id):
         flash('Prize stock updated.', 'success')
     return redirect(url_for('admin_panel'))
 
-# THE MISSING DELETE & RARITY EDIT ROUTES!
+
+# --- INDIVIDUAL & BULK DELETE ROUTES FOR GAME ---
 @app.route('/admin/spin/pool/update_rarity/<int:item_id>', methods=['POST'])
 @login_required
 def admin_spin_update_rarity(item_id):
@@ -633,6 +632,30 @@ def admin_spin_update_rarity(item_id):
     flash('Item rarity updated successfully!', 'success')
     return redirect(url_for('admin_panel'))
 
+@app.route('/admin/spin/pool/bulk_delete', methods=['POST'])
+@login_required
+def admin_spin_bulk_delete_pool():
+    item_ids = request.form.get('item_ids', '')
+    if item_ids:
+        ids = [int(x) for x in item_ids.split(',') if x.isdigit()]
+        MinifigurePool.query.filter(MinifigurePool.id.in_(ids)).delete(synchronize_session=False)
+        db.session.commit()
+        flash(f'Deleted {len(ids)} items from the Prize Pool!', 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/spin/code/bulk_delete', methods=['POST'])
+@login_required
+def admin_spin_bulk_delete_code():
+    code_ids = request.form.get('code_ids', '')
+    if code_ids:
+        ids = [int(x) for x in code_ids.split(',') if x.isdigit()]
+        RedeemCode.query.filter(RedeemCode.id.in_(ids)).delete(synchronize_session=False)
+        db.session.commit()
+        flash(f'Deleted {len(ids)} codes!', 'success')
+    return redirect(url_for('admin_panel'))
+
+
+# (Legacy Individual fallbacks just in case)
 @app.route('/admin/spin/pool/delete/<int:item_id>', methods=['POST'])
 @login_required
 def admin_spin_delete_pool(item_id):
@@ -649,15 +672,6 @@ def admin_spin_delete_history(draw_id):
     db.session.delete(draw)
     db.session.commit()
     flash('Live draw history record deleted!', 'success')
-    return redirect(url_for('admin_panel'))
-
-@app.route('/admin/spin/code/delete/<int:code_id>', methods=['POST'])
-@login_required
-def admin_spin_delete_code(code_id):
-    code = RedeemCode.query.get_or_404(code_id)
-    db.session.delete(code)
-    db.session.commit()
-    flash('Riel code deleted permanently!', 'success')
     return redirect(url_for('admin_panel'))
 
 
