@@ -1,3 +1,4 @@
+
 import os
 import json
 import time
@@ -82,7 +83,7 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     store = db.Column(db.String(50), nullable=False)
-    image = db.Column(db.String(500), nullable=True, default="[https://via.placeholder.com/150?text=Upload](https://via.placeholder.com/150?text=Upload)")
+    image = db.Column(db.String(500), nullable=True, default="https://via.placeholder.com/150?text=Upload")
     sort_order = db.Column(db.Integer, default=0)
 
 class Order(db.Model):
@@ -447,16 +448,6 @@ def add_product():
 
     return redirect(url_for('admin_panel'))
 
-@app.route('/admin/product/delete/<int:id>', methods=['POST'])
-@login_required
-def delete_product(id):
-    p = Product.query.get(id)
-    if p:
-        db.session.delete(p)
-        db.session.commit()
-        flash('Product deleted successfully.', 'success')
-    return redirect(url_for('admin_panel'))
-
 @app.route('/api/products/<store_name>')
 def get_api(store_name):
     try:
@@ -472,9 +463,12 @@ def get_api(store_name):
 
 # --- 7. SPINNER GAME FRONTEND & API LOGIC ---
 
+# NEW: Tells the backend that /mystery-box connects to lucky_draw.html!
+@app.route('/mystery-box')
+@app.route('/lucky-draw')
 @app.route('/spin')
-def spin_game(): 
-    return render_template('spin_game.html')
+def mystery_box(): 
+    return render_template('lucky_draw.html')
 
 def get_player():
     if 'player_id' not in session:
