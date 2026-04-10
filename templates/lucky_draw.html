@@ -1,0 +1,397 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lucky Draw | Somphea Reak</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;600;700&family=Moul&family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #f8fafc; 
+            color: #0f172a;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Soft subtle background pattern */
+        .bg-pattern {
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 20px 20px;
+            position: fixed; inset: 0; z-index: -1;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Premium Buttons */
+        .btn-3d {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 0 0 rgba(0,0,0,0.1);
+        }
+        .btn-3d:active {
+            transform: translateY(8px);
+            box-shadow: 0 0 0 0 rgba(0,0,0,0.1);
+        }
+        
+        .btn-orange-gradient {
+            background: linear-gradient(135deg, #ff9000 0%, #ff5000 100%);
+            box-shadow: 0 8px 0 0 #c2410c, 0 15px 20px rgba(255, 80, 0, 0.3);
+        }
+        .btn-orange-gradient:active { box-shadow: 0 0 0 0 #c2410c, 0 5px 10px rgba(255, 80, 0, 0.3); }
+
+        .btn-white-3d {
+            background: #ffffff;
+            box-shadow: 0 8px 0 0 #e2e8f0, 0 15px 20px rgba(0, 0, 0, 0.05);
+        }
+        .btn-white-3d:active { box-shadow: 0 0 0 0 #e2e8f0, 0 5px 10px rgba(0, 0, 0, 0.05); }
+
+        /* Rarity Styles */
+        .rarity-badge-Legendary { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3); }
+        .rarity-badge-Epic { background: #f3e8ff; color: #9333ea; border: 1px solid #d8b4fe; }
+        .rarity-badge-Rare { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+        .rarity-badge-Common { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+
+        /* Animations */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .anim-float { animation: float 3s ease-in-out infinite; }
+
+        @keyframes boxShake {
+            0%, 100% { transform: rotate(0deg) scale(1); filter: brightness(1); }
+            20% { transform: rotate(-5deg) scale(1.1); filter: brightness(1.2); }
+            40% { transform: rotate(5deg) scale(1.1); filter: brightness(1.2); }
+            60% { transform: rotate(-5deg) scale(1.1); filter: brightness(1.2); }
+            80% { transform: rotate(5deg) scale(1.1); filter: brightness(1.2); }
+        }
+        .anim-shake { animation: boxShake 0.5s ease-in-out infinite; }
+
+        @keyframes popReveal {
+            0% { transform: scale(0.3) translateY(50px); opacity: 0; filter: blur(10px); }
+            60% { transform: scale(1.1) translateY(-10px); opacity: 1; filter: blur(0px); }
+            100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0px); }
+        }
+        .anim-pop { animation: popReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative overflow-x-hidden">
+
+    <div class="bg-pattern"></div>
+    <canvas id="confetti-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-[9999]"></canvas>
+
+    <!-- 1. APP HEADER -->
+    <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm h-[70px]">
+        <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-600 hover:bg-black hover:text-white transition-all border border-gray-200 active:scale-95 shadow-sm">
+            <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        
+        <div class="text-center absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
+            <h1 class="text-base font-black tracking-tight text-gray-900 leading-none">Blind Box</h1>
+            <span class="text-[9px] font-bold text-[#ff5000] tracking-[0.2em] uppercase mt-0.5">Lucky Draw</span>
+        </div>
+        
+        <!-- Balance Pill -->
+        <div class="bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm" id="balance-pill">
+            <div class="w-5 h-5 rounded-full bg-[#ff5000] flex items-center justify-center text-white text-[10px] shadow-inner">
+                <i class="fa-solid fa-coins"></i>
+            </div>
+            <span id="player-balance" class="font-black text-sm text-[#ff5000] tracking-tight">0៛</span>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-lg mx-auto p-4 flex flex-col gap-6 pb-24">
+        
+        <!-- 2. HERO: THE MACHINE -->
+        <div class="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden flex flex-col items-center pt-8 mt-2">
+            <!-- Decorative Light Ray -->
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(ellipse_at_top,rgba(255,80,0,0.1),transparent_70%)] pointer-events-none z-0"></div>
+            
+            <div id="hero-machine" class="relative z-10 anim-float">
+                <div class="w-32 h-32 bg-gradient-to-br from-orange-100 to-orange-50 rounded-3xl border-4 border-white shadow-xl flex items-center justify-center relative mb-4">
+                    <div class="absolute inset-0 border border-orange-200 rounded-3xl"></div>
+                    <i class="fa-solid fa-box-open text-6xl text-[#ff5000] drop-shadow-md"></i>
+                    <div class="absolute -bottom-3 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md">Series 1</div>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-black text-gray-900 mt-2 z-10 font-['Moul']">ចាប់យករង្វាន់</h2>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-8 z-10">Pull exclusive minifigures</p>
+
+            <!-- Play Buttons -->
+            <div class="flex gap-4 w-full z-10">
+                <button onclick="playSpin(1)" class="btn-3d btn-white-3d flex-1 py-4 rounded-2xl flex flex-col items-center justify-center gap-1 group">
+                    <span class="text-sm font-black text-gray-900 uppercase tracking-widest group-active:text-[#ff5000] transition-colors">Draw 1x</span>
+                    <span class="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">1,000 ៛</span>
+                </button>
+                
+                <button onclick="playSpin(5)" class="btn-3d btn-orange-gradient flex-1 py-4 rounded-2xl flex flex-col items-center justify-center gap-1 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-white/20 w-full h-full transform -skew-x-12 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                    <span class="text-sm font-black text-white uppercase tracking-widest">Draw 5x</span>
+                    <span class="text-[10px] font-bold text-white bg-black/20 px-2 py-0.5 rounded-full border border-white/20">5,000 ៛</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. COMPACT REDEEM BAR -->
+        <div class="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-2 relative z-10">
+            <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-[#ff5000] shrink-0">
+                <i class="fa-solid fa-ticket transform -rotate-45"></i>
+            </div>
+            <input type="text" id="redeem-input" placeholder="Enter Riel Code" maxlength="8" class="flex-1 bg-transparent border-none outline-none font-black text-sm text-gray-900 placeholder-gray-300 uppercase tracking-widest">
+            <button onclick="submitRedeem()" class="bg-gray-900 text-white px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black active:scale-95 transition-all shadow-md shrink-0">Claim</button>
+        </div>
+
+        <!-- 4. PRIZE SHOWCASE -->
+        <div class="mt-2">
+            <div class="flex justify-between items-end mb-4 px-1">
+                <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest border-l-4 border-[#ff5000] pl-2 leading-none">Prize Pool</h3>
+                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1"><i class="fa-solid fa-circle text-green-500 text-[6px] animate-pulse"></i> Live Stock</span>
+            </div>
+            
+            <div id="pool-container" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <!-- Items injected here -->
+                <div class="col-span-full text-center py-10 text-gray-300 text-xs font-bold uppercase tracking-widest">Loading...</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 5. CINEMATIC REVEAL MODAL -->
+    <div id="prize-modal" class="fixed inset-0 bg-white/95 backdrop-blur-md z-[5000] hidden flex-col items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        
+        <div class="absolute top-0 w-full h-[50vh] bg-[radial-gradient(ellipse_at_top,rgba(255,80,0,0.15),transparent_70%)] pointer-events-none"></div>
+
+        <h2 id="congrats-text" class="text-3xl font-black text-gray-900 mb-8 text-center uppercase tracking-widest transform -translate-y-4 opacity-0 transition-all duration-500 font-['Moul'] z-10">អបអរសាទរ!</h2>
+        
+        <div id="prize-showcase" class="flex flex-wrap justify-center gap-4 max-w-lg w-full mb-12 z-10">
+            <!-- Drawn prizes injected here -->
+        </div>
+
+        <button onclick="closePrizeModal()" class="bg-gray-900 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-black active:scale-95 transition-all opacity-0 transform translate-y-4 z-10" style="animation: popReveal 0.5s forwards 1s;">
+            Awesome!
+        </button>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-[9000] bg-gray-900 text-white px-5 py-3 rounded-full font-black text-[10px] tracking-widest uppercase flex items-center gap-2 transition-all duration-300 transform -translate-y-10 opacity-0 shadow-xl border border-gray-700">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-green-400 text-sm"></i>
+        <span id="toast-msg">Success</span>
+    </div>
+
+    <script>
+        const formatRiel = (num) => new Intl.NumberFormat().format(num) + '៛';
+        let currentBalance = 0;
+        let isSpinning = false;
+
+        document.addEventListener('DOMContentLoaded', () => { 
+            fetchBalance(); 
+            fetchPool(); 
+        });
+
+        // --- API CONNECTION LOGIC (Connects to app.py routes) ---
+        async function fetchBalance() {
+            try {
+                const res = await fetch('/api/spin/balance');
+                const data = await res.json();
+                currentBalance = data.balance;
+                document.getElementById('player-balance').innerText = formatRiel(currentBalance);
+            } catch (err) { console.error("Failed to load balance", err); }
+        }
+
+        async function fetchPool() {
+            try {
+                const res = await fetch('/api/spin/pool');
+                const data = await res.json();
+                renderPool(data.pool);
+            } catch (err) { 
+                console.error("Failed to load pool", err);
+                document.getElementById('pool-container').innerHTML = `<div class="col-span-full py-10 text-center font-bold text-red-400 uppercase text-[10px] tracking-widest">Failed to load live database.</div>`;
+            }
+        }
+
+        // --- UI RENDERING ---
+        function renderPool(pool) {
+            const container = document.getElementById('pool-container');
+            if(!pool || pool.length === 0) { container.innerHTML = `<div class="col-span-full py-10 text-center font-bold text-gray-400 uppercase text-[10px] tracking-widest">Pool Empty. Admin needs to add items.</div>`; return; }
+
+            container.innerHTML = pool.map(item => {
+                const isOut = item.stock <= 0;
+                return `
+                <div class="bg-white rounded-2xl p-3 border border-gray-100 shadow-sm flex flex-col relative transition-transform ${isOut ? 'opacity-50 grayscale' : 'hover:-translate-y-1 hover:shadow-md'}">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[8px] font-black uppercase px-2 py-0.5 rounded-full rarity-badge-${item.rarity}">${item.rarity}</span>
+                        ${isOut ? `<span class="text-[8px] font-black text-red-500 bg-red-50 px-1.5 rounded uppercase">Out</span>` 
+                                : `<span class="text-[8px] font-bold text-gray-400">x${item.stock}</span>`}
+                    </div>
+                    <div class="w-full aspect-square bg-gray-50 rounded-xl mb-2 flex items-center justify-center p-2 border border-gray-50">
+                        <img src="${item.image}" class="max-w-full max-h-full object-contain mix-blend-multiply drop-shadow-sm">
+                    </div>
+                    <h4 class="text-[10px] font-black text-gray-900 leading-tight line-clamp-2 text-center mt-auto">${item.name}</h4>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // --- REDEEM LOGIC ---
+        async function submitRedeem() {
+            const input = document.getElementById('redeem-input');
+            const code = input.value.trim().toUpperCase();
+            if(code.length !== 8) return showToast('Code must be 8 Digits', 'error');
+
+            try {
+                const res = await fetch('/api/spin/redeem', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ code: code }) 
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    showToast(`+ ${formatRiel(data.value)}`, 'success');
+                    input.value = '';
+                    currentBalance = data.new_balance;
+                    document.getElementById('player-balance').innerText = formatRiel(currentBalance);
+                    
+                    const pill = document.getElementById('balance-pill');
+                    pill.classList.add('scale-110', 'bg-orange-100');
+                    setTimeout(() => pill.classList.remove('scale-110', 'bg-orange-100'), 300);
+                } else {
+                    showToast(data.error || 'Invalid Code', 'error');
+                }
+            } catch (err) { showToast('Network Error. Is backend running?', 'error'); }
+        }
+
+        // --- PLAY/SPIN LOGIC ---
+        async function playSpin(count) {
+            if(isSpinning) return;
+            const cost = count === 1 ? 1000 : 5000;
+            if(currentBalance < cost) return showToast(`Not enough balance! Need ${formatRiel(cost)}`, 'error');
+
+            isSpinning = true;
+            
+            // UI Animation Start
+            const machine = document.getElementById('hero-machine');
+            const boxIcon = machine.querySelector('i');
+            machine.classList.remove('anim-float');
+            boxIcon.classList.add('anim-shake');
+
+            try {
+                // Call actual backend logic
+                const res = await fetch('/api/spin/play', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ count: count }) 
+                });
+                const data = await res.json();
+
+                if(!data.success) {
+                    boxIcon.classList.remove('anim-shake'); machine.classList.add('anim-float');
+                    showToast(data.error || 'Draw failed. Admin needs to restock.', 'error');
+                    isSpinning = false; return;
+                }
+
+                currentBalance = data.new_balance;
+                document.getElementById('player-balance').innerText = formatRiel(currentBalance);
+
+                // Add a small delay so they can enjoy the shaking animation
+                setTimeout(() => {
+                    boxIcon.classList.remove('anim-shake'); machine.classList.add('anim-float');
+                    showPrizes(data.prizes);
+                    fetchPool(); // Re-fetch the live pool immediately so stock drops
+                }, 1000);
+
+            } catch(err) {
+                boxIcon.classList.remove('anim-shake'); machine.classList.add('anim-float');
+                showToast('Network error during draw', 'error');
+                isSpinning = false;
+            }
+        }
+
+        // --- REVEAL MODAL LOGIC ---
+        function showPrizes(prizes) {
+            const modal = document.getElementById('prize-modal');
+            const showcase = document.getElementById('prize-showcase');
+            const congratsText = document.getElementById('congrats-text');
+            
+            showcase.innerHTML = ''; 
+            
+            // Check if any prize is Legendary to trigger confetti
+            const hasLegendary = prizes.some(p => p.rarity === 'Legendary');
+            if(hasLegendary) fireConfetti();
+
+            prizes.forEach((prize, index) => {
+                const delay = index * 0.2; 
+                
+                const html = `
+                    <div class="anim-pop opacity-0 bg-white rounded-3xl p-4 border border-gray-100 flex flex-col items-center w-[45%] sm:w-40 shadow-xl relative" style="animation-delay: ${delay}s">
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-md rarity-badge-${prize.rarity} whitespace-nowrap">
+                            ${prize.rarity}
+                        </div>
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 mb-3 mt-3 flex items-center justify-center p-2 bg-gray-50 rounded-2xl border border-gray-100">
+                            <img src="${prize.image}" class="max-w-full max-h-full object-contain drop-shadow-md mix-blend-multiply">
+                        </div>
+                        <h3 class="text-xs sm:text-sm font-black text-center text-gray-900 leading-tight">${prize.name}</h3>
+                    </div>
+                `;
+                showcase.innerHTML += html;
+            });
+
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                congratsText.style.opacity = '1'; congratsText.style.transform = 'translateY(0)';
+            }, 50);
+        }
+
+        function closePrizeModal() {
+            const modal = document.getElementById('prize-modal');
+            const congratsText = document.getElementById('congrats-text');
+            
+            modal.classList.add('opacity-0');
+            congratsText.style.opacity = '0'; congratsText.style.transform = 'translateY(-10px)';
+            
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); isSpinning = false; }, 300);
+        }
+
+        // --- UTILITIES ---
+        let toastTimeout;
+        function showToast(msg, type = 'error') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            
+            document.getElementById('toast-msg').innerText = msg;
+            clearTimeout(toastTimeout);
+            
+            icon.className = type === 'error' ? "fa-solid fa-triangle-exclamation text-red-500 text-sm" : "fa-solid fa-circle-check text-green-400 text-sm";
+            
+            toast.style.opacity = '1'; toast.style.transform = 'translate(-50%, 0)';
+            toastTimeout = setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translate(-50%, -20px)'; }, 2500);
+        }
+
+        // --- CONFETTI ---
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+        function fireConfetti() {
+            particles = []; const colors = ['#ff5000', '#fcd34d', '#3b82f6'];
+            for(let i=0; i<100; i++) particles.push({ x: canvas.width/2, y: canvas.height/2, r: Math.random()*6+2, dx: Math.random()*20-10, dy: Math.random()*-20-5, color: colors[Math.floor(Math.random()*colors.length)], tilt: Math.floor(Math.random()*10)-10, tiltAngle: 0, tiltAngleInc: (Math.random()*0.07)+0.05 });
+            requestAnimationFrame(renderConfetti);
+        }
+        function renderConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); let active = false;
+            for(let i=0; i<particles.length; i++) {
+                let p = particles[i]; p.tiltAngle += p.tiltAngleInc; p.y += (Math.cos(p.tiltAngle) + 1 + p.r / 2) / 2; p.x += Math.sin(p.tiltAngle) * 2; p.dy += 0.5; p.y += p.dy; p.x += p.dx;
+                if(p.y <= canvas.height) active = true;
+                ctx.beginPath(); ctx.lineWidth = p.r; ctx.strokeStyle = p.color; ctx.moveTo(p.x + p.tilt + p.r, p.y); ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r); ctx.stroke();
+            }
+            if(active) requestAnimationFrame(renderConfetti); else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    </script>
+</body>
+</html>
