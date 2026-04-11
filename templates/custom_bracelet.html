@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   
-  <!-- NEW: Enterprise Drag & Drop Engine (With MultiDrag included) -->
+  <!-- Enterprise Drag & Drop Engine (With MultiDrag included) -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -35,23 +35,33 @@
         z-index: -1;
     }
 
-    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    /* SMOOTH SCROLLING PREVIEW CONTAINER */
+    .bracelet-preview-container {
+        display: flex;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        align-items: center;
+        gap: 2px;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+    }
     
-    #drawer { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
-    #cart-drawer { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
+    .bracelet-preview-container::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
 
-    #tutorialModal { transition: opacity 0.3s ease, transform 0.3s ease; }
-    .modal-active { opacity: 1; pointer-events: auto; transform: scale(1); }
-    .modal-hidden { opacity: 0; pointer-events: none; transform: scale(0.95); }
-
-    .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease-in-out; z-index: 0; }
-    .slide.active { opacity: 1; z-index: 10; }
-
+    /* CHARM ITEM FIXED SIZING FOR PERFECT HORIZONTAL SCROLL */
     .bracelet-link-container {
-        display: flex; align-items: flex-end; justify-content: center;
-        flex: 0 0 10%; aspect-ratio: 2 / 3.5; position: relative;
-        margin: 0; padding: 0; cursor: pointer; transition: transform 0.2s ease;
-        touch-action: pan-y; /* Allows vertical scrolling on container */
+        flex: 0 0 auto; 
+        width: 12vw; 
+        max-width: 55px; 
+        min-width: 42px;
+        aspect-ratio: 2 / 3.5;
+        position: relative;
+        cursor: grab;
+        touch-action: pan-x pan-y; /* Crucial for native scrolling */
+        transition: transform 0.2s ease;
     }
     
     .bracelet-link-container img {
@@ -59,7 +69,7 @@
         pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); transition: all 0.2s;
     }
 
-    /* SELECTED STATE */
+    /* SELECTED STATE MULTI-DRAG */
     .bracelet-link-container.selected { z-index: 40; }
     .bracelet-link-container.selected img { filter: drop-shadow(0 0 0 2px #ea580c); transform: translateY(-4px); }
     
@@ -78,18 +88,22 @@
     }
     .sortable-ghost { opacity: 0.1 !important; }
 
-    .nav-indicator-container { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 5px; margin-bottom: 8px; }
+    #drawer { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
+    #cart-drawer { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
+    #tutorialModal { transition: opacity 0.3s ease, transform 0.3s ease; }
+    .modal-active { opacity: 1; pointer-events: auto; transform: scale(1); }
+    .modal-hidden { opacity: 0; pointer-events: none; transform: scale(0.95); }
 
+    .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease-in-out; z-index: 0; }
+    .slide.active { opacity: 1; z-index: 10; }
+
+    .nav-indicator-container { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 5px; margin-bottom: 8px; }
     .nav-arrow {
         width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
         background: white; border: 1px solid #e2e8f0; border-radius: 6px; color: #64748b; font-size: 10px; transition: all 0.2s;
     }
-
     #scroll-track { height: 4px; background: #f1f5f9; border-radius: 10px; width: 80px; position: relative; overflow: hidden; }
     #scroll-thumb { position: absolute; height: 100%; width: 30%; background: #ea580c; border-radius: 10px; left: 0; transition: left 0.1s linear; }
-    
-    .logo-glow { animation: glow 3s infinite ease-in-out; }
-    @keyframes glow { 0%, 100% { box-shadow: 0 0 0 0px rgba(234, 88, 12, 0); } 50% { box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1); } }
 
     .package-card:active { transform: scale(0.98); background-color: #fff7ed; border-color: #ea580c; }
 
@@ -108,9 +122,7 @@
         outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
         background: white; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
     }
-    .cart-checkbox:checked { 
-        background-color: #ea580c; border-color: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
-    }
+    .cart-checkbox:checked { background-color: #ea580c; border-color: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3); }
     .cart-checkbox:checked::after { 
         content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
         width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
@@ -129,7 +141,7 @@
 
   <!-- LOADING OVERLAY -->
   <div id="loadingOverlay" style="display: none;" class="fixed inset-0 z-[4000] bg-black/90 backdrop-blur-md hidden flex-col items-center justify-center text-white">
-      <div class="w-12 h-12 border-4 border-[#ff5000] border-t-transparent rounded-full animate-spin mb-4"></div>
+      <div class="w-12 h-12 border-4 border-[#ea580c] border-t-transparent rounded-full animate-spin mb-4"></div>
       <p id="loadingText" class="text-xs font-black uppercase tracking-[0.3em] font-['Moul']">កំពុងរៀបចំ...</p>
   </div>
 
@@ -142,14 +154,14 @@
   <div id="tutorialModal" class="fixed inset-0 z-[1300] flex items-center justify-center px-4 modal-hidden">
       <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeTutorial()"></div>
       <div class="bg-white w-full max-w-sm rounded-2xl p-6 relative shadow-2xl flex flex-col items-center gap-4 text-center transform transition-transform">
-          <div class="w-full h-2 bg-[#ff5000] rounded-full opacity-20 mb-2"></div>
+          <div class="w-full h-2 bg-[#ea580c] rounded-full opacity-20 mb-2"></div>
           <button onclick="closeTutorial()" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 transition-colors">
               <i class="fa-solid fa-xmark"></i>
           </button>
-          <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-[#ff5000] text-2xl mb-2 animate-bounce">
+          <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-[#ea580c] text-2xl mb-2 animate-bounce">
               <i class="fa-brands fa-tiktok"></i>
           </div>
-          <h3 class="text-lg text-[#ff5000] mb-1" data-i18n="tutorial_title">របៀបកម្ម៉ង់?</h3>
+          <h3 class="text-lg text-[#ea580c] mb-1" data-i18n="tutorial_title">របៀបកម្ម៉ង់?</h3>
           <p class="text-sm font-bold text-gray-600 leading-relaxed font-['Kantumruy_Pro']" data-i18n="tutorial_msg">ចំណាយពេល 30 វិនាទី ដើម្បីដឹងពីរបៀបប្រើប្រាស់</p>
           <a href="https://www.tiktok.com/@sompheareak_italy" target="_blank" class="w-full bg-black text-white py-3.5 rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-gray-300">
               <i class="fa-solid fa-play"></i> <span data-i18n="watch_video">មើលវីដេអូ</span>
@@ -157,41 +169,37 @@
       </div>
   </div>
 
-  <!-- HEADER -->
-  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-2 flex items-center justify-between shadow-sm relative">
-    <div class="flex items-center gap-2">
-         <a href="/" class="relative z-20 w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-400 border border-gray-100 active:scale-90 transition-transform">
-            <i class="fa-solid fa-arrow-left text-sm"></i>
-        </a>
-    </div>
-   
-    <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center z-10 pointer-events-none">
-        <div class="flex items-center gap-2.5 mb-0.5">
-            <div class="relative">
-                <img src="static/images/logo.jpg" onerror="this.style.opacity='0'; this.nextElementSibling.style.opacity='1'" alt="SR Logo" class="w-7 h-7 rounded-lg object-cover border border-gray-200 shadow-sm logo-glow bg-white relative z-10">
-                <div class="absolute inset-0 w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center text-[#ff5000] text-[10px] opacity-0 transition-opacity z-0">
-                    <i class="fa-solid fa-gem"></i>
-                </div>
-            </div>
-            <h1 class="font-extrabold text-sm text-gray-900 tracking-tight leading-none whitespace-nowrap" data-i18n="brand_name">សម្ភារៈរក្ស៍</h1>
-        </div>
-        <div class="flex items-center gap-1.5 opacity-60">
-            <span class="w-1 h-1 rounded-full bg-[#ff5000]"></span>
-            <p class="font-bold text-[8px] uppercase tracking-[0.2em] leading-none whitespace-nowrap">Italy Bracelet Studio</p>
-            <span class="w-1 h-1 rounded-full bg-[#ff5000]"></span>
-        </div>
-    </div>
-    
-    <div class="relative z-20 flex items-center gap-3">
-         <button onclick="toggleLanguage()" class="bg-gray-900 text-white text-[9px] font-bold px-2 py-1 rounded shadow-sm hover:bg-gray-800 transition-colors hidden md:block">
-            <span id="lang-display">KH</span> | <span class="opacity-50" id="lang-alt">EN</span>
-         </button>
-         
-         <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform">
-             <i class="fa-solid fa-cart-shopping"></i>
-             <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#ff5000] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden">0</span>
-         </button>
-    </div>
+  <!-- 🌟 UNIFIED HEADER (MATCHES INDEX/STORE EXACTLY) 🌟 -->
+  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 sm:px-4 py-3 flex items-center justify-between shadow-sm">
+      
+      <!-- Back Button styled perfectly -->
+      <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0">
+          <i class="fa-solid fa-arrow-left text-sm"></i>
+      </a>
+      
+      <!-- Logo and Text Combo (Bigger and unclipped) -->
+      <div class="flex items-center justify-center flex-1 px-2 gap-2.5 min-w-0">
+          <img src="static/images/logo.png" onerror="this.src='static/images/logo.jpg'" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-sm shrink-0" alt="Logo">
+          
+          <div class="flex flex-col justify-center text-left">
+              <h1 class="text-[15px] sm:text-lg font-black text-gray-900 leading-normal tracking-tight font-['Moul'] pb-0.5">
+                  សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-sm sm:text-base whitespace-nowrap">- Somphea Reak</span>
+              </h1>
+              <p class="text-[10px] font-bold text-[#ea580c] uppercase tracking-widest leading-none">Italy Bracelet Studio</p>
+          </div>
+      </div>
+      
+      <div class="flex items-center gap-2 shrink-0">
+          <!-- Optional Mini Lang Toggle for Mobile -->
+          <button onclick="toggleLanguage()" class="w-10 h-10 hidden sm:flex items-center justify-center bg-gray-900 rounded-full text-white text-[10px] font-bold border border-gray-800 active:scale-90 transition-transform shrink-0">
+              <span id="lang-display">KH</span>
+          </button>
+           
+          <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0">
+              <i class="fa-solid fa-cart-shopping"></i>
+              <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden">0</span>
+          </button>
+      </div>
   </header>
 
   <!-- BANNER -->
@@ -228,7 +236,7 @@
   <div class="naga-divider"></div>
 
   <!-- WORKSPACE -->
-  <section class="sticky top-[53px] z-[90] bg-white border-b shadow-lg pb-2">
+  <section class="sticky top-[64px] z-[90] bg-white border-b shadow-lg pb-2">
     <div class="max-w-4xl mx-auto">
         <div class="flex items-center justify-between px-4 py-2 border-b border-gray-100">
             <div class="flex items-center gap-4">
@@ -240,7 +248,7 @@
                  <div class="flex flex-col">
                     <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest font-['Kantumruy_Pro']" data-i18n="header_price">តម្លៃ</span>
                     <div class="flex items-baseline gap-1">
-                        <span id="header-price-khr" class="text-sm font-black text-[#ff5000] leading-none">0៛</span>
+                        <span id="header-price-khr" class="text-sm font-black text-[#ea580c] leading-none">0៛</span>
                         <span id="header-price-usd" class="text-[10px] font-bold text-gray-400 leading-none">($0.00)</span>
                     </div>
                  </div>
@@ -259,8 +267,8 @@
             </div>
         </div>
 
-        <!-- NEW: SORTABLE DRAG CONTAINER -->
-        <div id="bracelet-preview" onclick="handleBackgroundClick(event)" onscroll="handlePreviewScroll(this)" class="flex overflow-x-auto py-8 px-4 scrollbar-hide min-h-[120px] items-center justify-center bg-slate-50 gap-0 transition-all relative">
+        <!-- SORTABLE DRAG CONTAINER WITH PERFECT NATIVE SCROLL FIX -->
+        <div id="bracelet-preview" onclick="handleBackgroundClick(event)" onscroll="handlePreviewScroll(this)" class="bracelet-preview-container bg-slate-50 relative min-h-[140px] pt-10 pb-4 px-4">
             <div class="w-full text-center opacity-20 flex flex-col items-center">
                 <i class="fa-solid fa-layer-group text-2xl mb-1"></i>
                 <p class="text-[8px] font-black uppercase tracking-[0.2em] font-['Kantumruy_Pro']" data-i18n="start_design">ចាប់ផ្តើមរចនា</p>
@@ -280,15 +288,15 @@
                 <div class="relative flex-grow">
                     <input type="text" id="share-code-input" readonly class="w-full bg-gray-100 border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono text-gray-600 focus:outline-none uppercase tracking-widest" placeholder="XXXX-XXXX">
                     <div class="absolute right-1 top-1 bottom-1">
-                        <button onclick="copyDesignCode()" class="h-full px-3 bg-white border border-gray-200 rounded-md text-[9px] font-bold uppercase text-gray-500 hover:text-[#ff5000] transition-colors font-['Kantumruy_Pro']" data-i18n="copy">ចម្លង</button>
+                        <button onclick="copyDesignCode()" class="h-full px-3 bg-white border border-gray-200 rounded-md text-[9px] font-bold uppercase text-gray-500 hover:text-[#ea580c] transition-colors font-['Kantumruy_Pro']" data-i18n="copy">ចម្លង</button>
                     </div>
                 </div>
             </div>
             <div class="flex gap-2">
-                <input type="text" id="load-code-input" class="flex-grow bg-white border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono uppercase tracking-widest text-gray-900 focus:border-[#ff5000] focus:ring-1 focus:ring-orange-500 outline-none transition-all placeholder:normal-case placeholder:text-gray-400 font-['Kantumruy_Pro']" placeholder="ដាក់លេខកូដដើម្បីរចនាបន្ត..." data-i18n-placeholder="placeholder_load">
+                <input type="text" id="load-code-input" class="flex-grow bg-white border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono uppercase tracking-widest text-gray-900 focus:border-[#ea580c] focus:ring-1 focus:ring-orange-500 outline-none transition-all placeholder:normal-case placeholder:text-gray-400 font-['Kantumruy_Pro']" placeholder="ដាក់លេខកូដដើម្បីរចនាបន្ត..." data-i18n-placeholder="placeholder_load">
                 <button onclick="loadDesignCode()" class="bg-gray-900 text-white px-4 rounded-lg text-[10px] font-bold uppercase tracking-wide active:scale-95 transition-transform shadow-lg shadow-gray-200 font-['Kantumruy_Pro']" data-i18n="load">ដាក់កូដ</button>
             </div>
-            <p class="text-[8px] font-bold text-gray-300 uppercase italic text-center pt-1 font-['Kantumruy_Pro']" data-i18n="hint_drag">ចុចលើត្បូងដើម្បីរើស • ដាក់ដៃឱ្យជាប់បន្តិចដើម្បីអូស</p>
+            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-center pt-1 font-['Kantumruy_Pro']" data-i18n="hint_drag">ចុចលើត្បូងដើម្បីរើស • សង្កត់ឱ្យជាប់បន្តិចដើម្បីអូស</p>
         </div>
     </div>
   </section>
@@ -330,7 +338,7 @@
         <button onclick="addRandom()" class="w-14 h-14 flex-shrink-0 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-2xl text-gray-400 active:scale-90 transition-transform hover:bg-gray-100">
             <i class="fa-solid fa-shuffle text-lg"></i>
         </button>
-        <button onclick="startPackagingFlow()" id="save-design-btn" disabled class="flex-grow bg-[#ff5000] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
+        <button onclick="startPackagingFlow()" id="save-design-btn" disabled class="flex-grow bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
             <i class="fa-solid fa-cart-plus text-sm"></i>
             <span data-i18n="checkout_btn">បញ្ចូលទៅកន្ត្រក</span>
         </button>
@@ -372,12 +380,11 @@
                        <div class="w-px h-8 bg-gray-100"></div>
                        <div class="flex flex-col items-center flex-1">
                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" data-i18n="subtotal">តម្លៃសរុប</span>
-                           <span id="preview-price" class="text-xl font-black text-[#ff5000] mt-1">0៛</span>
+                           <span id="preview-price" class="text-xl font-black text-[#ea580c] mt-1">0៛</span>
                        </div>
                   </div>
               </div>
 
-              <!-- STATIC LOCAL PACKAGING IMAGES -->
               <div class="w-full">
                   <div class="flex items-center justify-center gap-2 mb-4">
                       <span class="romdul-icon"></span>
@@ -390,7 +397,7 @@
                           <div class="text-center">
                               <p class="text-xs font-black uppercase text-gray-900 font-['Moul']" data-i18n="pkg_premium">ប្រអប់ Premium</p>
                               <p class="text-[9px] text-gray-500 font-medium mt-1 font-['Kantumruy_Pro']" data-i18n="pkg_premium_desc">សម្រាប់អ្នកពិសេស</p>
-                              <p class="text-[10px] text-[#ff5000] font-black mt-1">+2,000៛</p>
+                              <p class="text-[10px] text-[#ea580c] font-black mt-1">+2,000៛</p>
                           </div>
                           <div class="w-full bg-orange-50 text-orange-600 text-[9px] font-bold py-1.5 rounded-lg text-center uppercase tracking-wide mt-1"><i class="fa-solid fa-cart-plus mr-1"></i>ជ្រើសរើស</div>
                       </div>
@@ -431,7 +438,7 @@
         <div class="bg-white border-t border-gray-100 p-5 z-10">
             <div class="flex justify-between items-end mb-4">
                 <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Total)</span>
-                <span id="cart-grand-total" class="text-2xl font-black text-[#ff5000] leading-none">0៛</span>
+                <span id="cart-grand-total" class="text-2xl font-black text-[#ea580c] leading-none">0៛</span>
             </div>
             <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
                 <i class="fa-solid fa-truck-fast"></i> <span data-i18n="continue_checkout">បន្តទៅការដឹកជញ្ជូន</span>
@@ -449,27 +456,27 @@
       
       <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50">
           <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
-              <div class="absolute top-0 left-0 w-1 h-full bg-[#ff5000]"></div>
+              <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
               <div class="flex justify-between text-xs font-bold text-gray-500"><span data-i18n="subtotal">តម្លៃទំនិញសរុប:</span><span id="check-subtotal">៛0</span></div>
               <div class="flex justify-between text-xs font-bold text-blue-600"><span data-i18n="delivery_fee">ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">៛0</span></div>
               <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
                   <span class="text-sm" data-i18n="total_to_pay">សរុបត្រូវបង់:</span>
-                  <span id="check-total-khr" class="text-[#ff5000] text-xl leading-none">៛0</span>
+                  <span id="check-total-khr" class="text-[#ea580c] text-xl leading-none">៛0</span>
               </div>
           </div>
 
           <div class="space-y-4">
               <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2" data-i18n="contact_info">ព័ត៌មានទំនាក់ទំនង</label>
-              <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក" data-i18n-placeholder="name_ph">
-              <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ" data-i18n-placeholder="phone_ph">
+              <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក" data-i18n-placeholder="name_ph">
+              <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ" data-i18n-placeholder="phone_ph">
               
               <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4" data-i18n="shipping_dest">ទីតាំងដឹកជញ្ជូន</label>
-              <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ff5000] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ" data-i18n-placeholder="address_ph"></textarea>
+              <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ" data-i18n-placeholder="address_ph"></textarea>
           </div>
       </div>
 
       <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:pb-5">
-          <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-[#ff5000] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']" data-i18n="confirm_order">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
+          <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-[#ea580c] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']" data-i18n="confirm_order">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
       </div>
   </div>
 
@@ -485,10 +492,10 @@
 
     const translations = {
         KH: {
-            brand_name: "សម្ភារៈ - Somphea Reak",
+            brand_name: "សម្ភារៈរក្ស៍",
             daily_view: "ចំនួនអ្នកប្រើប្រាស់",
             slide1_tag: "ម៉ូតថ្មី",
-            slide1_title: "ជឿជាក់លើ<br><span class=\"text-[#ff5000]\">វីរកងទ័ពដ៏អង់អាចក្លាហាន</span>",
+            slide1_title: "ជឿជាក់លើ<br><span class=\"text-[#ea580c]\">វីរកងទ័ពដ៏អង់អាចក្លាហាន</span>",
             slide2_tag: "គុណភាពខ្ពស់",
             slide2_title: "នាំចូលពី<br><span class=\"text-blue-400\">ប្រទេសអ៊ីតាលី</span>",
             slide3_tag: "សេវារហ័ស",
@@ -502,7 +509,7 @@
             copy: "Copy",
             load: "បញ្ជូន",
             placeholder_load: "Paste Code នៅទីនេះ",
-            hint_drag: "ចុចលើត្បូងដើម្បីរើស • ដាក់ដៃឱ្យជាប់បន្តិចដើម្បីអូស",
+            hint_drag: "ចុចលើត្បូងដើម្បីរើស • សង្កត់ឱ្យជាប់បន្តិចដើម្បីអូស",
             collection_title: "ប្រភេទគ្រាប់",
             view_all: "ចុចមើលទាំងអស់",
             select_charm_title: "ជ្រើសរើសគ្រាប់",
@@ -545,10 +552,10 @@
             checkout_title: "ការរចនាខ្សែកដៃរបស់អ្នក"
         },
         EN: {
-            brand_name: "សម្ភារៈ - Somphea Reak",
+            brand_name: "Somphea Reak",
             daily_view: "Views",
             slide1_tag: "New Arrival",
-            slide1_title: "Design Your<br><span class=\"text-[#ff5000]\">Own Masterpiece</span>",
+            slide1_title: "Design Your<br><span class=\"text-[#ea580c]\">Own Masterpiece</span>",
             slide2_tag: "Premium Quality",
             slide2_title: "Imported From<br><span class=\"text-blue-400\">Italy</span>",
             slide3_tag: "Fast Delivery",
@@ -636,9 +643,7 @@
 
     function updateLanguageUI() {
         const langDisplay = document.getElementById('lang-display');
-        const langAlt = document.getElementById('lang-alt');
-        langDisplay.innerText = currentLang;
-        langAlt.innerText = currentLang === 'KH' ? 'EN' : 'KH';
+        if(langDisplay) langDisplay.innerText = currentLang;
 
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
@@ -837,17 +842,13 @@
         toast.classList.remove('opacity-0', 'scale-90'); setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500);
     }
 
-    // NEW: Generate ultra-short Base-36 Code
     function getDesignCode(charmsList = selectedCharms) {
         if(charmsList.length === 0) return "";
         let hexArr = charmsList.map(c => {
             const idx = allCharms.findIndex(x => x.ui_id === c.ui_id);
-            // Convert array index to base-36 (0-9, a-z), pad to 2 chars (supports up to 1295 charms)
             return (idx !== -1 ? idx : 1295).toString(36).padStart(2, '0');
         });
-        
         let rawStr = hexArr.join('').toUpperCase();
-        // Add hyphen every 4 characters for readability
         let formatted = rawStr.match(/.{1,4}/g)?.join('-') || rawStr;
         return formatted;
     }
@@ -864,7 +865,6 @@
         navigator.clipboard.writeText(input.value).then(() => showToast(t('copy'), 'text-white', 'fa-copy'));
     }
 
-    // NEW: Load ultra-short Base-36 Code
     function loadDesignCode() {
         const input = document.getElementById('load-code-input'); 
         const code = input.value.trim().replace(/-/g, '').toLowerCase();
@@ -877,7 +877,7 @@
             const newCharms = [];
             for(let i=0; i < code.length; i+=2) {
                 const chunk = code.substring(i, i+2);
-                const idx = parseInt(chunk, 36); // Convert base-36 back to array index
+                const idx = parseInt(chunk, 36); 
                 if(allCharms[idx]) {
                     newCharms.push({ ...allCharms[idx], uid: Math.random().toString(36).substr(2, 9) });
                 }
@@ -923,21 +923,19 @@
 
         if (selectedCharms.length === 0) {
             if(sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
-            preview.className = "flex overflow-x-auto py-8 px-4 scrollbar-hide min-h-[120px] items-center justify-center bg-slate-50 gap-0 transition-all relative";
+            preview.className = "bracelet-preview-container bg-slate-50 min-h-[140px] pt-10 pb-4 px-4 justify-center";
             preview.innerHTML = `<div class="w-full text-center opacity-30 flex flex-col items-center"><i class="fa-solid fa-layer-group text-2xl mb-1"></i><p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 font-['Kantumruy_Pro']" data-i18n="start_design">${t('start_design')}</p></div>`;
             document.getElementById('save-design-btn').disabled = true; document.querySelector('.nav-indicator-container').style.opacity = '0'; return;
         }
 
-        preview.className = "flex overflow-x-auto pt-10 pb-4 px-4 scrollbar-hide min-h-[140px] items-center bg-slate-50 gap-0 transition-all relative";
+        preview.className = "bracelet-preview-container bg-slate-50 min-h-[140px] pt-10 pb-4 px-4";
         document.querySelector('.nav-indicator-container').style.opacity = '1';
         
-        // Build items. No onclick needed, Sortable handles the select logic.
         preview.innerHTML = selectedCharms.map((c, index) => {
             const isSelected = selectedCharmUids.includes(c.uid);
             return `
                 <div class="bracelet-link-container link-pop group ${isSelected ? 'selected' : ''}" data-uid="${c.uid}">
                     <img src="${c.image}">
-                    <!-- Trash button controlled purely by CSS now (.selected class) -->
                     <button onclick="removeCharm('${c.uid}', event)" class="remove-btn-anim absolute -top-4 left-1/2 -translate-x-1/2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-[12px] shadow-lg z-50 hover:bg-red-600 active:scale-90 transition-transform"><i class="fa-solid fa-trash-can"></i></button>
                     <div class="absolute top-1/2 -right-[2px] w-1 h-3 bg-gray-300/50 rounded-full transform -translate-y-1/2 -z-10 pointer-events-none"></div>
                 </div>`;
@@ -945,45 +943,43 @@
         
         document.getElementById('save-design-btn').disabled = false;
 
-        // --- NEW: INITIALIZE SORTABLE JS ---
+        // 🌟 PERFECT SMOOTH SCROLLING ENGINE INITIALIZATION 🌟
         if(sortableInstance) sortableInstance.destroy();
         
         sortableInstance = new Sortable(preview, {
             animation: 150,
-            multiDrag: true, // Native MultiDrag plugin!
-            selectedClass: 'selected', // Class to append to selected items
-            forceFallback: true, // Forces creating the floating custom ghost on mobile
-            fallbackClass: 'sortable-fallback-ghost', // Makes it look locked to screen
+            multiDrag: true, 
+            selectedClass: 'selected', 
+            forceFallback: true, 
+            fallbackClass: 'sortable-fallback-ghost',
             ghostClass: 'sortable-ghost',
-            delay: 150, // 150ms delay so you can easily scroll horizontally without dragging
-            delayOnTouchOnly: true, // Only use the delay on touch screens
-            fallbackTolerance: 5, // Allows a little finger wiggle while holding
             
-            // Fires when an item is tapped
+            // MAGIC BULLET FOR PERFECT SCROLLING
+            delay: 250, // Waits 250ms before deciding it's a drag
+            delayOnTouchOnly: true, 
+            touchStartThreshold: 15, // Allows finger to move 15px to start scrolling instead of dragging!
+            fallbackTolerance: 10, 
+            
+            onChoose: function (evt) {
+                if(window.navigator && window.navigator.vibrate) window.navigator.vibrate(50);
+            },
             onSelect: function(evt) {
                 const uid = evt.item.dataset.uid;
                 if(!selectedCharmUids.includes(uid)) selectedCharmUids.push(uid);
                 refreshToolbar();
             },
-            // Fires when an item is tapped again
             onDeselect: function(evt) {
                 const uid = evt.item.dataset.uid;
                 selectedCharmUids = selectedCharmUids.filter(id => id !== uid);
                 refreshToolbar();
             },
-            // Fires when dragging is finished
             onEnd: function(evt) {
-                // Reconstruct array state based on new DOM order
                 const newOrderUids = Array.from(preview.querySelectorAll('.bracelet-link-container')).map(el => el.dataset.uid);
                 const map = new Map();
                 selectedCharms.forEach(c => map.set(c.uid, c));
                 selectedCharms = newOrderUids.map(uid => map.get(uid)).filter(Boolean);
-                
-                // Save and update background state
                 try { localStorage.setItem('customCharms', JSON.stringify(selectedCharms)); } catch(e) {}
                 document.getElementById('share-code-input').value = getDesignCode();
-                
-                // Quick re-render to enforce React-like state stability
                 updateUI(); 
             }
         });
@@ -1016,7 +1012,6 @@
             document.body.appendChild(tempDiv); await new Promise(r => setTimeout(r, 500)); 
             const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 2, backgroundColor: null });
             
-            // LOW QUALITY JPEG for cart storage to prevent localstorage memory limits!
             const dataUrl = canvas.toDataURL("image/jpeg", 0.6); 
             document.body.removeChild(tempDiv);
 
@@ -1052,15 +1047,11 @@
         updateCartBadge();
         closeResult();
         
-        // RESET WORKSPACE FOR NEXT DESIGN
         selectedCharms = []; selectedCharmUids = []; updateUI();
-        
         showToast('Saved to Cart', 'text-green-400', 'fa-cart-shopping');
         openCartDrawer();
     }
 
-
-    // --- UNIFIED CART DRAWER LOGIC (NEW BANNER UI) ---
 
     function openCartDrawer() {
         renderCartUI();
@@ -1076,7 +1067,7 @@
     function renderCartUI() {
         const container = document.getElementById('cart-items-container');
         if(userCart.length === 0) {
-            container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-sm uppercase tracking-widest">កន្ត្រកទទេ</p></div>`;
+            container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-sm uppercase tracking-widest mt-2">កន្ត្រកទទេ</p></div>`;
             document.getElementById('cart-grand-total').innerText = "0៛";
             return;
         }
@@ -1087,19 +1078,16 @@
         container.innerHTML = userCart.map((item) => {
             let itemTotal = 0;
             
-            // 1. CUSTOM BRACELET WIDE BANNER LAYOUT
             if(item.type === 'custom_bracelet') {
                 itemTotal = (item.baseTotal + item.pkgPrice) * item.qty;
                 if(item.selected) grandTotal += itemTotal;
                 
                 return `
-                <div class="bg-white rounded-2xl shadow-sm border ${item.selected ? 'border-[#ff5000] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col relative transition-all overflow-hidden mb-4">
+                <div class="bg-white rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col relative transition-all overflow-hidden mb-4">
                     
-                    <!-- FULL WIDTH RECTANGULAR IMAGE (EDGE TO EDGE) -->
                     <div class="w-full h-36 bg-gray-50 border-b border-gray-100 relative cursor-pointer group" onclick="openImageViewer('${item.image}')">
                         <img src="${item.image}" class="w-full h-full object-contain p-2">
                         
-                        <!-- BOTTOM OVERLAY -->
                         <div class="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 flex justify-between items-center text-white">
                             <span class="text-[10px] font-bold tracking-widest uppercase font-['Kantumruy_Pro']"><i class="fa-solid fa-gem text-orange-400 mr-1"></i> ${item.charms.length} Charms</span>
                             <span class="text-sm font-black text-orange-400">${itemTotal.toLocaleString()}៛</span>
@@ -1108,7 +1096,6 @@
                         <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full w-7 h-7 flex items-center justify-center text-gray-800 shadow-sm opacity-80 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-expand text-[10px]"></i></div>
                     </div>
 
-                    <!-- CARD DETAILS -->
                     <div class="p-3">
                         <div class="flex justify-between items-start mb-2">
                             <label class="flex items-start gap-3 cursor-pointer flex-1">
@@ -1117,7 +1104,7 @@
                                     <h4 class="font-black text-sm text-gray-900 leading-tight">Custom Bracelet #${customIndex++}</h4>
                                     <p class="text-[10px] font-bold text-gray-500 mt-1 uppercase tracking-widest flex items-center">
                                         Code: <span class="font-mono text-gray-800 ml-1">${item.code.substring(0,9)}...</span>
-                                        <button type="button" onclick="copyToClipboardCode('${item.code}')" class="text-gray-400 hover:text-orange-500 ml-2 p-1 active:scale-90"><i class="fa-regular fa-copy"></i></button>
+                                        <button type="button" onclick="copyToClipboardCode('${item.code}')" class="text-gray-400 hover:text-[#ea580c] ml-2 p-1 active:scale-90"><i class="fa-regular fa-copy"></i></button>
                                     </p>
                                 </div>
                             </label>
@@ -1143,12 +1130,11 @@
                 </div>`;
             } 
             else {
-                // 2. STANDARD STORE ITEM LAYOUT
                 itemTotal = (item.price || 0) * item.qty;
                 if(item.selected) grandTotal += itemTotal;
 
                 return `
-                <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ff5000] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
+                <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
                     <label class="flex items-start gap-3 cursor-pointer">
                         <input type="checkbox" class="cart-checkbox mt-2 ml-1" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
                     </label>
@@ -1168,7 +1154,7 @@
                         </div>
                         
                         <div class="flex justify-between items-end mt-2">
-                            <span class="font-black text-sm text-[#ff5000]">${itemTotal.toLocaleString()}៛</span>
+                            <span class="font-black text-sm text-[#ea580c]">${itemTotal.toLocaleString()}៛</span>
                             
                             <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
                                 <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
