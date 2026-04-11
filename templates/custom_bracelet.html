@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +7,10 @@
   <title>Somphea Reak - Italy Bracelet Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <!-- NEW: Enterprise Drag & Drop Engine (With MultiDrag included) -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Moul&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -32,20 +37,6 @@
 
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     
-    @keyframes popIn {
-        0% { transform: translate(-50%, 50%) scale(0); opacity: 0; }
-        80% { transform: translate(-50%, -10%) scale(1.1); opacity: 1; }
-        100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
-    }
-
-    @keyframes wiggle {
-        0% { transform: rotate(0deg); }
-        25% { transform: rotate(-3deg); }
-        50% { transform: rotate(3deg); }
-        75% { transform: rotate(-3deg); }
-        100% { transform: rotate(0deg); }
-    }
-
     #drawer { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
     #cart-drawer { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
 
@@ -59,22 +50,33 @@
     .bracelet-link-container {
         display: flex; align-items: flex-end; justify-content: center;
         flex: 0 0 10%; aspect-ratio: 2 / 3.5; position: relative;
-        margin: 0; padding: 0; cursor: pointer; transition: all 0.2s ease; opacity: 1;
+        margin: 0; padding: 0; cursor: pointer; transition: transform 0.2s ease;
+        touch-action: pan-y; /* Allows vertical scrolling on container */
     }
     
-    .bracelet-link-container.dragging { opacity: 0.8; z-index: 50; }
-    .bracelet-link-container.dragging img { animation: wiggle 0.3s infinite ease-in-out; transform: scale(1.1); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2)); }
-    .bracelet-link-container.drag-over { transform: scale(0.95); opacity: 0.7; }
-
-    .bracelet-link-container.selected { z-index: 40; }
-    .bracelet-link-container.selected img { filter: drop-shadow(0 0 0 2px #ea580c); transform: translateY(-4px); }
-    
-    .remove-btn-anim { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-
     .bracelet-link-container img {
         width: 100%; height: 100%; object-fit: contain; display: block;
         pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); transition: all 0.2s;
     }
+
+    /* SELECTED STATE */
+    .bracelet-link-container.selected { z-index: 40; }
+    .bracelet-link-container.selected img { filter: drop-shadow(0 0 0 2px #ea580c); transform: translateY(-4px); }
+    
+    /* REMOVE BUTTON LOGIC VIA CSS */
+    .remove-btn-anim { opacity: 0; pointer-events: none; transform: scale(0.8); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex !important; }
+    .bracelet-link-container.selected .remove-btn-anim { opacity: 1; pointer-events: auto; transform: scale(1); }
+
+    /* SORTABLE DRAG STYLES (Locked to Screen Feel) */
+    .sortable-fallback-ghost {
+        opacity: 0.95 !important;
+        transform: scale(1.15) !important;
+        filter: drop-shadow(0 25px 25px rgba(0,0,0,0.3)) !important;
+        z-index: 9999 !important;
+        cursor: grabbing !important;
+        background: transparent !important;
+    }
+    .sortable-ghost { opacity: 0.1 !important; }
 
     .nav-indicator-container { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 5px; margin-bottom: 8px; }
 
@@ -85,8 +87,6 @@
 
     #scroll-track { height: 4px; background: #f1f5f9; border-radius: 10px; width: 80px; position: relative; overflow: hidden; }
     #scroll-thumb { position: absolute; height: 100%; width: 30%; background: #ea580c; border-radius: 10px; left: 0; transition: left 0.1s linear; }
-
-    .screenshot-frame { background: #fff; padding: 40px 20px; display: inline-flex; flex-direction: column; align-items: center; gap: 20px; }
     
     .logo-glow { animation: glow 3s infinite ease-in-out; }
     @keyframes glow { 0%, 100% { box-shadow: 0 0 0 0px rgba(234, 88, 12, 0); } 50% { box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1); } }
@@ -103,7 +103,6 @@
         background-repeat: no-repeat; background-size: contain; vertical-align: middle;
     }
 
-    /* BEAUTIFUL CUSTOM CHECKBOX ICON */
     .cart-checkbox { 
         appearance: none; width: 24px; height: 24px; border: 2.5px solid #cbd5e1; border-radius: 50%; 
         outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
@@ -188,7 +187,6 @@
             <span id="lang-display">KH</span> | <span class="opacity-50" id="lang-alt">EN</span>
          </button>
          
-         <!-- CART BUTTON -->
          <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform">
              <i class="fa-solid fa-cart-shopping"></i>
              <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#ff5000] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden">0</span>
@@ -261,7 +259,8 @@
             </div>
         </div>
 
-        <div id="bracelet-preview" onclick="handleBackgroundClick(event)" onscroll="handlePreviewScroll(this)" class="flex overflow-x-auto py-8 px-4 scrollbar-hide min-h-[120px] items-center justify-center bg-slate-50 gap-0 transition-all">
+        <!-- NEW: SORTABLE DRAG CONTAINER -->
+        <div id="bracelet-preview" onclick="handleBackgroundClick(event)" onscroll="handlePreviewScroll(this)" class="flex overflow-x-auto py-8 px-4 scrollbar-hide min-h-[120px] items-center justify-center bg-slate-50 gap-0 transition-all relative">
             <div class="w-full text-center opacity-20 flex flex-col items-center">
                 <i class="fa-solid fa-layer-group text-2xl mb-1"></i>
                 <p class="text-[8px] font-black uppercase tracking-[0.2em] font-['Kantumruy_Pro']" data-i18n="start_design">ចាប់ផ្តើមរចនា</p>
@@ -279,17 +278,17 @@
         <div class="px-4 space-y-2">
             <div class="flex gap-2">
                 <div class="relative flex-grow">
-                    <input type="text" id="share-code-input" readonly class="w-full bg-gray-100 border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono text-gray-600 focus:outline-none uppercase tracking-widest" placeholder="0000000000">
+                    <input type="text" id="share-code-input" readonly class="w-full bg-gray-100 border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono text-gray-600 focus:outline-none uppercase tracking-widest" placeholder="XXXX-XXXX">
                     <div class="absolute right-1 top-1 bottom-1">
                         <button onclick="copyDesignCode()" class="h-full px-3 bg-white border border-gray-200 rounded-md text-[9px] font-bold uppercase text-gray-500 hover:text-[#ff5000] transition-colors font-['Kantumruy_Pro']" data-i18n="copy">ចម្លង</button>
                     </div>
                 </div>
             </div>
             <div class="flex gap-2">
-                <input type="tel" inputmode="numeric" id="load-code-input" class="flex-grow bg-white border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono text-gray-900 focus:border-[#ff5000] focus:ring-1 focus:ring-orange-500 outline-none transition-all placeholder:normal-case placeholder:text-gray-400 font-['Kantumruy_Pro']" placeholder="ដាក់លេខកូដដើម្បីរចនាបន្ត..." data-i18n-placeholder="placeholder_load">
+                <input type="text" id="load-code-input" class="flex-grow bg-white border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono uppercase tracking-widest text-gray-900 focus:border-[#ff5000] focus:ring-1 focus:ring-orange-500 outline-none transition-all placeholder:normal-case placeholder:text-gray-400 font-['Kantumruy_Pro']" placeholder="ដាក់លេខកូដដើម្បីរចនាបន្ត..." data-i18n-placeholder="placeholder_load">
                 <button onclick="loadDesignCode()" class="bg-gray-900 text-white px-4 rounded-lg text-[10px] font-bold uppercase tracking-wide active:scale-95 transition-transform shadow-lg shadow-gray-200 font-['Kantumruy_Pro']" data-i18n="load">ដាក់កូដ</button>
             </div>
-            <p class="text-[8px] font-bold text-gray-300 uppercase italic text-center pt-1 font-['Kantumruy_Pro']" data-i18n="hint_drag">ចុចលើត្បូងដើម្បីរើស • អូសដើម្បីប្តូរទីតាំង</p>
+            <p class="text-[8px] font-bold text-gray-300 uppercase italic text-center pt-1 font-['Kantumruy_Pro']" data-i18n="hint_drag">ចុចលើត្បូងដើម្បីរើស • ដាក់ដៃឱ្យជាប់បន្តិចដើម្បីអូស</p>
         </div>
     </div>
   </section>
@@ -475,6 +474,15 @@
   </div>
 
   <script>
+    // Initialize SortableJS MultiDrag Support globally
+    document.addEventListener("DOMContentLoaded", () => {
+        try {
+            if (typeof Sortable !== 'undefined' && Sortable.MultiDrag) {
+                Sortable.mount(new Sortable.MultiDrag());
+            }
+        } catch(e) { console.error("Sortable plugin error:", e); }
+    });
+
     const translations = {
         KH: {
             brand_name: "សម្ភារៈ - Somphea Reak",
@@ -494,7 +502,7 @@
             copy: "Copy",
             load: "បញ្ជូន",
             placeholder_load: "Paste Code នៅទីនេះ",
-            hint_drag: "ចុចលើគ្រាប់ ដើម្បីដូរទីតាំងឬលុបចោល",
+            hint_drag: "ចុចលើត្បូងដើម្បីរើស • ដាក់ដៃឱ្យជាប់បន្តិចដើម្បីអូស",
             collection_title: "ប្រភេទគ្រាប់",
             view_all: "ចុចមើលទាំងអស់",
             select_charm_title: "ជ្រើសរើសគ្រាប់",
@@ -554,7 +562,7 @@
             copy: "Copy",
             load: "Load",
             placeholder_load: "Paste code to load...",
-            hint_drag: "Tap charm to select • Drag to reorder",
+            hint_drag: "Tap charm to select • Hold to drag multiple",
             collection_title: "Collections",
             view_all: "View All",
             select_charm_title: "Select Charm",
@@ -603,6 +611,7 @@
 
     let allCharms = [];
     let selectedCharms = [];
+    let sortableInstance = null;
     
     let userCart = [];
     try {
@@ -706,7 +715,7 @@
         
         updateLanguageUI(); 
         updateCartBadge();
-        document.getElementById('header-visitor-count').innerText = getDailyVisitorCount().toLocaleString();
+        document.getElementById('header-visitor-count')?.innerText && (document.getElementById('header-visitor-count').innerText = getDailyVisitorCount().toLocaleString());
         startBannerSlideshow();
 
         setTimeout(() => {
@@ -792,7 +801,7 @@
     }
 
     function removeCharm(uid, event) {
-        if(event) event.stopPropagation();
+        if(event) event.stopPropagation(); // Stop Sortable from triggering a select
         selectedCharms = selectedCharms.filter(c => c.uid !== uid);
         selectedCharmUids = selectedCharmUids.filter(id => id !== uid); updateUI();
     }
@@ -828,17 +837,76 @@
         toast.classList.remove('opacity-0', 'scale-90'); setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500);
     }
 
+    // NEW: Generate ultra-short Base-36 Code
     function getDesignCode(charmsList = selectedCharms) {
-        if(charmsList.length > 0) {
-            let code = charmsList.map(c => { const idx = allCharms.findIndex(x => x.ui_id === c.ui_id); return idx !== -1 ? idx.toString().padStart(3, '0') : '999'; }).join('');
-            while (code.length < 12) { code += '999'; } return code;
-        } return "";
+        if(charmsList.length === 0) return "";
+        let hexArr = charmsList.map(c => {
+            const idx = allCharms.findIndex(x => x.ui_id === c.ui_id);
+            // Convert array index to base-36 (0-9, a-z), pad to 2 chars (supports up to 1295 charms)
+            return (idx !== -1 ? idx : 1295).toString(36).padStart(2, '0');
+        });
+        
+        let rawStr = hexArr.join('').toUpperCase();
+        // Add hyphen every 4 characters for readability
+        let formatted = rawStr.match(/.{1,4}/g)?.join('-') || rawStr;
+        return formatted;
     }
 
     function copyToClipboardCode(code) {
         navigator.clipboard.writeText(code).then(() => {
             showToast('Code Copied', 'text-white', 'fa-copy');
         });
+    }
+
+    function copyDesignCode() {
+        const input = document.getElementById('share-code-input'); if(!input.value) return;
+        input.select(); input.setSelectionRange(0, 99999); 
+        navigator.clipboard.writeText(input.value).then(() => showToast(t('copy'), 'text-white', 'fa-copy'));
+    }
+
+    // NEW: Load ultra-short Base-36 Code
+    function loadDesignCode() {
+        const input = document.getElementById('load-code-input'); 
+        const code = input.value.trim().replace(/-/g, '').toLowerCase();
+        
+        if(!code || code.length % 2 !== 0) {
+            return alert(currentLang === 'KH' ? "កូដមិនត្រឹមត្រូវទេ (Invalid Code)" : "Invalid code format.");
+        }
+        
+        try {
+            const newCharms = [];
+            for(let i=0; i < code.length; i+=2) {
+                const chunk = code.substring(i, i+2);
+                const idx = parseInt(chunk, 36); // Convert base-36 back to array index
+                if(allCharms[idx]) {
+                    newCharms.push({ ...allCharms[idx], uid: Math.random().toString(36).substr(2, 9) });
+                }
+            }
+            if(newCharms.length > 0 && confirm(currentLang === 'KH' ? "តើអ្នកចង់ដាក់កូដនេះមែនទេ?" : "Load this design?")) {
+                selectedCharms = newCharms; selectedCharmUids = []; updateUI(); input.value = ""; showToast(t('design_loaded'), 'text-green-400', 'fa-download');
+            } else if (newCharms.length === 0) {
+                alert(currentLang === 'KH' ? "រកមិនឃើញកូដរចនានេះទេ" : "Design code not found.");
+            }
+        } catch(e) { alert("Error loading code."); }
+    }
+
+    function clearBracelet() {
+        if(selectedCharms.length === 0) return;
+        if(confirm(currentLang === 'KH' ? "តើអ្នកចង់ជម្រះការរចនានេះមែនទេ?" : "Clear current design?")) {
+            selectedCharms = []; selectedCharmUids = []; updateUI(); showToast(t('cleared'), 'text-red-400', 'fa-trash');
+        }
+    }
+
+    function refreshToolbar() {
+        const duplicateBtn = document.getElementById('duplicate-btn');
+        const deleteSelBtn = document.getElementById('delete-selected-btn');
+        if (selectedCharmUids.length > 0) { 
+            duplicateBtn.classList.remove('hidden'); duplicateBtn.classList.add('flex'); 
+            deleteSelBtn.classList.remove('hidden'); deleteSelBtn.classList.add('flex');
+        } else { 
+            duplicateBtn.classList.add('hidden'); duplicateBtn.classList.remove('flex'); 
+            deleteSelBtn.classList.add('hidden'); deleteSelBtn.classList.remove('flex');
+        }
     }
 
     function updateUI() {
@@ -851,116 +919,74 @@
         const usd = (total / RATE).toFixed(2); document.getElementById('header-price-usd').innerText = `($${usd})`;
         document.getElementById('share-code-input').value = getDesignCode();
         
-        const duplicateBtn = document.getElementById('duplicate-btn');
-        const deleteSelBtn = document.getElementById('delete-selected-btn');
-        
-        if (selectedCharmUids.length > 0) { 
-            duplicateBtn.classList.remove('hidden'); duplicateBtn.classList.add('flex'); 
-            deleteSelBtn.classList.remove('hidden'); deleteSelBtn.classList.add('flex');
-        } else { 
-            duplicateBtn.classList.add('hidden'); duplicateBtn.classList.remove('flex'); 
-            deleteSelBtn.classList.add('hidden'); deleteSelBtn.classList.remove('flex');
-        }
+        refreshToolbar();
 
         if (selectedCharms.length === 0) {
-            preview.className = "flex overflow-x-auto py-8 px-4 scrollbar-hide min-h-[120px] items-center justify-center bg-slate-50 gap-0 transition-all";
+            if(sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
+            preview.className = "flex overflow-x-auto py-8 px-4 scrollbar-hide min-h-[120px] items-center justify-center bg-slate-50 gap-0 transition-all relative";
             preview.innerHTML = `<div class="w-full text-center opacity-30 flex flex-col items-center"><i class="fa-solid fa-layer-group text-2xl mb-1"></i><p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 font-['Kantumruy_Pro']" data-i18n="start_design">${t('start_design')}</p></div>`;
             document.getElementById('save-design-btn').disabled = true; document.querySelector('.nav-indicator-container').style.opacity = '0'; return;
         }
 
-        preview.className = "flex overflow-x-auto pt-10 pb-4 px-4 scrollbar-hide min-h-[140px] items-center bg-slate-50 gap-0 transition-all";
+        preview.className = "flex overflow-x-auto pt-10 pb-4 px-4 scrollbar-hide min-h-[140px] items-center bg-slate-50 gap-0 transition-all relative";
         document.querySelector('.nav-indicator-container').style.opacity = '1';
         
+        // Build items. No onclick needed, Sortable handles the select logic.
         preview.innerHTML = selectedCharms.map((c, index) => {
             const isSelected = selectedCharmUids.includes(c.uid);
             return `
-                <div class="bracelet-link-container link-pop group ${isSelected ? 'selected' : ''}" data-index="${index}" data-uid="${c.uid}" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event)">
+                <div class="bracelet-link-container link-pop group ${isSelected ? 'selected' : ''}" data-uid="${c.uid}">
                     <img src="${c.image}">
-                    <button onclick="removeCharm('${c.uid}', event)" class="${isSelected ? 'flex' : 'hidden'} remove-btn-anim absolute -top-4 left-1/2 -translate-x-1/2 w-7 h-7 bg-red-500 text-white rounded-full items-center justify-center text-[12px] shadow-lg z-50 hover:bg-red-600 active:scale-90 transition-transform"><i class="fa-solid fa-trash-can"></i></button>
-                    <div class="absolute top-1/2 -right-[2px] w-1 h-3 bg-gray-300/50 rounded-full transform -translate-y-1/2 -z-10"></div>
+                    <!-- Trash button controlled purely by CSS now (.selected class) -->
+                    <button onclick="removeCharm('${c.uid}', event)" class="remove-btn-anim absolute -top-4 left-1/2 -translate-x-1/2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-[12px] shadow-lg z-50 hover:bg-red-600 active:scale-90 transition-transform"><i class="fa-solid fa-trash-can"></i></button>
+                    <div class="absolute top-1/2 -right-[2px] w-1 h-3 bg-gray-300/50 rounded-full transform -translate-y-1/2 -z-10 pointer-events-none"></div>
                 </div>`;
         }).join('');
+        
         document.getElementById('save-design-btn').disabled = false;
-    }
 
-    // MULTI-SELECT DRAG & DROP LOGIC
-    let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
-    let isDragging = false, potentialDrag = false, draggedItem = null;
-
-    function handleTouchStart(e) {
-        if (e.target.closest('button')) return; 
-        const container = e.target.closest('.bracelet-link-container'); 
-        if (!container) return;
-        const uid = container.dataset.uid;
-        if (selectedCharmUids.includes(uid) || selectedCharmUids.length === 0) { potentialDrag = true; draggedItem = container; }
-        touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; touchStartTime = new Date().getTime();
-    }
-    function handleTouchMove(e) {
-        if (!potentialDrag || !draggedItem) return;
-        const touch = e.touches[0]; const distX = Math.abs(touch.clientX - touchStartX); const distY = Math.abs(touch.clientY - touchStartY);
-        if (!isDragging && (distX > 10 || distY > 10)) {
-            isDragging = true; const uid = draggedItem.dataset.uid;
-            if (!selectedCharmUids.includes(uid)) {
-                selectedCharmUids = [uid]; document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('selected')); draggedItem.classList.add('selected');
+        // --- NEW: INITIALIZE SORTABLE JS ---
+        if(sortableInstance) sortableInstance.destroy();
+        
+        sortableInstance = new Sortable(preview, {
+            animation: 150,
+            multiDrag: true, // Native MultiDrag plugin!
+            selectedClass: 'selected', // Class to append to selected items
+            forceFallback: true, // Forces creating the floating custom ghost on mobile
+            fallbackClass: 'sortable-fallback-ghost', // Makes it look locked to screen
+            ghostClass: 'sortable-ghost',
+            delay: 150, // 150ms delay so you can easily scroll horizontally without dragging
+            delayOnTouchOnly: true, // Only use the delay on touch screens
+            fallbackTolerance: 5, // Allows a little finger wiggle while holding
+            
+            // Fires when an item is tapped
+            onSelect: function(evt) {
+                const uid = evt.item.dataset.uid;
+                if(!selectedCharmUids.includes(uid)) selectedCharmUids.push(uid);
+                refreshToolbar();
+            },
+            // Fires when an item is tapped again
+            onDeselect: function(evt) {
+                const uid = evt.item.dataset.uid;
+                selectedCharmUids = selectedCharmUids.filter(id => id !== uid);
+                refreshToolbar();
+            },
+            // Fires when dragging is finished
+            onEnd: function(evt) {
+                // Reconstruct array state based on new DOM order
+                const newOrderUids = Array.from(preview.querySelectorAll('.bracelet-link-container')).map(el => el.dataset.uid);
+                const map = new Map();
+                selectedCharms.forEach(c => map.set(c.uid, c));
+                selectedCharms = newOrderUids.map(uid => map.get(uid)).filter(Boolean);
+                
+                // Save and update background state
+                try { localStorage.setItem('customCharms', JSON.stringify(selectedCharms)); } catch(e) {}
+                document.getElementById('share-code-input').value = getDesignCode();
+                
+                // Quick re-render to enforce React-like state stability
+                updateUI(); 
             }
-            document.querySelectorAll('.bracelet-link-container').forEach(el => { if (selectedCharmUids.includes(el.dataset.uid)) el.classList.add('dragging'); });
-        }
-        if (isDragging) {
-            e.preventDefault(); const target = document.elementFromPoint(touch.clientX, touch.clientY); const targetContainer = target?.closest('.bracelet-link-container');
-            document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('drag-over'));
-            if (targetContainer && !selectedCharmUids.includes(targetContainer.dataset.uid)) targetContainer.classList.add('drag-over');
-        }
-    }
-    function handleTouchEnd(e) {
-        if (e.target.closest('button')) return; 
-        const container = e.target.closest('.bracelet-link-container'); if(!container) return;
-        const timeDiff = new Date().getTime() - touchStartTime; const touchEndX = e.changedTouches[0].clientX; const dist = Math.abs(touchEndX - touchStartX);
-        if (timeDiff < 200 && dist < 10) {
-             const uid = container.dataset.uid;
-             if (selectedCharmUids.includes(uid)) selectedCharmUids = selectedCharmUids.filter(id => id !== uid);
-             else selectedCharmUids.push(uid);
-             updateUI();
-        } 
-        else if (isDragging) {
-            const targetContainer = document.querySelector('.bracelet-link-container.drag-over');
-            if (targetContainer) {
-                const targetUid = targetContainer.dataset.uid; const itemsToMove = selectedCharms.filter(c => selectedCharmUids.includes(c.uid));
-                selectedCharms = selectedCharms.filter(c => !selectedCharmUids.includes(c.uid));
-                let insertIdx = selectedCharms.findIndex(c => c.uid === targetUid); if (insertIdx === -1) insertIdx = selectedCharms.length; 
-                selectedCharms.splice(insertIdx, 0, ...itemsToMove); updateUI();
-            }
-        }
-        document.querySelectorAll('.bracelet-link-container').forEach(el => el.classList.remove('dragging', 'drag-over')); 
-        isDragging = false; potentialDrag = false; draggedItem = null;
-    }
-
-    function copyDesignCode() {
-        const input = document.getElementById('share-code-input'); if(!input.value) return;
-        input.select(); input.setSelectionRange(0, 99999); 
-        navigator.clipboard.writeText(input.value).then(() => showToast(t('copy'), 'text-white', 'fa-copy'));
-    }
-
-    function loadDesignCode() {
-        const input = document.getElementById('load-code-input'); const code = input.value.trim();
-        if(!code || !/^\d+$/.test(code)) return alert("Invalid code.");
-        try {
-            const newCharms = [];
-            for(let i=0; i < code.length; i+=3) {
-                const chunk = code.substring(i, i+3); if(chunk === '999') continue; 
-                const idx = parseInt(chunk, 10);
-                if(allCharms[idx]) newCharms.push({ ...allCharms[idx], uid: Math.random().toString(36).substr(2, 9) });
-            }
-            if(newCharms.length > 0 && confirm(currentLang === 'KH' ? "តើអ្នកចង់ដាក់កូដនេះមែនទេ?" : "Load this design?")) {
-                selectedCharms = newCharms; selectedCharmUids = []; updateUI(); input.value = ""; showToast(t('design_loaded'), 'text-green-400', 'fa-download');
-            }
-        } catch(e) { alert("Error loading code."); }
-    }
-
-    function clearBracelet() {
-        if(selectedCharms.length === 0) return;
-        if(confirm(currentLang === 'KH' ? "តើអ្នកចង់ជម្រះការរចនានេះមែនទេ?" : "Clear current design?")) {
-            selectedCharms = []; selectedCharmUids = []; updateUI(); showToast(t('cleared'), 'text-red-400', 'fa-trash');
-        }
+        });
     }
 
     // --- PACKAGING & CART WORKFLOW ---
@@ -1090,7 +1116,7 @@
                                 <div>
                                     <h4 class="font-black text-sm text-gray-900 leading-tight">Custom Bracelet #${customIndex++}</h4>
                                     <p class="text-[10px] font-bold text-gray-500 mt-1 uppercase tracking-widest flex items-center">
-                                        Code: <span class="font-mono text-gray-800 ml-1">${item.code.substring(0,8)}</span>
+                                        Code: <span class="font-mono text-gray-800 ml-1">${item.code.substring(0,9)}...</span>
                                         <button type="button" onclick="copyToClipboardCode('${item.code}')" class="text-gray-400 hover:text-orange-500 ml-2 p-1 active:scale-90"><i class="fa-regular fa-copy"></i></button>
                                     </p>
                                 </div>
@@ -1183,7 +1209,6 @@
         }
     }
 
-    // LOAD DESIGN FROM CART BACK INTO WORKSPACE
     function loadDesignFromCart(id) {
         const item = userCart.find(i => i.id === id);
         if(!item || item.type !== 'custom_bracelet') return;
@@ -1252,7 +1277,6 @@
         const orderItemsPayload = [];
         const charmCounts = {}; 
 
-        // COMBINE NORMAL STORE ITEMS + CUSTOM BRACELETS PERFECTLY
         selectedItems.forEach((cartItem, bIdx) => {
             
             if(cartItem.type === 'custom_bracelet') {
@@ -1261,7 +1285,6 @@
 
                 const styleText = `Bracelet #${bIdx+1} | Code: ${cartItem.code} | Charms: ${cartItem.charms.length} | Pkg: ${cartItem.pkgName}`;
                 
-                // 1. ADD VISUAL BRACELET
                 orderItemsPayload.push({
                     cartId: "custom-" + Date.now() + "-" + bIdx,
                     title: "Custom DIY Bracelet",
@@ -1272,15 +1295,13 @@
                     maxStock: 99
                 });
 
-                // 2. AGGREGATE EXACT DB_IDS FOR STOCK
                 cartItem.charms.forEach(c => {
                     charmCounts[c.db_id] = (charmCounts[c.db_id] || 0) + (1 * cartItem.qty);
                 });
             } else {
-                // NORMAL TOY/BRACELET LOGIC
                 subtotal += (cartItem.price * cartItem.qty);
                 orderItemsPayload.push({
-                    cartId: cartItem.id, // This holds the '15-0' format
+                    cartId: cartItem.id,
                     title: cartItem.title,
                     style: cartItem.style,
                     price: cartItem.price / RATE,
@@ -1291,7 +1312,6 @@
             }
         });
 
-        // 3. PUSH ALL INVISIBLE STOCK-DEDUCTING PARTS
         for (const [id, count] of Object.entries(charmCounts)) {
             orderItemsPayload.push({
                 cartId: id, 
@@ -1343,5 +1363,3 @@
   </script>
 </body>
 </html>
-
-
