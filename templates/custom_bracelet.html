@@ -8,9 +8,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   
-  <!-- Enterprise Drag & Drop Engine -->
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Moul&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -35,32 +32,30 @@
         z-index: -1;
     }
 
-    /* PERFECTED SCROLLING CONTAINER */
     .bracelet-preview-container {
         display: flex;
         overflow-x: auto;
         scroll-behavior: smooth;
         -webkit-overflow-scrolling: touch;
         align-items: center;
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none; /* IE/Edge */
+        scrollbar-width: none; 
+        -ms-overflow-style: none; 
         padding-left: 0;
         padding-right: 0;
     }
     
     .bracelet-preview-container::-webkit-scrollbar {
-        display: none; /* Chrome/Safari */
+        display: none; 
     }
 
     /* 10 CHARMS PER LINE STRICT SIZING */
     .bracelet-link-container {
-        flex: 0 0 10vw; /* Exactly 10 items fit per screen width */
+        flex: 0 0 10vw; 
         width: 10vw; 
         aspect-ratio: 2 / 3.5;
         position: relative;
-        cursor: grab;
-        touch-action: pan-x pan-y;
-        transition: transform 0.2s ease;
+        cursor: pointer;
+        transition: transform 0.2s ease, filter 0.2s ease;
     }
     
     .bracelet-link-container img {
@@ -73,17 +68,6 @@
     
     .remove-btn-anim { opacity: 0; pointer-events: none; transform: scale(0.8); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex !important; }
     .bracelet-link-container.selected .remove-btn-anim { opacity: 1; pointer-events: auto; transform: scale(1); }
-
-    /* SORTABLE DRAG STYLES */
-    .sortable-fallback-ghost {
-        opacity: 0.95 !important;
-        transform: scale(1.15) !important;
-        filter: drop-shadow(0 25px 25px rgba(0,0,0,0.3)) !important;
-        z-index: 9999 !important;
-        cursor: grabbing !important;
-        background: transparent !important;
-    }
-    .sortable-ghost { opacity: 0.1 !important; }
 
     #drawer { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
     #cart-drawer { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
@@ -160,7 +144,7 @@
           </div>
           <h3 class="text-lg text-[#ea580c] mb-1" data-i18n="tutorial_title">របៀបកម្ម៉ង់?</h3>
           <p class="text-sm font-bold text-gray-600 leading-relaxed font-['Kantumruy_Pro']" data-i18n="tutorial_msg">ចំណាយពេល 30 វិនាទី ដើម្បីដឹងពីរបៀបប្រើប្រាស់</p>
-          <a href="https://vt.tiktok.com/ZSH41T55Q/" target="_blank" class="w-full bg-black text-white py-3.5 rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-gray-300">
+          <a href="https://www.tiktok.com/@sompheareak_italy" target="_blank" class="w-full bg-black text-white py-3.5 rounded-xl font-bold uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-gray-300">
               <i class="fa-solid fa-play"></i> <span data-i18n="watch_video">មើលវីដេអូ</span>
           </a>
       </div>
@@ -247,15 +231,25 @@
                  </div>
             </div>
             
-            <div class="flex items-center gap-1.5">
-                <button id="delete-selected-btn" onclick="deleteSelectedCharms()" class="hidden bg-red-50 text-red-500 hover:bg-red-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 items-center gap-1 font-['Kantumruy_Pro']">
-                    <i class="fa-solid fa-trash-can"></i> <span data-i18n="delete">លុប</span>
+            <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                <!-- SHIFT ARROWS (New!) -->
+                <button id="move-left-btn" onclick="moveSelected(-1)" class="hidden bg-gray-100 text-gray-700 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-[10px] font-black transition-colors active:scale-95 items-center gap-1 border border-gray-200">
+                    <i class="fa-solid fa-chevron-left"></i>
                 </button>
-                <button id="duplicate-btn" onclick="duplicateSelectedCharms()" class="hidden bg-blue-50 text-blue-500 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 items-center gap-1 font-['Kantumruy_Pro']">
-                    <i class="fa-solid fa-copy"></i> <span data-i18n="duplicate">ចម្លង</span>
+                <button id="move-right-btn" onclick="moveSelected(1)" class="hidden bg-gray-100 text-gray-700 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-[10px] font-black transition-colors active:scale-95 items-center gap-1 border border-gray-200">
+                    <i class="fa-solid fa-chevron-right"></i>
                 </button>
-                <button onclick="clearBracelet()" class="bg-gray-50 text-gray-500 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 flex items-center gap-1 font-['Kantumruy_Pro']">
-                    <i class="fa-solid fa-rotate-left"></i> <span data-i18n="reset">ជម្រះ</span>
+                
+                <div id="action-divider" class="hidden w-px h-6 bg-gray-200 mx-1"></div>
+
+                <button id="delete-selected-btn" onclick="deleteSelectedCharms()" class="hidden bg-red-50 text-red-500 hover:bg-red-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 items-center gap-1 font-['Kantumruy_Pro'] border border-red-100">
+                    <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline" data-i18n="delete">លុប</span>
+                </button>
+                <button id="duplicate-btn" onclick="duplicateSelectedCharms()" class="hidden bg-blue-50 text-blue-500 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 items-center gap-1 font-['Kantumruy_Pro'] border border-blue-100">
+                    <i class="fa-solid fa-copy"></i> <span class="hidden sm:inline" data-i18n="duplicate">ចម្លង</span>
+                </button>
+                <button onclick="clearBracelet()" class="bg-gray-50 text-gray-500 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 flex items-center gap-1 font-['Kantumruy_Pro'] border border-gray-200">
+                    <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline" data-i18n="reset">ជម្រះ</span>
                 </button>
             </div>
         </div>
@@ -289,7 +283,7 @@
                 <input type="text" id="load-code-input" class="flex-grow bg-white border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono uppercase tracking-widest text-gray-900 focus:border-[#ea580c] focus:ring-1 focus:ring-orange-500 outline-none transition-all placeholder:normal-case placeholder:text-gray-400 font-['Kantumruy_Pro']" placeholder="ដាក់លេខកូដដើម្បីរចនាបន្ត..." data-i18n-placeholder="placeholder_load">
                 <button onclick="loadDesignCode()" class="bg-gray-900 text-white px-4 rounded-lg text-[10px] font-bold uppercase tracking-wide active:scale-95 transition-transform shadow-lg shadow-gray-200 font-['Kantumruy_Pro']" data-i18n="load">ដាក់កូដ</button>
             </div>
-            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-center pt-1 font-['Kantumruy_Pro']" data-i18n="hint_drag">ចុចលើត្បូងដើម្បីរើស • សង្កត់ឱ្យជាប់បន្តិចដើម្បីអូស</p>
+            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-center pt-1 font-['Kantumruy_Pro']" data-i18n="hint_drag">ចុចលើត្បូងដើម្បីរើស • ចុចសញ្ញាព្រួញខាងលើដើម្បីប្ដូរទីតាំង</p>
         </div>
     </div>
   </section>
@@ -307,10 +301,7 @@
 
   <!-- CHARM SELECTOR DRAWER (NO BLUR, 55% HEIGHT) -->
   <div id="drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[200] translate-y-full pointer-events-none">
-    <!-- Transparent Background Overlay -->
     <div class="absolute inset-0 bg-transparent transition-opacity pointer-events-auto" onclick="closeDrawer()"></div>
-    
-    <!-- Drawer Height set to 55vh to show Preview Box fully -->
     <div class="absolute bottom-0 left-0 right-0 h-[55vh] bg-white rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden border-t border-gray-100 pointer-events-auto">
         <div class="bg-white border-b border-gray-100 sticky top-0 z-10 px-6 py-4 flex items-center justify-between relative overflow-hidden">
              <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-100 via-orange-300 to-orange-100 opacity-50"></div>
@@ -477,15 +468,6 @@
   </div>
 
   <script>
-    // Initialize SortableJS MultiDrag Support globally
-    document.addEventListener("DOMContentLoaded", () => {
-        try {
-            if (typeof Sortable !== 'undefined' && Sortable.MultiDrag) {
-                Sortable.mount(new Sortable.MultiDrag());
-            }
-        } catch(e) { console.error("Sortable plugin error:", e); }
-    });
-
     const translations = {
         KH: {
             brand_name: "សម្ភារៈរក្ស៍",
@@ -505,7 +487,7 @@
             copy: "Copy",
             load: "បញ្ជូន",
             placeholder_load: "Paste Code នៅទីនេះ",
-            hint_drag: "ចុចលើត្បូងដើម្បីរើស • សង្កត់ឱ្យជាប់បន្តិចដើម្បីអូស",
+            hint_drag: "ចុចលើត្បូងដើម្បីរើស • ចុចសញ្ញាព្រួញខាងលើដើម្បីប្ដូរទីតាំង",
             collection_title: "ប្រភេទគ្រាប់",
             view_all: "ចុចមើលទាំងអស់",
             select_charm_title: "ជ្រើសរើសគ្រាប់",
@@ -565,7 +547,7 @@
             copy: "Copy",
             load: "Load",
             placeholder_load: "Paste code to load...",
-            hint_drag: "Tap charm to select • Hold to drag multiple",
+            hint_drag: "Tap to select • Use Top Arrows to move it left/right",
             collection_title: "Collections",
             view_all: "View All",
             select_charm_title: "Select Charm",
@@ -614,7 +596,7 @@
 
     let allCharms = [];
     let selectedCharms = [];
-    let sortableInstance = null;
+    let selectedCharmUids = []; 
     
     let userCart = [];
     try {
@@ -626,8 +608,6 @@
         const saved = localStorage.getItem('customCharms');
         if (saved) selectedCharms = JSON.parse(saved);
     } catch(e) { localStorage.removeItem('customCharms'); }
-
-    let selectedCharmUids = []; 
 
     function t(key) { return translations[currentLang][key] || key; }
 
@@ -796,9 +776,48 @@
         if(!charm || (charm.stock !== undefined && charm.stock <= 0)) return;
         const newUid = Math.random().toString(36).substr(2, 9);
         selectedCharms.push({ ...charm, uid: newUid });
-        selectedCharmUids = [newUid]; 
+        selectedCharmUids = [newUid]; // Auto select the new one
         updateUI(); showToast(t('added'), 'text-green-400', 'fa-circle-check');
         setTimeout(() => { const preview = document.getElementById('bracelet-preview'); preview.scrollTo({ left: preview.scrollWidth, behavior: 'smooth' }); }, 50);
+    }
+
+    // --- NEW SELECTION & SHIFT MECHANIC ---
+    function toggleSelection(uid, event) {
+        if(event) event.stopPropagation();
+        if(selectedCharmUids.includes(uid)) {
+            selectedCharmUids = selectedCharmUids.filter(id => id !== uid);
+        } else {
+            selectedCharmUids.push(uid);
+        }
+        updateUI();
+    }
+
+    function moveSelected(direction) {
+        if(selectedCharmUids.length !== 1) return;
+        const uid = selectedCharmUids[0];
+        const index = selectedCharms.findIndex(c => c.uid === uid);
+        if(index === -1) return;
+
+        if(direction === -1 && index > 0) {
+            // Swap left
+            const temp = selectedCharms[index];
+            selectedCharms[index] = selectedCharms[index - 1];
+            selectedCharms[index - 1] = temp;
+        } else if(direction === 1 && index < selectedCharms.length - 1) {
+            // Swap right
+            const temp = selectedCharms[index];
+            selectedCharms[index] = selectedCharms[index + 1];
+            selectedCharms[index + 1] = temp;
+        } else {
+            return; 
+        }
+        
+        updateUI();
+        // Keep it in view
+        setTimeout(() => {
+            const el = document.querySelector(`[data-uid="${uid}"]`);
+            if(el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }, 50);
     }
 
     function removeCharm(uid, event) {
@@ -896,12 +915,39 @@
     function refreshToolbar() {
         const duplicateBtn = document.getElementById('duplicate-btn');
         const deleteSelBtn = document.getElementById('delete-selected-btn');
-        if (selectedCharmUids.length > 0) { 
+        const moveLeftBtn = document.getElementById('move-left-btn');
+        const moveRightBtn = document.getElementById('move-right-btn');
+        const actionDivider = document.getElementById('action-divider');
+        
+        // Show Action Toolbar Divider if items selected
+        if (selectedCharmUids.length > 0) {
+            actionDivider.classList.remove('hidden'); actionDivider.classList.add('block');
             duplicateBtn.classList.remove('hidden'); duplicateBtn.classList.add('flex'); 
             deleteSelBtn.classList.remove('hidden'); deleteSelBtn.classList.add('flex');
-        } else { 
+        } else {
+            actionDivider.classList.add('hidden'); actionDivider.classList.remove('block');
             duplicateBtn.classList.add('hidden'); duplicateBtn.classList.remove('flex'); 
             deleteSelBtn.classList.add('hidden'); deleteSelBtn.classList.remove('flex');
+        }
+
+        // Show ARROWS only if EXACTLY ONE charm is selected
+        if (selectedCharmUids.length === 1) {
+            moveLeftBtn.classList.remove('hidden'); moveLeftBtn.classList.add('flex');
+            moveRightBtn.classList.remove('hidden'); moveRightBtn.classList.add('flex');
+            
+            const idx = selectedCharms.findIndex(c => c.uid === selectedCharmUids[0]);
+            
+            // Fade out the left arrow if we are at the very beginning
+            if (idx === 0) { moveLeftBtn.style.opacity = '0.3'; moveLeftBtn.style.pointerEvents = 'none'; } 
+            else { moveLeftBtn.style.opacity = '1'; moveLeftBtn.style.pointerEvents = 'auto'; }
+            
+            // Fade out the right arrow if we are at the very end
+            if (idx === selectedCharms.length - 1) { moveRightBtn.style.opacity = '0.3'; moveRightBtn.style.pointerEvents = 'none'; } 
+            else { moveRightBtn.style.opacity = '1'; moveRightBtn.style.pointerEvents = 'auto'; }
+
+        } else {
+            moveLeftBtn.classList.add('hidden'); moveLeftBtn.classList.remove('flex');
+            moveRightBtn.classList.add('hidden'); moveRightBtn.classList.remove('flex');
         }
     }
 
@@ -918,7 +964,6 @@
         refreshToolbar();
 
         if (selectedCharms.length === 0) {
-            if(sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
             preview.className = "bracelet-preview-container bg-slate-50 min-h-[140px] pt-10 pb-4 justify-center";
             preview.innerHTML = `<div class="w-full text-center opacity-30 flex flex-col items-center"><i class="fa-solid fa-layer-group text-2xl mb-1"></i><p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 font-['Kantumruy_Pro']" data-i18n="start_design">${t('start_design')}</p></div>`;
             document.getElementById('save-design-btn').disabled = true; document.querySelector('.nav-indicator-container').style.opacity = '0'; return;
@@ -930,7 +975,7 @@
         preview.innerHTML = selectedCharms.map((c, index) => {
             const isSelected = selectedCharmUids.includes(c.uid);
             return `
-                <div class="bracelet-link-container link-pop group ${isSelected ? 'selected' : ''}" data-uid="${c.uid}">
+                <div onclick="toggleSelection('${c.uid}', event)" class="bracelet-link-container link-pop group ${isSelected ? 'selected' : ''}" data-uid="${c.uid}">
                     <img src="${c.image}">
                     <button onclick="removeCharm('${c.uid}', event)" class="remove-btn-anim absolute -top-4 left-1/2 -translate-x-1/2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-[12px] shadow-lg z-50 hover:bg-red-600 active:scale-90 transition-transform"><i class="fa-solid fa-trash-can"></i></button>
                     <div class="absolute top-1/2 -right-[2px] w-1 h-3 bg-gray-300/50 rounded-full transform -translate-y-1/2 -z-10 pointer-events-none"></div>
@@ -938,50 +983,6 @@
         }).join('');
         
         document.getElementById('save-design-btn').disabled = false;
-
-        // 🌟 PERFECTED SORTABLE INITIALIZATION (HORIZONTAL DRAG FIX) 🌟
-        if(sortableInstance) sortableInstance.destroy();
-        
-        sortableInstance = new Sortable(preview, {
-            animation: 200, // Smooth transition when elements swap
-            direction: 'horizontal', // CRITICAL: Tells the physics engine items are left-to-right
-            multiDrag: true, 
-            selectedClass: 'selected', 
-            forceFallback: true, 
-            fallbackClass: 'sortable-fallback-ghost',
-            ghostClass: 'sortable-ghost',
-            
-            // MAGIC BULLETS FOR MOBILE DRAG & SCROLL
-            delay: 150, // Short hold to pick up (150ms)
-            delayOnTouchOnly: true, 
-            touchStartThreshold: 3, // Allows tiny finger movements without cancelling the pick-up
-            fallbackTolerance: 5, 
-            
-            onChoose: function (evt) {
-                if(window.navigator && window.navigator.vibrate) window.navigator.vibrate(50);
-            },
-            onSelect: function(evt) {
-                const uid = evt.item.dataset.uid;
-                if(!selectedCharmUids.includes(uid)) selectedCharmUids.push(uid);
-                refreshToolbar();
-            },
-            onDeselect: function(evt) {
-                const uid = evt.item.dataset.uid;
-                selectedCharmUids = selectedCharmUids.filter(id => id !== uid);
-                refreshToolbar();
-            },
-            onEnd: function(evt) {
-                const newOrderUids = Array.from(preview.querySelectorAll('.bracelet-link-container')).map(el => el.dataset.uid);
-                const map = new Map();
-                selectedCharms.forEach(c => map.set(c.uid, c));
-                selectedCharms = newOrderUids.map(uid => map.get(uid)).filter(Boolean);
-                try { localStorage.setItem('customCharms', JSON.stringify(selectedCharms)); } catch(e) {}
-                document.getElementById('share-code-input').value = getDesignCode();
-                
-                // Allow CSS animation to finish before destroying/re-rendering DOM
-                setTimeout(() => { updateUI(); }, 10);
-            }
-        });
     }
 
     // --- PACKAGING & CART WORKFLOW ---
