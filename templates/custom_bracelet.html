@@ -40,9 +40,10 @@
         align-items: center;
         scrollbar-width: none; 
         -ms-overflow-style: none; 
-        padding-left: 0;
-        padding-right: 0;
+        padding-left: 10vw;
+        padding-right: 10vw;
         position: relative;
+        touch-action: pan-x; /* Allows scrolling when not dragging */
     }
     
     .bracelet-preview-container::-webkit-scrollbar {
@@ -58,18 +59,23 @@
         cursor: grab;
         transition: transform 0.3s cubic-bezier(0.2, 0, 0.2, 1), opacity 0.2s ease;
         user-select: none;
-        touch-action: none; /* Critical for custom drag logic */
+        touch-action: pan-x; /* Default to scroll */
     }
 
-    .bracelet-link-container:active { cursor: grabbing; }
+    .bracelet-link-container.selected {
+        touch-action: none; /* Disable scroll only when selected for dragging */
+        z-index: 40;
+    }
     
     .bracelet-link-container img {
         width: 100%; height: 100%; object-fit: contain; display: block;
         pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); transition: all 0.2s;
     }
 
-    .bracelet-link-container.selected { z-index: 40; }
-    .bracelet-link-container.selected img { filter: drop-shadow(0 0 0 2px #ea580c); transform: translateY(-4px); }
+    .bracelet-link-container.selected img { 
+        filter: drop-shadow(0 0 10px rgba(234, 88, 12, 0.4)); 
+        transform: translateY(-4px); 
+    }
     
     /* DRAGGING STATES */
     .bracelet-link-container.is-dragging {
@@ -78,11 +84,23 @@
         scale: 1.15;
         cursor: grabbing;
         transition: none; /* No transition while dragging for 1:1 movement */
-        filter: brightness(1.1);
     }
 
-    .remove-btn-anim { opacity: 0; pointer-events: none; transform: scale(0.8); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex !important; }
-    .bracelet-link-container.selected .remove-btn-anim { opacity: 1; pointer-events: auto; transform: scale(1); }
+    .remove-btn-anim { 
+        opacity: 0; 
+        pointer-events: none; 
+        transform: translateX(-50%) scale(0.5); 
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        display: flex !important;
+        position: absolute;
+        top: -20px;
+        left: 50%;
+    }
+    .bracelet-link-container.selected .remove-btn-anim { 
+        opacity: 1; 
+        pointer-events: auto; 
+        transform: translateX(-50%) scale(1); 
+    }
 
     #drawer, #cart-drawer, #tutorialModal { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease; }
     .modal-active { opacity: 1; pointer-events: auto; transform: scale(1); }
@@ -746,9 +764,9 @@
 
     function toggleSelection(uid) {
         if(selectedCharmUids.includes(uid)) {
-            selectedCharmUids = selectedCharmUids.filter(id => id !== uid);
+            selectedCharmUids = []; // Deselect if tapped again
         } else {
-            selectedCharmUids.push(uid);
+            selectedCharmUids = [uid]; // Only one selectable for drag/delete clarity
         }
         updateUI();
     }
@@ -784,19 +802,23 @@
         toast.classList.remove('opacity-0', 'scale-90'); setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500);
     }
 
-    // --- DRAG AND DROP REORDERING SYSTEM ---
+    // --- ENHANCED DRAG AND DROP REORDERING SYSTEM ---
     
     function handlePointerDown(e, uid, index) {
+        const isSelected = selectedCharmUids.includes(uid);
+        
         dragItem = e.currentTarget;
         dragStartX = e.clientX;
         dragCurrentX = dragStartX;
         dragStartIndex = index;
         hasMoved = false;
 
-        // Add dragging class
-        dragItem.classList.add('is-dragging');
+        // If it's already selected, we allow dragging immediately
+        if (isSelected) {
+            dragItem.classList.add('is-dragging');
+            dragItem.setPointerCapture(e.pointerId);
+        }
         
-        // Add listeners to document for smooth tracking
         document.addEventListener('pointermove', handlePointerMove);
         document.addEventListener('pointerup', handlePointerUp);
     }
@@ -805,46 +827,47 @@
         if (!dragItem) return;
         
         const deltaX = e.clientX - dragStartX;
-        if (Math.abs(deltaX) > 5) hasMoved = true;
         
-        dragCurrentX = e.clientX;
-        dragItem.style.transform = `translateX(${deltaX}px) scale(1.15)`;
+        // Threshold for movement
+        if (Math.abs(deltaX) > 10) {
+            hasMoved = true;
+        }
+        
+        // Only visual movement if it's the selected item being dragged
+        if (selectedCharmUids.includes(dragItem.getAttribute('data-uid')) && hasMoved) {
+            dragCurrentX = e.clientX;
+            dragItem.style.transform = `translateX(${deltaX}px) scale(1.15)`;
 
-        // Calculate if we've crossed over other items
-        const itemWidth = dragItem.offsetWidth;
-        const indexShift = Math.round(deltaX / itemWidth);
-        const newIndex = Math.max(0, Math.min(selectedCharms.length - 1, dragStartIndex + indexShift));
+            // Visual shift of siblings
+            const itemWidth = dragItem.offsetWidth;
+            const indexShift = Math.round(deltaX / itemWidth);
+            const newIndex = Math.max(0, Math.min(selectedCharms.length - 1, dragStartIndex + indexShift));
 
-        // Visual feedback for other items (Galllery effect)
-        const items = document.querySelectorAll('.bracelet-link-container');
-        items.forEach((item, idx) => {
-            if (item === dragItem) return;
-            
-            let shift = 0;
-            if (dragStartIndex < newIndex) {
-                // Moving Right
-                if (idx > dragStartIndex && idx <= newIndex) shift = -100;
-            } else if (dragStartIndex > newIndex) {
-                // Moving Left
-                if (idx < dragStartIndex && idx >= newIndex) shift = 100;
-            }
-            
-            item.style.transform = `translateX(${shift}%)`;
-        });
+            const items = document.querySelectorAll('.bracelet-link-container');
+            items.forEach((item, idx) => {
+                if (item === dragItem) return;
+                let shift = 0;
+                if (dragStartIndex < newIndex) {
+                    if (idx > dragStartIndex && idx <= newIndex) shift = -100;
+                } else if (dragStartIndex > newIndex) {
+                    if (idx < dragStartIndex && idx >= newIndex) shift = 100;
+                }
+                item.style.transform = `translateX(${shift}%)`;
+            });
+        }
     }
 
     function handlePointerUp(e) {
         if (!dragItem) return;
 
-        dragItem.classList.remove('is-dragging');
-        dragItem.style.transform = '';
+        const uid = dragItem.getAttribute('data-uid');
+        const isSelected = selectedCharmUids.includes(uid);
 
         if (!hasMoved) {
-            // It was a tap, not a drag
-            const uid = dragItem.getAttribute('data-uid');
+            // It was a simple tap, toggle selection
             toggleSelection(uid);
-        } else {
-            // It was a drag, finalize the order
+        } else if (isSelected) {
+            // It was a drag of a selected item, finalize order
             const itemWidth = dragItem.offsetWidth;
             const deltaX = dragCurrentX - dragStartX;
             const indexShift = Math.round(deltaX / itemWidth);
@@ -854,14 +877,16 @@
                 const element = selectedCharms.splice(dragStartIndex, 1)[0];
                 selectedCharms.splice(newIndex, 0, element);
             }
+            
+            // Per instructions: "after drag the delete icon it dissapear"
+            selectedCharmUids = []; 
         }
 
-        // Clean up
+        dragItem.classList.remove('is-dragging');
         dragItem = null;
         document.removeEventListener('pointermove', handlePointerMove);
         document.removeEventListener('pointerup', handlePointerUp);
         
-        // Final UI Refresh
         updateUI();
     }
 
@@ -902,7 +927,7 @@
                      class="bracelet-link-container group ${isSelected ? 'selected' : ''}" 
                      data-uid="${c.uid}">
                     <img src="${c.image}" draggable="false">
-                    <button onclick="removeCharm('${c.uid}', event)" class="remove-btn-anim absolute -top-4 left-1/2 -translate-x-1/2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-[12px] shadow-lg z-50 hover:bg-red-600 active:scale-90 transition-transform"><i class="fa-solid fa-trash-can"></i></button>
+                    <button onclick="removeCharm('${c.uid}', event)" class="remove-btn-anim w-7 h-7 bg-red-500 text-white rounded-full items-center justify-center text-[12px] shadow-lg z-50 hover:bg-red-600 active:scale-90 transition-transform"><i class="fa-solid fa-trash-can"></i></button>
                     <div class="absolute top-1/2 -right-[2px] w-1 h-3 bg-gray-300/50 rounded-full transform -translate-y-1/2 -z-10 pointer-events-none"></div>
                 </div>`;
         }).join('');
