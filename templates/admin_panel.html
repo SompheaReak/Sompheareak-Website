@@ -99,7 +99,7 @@
         </div>
     </header>
 
-    <!-- 3 TABS LAYOUT -->
+    <!-- 4 TABS LAYOUT (Added Analytics) -->
     <div class="max-w-7xl mx-auto px-4 mt-6">
         <div class="bg-gray-200/50 p-1.5 rounded-2xl flex gap-1 shadow-inner overflow-x-auto hide-scrollbar">
             <button onclick="switchView('inventory')" id="tab-inventory" class="tab-btn active flex-1 min-w-[100px] py-3 text-[10px] font-black uppercase rounded-xl transition-all">
@@ -110,6 +110,9 @@
             </button>
             <button onclick="switchView('spin')" id="tab-spin" class="tab-btn flex-1 min-w-[120px] py-3 text-[10px] font-black uppercase rounded-xl transition-all">
                 <i class="fa-solid fa-gamepad mr-1"></i> Minifig Spin
+            </button>
+            <button onclick="switchView('analytics')" id="tab-analytics" class="tab-btn flex-1 min-w-[100px] py-3 text-[10px] font-black uppercase rounded-xl transition-all">
+                <i class="fa-solid fa-chart-simple mr-1"></i> Traffic
             </button>
         </div>
     </div>
@@ -678,6 +681,49 @@
             </section>
         </div>
 
+        <!-- ==================== 4. ANALYTICS VIEW ==================== -->
+        <div id="view-analytics" class="hidden-view space-y-6 max-w-7xl mx-auto">
+            <div class="bg-white rounded-[32px] shadow-sm border border-gray-100 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-black text-lg"><i class="fa-solid fa-location-dot text-[#ff5000] mr-2"></i>Live Visitor Traffic</h2>
+                    <span class="bg-green-50 text-green-600 border border-green-100 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>Tracking Active</span>
+                </div>
+
+                <div class="overflow-x-auto max-h-[500px] overflow-y-auto hide-scrollbar border border-gray-100 rounded-2xl">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-[9px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+                                <th class="p-4">Time (KH)</th>
+                                <th class="p-4">Location</th>
+                                <th class="p-4">Page Visited</th>
+                                <th class="p-4">IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm font-semibold text-gray-700 divide-y divide-gray-100">
+                            <!-- Example Data injected by Flask: for visit in traffic_logs -->
+                            {% for visit in traffic_logs|default([]) %}
+                            <tr class="hover:bg-orange-50/30 transition-colors">
+                                <td class="p-4 text-[10px] font-mono text-gray-500">{{ visit.timestamp }}</td>
+                                <td class="p-4 font-black text-xs text-gray-900">
+                                    {% if visit.location == 'Phnom Penh' %}
+                                        <i class="fa-solid fa-building text-blue-400 mr-1"></i>
+                                    {% else %}
+                                        <i class="fa-solid fa-map text-green-400 mr-1"></i>
+                                    {% endif %}
+                                    {{ visit.location }}
+                                </td>
+                                <td class="p-4 text-[10px] uppercase tracking-widest">{{ visit.page }}</td>
+                                <td class="p-4 font-mono text-[10px] text-gray-400">{{ visit.ip }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="p-8 text-center text-gray-400 text-xs font-bold uppercase tracking-widest">No traffic recorded yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <form id="delete-cat-form" method="POST" class="hidden"></form>
@@ -803,7 +849,7 @@
             switchView(activeTab);
         });
 
-        // --- 3-TAB SWITCHING LOGIC ---
+        // --- 4-TAB SWITCHING LOGIC ---
         function switchView(view) {
             localStorage.setItem('adminActiveTab', view);
 
@@ -819,6 +865,9 @@
             document.getElementById('view-spin').classList.add('hidden-view'); 
             document.getElementById('view-spin').style.display = 'none';
             
+            document.getElementById('view-analytics').classList.add('hidden-view'); 
+            document.getElementById('view-analytics').style.display = 'none';
+            
             if(view === 'inventory') { 
                 document.getElementById('view-inventory').classList.remove('hidden-view'); 
                 document.getElementById('view-inventory').style.display = 'grid'; 
@@ -828,6 +877,9 @@
             } else if(view === 'spin') {
                 document.getElementById('view-spin').classList.remove('hidden-view');
                 document.getElementById('view-spin').style.display = 'grid';
+            } else if(view === 'analytics') {
+                document.getElementById('view-analytics').classList.remove('hidden-view');
+                document.getElementById('view-analytics').style.display = 'block';
             }
         }
 
