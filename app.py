@@ -117,6 +117,7 @@ class MinifigurePool(db.Model):
     image = db.Column(db.String(500), nullable=False)
     rarity = db.Column(db.String(50), nullable=False)
     stock = db.Column(db.Integer, default=0)
+    sort_order = db.Column(db.Integer, default=0) # ADDED FOR SORTING
 
 class DrawHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -214,14 +215,14 @@ def admin_panel():
     orders = Order.query.order_by(Order.timestamp.desc()).all()
     for o in orders: o.parsed_items = json.loads(o.items_json)
 
-    # Spinner Game Data
+    # Spinner Game Data (Added sorting functionality)
     codes = RedeemCode.query.order_by(RedeemCode.timestamp.desc()).all()
-    pool = MinifigurePool.query.all()
+    pool = MinifigurePool.query.order_by(MinifigurePool.sort_order.asc(), MinifigurePool.id.desc()).all()
     history = DrawHistory.query.order_by(DrawHistory.timestamp_utc.desc()).limit(100).all()
 
     return render_template('admin_panel.html', products=products, categories=categories, orders=orders, codes=codes, pool=pool, history=history)
 
-# NEW: Quick API to edit stock instantly from the Modal
+# Quick API to edit stock instantly from the Modal
 @app.route('/admin/product/quick_stock', methods=['POST'])
 @login_required
 def quick_update_stock():
@@ -342,6 +343,17 @@ def toggle_product(id):
         p.is_visible = not p.is_visible
         db.session.commit()
         flash(f'Product visibility updated.', 'success')
+    return redirect(url_for('admin_panel'))
+
+# FIX: Added Missing Product Delete Route!
+@app.route('/admin/product/delete/<int:id>', methods=['POST'])
+@login_required
+def delete_product(id):
+    p = Product.query.get(id)
+    if p:
+        db.session.delete(p)
+        db.session.commit()
+        flash('Product successfully deleted.', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/product/update/<int:id>', methods=['POST'])
@@ -578,6 +590,46 @@ def generate_codes():
     flash(f'Generated {quantity} codes!', 'success')
     return redirect(url_for('admin_panel'))
 
+# FIX: Added Missing Catalog Linking Route!
+@app.route('/admin/spin/add_pool_catalog', methods=['POST'])
+@login_required
+def add_pool_catalog():
+    selected_items = request.form.getlist('catalog_items[]')
+    rarity = request.form.get('rarity', 'Common')
+    
+    added_count = 0
+    for item_data in selected_items:
+        parts = item_data.split('|')
+        if len(parts) == 2:
+            p_id = int(parts[0])
+            v_idx = int(parts[1])
+            
+            product = Product.query.get(p_id)
+            if product:
+                image = product.image
+                name = product.title
+                stock = product.stock
+                
+                # Fetch specific variant info if it's a multi-variant product
+                if v_idx != -1 and product.variants:
+                    variants = json.loads(product.variants)
+                    if 0 <= v_idx < len(variants):
+                        image = variants[v_idx].get('image', image)
+                        name = f"{variants[v_idx].get('name', 'Variant')} {product.title}"
+                        stock = variants[v_idx].get('stock', 0)
+                
+                new_item = MinifigurePool(name=name, rarity=rarity, stock=stock, image=image)
+                db.session.add(new_item)
+                added_count += 1
+                
+    if added_count > 0:
+        db.session.commit()
+        flash(f'Successfully linked {added_count} catalog items to the Prize Pool!', 'success')
+    else:
+        flash('No valid items selected to link.', 'error')
+        
+    return redirect(url_for('admin_panel'))
+
 @app.route('/admin/spin/add_pool', methods=['POST'])
 @login_required
 def add_spin_pool():
@@ -621,6 +673,15 @@ def update_spin_stock(id):
         flash('Prize stock updated.', 'success')
     return redirect(url_for('admin_panel'))
 
+# FIX: Added missing sorting route!
+@app.route('/admin/spin/pool/update_order/<int:item_id>', methods=['POST'])
+@login_required
+def update_spin_pool_order(item_id):
+    item = MinifigurePool.query.get_or_404(item_id)
+    item.sort_order = int(request.form.get('sort_order', 0))
+    db.session.commit()
+    return redirect(url_for('admin_panel'))
+
 
 # --- INDIVIDUAL & BULK DELETE ROUTES FOR GAME ---
 @app.route('/admin/spin/pool/update_rarity/<int:item_id>', methods=['POST'])
@@ -654,6 +715,17 @@ def admin_spin_bulk_delete_code():
         flash(f'Deleted {len(ids)} codes!', 'success')
     return redirect(url_for('admin_panel'))
 
+# FIX: Added Missing Bulk Delete History Route!
+@app.route('/admin/spin/history/bulk_delete', methods=['POST'])
+@login_required
+def admin_spin_bulk_delete_history():
+    history_ids = request.form.get('history_ids', '')
+    if history_ids:
+        ids = [int(x) for x in history_ids.split(',') if x.isdigit()]
+        DrawHistory.query.filter(DrawHistory.id.in_(ids)).delete(synchronize_session=False)
+        db.session.commit()
+        flash(f'Deleted {len(ids)} history records!', 'success')
+    return redirect(url_for('admin_panel'))
 
 # (Legacy Individual fallbacks just in case)
 @app.route('/admin/spin/pool/delete/<int:item_id>', methods=['POST'])
