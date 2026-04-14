@@ -755,6 +755,13 @@ def request_entity_too_large(error):
 
 with app.app_context():
     db.create_all()
+    
+    # --- FIX: Force the database to add the missing column safely ---
+    try:
+        db.session.execute(text('ALTER TABLE minifigure_pool ADD COLUMN sort_order INTEGER DEFAULT 0'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback() # Ignores the error if the column already exists
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
