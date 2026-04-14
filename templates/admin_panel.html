@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -232,7 +233,7 @@
                                 <div class="tag-wrapper pt-0.5">
                                     <input type="hidden" name="category" id="main-category-input" class="hidden-category-input" value="">
                                     <div class="tag-container border-2 border-orange-200 bg-white">
-                                        <input type="text" list="add-cats" class="tag-input" placeholder="Categories..." autocomplete="off">
+                                        <input type="text" list="add-cats" class="tag-input" placeholder="e.g. Lucky Draw, Cute" autocomplete="off">
                                     </div>
                                 </div>
                                 <datalist id="add-cats"></datalist>
@@ -522,7 +523,7 @@
                             <div class="flex gap-2.5 md:gap-4 items-center bg-white p-2 md:p-3 rounded-xl md:rounded-2xl border border-gray-100 shadow-sm hover:border-gray-200 transition-colors mb-2">
                                 <img src="{{ item.image }}" class="w-12 h-12 md:w-14 md:h-14 rounded-lg md:rounded-xl object-contain bg-gray-50 border border-gray-100 p-1 shrink-0">
                                 <div class="flex-1 min-w-0">
-                                    <h4 class="text-[11px] md:text-xs font-black text-gray-900 truncate">{{ item.title }}</h4>
+                                    <h4 class="text-[11px] md:text-[10px] font-black text-gray-900 truncate">{{ item.title }}</h4>
                                     <p class="text-[8px] md:text-[10px] font-bold text-gray-500 mt-0.5 md:mt-1 uppercase tracking-wider">{{ item.style }} <span class="text-[#ff5000] ml-1.5 md:ml-2 font-black bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100">QTY: {{ item.qty }}</span></p>
                                 </div>
                                 <div class="text-right shrink-0 bg-gray-50 px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg md:rounded-xl border border-gray-100">
@@ -575,6 +576,16 @@
             
             <section class="lg:col-span-4 space-y-4 md:space-y-6">
                 
+                <!-- Smart Auto-Sync for Lucky Draw -->
+                <div class="bg-gradient-to-br from-[#ff9000] to-[#ff5000] p-4 md:p-6 rounded-2xl md:rounded-[32px] shadow-sm text-white relative overflow-hidden border border-orange-400">
+                    <i class="fa-solid fa-wand-magic-sparkles absolute -right-2 -bottom-2 text-7xl text-white/10"></i>
+                    <h2 class="font-black text-base md:text-lg mb-1 flex items-center relative z-10"><i class="fa-solid fa-tags text-white mr-2"></i>Smart Auto-Sync</h2>
+                    <p class="text-[9px] md:text-[10px] font-bold text-orange-100 uppercase tracking-widest mb-4 relative z-10">Found items tagged with "Lucky Draw"? Link them instantly to the prize pool.</p>
+                    <button type="button" onclick="syncLuckyDrawTags(this)" class="w-full bg-white text-[#ff5000] hover:bg-gray-100 py-3 md:py-4 rounded-xl font-black uppercase text-[10px] md:text-[11px] tracking-widest shadow-lg active:scale-95 transition-all relative z-10">
+                        <i class="fa-solid fa-rotate mr-1.5"></i> Sync "Lucky Draw" Tag
+                    </button>
+                </div>
+
                 <!-- NEW DUAL-MODE ADD TO PRIZE POOL -->
                 <div class="bg-white p-4 md:p-6 rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 border-t-4 border-t-indigo-500">
                     <h2 class="font-black text-base md:text-lg mb-3 flex items-center"><i class="fa-solid fa-link text-indigo-500 mr-2 text-lg md:text-xl"></i>Add to Prize Pool</h2>
@@ -1106,6 +1117,76 @@
     </div>
 
     <script>
+        // --- SMART LUCKY DRAW SYNC ---
+        const allInventoryItems = [
+            {% for p in products %}
+            {
+                id: "{{ p.id }}",
+                category: "{{ p.category|lower if p.category else '' }}",
+                variants: [
+                    {% for v in p.parsed_variants %}
+                    { index: {{ loop.index0 }}, category: "{{ v.category|lower if v.category else '' }}" },
+                    {% endfor %}
+                ]
+            },
+            {% endfor %}
+        ];
+
+        async function syncLuckyDrawTags(btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Scanning & Syncing...';
+            btn.disabled = true;
+
+            const itemsToSync = [];
+            
+            // Loop through the data to find matching tags
+            allInventoryItems.forEach(product => {
+                const pCats = product.category ? product.category.split(',').map(c => c.trim().toLowerCase()) : [];
+                
+                if (product.variants && product.variants.length > 0) {
+                    product.variants.forEach(v => {
+                        const vCats = v.category ? v.category.split(',').map(c => c.trim().toLowerCase()) : [];
+                        if (pCats.includes('lucky draw') || vCats.includes('lucky draw')) {
+                            itemsToSync.push({ id: product.id, variantIndex: v.index });
+                        }
+                    });
+                } else {
+                    if (pCats.includes('lucky draw')) {
+                        itemsToSync.push({ id: product.id, variantIndex: -1 });
+                    }
+                }
+            });
+
+            if (itemsToSync.length === 0) {
+                alert('No products found with the "Lucky Draw" category. Add this tag to your inventory items first!');
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                return;
+            }
+
+            let successCount = 0;
+            for (const item of itemsToSync) {
+                try {
+                    const formData = new FormData();
+                    formData.append('catalog_item', `${item.id}|${item.variantIndex}`);
+                    formData.append('rarity', 'Common'); // Default drop chance
+                    
+                    await fetch('/admin/spin/add_pool_catalog', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    successCount++;
+                } catch(e) {
+                    console.error('Failed to sync item', item);
+                }
+            }
+
+            btn.innerHTML = `<i class="fa-solid fa-check mr-1.5"></i> Synced ${successCount} Items`;
+            setTimeout(() => {
+                window.location.reload(); // Reload to see them in the pool matrix
+            }, 1000);
+        }
+
         // --- 0. DASHBOARD DATE ---
         document.getElementById('current-date-display').innerText = new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
 
