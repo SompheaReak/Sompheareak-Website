@@ -117,7 +117,15 @@ class MinifigurePool(db.Model):
     image = db.Column(db.String(500), nullable=False)
     rarity = db.Column(db.String(50), nullable=False)
     stock = db.Column(db.Integer, default=0)
-    sort_order = db.Column(db.Integer, default=0) # ADDED FOR SORTING
+    sort_order = db.Column(db.Integer, default=0)
+    
+    # --- NEW COLUMNS FOR SYNCING ---
+    linked_product_id = db.Column(db.Integer, nullable=True)
+    linked_variant_index = db.Column(db.Integer, nullable=True)
+
+    @property
+    def is_catalog_linked(self):
+        return self.linked_product_id is not None
 
 class DrawHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -132,6 +140,31 @@ class DrawHistory(db.Model):
     def cambodia_time(self):
         kh_time = self.timestamp_utc + timedelta(hours=7)
         return kh_time.strftime('%d-%b-%Y %I:%M %p')
+
+
+# --- SYNC HELPER FUNCTIONS ---
+def _sync_product_to_pool(product_id, variant_index, new_stock):
+    """Updates the Spin Pool when the Store Stock changes"""
+    linked_prize = MinifigurePool.query.filter_by(linked_product_id=product_id, linked_variant_index=variant_index).first()
+    if linked_prize:
+        linked_prize.stock = new_stock
+
+def _sync_pool_to_product(pool_item):
+    """Updates the Store Stock when the Spin Pool Stock changes (wins or admin edits)"""
+    if pool_item.linked_product_id is not None:
+        product = Product.query.get(pool_item.linked_product_id)
+        if product:
+            if pool_item.linked_variant_index != -1 and product.variants:
+                try:
+                    variants = json.loads(product.variants)
+                    if 0 <= pool_item.linked_variant_index < len(variants):
+                        variants[pool_item.linked_variant_index]['stock'] = pool_item.stock
+                        product.variants = json.dumps(variants)
+                        product.stock = sum(int(v.get('stock', 0)) for v in variants)
+                except Exception:
+                    pass
+            else:
+                product.stock = pool_item.stock
 
 
 # --- 5. PUBLIC & STORE ROUTES ---
@@ -244,6 +277,9 @@ def quick_update_stock():
     else:
         product.stock = new_stock
 
+    # --- SYNC ---
+    _sync_product_to_pool(p_id, v_idx, new_stock)
+    
     db.session.commit()
     return jsonify({'success': True, 'new_stock': new_stock, 'total_stock': product.stock})
 
@@ -264,12 +300,21 @@ def update_order_status(id, status):
                         qty_bought = int(item.get('qty', 1))
                         
                         product = Product.query.get(p_id)
-                        if product and product.variants:
-                            variants = json.loads(product.variants)
-                            if 0 <= v_idx < len(variants):
-                                variants[v_idx]['stock'] = max(0, variants[v_idx]['stock'] - qty_bought)
-                                product.variants = json.dumps(variants)
-                                product.stock = sum(v.get('stock', 0) for v in variants)
+                        if product:
+                            # Handle Variant Stock Deduction
+                            if product.variants and v_idx != -1:
+                                variants = json.loads(product.variants)
+                                if 0 <= v_idx < len(variants):
+                                    variants[v_idx]['stock'] = max(0, variants[v_idx]['stock'] - qty_bought)
+                                    product.variants = json.dumps(variants)
+                                    product.stock = sum(v.get('stock', 0) for v in variants)
+                                    # SYNC
+                                    _sync_product_to_pool(p_id, v_idx, variants[v_idx]['stock'])
+                            # Handle Normal Single Product Stock Deduction
+                            else:
+                                product.stock = max(0, product.stock - qty_bought)
+                                # SYNC
+                                _sync_product_to_pool(p_id, -1, product.stock)
             except Exception as e:
                 pass
             
@@ -345,7 +390,6 @@ def toggle_product(id):
         flash(f'Product visibility updated.', 'success')
     return redirect(url_for('admin_panel'))
 
-# FIX: Added Missing Product Delete Route!
 @app.route('/admin/product/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_product(id):
@@ -385,6 +429,8 @@ def update_product(id):
             "category": v_cats[i] if i < len(v_cats) else p.category
         })
         total_stock += stock
+        # SYNC
+        _sync_product_to_pool(p.id, int(v_ids[i]), stock)
 
     new_files = request.files.getlist('new_images')
     try:
@@ -547,6 +593,9 @@ def execute_spin():
         winner = random.choice(pool)
         winner.stock -= 1 # DEDUCT STOCK PERMANENTLY
         
+        # --- SYNC: Deduct from linked store product ---
+        _sync_pool_to_product(winner)
+        
         # Log to Admin Panel with Cambodia Time tracking
         history = DrawHistory(
             player_id=player.player_id, 
@@ -590,7 +639,6 @@ def generate_codes():
     flash(f'Generated {quantity} codes!', 'success')
     return redirect(url_for('admin_panel'))
 
-# FIX: Added Missing Catalog Linking Route!
 @app.route('/admin/spin/add_pool_catalog', methods=['POST'])
 @login_required
 def add_pool_catalog():
@@ -618,9 +666,17 @@ def add_pool_catalog():
                         name = f"{variants[v_idx].get('name', 'Variant')} {product.title}"
                         stock = variants[v_idx].get('stock', 0)
                 
-                new_item = MinifigurePool(name=name, rarity=rarity, stock=stock, image=image)
-                db.session.add(new_item)
-                added_count += 1
+                # Check if it's already linked to prevent duplicates
+                existing = MinifigurePool.query.filter_by(linked_product_id=p_id, linked_variant_index=v_idx).first()
+                if existing:
+                    existing.stock = stock
+                    existing.image = image
+                    existing.name = name
+                    added_count += 1
+                else:
+                    new_item = MinifigurePool(name=name, rarity=rarity, stock=stock, image=image, linked_product_id=p_id, linked_variant_index=v_idx)
+                    db.session.add(new_item)
+                    added_count += 1
                 
     if added_count > 0:
         db.session.commit()
@@ -644,8 +700,6 @@ def add_spin_pool():
         for file in files:
             if file and file.filename != '':
                 res = optimize_and_upload(file) # Uses Cloudinary
-                
-                # If name is blank, default to "Mystery [Rarity] Prize" 
                 item_name = name_input if name_input else f"Mystery {rarity} Prize"
                 
                 new_item = MinifigurePool(name=item_name, rarity=rarity, stock=stock, image=res['secure_url'])
@@ -669,11 +723,29 @@ def update_spin_stock(id):
     item = MinifigurePool.query.get(id)
     if item:
         item.stock = int(request.form.get('stock', 0))
+        # SYNC
+        _sync_pool_to_product(item)
         db.session.commit()
         flash('Prize stock updated.', 'success')
     return redirect(url_for('admin_panel'))
 
-# FIX: Added missing sorting route!
+# NEW ROUTE: For handling the Bulk Matrix Changes from Admin Panel
+@app.route('/admin/spin/pool/update_bulk', methods=['POST'])
+@login_required
+def admin_spin_update_bulk():
+    data = request.json
+    item = MinifigurePool.query.get(data.get('id'))
+    if item:
+        item.rarity = data.get('rarity', item.rarity)
+        item.sort_order = int(data.get('sort_order', item.sort_order))
+        item.stock = int(data.get('stock', item.stock))
+        
+        # SYNC TO STORE
+        _sync_pool_to_product(item)
+        db.session.commit()
+    return jsonify({"status": "success"})
+
+
 @app.route('/admin/spin/pool/update_order/<int:item_id>', methods=['POST'])
 @login_required
 def update_spin_pool_order(item_id):
@@ -715,7 +787,6 @@ def admin_spin_bulk_delete_code():
         flash(f'Deleted {len(ids)} codes!', 'success')
     return redirect(url_for('admin_panel'))
 
-# FIX: Added Missing Bulk Delete History Route!
 @app.route('/admin/spin/history/bulk_delete', methods=['POST'])
 @login_required
 def admin_spin_bulk_delete_history():
@@ -727,7 +798,6 @@ def admin_spin_bulk_delete_history():
         flash(f'Deleted {len(ids)} history records!', 'success')
     return redirect(url_for('admin_panel'))
 
-# (Legacy Individual fallbacks just in case)
 @app.route('/admin/spin/pool/delete/<int:item_id>', methods=['POST'])
 @login_required
 def admin_spin_delete_pool(item_id):
@@ -756,13 +826,19 @@ def request_entity_too_large(error):
 with app.app_context():
     db.create_all()
     
-    # --- FIX: Force the database to add the missing column safely ---
+    # --- AUTO MIGRATIONS FOR THE NEW SYNC FEATURES ---
     try:
         db.session.execute(text('ALTER TABLE minifigure_pool ADD COLUMN sort_order INTEGER DEFAULT 0'))
         db.session.commit()
     except Exception:
-        db.session.rollback() # Ignores the error if the column already exists
+        db.session.rollback()
+        
+    try:
+        db.session.execute(text('ALTER TABLE minifigure_pool ADD COLUMN linked_product_id INTEGER'))
+        db.session.execute(text('ALTER TABLE minifigure_pool ADD COLUMN linked_variant_index INTEGER'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
