@@ -43,7 +43,7 @@
         padding-left: 10vw;
         padding-right: 10vw;
         position: relative;
-        touch-action: pan-x; /* Allows scrolling when not dragging */
+        touch-action: pan-x; 
     }
     
     .bracelet-preview-container::-webkit-scrollbar {
@@ -59,11 +59,11 @@
         cursor: grab;
         transition: transform 0.3s cubic-bezier(0.2, 0, 0.2, 1), opacity 0.2s ease;
         user-select: none;
-        touch-action: pan-x; /* Default to scroll */
+        touch-action: pan-x;
     }
 
     .bracelet-link-container.selected {
-        touch-action: none; /* Disable scroll only when selected for dragging */
+        touch-action: none; 
         z-index: 40;
     }
     
@@ -83,7 +83,7 @@
         opacity: 0.9;
         scale: 1.15;
         cursor: grabbing;
-        transition: none; /* No transition while dragging for 1:1 movement */
+        transition: none; 
     }
 
     .remove-btn-anim { 
@@ -436,9 +436,23 @@
         </div>
         <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
         <div class="bg-white border-t border-gray-100 p-5 z-10">
-            <div class="flex justify-between items-end mb-4">
-                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Total)</span>
-                <span id="cart-grand-total" class="text-2xl font-black text-[#ea580c] leading-none">0៛</span>
+            <!-- NEW ITEMIZED TOTALS -->
+            <div class="space-y-2 mb-4">
+                <div class="flex justify-between items-center text-xs font-bold text-gray-500">
+                    <span data-i18n="subtotal">Subtotal (តម្លៃទំនិញ)</span>
+                    <span id="cart-subtotal">0៛</span>
+                </div>
+                <div class="flex justify-between items-center text-xs font-bold text-gray-500">
+                    <span data-i18n="delivery_fee">Delivery (ថ្លៃដឹកជញ្ជូន)</span>
+                    <span id="cart-delivery">0៛</span>
+                </div>
+                <div class="flex justify-between items-end pt-2 border-t border-gray-100">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest" data-i18n="total_to_pay">សរុប (Grand Total)</span>
+                    <div class="text-right">
+                        <span id="cart-grand-total-khr" class="text-2xl font-black text-[#ea580c] leading-none block">0៛</span>
+                        <span id="cart-grand-total-usd" class="text-xs text-gray-400 font-bold block mt-1">$0.00</span>
+                    </div>
+                </div>
             </div>
             <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
                 <i class="fa-solid fa-truck-fast"></i> <span data-i18n="continue_checkout">បន្តទៅការដឹកជញ្ជូន</span>
@@ -764,9 +778,9 @@
 
     function toggleSelection(uid) {
         if(selectedCharmUids.includes(uid)) {
-            selectedCharmUids = []; // Deselect if tapped again
+            selectedCharmUids = [];
         } else {
-            selectedCharmUids = [uid]; // Only one selectable for drag/delete clarity
+            selectedCharmUids = [uid]; 
         }
         updateUI();
     }
@@ -813,7 +827,6 @@
         dragStartIndex = index;
         hasMoved = false;
 
-        // If it's already selected, we allow dragging immediately
         if (isSelected) {
             dragItem.classList.add('is-dragging');
             dragItem.setPointerCapture(e.pointerId);
@@ -828,17 +841,14 @@
         
         const deltaX = e.clientX - dragStartX;
         
-        // Threshold for movement
         if (Math.abs(deltaX) > 10) {
             hasMoved = true;
         }
         
-        // Only visual movement if it's the selected item being dragged
         if (selectedCharmUids.includes(dragItem.getAttribute('data-uid')) && hasMoved) {
             dragCurrentX = e.clientX;
             dragItem.style.transform = `translateX(${deltaX}px) scale(1.15)`;
 
-            // Visual shift of siblings
             const itemWidth = dragItem.offsetWidth;
             const indexShift = Math.round(deltaX / itemWidth);
             const newIndex = Math.max(0, Math.min(selectedCharms.length - 1, dragStartIndex + indexShift));
@@ -864,10 +874,8 @@
         const isSelected = selectedCharmUids.includes(uid);
 
         if (!hasMoved) {
-            // It was a simple tap, toggle selection
             toggleSelection(uid);
         } else if (isSelected) {
-            // It was a drag of a selected item, finalize order
             const itemWidth = dragItem.offsetWidth;
             const deltaX = dragCurrentX - dragStartX;
             const indexShift = Math.round(deltaX / itemWidth);
@@ -877,8 +885,6 @@
                 const element = selectedCharms.splice(dragStartIndex, 1)[0];
                 selectedCharms.splice(newIndex, 0, element);
             }
-            
-            // Per instructions: "after drag the delete icon it dissapear"
             selectedCharmUids = []; 
         }
 
@@ -900,7 +906,6 @@
         const usd = (total / RATE).toFixed(2); document.getElementById('header-price-usd').innerText = `($${usd})`;
         document.getElementById('share-code-input').value = getDesignCode();
         
-        // Toolbar visibility
         const duplicateBtn = document.getElementById('duplicate-btn');
         const deleteSelBtn = document.getElementById('delete-selected-btn');
         if (selectedCharmUids.length > 0) {
@@ -934,8 +939,6 @@
         
         document.getElementById('save-design-btn').disabled = false;
     }
-
-    // --- OTHER CORE LOGIC ---
 
     function getDesignCode(charmsList = selectedCharms) {
         if(charmsList.length === 0) return "";
@@ -1031,60 +1034,140 @@
     function openCartDrawer() { renderCartUI(); const drawer = document.getElementById('cart-drawer'); drawer.style.transform = 'translateY(0%)'; drawer.style.pointerEvents = 'auto'; }
     function closeCartDrawer() { const drawer = document.getElementById('cart-drawer'); drawer.style.transform = 'translateY(100%)'; drawer.style.pointerEvents = 'none'; }
 
+    // --- NEW CORE DELIVERY LOGIC ---
+    function calculateDelivery(subtotalKHR) {
+        if (subtotalKHR === 0) return 0;
+        if (subtotalKHR < 20000) return 8000;
+        if (subtotalKHR < 40000) return 6000;
+        if (subtotalKHR < 60000) return 4000;
+        if (subtotalKHR < 80000) return 2000;
+        return 0; // 80,000+ is Free
+    }
+
     function renderCartUI() {
         const container = document.getElementById('cart-items-container');
         if(userCart.length === 0) {
             container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-sm uppercase">កន្ត្រកទទេ</p></div>`;
-            document.getElementById('cart-grand-total').innerText = "0៛"; return;
+            document.getElementById('cart-subtotal').innerText = "0៛";
+            document.getElementById('cart-delivery').innerText = "0៛";
+            document.getElementById('cart-grand-total-khr').innerText = "0៛";
+            document.getElementById('cart-grand-total-usd').innerText = "$0.00";
+            return;
         }
-        let grandTotal = 0; let customIndex = 1;
+
+        let subtotal = 0; let customIndex = 1;
         container.innerHTML = userCart.map((item) => {
-            let itemTotal = (item.baseTotal + item.pkgPrice) * item.qty;
-            if(item.selected) grandTotal += itemTotal;
-            return `
-            <div class="bg-white rounded-2xl border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col overflow-hidden mb-4">
-                <div class="w-full h-32 bg-gray-50 relative cursor-pointer" onclick="openImageViewer('${item.image}')">
-                    <img src="${item.image}" class="w-full h-full object-contain p-2">
-                    <div class="absolute bottom-0 inset-x-0 bg-black/60 px-3 py-1.5 flex justify-between text-white text-[10px] font-bold">
-                        <span>${item.charms.length} Charms</span>
-                        <span>${itemTotal.toLocaleString()}៛</span>
-                    </div>
-                </div>
-                <div class="p-3">
-                    <div class="flex justify-between">
-                        <label class="flex items-center gap-3">
-                            <input type="checkbox" class="cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
-                            <span class="font-black text-sm">Bracelet #${customIndex++}</span>
-                        </label>
-                        <button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>
-                    <div class="flex justify-between items-center mt-3">
-                        <span class="text-[9px] font-bold bg-orange-50 text-orange-600 px-2 py-1 rounded">${item.pkgName}</span>
-                        <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-1">
-                            <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 bg-white rounded shadow-sm text-xs">-</button>
-                            <span class="font-black text-xs">${item.qty}</span>
-                            <button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 bg-white rounded shadow-sm text-xs">+</button>
+            let itemTotal = 0;
+            if (item.type === 'custom_bracelet') {
+                itemTotal = (item.baseTotal + item.pkgPrice) * item.qty;
+            } else {
+                itemTotal = (item.price || 0) * item.qty; // Support shared normal items
+            }
+            if(item.selected) subtotal += itemTotal;
+            
+            // Custom bracelet layout
+            if (item.type === 'custom_bracelet') {
+                return `
+                <div class="bg-white rounded-2xl border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col overflow-hidden mb-4 shadow-sm">
+                    <div class="w-full h-32 bg-gray-50 relative cursor-pointer" onclick="openImageViewer('${item.image}')">
+                        <img src="${item.image}" class="w-full h-full object-contain p-2">
+                        <div class="absolute bottom-0 inset-x-0 bg-black/60 px-3 py-1.5 flex justify-between text-white text-[10px] font-bold">
+                            <span>${item.charms.length} Charms</span>
+                            <span>${itemTotal.toLocaleString()}៛</span>
                         </div>
                     </div>
-                </div>
-            </div>`;
+                    <div class="p-3">
+                        <div class="flex justify-between">
+                            <label class="flex items-center gap-3">
+                                <input type="checkbox" class="cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
+                                <span class="font-black text-sm">Bracelet #${customIndex++}</span>
+                            </label>
+                            <button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                        <div class="flex justify-between items-center mt-3">
+                            <span class="text-[9px] font-bold bg-orange-50 text-orange-600 px-2 py-1 rounded">${item.pkgName}</span>
+                            <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-1">
+                                <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 bg-white rounded shadow-sm text-xs">-</button>
+                                <span class="font-black text-xs">${item.qty}</span>
+                                <button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 bg-white rounded shadow-sm text-xs">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            } else {
+                // Standard item layout (for cross-page shared carts)
+                return `
+                <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" class="cart-checkbox mt-2 ml-1" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
+                    </label>
+                    <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden">
+                        <img src="${item.image}" class="max-w-full max-h-full object-contain">
+                    </div>
+                    <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
+                        <div>
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-black text-xs text-gray-900 leading-tight truncate pr-2">${item.title}</h4>
+                                <button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 -mt-1 -mr-1 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                            </div>
+                            <p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">${item.style}</p>
+                        </div>
+                        <div class="flex justify-between items-end mt-2">
+                            <span class="font-black text-sm text-[#ea580c]">${itemTotal.toLocaleString()}៛</span>
+                            <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
+                                <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600">-</button>
+                                <span class="font-black text-xs w-2 text-center">${item.qty}</span>
+                                <button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
         }).join('');
-        document.getElementById('cart-grand-total').innerText = grandTotal.toLocaleString() + "៛";
+        
+        // APPLY MATH
+        const delivery = calculateDelivery(subtotal);
+        const grandTotalKHR = subtotal + delivery;
+        const grandTotalUSD = grandTotalKHR / RATE;
+
+        document.getElementById('cart-subtotal').innerText = subtotal.toLocaleString() + "៛";
+        
+        const deliveryEl = document.getElementById('cart-delivery');
+        if (delivery === 0 && subtotal > 0) {
+            deliveryEl.innerText = t('free') || "FREE";
+            deliveryEl.className = "text-green-500 font-black";
+        } else if (subtotal > 0) {
+            deliveryEl.innerText = "+" + delivery.toLocaleString() + "៛";
+            deliveryEl.className = "text-[#ea580c] font-black";
+        } else {
+            deliveryEl.innerText = "0៛";
+            deliveryEl.className = "text-gray-500 font-bold";
+        }
+
+        document.getElementById('cart-grand-total-khr').innerText = grandTotalKHR.toLocaleString() + "៛";
+        document.getElementById('cart-grand-total-usd').innerText = "$" + grandTotalUSD.toFixed(2);
     }
 
     function toggleCartItem(id) { const item = userCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveCart(); renderCartUI(); } }
     function updateCartQty(id, delta) { const item = userCart.find(i => i.id === id); if(item) { item.qty = Math.max(1, Math.min(10, item.qty + delta)); saveCart(); renderCartUI(); } }
-    function removeCartItem(id) { if(confirm("លុបចេញពីកន្ត្រក?")) { userCart = userCart.filter(i => i.id !== id); saveCart(); renderCartUI(); updateCartBadge(); } }
+    function removeCartItem(id) { if(confirm(currentLang === 'KH' ? "លុបចេញពីកន្ត្រក?" : "Remove item?")) { userCart = userCart.filter(i => i.id !== id); saveCart(); renderCartUI(); updateCartBadge(); } }
     function saveCart() { localStorage.setItem('sr_cart', JSON.stringify(userCart)); }
 
     function openCheckout() {
         const selectedItems = userCart.filter(i => i.selected);
-        if(selectedItems.length === 0) return alert("Select an item first!");
-        let subtotal = 0; selectedItems.forEach(i => subtotal += (i.baseTotal + i.pkgPrice) * i.qty);
-        const delivery = subtotal > 0 ? (subtotal < 80000 ? 4000 : 0) : 0;
+        if(selectedItems.length === 0) return alert(currentLang === 'KH' ? "សូមជ្រើសរើសយ៉ាងហោចណាស់មួយ!" : "Select an item first!");
+        
+        let subtotal = 0; 
+        selectedItems.forEach(i => {
+            if(i.type === 'custom_bracelet') subtotal += (i.baseTotal + i.pkgPrice) * i.qty;
+            else subtotal += (i.price || 0) * i.qty;
+        });
+        
+        const delivery = calculateDelivery(subtotal);
         document.getElementById('check-subtotal').innerText = subtotal.toLocaleString() + "៛";
-        document.getElementById('check-delivery').innerText = delivery === 0 ? "Free" : delivery.toLocaleString() + "៛";
+        document.getElementById('check-delivery').innerText = delivery === 0 ? t('free') : delivery.toLocaleString() + "៛";
         document.getElementById('check-total-khr').innerText = (subtotal + delivery).toLocaleString() + "៛";
+        
         closeCartDrawer(); document.getElementById('checkout-modal').classList.remove('translate-y-full');
     }
     function closeCheckout() { document.getElementById('checkout-modal').classList.add('translate-y-full'); }
@@ -1094,28 +1177,52 @@
         const name = document.getElementById('cust-name').value.trim();
         const phone = document.getElementById('cust-phone').value.trim();
         const address = document.getElementById('cust-address').value.trim();
-        if(!name || !phone || !address) return alert("Please fill all info!");
+        
+        if(!name || !phone || !address) return alert(currentLang === 'KH' ? "សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់!" : "Please fill all info!");
         
         const btn = document.getElementById('confirm-btn');
-        btn.innerText = "Sending..."; btn.disabled = true;
+        btn.innerText = currentLang === 'KH' ? "កំពុងបញ្ជូន..." : "Sending..."; 
+        btn.disabled = true;
 
-        const itemsPayload = selectedItems.map(i => ({
-            title: "Custom DIY Bracelet",
-            style: `Code: ${i.code} | Pkg: ${i.pkgName}`,
-            price: (i.baseTotal + i.pkgPrice) / RATE,
-            qty: i.qty, image: i.image
-        }));
+        let subtotal = 0; const charmCounts = {};
+        const itemsPayload = [];
+        
+        selectedItems.forEach((i, bIdx) => {
+            if (i.type === 'custom_bracelet') {
+                const itemPrice = i.baseTotal + i.pkgPrice;
+                subtotal += itemPrice * i.qty;
+                itemsPayload.push({
+                    cartId: "custom-" + Date.now() + "-" + bIdx,
+                    title: "Custom DIY Bracelet",
+                    style: `Code: ${i.code} | Charms: ${i.charms.length} | Pkg: ${i.pkgName}`,
+                    price: itemPrice / RATE,
+                    qty: i.qty, image: i.image, maxStock: 99
+                });
+                i.charms.forEach(c => { charmCounts[c.db_id] = (charmCounts[c.db_id] || 0) + (1 * i.qty); });
+            } else {
+                subtotal += (i.price || 0) * i.qty;
+                itemsPayload.push({
+                    cartId: i.id, title: i.title, style: i.style, price: i.price / RATE, qty: i.qty, image: i.image, maxStock: i.maxStock || 99
+                });
+            }
+        });
+        
+        for (const [id, count] of Object.entries(charmCounts)) { itemsPayload.push({ cartId: id, title: "DIY-Part", style: "Hidden stock component", price: 0, qty: count, image: "hidden", maxStock: 99 }); }
+
+        const delivery = calculateDelivery(subtotal);
+        const totalUSD = (subtotal + delivery) / RATE;
 
         try {
             const res = await fetch('/api/checkout', { 
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ name, phone, address, items: itemsPayload, total: itemsPayload.reduce((a, b) => a + (b.price * b.qty), 0) }) 
+                body: JSON.stringify({ name, phone, address, items: itemsPayload, total: totalUSD }) 
             });
             if(res.ok) { 
-                alert("Order Successful!"); userCart = userCart.filter(i => !i.selected); saveCart(); window.location.href = '/'; 
+                alert(currentLang === 'KH' ? "បញ្ជាទិញបានជោគជ័យ!" : "Order Successful!"); 
+                userCart = userCart.filter(i => !i.selected); saveCart(); window.location.href = '/'; 
             }
         } catch (e) { alert("Error sending order"); }
-        btn.innerText = "Confirm Order"; btn.disabled = false;
+        btn.innerText = t('confirm_order'); btn.disabled = false;
     }
 
     function handlePreviewScroll(el) {
