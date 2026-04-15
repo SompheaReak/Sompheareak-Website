@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -64,16 +65,14 @@
       <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl mb-6">
   </div>
 
-  <!-- 🌟 UNIFIED HEADER (FIXED: BIGGER, NO CLIPPING) 🌟 -->
+  <!-- 🌟 UNIFIED HEADER 🌟 -->
   <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 sm:px-4 py-3 flex items-center justify-between shadow-sm">
     <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0">
         <i class="fa-solid fa-arrow-left"></i>
     </a>
     
-    <!-- Logo and Text Combo (Bigger and unclipped) -->
     <div class="flex items-center justify-center flex-1 px-2 gap-2.5 min-w-0">
         <img src="static/images/logo.png" onerror="this.src='static/images/logo.jpg'" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-sm shrink-0" alt="Logo">
-        
         <div class="flex flex-col justify-center text-left">
             <h1 class="text-[15px] sm:text-lg font-black text-gray-900 leading-normal tracking-tight font-['Moul'] pb-0.5">
                 សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-sm sm:text-base whitespace-nowrap">- Somphea Reak</span>
@@ -102,35 +101,28 @@
       </div>
   </main>
 
-  <!-- PRODUCT DETAIL MODAL (UPGRADED) -->
+  <!-- PRODUCT DETAIL MODAL -->
   <div id="product-modal" class="fixed inset-0 z-[1000] flex flex-col justify-end translate-y-full">
       <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeProductModal()"></div>
       <div class="relative w-full h-[92vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
           
-          <!-- Modal Header -->
           <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-[30] absolute top-0 left-0 right-0 shadow-sm">
               <h2 class="text-base font-black text-gray-900 font-['Moul'] truncate pr-4" id="modal-title">Product</h2>
               <button onclick="closeProductModal()" class="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark"></i></button>
           </div>
           
-          <!-- Modal Scrollable Body -->
           <div class="flex-1 overflow-y-auto pt-14 pb-6 scrollbar-hide relative bg-gray-50" id="modal-body">
-              
-              <!-- STICKY FULL-WIDTH IMAGE CAROUSEL -->
               <div class="sticky top-0 z-20 bg-white border-b border-gray-100 sticky-shadow">
                   <div id="modal-image-carousel" class="w-full h-[35vh] flex overflow-x-auto snap-x snap-mandatory scrollbar-hide relative" onscroll="handleCarouselScroll()">
                       <!-- Images injected here by JS -->
                   </div>
-                  <!-- Floating Price Badge -->
                   <div class="absolute bottom-3 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl shadow-md border border-gray-100 flex flex-col pointer-events-none">
                       <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-0.5">Price</span>
                       <span id="modal-price" class="text-xl font-black text-[#ea580c] leading-none">0៛</span>
                   </div>
               </div>
 
-              <!-- Content Area -->
               <div class="px-5 space-y-6 mt-5 relative z-10">
-                  
                   <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
                       <div>
                           <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Availability</p>
@@ -147,7 +139,6 @@
                       <div id="variant-grid" class="grid grid-cols-4 gap-2.5"></div>
                   </div>
 
-                  <!-- RECOMMENDATIONS SECTION (ALL PRODUCTS) -->
                   <div class="pt-2">
                       <div class="flex items-center gap-2 mb-4">
                           <div class="h-px bg-gray-200 flex-1"></div>
@@ -161,7 +152,6 @@
               </div>
           </div>
 
-          <!-- Add to Cart Footer -->
           <div class="bg-white border-t border-gray-100 p-4 z-[30] flex gap-3 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
               <div class="flex items-center gap-3 bg-gray-50 rounded-2xl p-1 border border-gray-100">
                   <button onclick="updateModalQty(-1)" class="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm text-gray-600 active:scale-95"><i class="fa-solid fa-minus"></i></button>
@@ -175,7 +165,7 @@
       </div>
   </div>
 
-  <!-- UNIFIED CART DRAWER -->
+  <!-- UNIFIED CART DRAWER (UPDATED WITH DELIVERY CALCULATION UI) -->
   <div id="cart-drawer" class="fixed inset-0 z-[2000] flex flex-col justify-end translate-y-full">
     <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeCartDrawer()"></div>
     <div class="relative w-full h-[85vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
@@ -193,10 +183,25 @@
         <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
 
         <div class="bg-white border-t border-gray-100 p-5 z-10">
-            <div class="flex justify-between items-end mb-4">
-                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Total)</span>
-                <span id="cart-grand-total" class="text-2xl font-black text-[#ea580c] leading-none">0៛</span>
+            <!-- NEW ITEMIZED TOTALS -->
+            <div class="space-y-2 mb-4">
+                <div class="flex justify-between items-center text-xs font-bold text-gray-500">
+                    <span>Subtotal (តម្លៃទំនិញ)</span>
+                    <span id="cart-subtotal">0៛</span>
+                </div>
+                <div class="flex justify-between items-center text-xs font-bold text-gray-500">
+                    <span>Delivery (ថ្លៃដឹកជញ្ជូន)</span>
+                    <span id="cart-delivery">0៛</span>
+                </div>
+                <div class="flex justify-between items-end pt-2 border-t border-gray-100">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Grand Total)</span>
+                    <div class="text-right">
+                        <span id="cart-grand-total-khr" class="text-2xl font-black text-[#ea580c] leading-none block">0៛</span>
+                        <span id="cart-grand-total-usd" class="text-xs text-gray-400 font-bold block mt-1">$0.00</span>
+                    </div>
+                </div>
             </div>
+            
             <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
                 <i class="fa-solid fa-truck-fast"></i> បន្តទៅការដឹកជញ្ជូន
             </button>
@@ -252,6 +257,16 @@
         if (savedCart) userCart = JSON.parse(savedCart);
     } catch(e) {}
 
+    // CORE DELIVERY CALCULATION LOGIC
+    function calculateDelivery(subtotalKHR) {
+        if (subtotalKHR === 0) return 0;
+        if (subtotalKHR < 20000) return 8000;
+        if (subtotalKHR < 40000) return 6000;
+        if (subtotalKHR < 60000) return 4000;
+        if (subtotalKHR < 80000) return 2000;
+        return 0; // 80,000+ is Free
+    }
+
     function updateCartBadge() {
         const badge = document.getElementById('cart-badge');
         if(userCart.length > 0) {
@@ -296,7 +311,6 @@
             btnEl.classList.add('bg-gray-900', 'text-white'); btnEl.classList.remove('bg-gray-100', 'text-gray-600');
         }
         
-        // Randomize if "All" is selected!
         let filtered = [];
         if (cat === 'All') {
             filtered = [...allProducts].sort(() => 0.5 - Math.random());
@@ -334,7 +348,6 @@
         }).join('');
     }
 
-    // Modal, Carousel & Recommendation Logic
     function openProductModal(id) {
         currentModalProduct = allProducts.find(p => p.id === id);
         if(!currentModalProduct) return;
@@ -342,8 +355,6 @@
         document.getElementById('modal-title').innerText = currentModalProduct.title;
         currentVariantIndex = 0; modalQty = 1;
         document.getElementById('modal-qty').innerText = modalQty;
-        
-        // Reset scroll position
         document.getElementById('modal-body').scrollTop = 0;
         
         let variants = currentModalProduct.parsed_variants || [];
@@ -356,7 +367,6 @@
         const varGrid = document.getElementById('variant-grid');
         
         if(variants.length > 0) {
-            // Populate Carousel
             carousel.innerHTML = variants.map(v => `
                 <div class="min-w-full h-full snap-center relative cursor-pointer" onclick="openImageViewer('${v.image || currentModalProduct.thumbnail}')">
                     <img src="${v.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain p-2">
@@ -364,7 +374,6 @@
                 </div>
             `).join('');
 
-            // Populate Grid Below
             varSection.classList.remove('hidden');
             varGrid.innerHTML = variants.map((v, i) => `
                 <div onclick="selectVariant(${i})" class="variant-btn w-full aspect-[4/5] bg-gray-50 rounded-xl border-2 ${i === 0 ? 'border-[#ea580c]' : 'border-gray-100 hover:border-gray-300'} overflow-hidden cursor-pointer p-1 transition-colors relative">
@@ -375,7 +384,6 @@
             
             updatePriceAndStock(variants[0].price, variants[0].stock);
         } else {
-            // No Variants
             varSection.classList.add('hidden');
             carousel.innerHTML = `
                 <div class="min-w-full h-full snap-center relative cursor-pointer" onclick="openImageViewer('${currentModalProduct.image || currentModalProduct.thumbnail}')">
@@ -386,16 +394,12 @@
             updatePriceAndStock(currentModalProduct.price, currentModalProduct.stock);
         }
         
-        // Reset Carousel Scroll
         isProgrammaticScroll = true;
         carousel.scrollLeft = 0;
         setTimeout(() => isProgrammaticScroll = false, 50);
 
-        // Render ALL Recommendations
         renderRecommendations(id);
-
-        const modal = document.getElementById('product-modal');
-        modal.classList.remove('translate-y-full');
+        document.getElementById('product-modal').classList.remove('translate-y-full');
     }
 
     function handleCarouselScroll() {
@@ -412,20 +416,15 @@
 
     function selectVariant(idx) {
         updateVariantUIOnly(idx);
-        
-        // Scroll the carousel to match
         isProgrammaticScroll = true;
         const carousel = document.getElementById('modal-image-carousel');
         carousel.scrollTo({ left: carousel.clientWidth * idx, behavior: 'smooth' });
-        
-        // Re-enable manual scroll listener after animation
         setTimeout(() => { isProgrammaticScroll = false; }, 400);
     }
 
     function updateVariantUIOnly(idx) {
         currentVariantIndex = idx;
         
-        // Update Borders
         document.querySelectorAll('.variant-btn').forEach((btn, i) => {
             if(i === idx) {
                 btn.classList.add('border-[#ea580c]');
@@ -439,7 +438,6 @@
             }
         });
         
-        // Update Data
         let variants = currentModalProduct.parsed_variants || [];
         if(variants.length === 0 && currentModalProduct.variants) {
              try { variants = typeof currentModalProduct.variants === 'string' ? JSON.parse(currentModalProduct.variants) : currentModalProduct.variants; } catch(e){}
@@ -461,7 +459,6 @@
 
     function renderRecommendations(excludeId) {
         const available = allProducts.filter(p => p.id !== excludeId);
-        // Shuffle array and show ALL of them (removed .slice)
         const shuffled = available.sort(() => 0.5 - Math.random());
 
         const grid = document.getElementById('recommendations-grid');
@@ -482,11 +479,8 @@
     }
 
     function swapToRecommendation(newId) {
-        // Smoothly close current and open new
         document.getElementById('modal-body').scrollTo({ top: 0, behavior: 'smooth' });
-        setTimeout(() => {
-            openProductModal(newId);
-        }, 100);
+        setTimeout(() => { openProductModal(newId); }, 100);
     }
 
     function updateModalQty(delta) {
@@ -496,9 +490,7 @@
         document.getElementById('modal-qty').innerText = modalQty;
     }
 
-    function closeProductModal() { 
-        document.getElementById('product-modal').classList.add('translate-y-full'); 
-    }
+    function closeProductModal() { document.getElementById('product-modal').classList.add('translate-y-full'); }
 
     function addToCartFromModal() {
         if(!currentModalProduct) return;
@@ -539,8 +531,6 @@
         
         saveCart(); updateCartBadge();
         
-        // INTENTIONALLY NOT CLOSING MODAL
-        // Show beautiful toast notification instead
         const toast = document.getElementById('toast');
         document.getElementById('toast-text').innerText = "Added to Cart";
         toast.classList.remove('opacity-0', 'scale-90'); 
@@ -553,19 +543,23 @@
 
     function renderCartUI() {
         const container = document.getElementById('cart-items-container');
+        
         if(userCart.length === 0) {
             container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-sm uppercase tracking-widest mt-2">កន្ត្រកទទេ</p></div>`;
-            document.getElementById('cart-grand-total').innerText = "0៛";
+            document.getElementById('cart-subtotal').innerText = "0៛";
+            document.getElementById('cart-delivery').innerText = "0៛";
+            document.getElementById('cart-grand-total-khr').innerText = "0៛";
+            document.getElementById('cart-grand-total-usd').innerText = "$0.00";
             return;
         }
 
-        let grandTotal = 0; let customIndex = 1;
+        let subtotal = 0; let customIndex = 1;
 
         container.innerHTML = userCart.map((item) => {
             let itemTotal = 0;
             if(item.type === 'custom_bracelet') {
                 itemTotal = (item.baseTotal + item.pkgPrice) * item.qty;
-                if(item.selected) grandTotal += itemTotal;
+                if(item.selected) subtotal += itemTotal;
                 
                 return `
                 <div class="bg-white rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col relative transition-all overflow-hidden mb-4">
@@ -608,7 +602,7 @@
                 </div>`;
             } else {
                 itemTotal = (item.price || 0) * item.qty;
-                if(item.selected) grandTotal += itemTotal;
+                if(item.selected) subtotal += itemTotal;
 
                 return `
                 <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
@@ -639,7 +633,28 @@
                 </div>`;
             }
         }).join('');
-        document.getElementById('cart-grand-total').innerText = grandTotal.toLocaleString() + "៛";
+        
+        // APPLY THE NEW MATH
+        const delivery = calculateDelivery(subtotal);
+        const grandTotalKHR = subtotal + delivery;
+        const grandTotalUSD = grandTotalKHR / RATE;
+
+        document.getElementById('cart-subtotal').innerText = subtotal.toLocaleString() + "៛";
+        
+        const deliveryEl = document.getElementById('cart-delivery');
+        if (delivery === 0 && subtotal > 0) {
+            deliveryEl.innerText = "FREE";
+            deliveryEl.className = "text-green-500 font-black";
+        } else if (subtotal > 0) {
+            deliveryEl.innerText = "+" + delivery.toLocaleString() + "៛";
+            deliveryEl.className = "text-[#ea580c] font-black";
+        } else {
+            deliveryEl.innerText = "0៛";
+            deliveryEl.className = "text-gray-500 font-bold";
+        }
+
+        document.getElementById('cart-grand-total-khr').innerText = grandTotalKHR.toLocaleString() + "៛";
+        document.getElementById('cart-grand-total-usd').innerText = "$" + grandTotalUSD.toFixed(2);
     }
 
     function copyCode(code) { navigator.clipboard.writeText(code); const toast = document.getElementById('toast'); document.getElementById('toast-text').innerText = "Code Copied"; toast.classList.remove('opacity-0', 'scale-90'); setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500); }
@@ -651,15 +666,6 @@
     function saveCart() { localStorage.setItem('sr_cart', JSON.stringify(userCart)); }
 
     // --- CHECKOUT LOGIC ---
-    function calculateDelivery(subtotalKHR) {
-        if (subtotalKHR === 0) return 0;
-        if (subtotalKHR < 20000) return 8000;
-        if (subtotalKHR < 40000) return 6000;
-        if (subtotalKHR < 60000) return 4000;
-        if (subtotalKHR < 80000) return 2000;
-        return 0;
-    }
-
     function openCheckout() {
         const selectedItems = userCart.filter(i => i.selected);
         if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយដើម្បីបន្ត!");
