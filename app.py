@@ -142,12 +142,32 @@ class DrawHistory(db.Model):
         return kh_time.strftime('%d-%b-%Y %I:%M %p')
 
 
-# --- SYNC HELPER FUNCTIONS ---
+# --- SYNC HELPER FUNCTIONS (SELF-HEALING ENABLED) ---
 def _sync_product_to_pool(product_id, variant_index, new_stock):
     """Updates the Spin Pool when the Store Stock changes"""
     linked_prize = MinifigurePool.query.filter_by(linked_product_id=product_id, linked_variant_index=variant_index).first()
+    
     if linked_prize:
         linked_prize.stock = new_stock
+    else:
+        # FALLBACK (SELF-HEALING): Find unlinked old items by Image URL
+        product = Product.query.get(product_id)
+        if product:
+            target_image = product.image
+            if variant_index != -1 and product.variants:
+                try:
+                    variants = json.loads(product.variants)
+                    if 0 <= variant_index < len(variants):
+                        target_image = variants[variant_index].get('image', target_image)
+                except Exception:
+                    pass
+            
+            prize = MinifigurePool.query.filter_by(image=target_image).first()
+            if prize:
+                prize.stock = new_stock
+                # Fix the broken link permanently!
+                prize.linked_product_id = product_id
+                prize.linked_variant_index = variant_index
 
 def _sync_pool_to_product(pool_item):
     """Updates the Store Stock when the Spin Pool Stock changes (wins or admin edits)"""
@@ -165,6 +185,35 @@ def _sync_pool_to_product(pool_item):
                     pass
             else:
                 product.stock = pool_item.stock
+    else:
+        # FALLBACK (SELF-HEALING): Find unlinked old items by Image URL
+        products = Product.query.all()
+        for p in products:
+            # Check variants first
+            if p.variants:
+                try:
+                    variants = json.loads(p.variants)
+                    updated = False
+                    for idx, v in enumerate(variants):
+                        if v.get('image') == pool_item.image:
+                            variants[idx]['stock'] = pool_item.stock
+                            updated = True
+                            # Fix the broken link permanently!
+                            pool_item.linked_product_id = p.id
+                            pool_item.linked_variant_index = idx
+                    if updated:
+                        p.variants = json.dumps(variants)
+                        p.stock = sum(int(v.get('stock', 0)) for v in variants)
+                        break
+                except Exception:
+                    pass
+            # Check main product image
+            elif p.image == pool_item.image:
+                p.stock = pool_item.stock
+                # Fix the broken link permanently!
+                pool_item.linked_product_id = p.id
+                pool_item.linked_variant_index = -1
+                break
 
 
 # --- 5. PUBLIC & STORE ROUTES ---
