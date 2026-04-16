@@ -223,6 +223,9 @@ def index(): return render_template('index.html')
 @app.route('/toy-universe')
 def toy_universe(): return render_template('toy.html')
 
+@app.route('/lego')
+def lego_store(): return render_template('lego.html')
+
 @app.route('/bracelet')
 def shop(): return render_template('bracelet.html')
 
@@ -297,7 +300,7 @@ def admin_panel():
     orders = Order.query.order_by(Order.timestamp.desc()).all()
     for o in orders: o.parsed_items = json.loads(o.items_json)
 
-    # Spinner Game Data (Added sorting functionality)
+    # Spinner Game Data
     codes = RedeemCode.query.order_by(RedeemCode.timestamp.desc()).all()
     pool = MinifigurePool.query.order_by(MinifigurePool.sort_order.asc(), MinifigurePool.id.desc()).all()
     history = DrawHistory.query.order_by(DrawHistory.timestamp_utc.desc()).limit(100).all()
