@@ -138,6 +138,7 @@
                   <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
                       <div>
                           <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Availability</p>
+                          <!-- Dynamic Stock Status will appear here -->
                           <span id="modal-stock" class="text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block">In Stock</span>
                       </div>
                       <div class="text-right">
@@ -171,7 +172,6 @@
                   <span id="modal-qty" class="font-black text-base w-6 text-center">1</span>
                   <button onclick="updateModalQty(1)" class="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm text-gray-600 active:scale-95"><i class="fa-solid fa-plus"></i></button>
               </div>
-              <!-- Strict: Only adds the 1st Variant Template to cart -->
               <button onclick="addToCartFromModal()" class="flex-1 bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
                   <i class="fa-solid fa-cart-plus"></i> បញ្ចូលទៅកន្ត្រក
               </button>
@@ -350,13 +350,11 @@
                 try { variants = typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants; } catch(e){}
             }
             
-            // For price filtering logic, we check the USD value (since RATE * USD = KHR)
+            // USD Price extraction
             const basePriceUSD = variants.length > 0 ? parseFloat(variants[0].price) : parseFloat(p.price);
 
-            // Match Category
+            // Filters
             let passCat = (activeCategory === 'All') || (p.category && p.category.includes(activeCategory));
-            
-            // Match Price Filter
             let passPrice = true;
             if (activePriceRange === 'under50') passPrice = basePriceUSD < 50;
             else if (activePriceRange === '50to100') passPrice = basePriceUSD >= 50 && basePriceUSD <= 100;
@@ -381,10 +379,16 @@
             const price = variants.length > 0 ? (variants[0].price * RATE) : (p.price * RATE);
             const image = variants.length > 0 ? variants[0].image : (p.image || p.thumbnail);
             const isHot = index % 5 === 0;
+            
+            // Check stock specifically for pre-order logic
+            const baseStock = variants.length > 0 ? parseInt(variants[0].stock) : parseInt(p.stock || 0);
+            
+            // PRE-ORDER BADGE instead of sold out
+            const preOrderBadge = baseStock <= 0 ? `<div class="absolute top-2 right-2 z-20 bg-[#ea580c] text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-md">PRE-ORDER</div>` : '';
 
             return `
             <div onclick="openProductModal(${p.id})" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-all hover:shadow-xl group relative">
-                ${p.stock <= 0 && variants.length === 0 ? `<div class="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-20 flex items-center justify-center"><span class="bg-black text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg">Sold Out</span></div>` : ''}
+                ${preOrderBadge}
                 <div class="aspect-[4/5] bg-gray-50 relative overflow-hidden flex items-center justify-center p-2">
                     ${isHot ? `<div class="absolute top-2 left-2 z-10 bg-red-500 text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-md animate-pulse">HOT</div>` : ''}
                     <img src="${image}" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500">
@@ -420,7 +424,6 @@
         const varGrid = document.getElementById('variant-grid');
         
         if(variants.length > 0) {
-            // Load all variants purely as a visual Gallery
             carousel.innerHTML = variants.map(v => `
                 <div class="min-w-full h-full snap-center relative cursor-pointer" onclick="openImageViewer('${v.image || currentModalProduct.thumbnail}')">
                     <img src="${v.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain p-2">
@@ -436,7 +439,6 @@
                 </div>
             `).join('');
             
-            // Display price and stock of the FIRST item (Master Template)
             document.getElementById('modal-price').innerText = (parseFloat(variants[0].price) * RATE).toLocaleString() + '៛';
             updateModalStockStatus(variants[0].stock);
         } else {
@@ -459,12 +461,15 @@
         document.getElementById('product-modal').classList.remove('translate-y-full');
     }
 
+    // Displays Pre-Order logic in Modal
     function updateModalStockStatus(stock) {
         const stockEl = document.getElementById('modal-stock');
         if(parseInt(stock) > 0) {
-            stockEl.innerText = "In Stock"; stockEl.className = "text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block";
+            stockEl.innerText = "In Stock"; 
+            stockEl.className = "text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block";
         } else {
-            stockEl.innerText = "Sold Out"; stockEl.className = "text-xs font-black text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 inline-block";
+            stockEl.innerText = "Pre-Order Available"; 
+            stockEl.className = "text-xs font-black text-[#ea580c] bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100 inline-block";
         }
     }
 
@@ -488,7 +493,6 @@
         setTimeout(() => { isProgrammaticScroll = false; }, 400);
     }
 
-    // Notice we removed the price/stock update here. This is purely visual scrolling now.
     function updateGalleryUIOnly(idx) {
         currentVariantIndex = idx;
         
@@ -541,7 +545,7 @@
 
     function closeProductModal() { document.getElementById('product-modal').classList.add('translate-y-full'); }
 
-    // STRICT LOGIC: ALWAYS ADD VARIANT[0] TO CART
+    // PRE-ORDER & CART LOGIC
     function addToCartFromModal() {
         if(!currentModalProduct) return;
         
@@ -553,13 +557,12 @@
         let dbId, price, image, stock, styleName;
 
         if(variants.length > 0) {
-            // FORCE INDEX 0 - Use 1st image as main template
-            const v = variants[0];
+            const v = variants[0]; // ALWAYS USE VARIANT 0 AS MASTER TEMPLATE
             dbId = `${currentModalProduct.id}-0`;
             price = parseFloat(v.price) * RATE;
             image = v.image || currentModalProduct.thumbnail;
             stock = parseInt(v.stock);
-            styleName = v.name || `Standard Box Set`;
+            styleName = v.name || `Box Set`;
         } else {
             dbId = `${currentModalProduct.id}-0`;
             price = parseFloat(currentModalProduct.price) * RATE;
@@ -568,11 +571,15 @@
             styleName = "Standard Base";
         }
 
-        if(stock <= 0) return alert("Sorry, this item is sold out!");
+        // Apply Pre-Order label if stock is 0 (so you can see it easily in admin)
+        if(stock <= 0 && !styleName.includes('PRE-ORDER')) {
+            styleName = "[PRE-ORDER] " + styleName;
+        }
 
         const existing = userCart.find(i => i.id === dbId);
-        if(existing) { existing.qty += modalQty; } 
-        else {
+        if(existing) { 
+            existing.qty += modalQty; 
+        } else {
             userCart.push({
                 id: dbId, type: 'standard', title: currentModalProduct.title,
                 style: styleName, price: price, image: image, maxStock: stock,
@@ -670,7 +677,9 @@
                                 <h4 class="font-black text-xs text-gray-900 leading-tight truncate pr-2">${item.title}</h4>
                                 <button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 -mt-1 -mr-1 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
                             </div>
-                            <p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">${item.style}</p>
+                            <p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">
+                                ${item.style.includes('PRE-ORDER') ? `<span class="text-[#ea580c]">${item.style}</span>` : item.style}
+                            </p>
                         </div>
                         <div class="flex justify-between items-end mt-2">
                             <span class="font-black text-sm text-[#ea580c]">${itemTotal.toLocaleString()}៛</span>
