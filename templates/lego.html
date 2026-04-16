@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -86,10 +87,22 @@
     </button>
   </header>
 
-  <!-- CATEGORIES -->
-  <section class="px-4 py-3 bg-white border-b border-gray-100 sticky top-[65px] z-[90]">
-      <div id="category-filters" class="flex overflow-x-auto gap-2 scrollbar-hide">
+  <!-- CATEGORIES & PRICE FILTERS -->
+  <section class="px-4 py-3 bg-white border-b border-gray-100 sticky top-[65px] z-[90] space-y-3">
+      <!-- Categories -->
+      <div id="category-filters" class="flex overflow-x-auto gap-2 scrollbar-hide pb-1">
           <button class="px-4 py-1.5 rounded-full bg-gray-900 text-white text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">All LEGO</button>
+      </div>
+      
+      <!-- Prices -->
+      <div id="price-filters" class="flex overflow-x-auto gap-2 scrollbar-hide">
+          <div class="flex items-center px-2 border-r border-gray-200 mr-1 text-gray-400">
+              <i class="fa-solid fa-filter text-[10px]"></i>
+          </div>
+          <button onclick="setPriceFilter('all', this)" class="price-btn px-4 py-1.5 rounded-full bg-gray-900 text-white border-transparent text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">All Prices</button>
+          <button onclick="setPriceFilter('under50', this)" class="price-btn px-4 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">Under $50</button>
+          <button onclick="setPriceFilter('50to100', this)" class="price-btn px-4 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">$50 - $100</button>
+          <button onclick="setPriceFilter('over100', this)" class="price-btn px-4 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">$100+</button>
       </div>
   </section>
 
@@ -133,8 +146,9 @@
                       </div>
                   </div>
 
+                  <!-- REPURPOSED TO ACT PURELY AS A GALLERY -->
                   <div id="variant-section" class="hidden bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                      <p class="text-[10px] font-black text-gray-800 uppercase tracking-widest mb-3 font-['Kantumruy_Pro']">ជ្រើសរើសម៉ូត (Select Style)</p>
+                      <p class="text-[10px] font-black text-gray-800 uppercase tracking-widest mb-3 font-['Kantumruy_Pro']">មើលរូបភាពបន្ថែម (Gallery Views)</p>
                       <div id="variant-grid" class="grid grid-cols-4 gap-2.5"></div>
                   </div>
 
@@ -157,6 +171,7 @@
                   <span id="modal-qty" class="font-black text-base w-6 text-center">1</span>
                   <button onclick="updateModalQty(1)" class="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm text-gray-600 active:scale-95"><i class="fa-solid fa-plus"></i></button>
               </div>
+              <!-- Strict: Only adds the 1st Variant Template to cart -->
               <button onclick="addToCartFromModal()" class="flex-1 bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
                   <i class="fa-solid fa-cart-plus"></i> បញ្ចូលទៅកន្ត្រក
               </button>
@@ -250,12 +265,15 @@
     let isProgrammaticScroll = false;
     let scrollTimeout;
 
+    // Filter Variables
+    let activeCategory = 'All';
+    let activePriceRange = 'all';
+
     try {
         const savedCart = localStorage.getItem('sr_cart');
         if (savedCart) userCart = JSON.parse(savedCart);
     } catch(e) {}
 
-    // CORE DELIVERY CALCULATION LOGIC
     function calculateDelivery(subtotalKHR) {
         if (subtotalKHR === 0) return 0;
         if (subtotalKHR < 20000) return 8000;
@@ -277,12 +295,11 @@
     async function fetchProducts() {
         document.getElementById('loadingOverlay').style.display = 'flex';
         try {
-            // Note: Updated Endpoint for LEGO
             const res = await fetch('/api/products/lego');
             const data = await res.json();
             allProducts = data.products;
             renderCategoryFilters();
-            renderProducts('All');
+            renderFilteredProducts();
         } catch (e) {
             console.error("Error loading products", e);
         } finally {
@@ -300,25 +317,61 @@
         });
         const container = document.getElementById('category-filters');
         container.innerHTML = Array.from(cats).map(c => 
-            `<button onclick="renderProducts('${c}', this)" class="filter-btn px-4 py-1.5 rounded-full ${c === 'All' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">${c}</button>`
+            `<button onclick="setCategoryFilter('${c}', this)" class="cat-btn px-4 py-1.5 rounded-full ${c === 'All' ? 'bg-gray-900 text-white border-transparent' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100'} text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">${c}</button>`
         ).join('');
     }
 
-    function renderProducts(cat, btnEl = null) {
-        if(btnEl) {
-            document.querySelectorAll('.filter-btn').forEach(b => { b.classList.remove('bg-gray-900', 'text-white'); b.classList.add('bg-gray-100', 'text-gray-600'); });
-            btnEl.classList.add('bg-gray-900', 'text-white'); btnEl.classList.remove('bg-gray-100', 'text-gray-600');
-        }
-        
-        let filtered = [];
-        if (cat === 'All') {
-            filtered = [...allProducts].sort(() => 0.5 - Math.random());
-        } else {
-            filtered = allProducts.filter(p => p.category && p.category.includes(cat));
-        }
+    function setCategoryFilter(cat, btnEl) {
+        activeCategory = cat;
+        document.querySelectorAll('.cat-btn').forEach(b => { 
+            b.classList.remove('bg-gray-900', 'text-white', 'border-transparent'); 
+            b.classList.add('bg-gray-50', 'text-gray-600', 'border', 'border-gray-200'); 
+        });
+        btnEl.classList.add('bg-gray-900', 'text-white', 'border-transparent'); 
+        btnEl.classList.remove('bg-gray-50', 'text-gray-600', 'border', 'border-gray-200');
+        renderFilteredProducts();
+    }
+
+    function setPriceFilter(range, btnEl) {
+        activePriceRange = range;
+        document.querySelectorAll('.price-btn').forEach(b => { 
+            b.classList.remove('bg-gray-900', 'text-white', 'border-transparent'); 
+            b.classList.add('bg-gray-50', 'text-gray-600', 'border', 'border-gray-200'); 
+        });
+        btnEl.classList.add('bg-gray-900', 'text-white', 'border-transparent'); 
+        btnEl.classList.remove('bg-gray-50', 'text-gray-600', 'border', 'border-gray-200');
+        renderFilteredProducts();
+    }
+
+    function renderFilteredProducts() {
+        let filtered = allProducts.filter(p => {
+            let variants = p.parsed_variants || [];
+            if(variants.length === 0 && p.variants) {
+                try { variants = typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants; } catch(e){}
+            }
+            
+            // For price filtering logic, we check the USD value (since RATE * USD = KHR)
+            const basePriceUSD = variants.length > 0 ? parseFloat(variants[0].price) : parseFloat(p.price);
+
+            // Match Category
+            let passCat = (activeCategory === 'All') || (p.category && p.category.includes(activeCategory));
+            
+            // Match Price Filter
+            let passPrice = true;
+            if (activePriceRange === 'under50') passPrice = basePriceUSD < 50;
+            else if (activePriceRange === '50to100') passPrice = basePriceUSD >= 50 && basePriceUSD <= 100;
+            else if (activePriceRange === 'over100') passPrice = basePriceUSD > 100;
+
+            return passCat && passPrice;
+        });
         
         const grid = document.getElementById('product-grid');
         
+        if (filtered.length === 0) {
+            grid.innerHTML = `<div class="col-span-2 md:col-span-3 lg:col-span-4 text-center py-10 text-gray-400 font-bold uppercase tracking-widest text-[10px]">No sets found matching these filters.</div>`;
+            return;
+        }
+
         grid.innerHTML = filtered.map((p, index) => {
             let variants = p.parsed_variants || [];
             if(variants.length === 0 && p.variants) {
@@ -326,11 +379,12 @@
             }
             
             const price = variants.length > 0 ? (variants[0].price * RATE) : (p.price * RATE);
-            const image = p.image || p.thumbnail;
+            const image = variants.length > 0 ? variants[0].image : (p.image || p.thumbnail);
             const isHot = index % 5 === 0;
 
             return `
-            <div onclick="openProductModal(${p.id})" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-all hover:shadow-xl group">
+            <div onclick="openProductModal(${p.id})" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-all hover:shadow-xl group relative">
+                ${p.stock <= 0 && variants.length === 0 ? `<div class="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-20 flex items-center justify-center"><span class="bg-black text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg">Sold Out</span></div>` : ''}
                 <div class="aspect-[4/5] bg-gray-50 relative overflow-hidden flex items-center justify-center p-2">
                     ${isHot ? `<div class="absolute top-2 left-2 z-10 bg-red-500 text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-md animate-pulse">HOT</div>` : ''}
                     <img src="${image}" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500">
@@ -366,6 +420,7 @@
         const varGrid = document.getElementById('variant-grid');
         
         if(variants.length > 0) {
+            // Load all variants purely as a visual Gallery
             carousel.innerHTML = variants.map(v => `
                 <div class="min-w-full h-full snap-center relative cursor-pointer" onclick="openImageViewer('${v.image || currentModalProduct.thumbnail}')">
                     <img src="${v.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain p-2">
@@ -375,13 +430,15 @@
 
             varSection.classList.remove('hidden');
             varGrid.innerHTML = variants.map((v, i) => `
-                <div onclick="selectVariant(${i})" class="variant-btn w-full aspect-[4/5] bg-gray-50 rounded-xl border-2 ${i === 0 ? 'border-[#ea580c]' : 'border-gray-100 hover:border-gray-300'} overflow-hidden cursor-pointer p-1 transition-colors relative">
+                <div onclick="selectGalleryImage(${i})" class="variant-btn w-full aspect-[4/5] bg-gray-50 rounded-xl border-2 ${i === 0 ? 'border-[#ea580c]' : 'border-gray-100 hover:border-gray-300'} overflow-hidden cursor-pointer p-1 transition-colors relative">
                     ${i === 0 ? '<div class="absolute top-1 right-1 w-2 h-2 bg-[#ea580c] rounded-full border border-white"></div>' : ''}
                     <img src="${v.image || currentModalProduct.thumbnail}" class="w-full h-full object-cover rounded-lg">
                 </div>
             `).join('');
             
-            updatePriceAndStock(variants[0].price, variants[0].stock);
+            // Display price and stock of the FIRST item (Master Template)
+            document.getElementById('modal-price').innerText = (parseFloat(variants[0].price) * RATE).toLocaleString() + '៛';
+            updateModalStockStatus(variants[0].stock);
         } else {
             varSection.classList.add('hidden');
             carousel.innerHTML = `
@@ -390,7 +447,8 @@
                     <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-sm"></i></div>
                 </div>
             `;
-            updatePriceAndStock(currentModalProduct.price, currentModalProduct.stock);
+            document.getElementById('modal-price').innerText = (parseFloat(currentModalProduct.price) * RATE).toLocaleString() + '៛';
+            updateModalStockStatus(currentModalProduct.stock);
         }
         
         isProgrammaticScroll = true;
@@ -401,6 +459,15 @@
         document.getElementById('product-modal').classList.remove('translate-y-full');
     }
 
+    function updateModalStockStatus(stock) {
+        const stockEl = document.getElementById('modal-stock');
+        if(parseInt(stock) > 0) {
+            stockEl.innerText = "In Stock"; stockEl.className = "text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block";
+        } else {
+            stockEl.innerText = "Sold Out"; stockEl.className = "text-xs font-black text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 inline-block";
+        }
+    }
+
     function handleCarouselScroll() {
         if(isProgrammaticScroll) return;
         clearTimeout(scrollTimeout);
@@ -408,20 +475,21 @@
             const carousel = document.getElementById('modal-image-carousel');
             const index = Math.round(carousel.scrollLeft / carousel.clientWidth);
             if (index !== currentVariantIndex && index >= 0) {
-                updateVariantUIOnly(index);
+                updateGalleryUIOnly(index);
             }
         }, 50);
     }
 
-    function selectVariant(idx) {
-        updateVariantUIOnly(idx);
+    function selectGalleryImage(idx) {
+        updateGalleryUIOnly(idx);
         isProgrammaticScroll = true;
         const carousel = document.getElementById('modal-image-carousel');
         carousel.scrollTo({ left: carousel.clientWidth * idx, behavior: 'smooth' });
         setTimeout(() => { isProgrammaticScroll = false; }, 400);
     }
 
-    function updateVariantUIOnly(idx) {
+    // Notice we removed the price/stock update here. This is purely visual scrolling now.
+    function updateGalleryUIOnly(idx) {
         currentVariantIndex = idx;
         
         document.querySelectorAll('.variant-btn').forEach((btn, i) => {
@@ -436,24 +504,6 @@
                 if(dot) dot.remove();
             }
         });
-        
-        let variants = currentModalProduct.parsed_variants || [];
-        if(variants.length === 0 && currentModalProduct.variants) {
-             try { variants = typeof currentModalProduct.variants === 'string' ? JSON.parse(currentModalProduct.variants) : currentModalProduct.variants; } catch(e){}
-        }
-        if (variants.length > 0 && variants[idx]) {
-            updatePriceAndStock(variants[idx].price, variants[idx].stock);
-        }
-    }
-
-    function updatePriceAndStock(price, stock) {
-        document.getElementById('modal-price').innerText = (parseFloat(price) * RATE).toLocaleString() + '៛';
-        const stockEl = document.getElementById('modal-stock');
-        if(parseInt(stock) > 0) {
-            stockEl.innerText = "In Stock"; stockEl.className = "text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block";
-        } else {
-            stockEl.innerText = "Sold Out"; stockEl.className = "text-xs font-black text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 inline-block";
-        }
     }
 
     function renderRecommendations(excludeId) {
@@ -463,7 +513,7 @@
         const grid = document.getElementById('recommendations-grid');
         grid.innerHTML = shuffled.map(p => {
             const price = p.parsed_variants && p.parsed_variants.length > 0 ? (p.parsed_variants[0].price * RATE) : (p.price * RATE);
-            const image = p.image || p.thumbnail;
+            const image = p.parsed_variants && p.parsed_variants.length > 0 ? p.parsed_variants[0].image : (p.image || p.thumbnail);
             return `
             <div onclick="swapToRecommendation(${p.id})" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-all hover:border-[#ea580c]">
                 <div class="aspect-[4/5] bg-gray-50 relative p-2">
@@ -491,6 +541,7 @@
 
     function closeProductModal() { document.getElementById('product-modal').classList.add('translate-y-full'); }
 
+    // STRICT LOGIC: ALWAYS ADD VARIANT[0] TO CART
     function addToCartFromModal() {
         if(!currentModalProduct) return;
         
@@ -502,18 +553,19 @@
         let dbId, price, image, stock, styleName;
 
         if(variants.length > 0) {
-            const v = variants[currentVariantIndex];
-            dbId = `${currentModalProduct.id}-${currentVariantIndex}`;
+            // FORCE INDEX 0 - Use 1st image as main template
+            const v = variants[0];
+            dbId = `${currentModalProduct.id}-0`;
             price = parseFloat(v.price) * RATE;
             image = v.image || currentModalProduct.thumbnail;
             stock = parseInt(v.stock);
-            styleName = v.name || `Style ${currentVariantIndex + 1}`;
+            styleName = v.name || `Standard Box Set`;
         } else {
             dbId = `${currentModalProduct.id}-0`;
             price = parseFloat(currentModalProduct.price) * RATE;
             image = currentModalProduct.image || currentModalProduct.thumbnail;
             stock = parseInt(currentModalProduct.stock);
-            styleName = "Standard";
+            styleName = "Standard Base";
         }
 
         if(stock <= 0) return alert("Sorry, this item is sold out!");
@@ -633,7 +685,6 @@
             }
         }).join('');
         
-        // APPLY THE NEW MATH
         const delivery = calculateDelivery(subtotal);
         const grandTotalKHR = subtotal + delivery;
         const grandTotalUSD = grandTotalKHR / RATE;
