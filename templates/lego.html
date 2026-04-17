@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,7 +39,7 @@
 
     #cart-drawer, #product-modal, #checkout-modal { transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
     
-    /* Smooth shadow for sticky headers inside modal */
+    /* Smooth shadow for sticky headers */
     .sticky-shadow { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025); }
     
     @keyframes bounce-in {
@@ -91,8 +92,8 @@
       <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl mb-6 bg-white p-2">
   </div>
 
-  <!-- 🌟 UNIFIED HEADER WITH DUAL LOGOS (TOY.HTML STYLE) 🌟 -->
-  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 sm:px-4 py-3 flex items-center justify-between shadow-sm">
+  <!-- 🌟 UNIFIED HEADER WITH DUAL LOGOS 🌟 -->
+  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 sm:px-4 py-3 flex items-center justify-between shadow-sm h-[65px]">
     <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0">
         <i class="fa-solid fa-arrow-left"></i>
     </a>
@@ -116,27 +117,43 @@
     </button>
   </header>
 
-  <!-- CATEGORIES & PRICE FILTERS -->
-  <section class="px-4 py-3 bg-white border-b border-gray-100 sticky top-[65px] z-[90] space-y-3">
-      <!-- Categories -->
-      <div id="category-filters" class="flex overflow-x-auto gap-2 scrollbar-hide pb-1">
-          <!-- Dynamically Filled -->
-      </div>
-      
-      <!-- Prices -->
-      <div id="price-filters" class="flex overflow-x-auto gap-2 scrollbar-hide">
-          <div class="flex items-center px-2 border-r border-gray-200 mr-1 text-gray-400">
-              <i class="fa-solid fa-filter text-[10px]"></i>
+  <!-- 🌟 HIERARCHICAL FILTER SECTION 🌟 -->
+  <section class="sticky top-[65px] z-[90] bg-white border-b border-gray-100 shadow-sm flex flex-col">
+      <!-- Search Bar -->
+      <div class="px-4 py-2 bg-white border-b border-gray-50 flex items-center">
+          <div class="relative w-full">
+              <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+              <input type="text" id="search-input" placeholder="ស្វែងរកទំនិញ / Search LEGO..." class="w-full bg-gray-50 border border-gray-200 rounded-full py-2 pl-9 pr-4 text-xs font-bold text-gray-700 outline-none focus:border-[#ea580c] focus:ring-2 focus:ring-orange-50 transition-all shadow-inner">
           </div>
-          <button onclick="setPriceFilter('all', this)" class="price-btn px-4 py-1.5 rounded-full bg-gray-900 text-white border-transparent text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">All Prices</button>
-          <button onclick="setPriceFilter('under50', this)" class="price-btn px-4 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">Under $50</button>
-          <button onclick="setPriceFilter('50to100', this)" class="price-btn px-4 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">$50 - $100</button>
-          <button onclick="setPriceFilter('over100', this)" class="price-btn px-4 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">$100+</button>
+      </div>
+
+      <!-- Top Level: Main Types -->
+      <div class="flex justify-center gap-6 sm:gap-10 px-4 pt-3 border-b border-gray-50 font-['Plus_Jakarta_Sans'] font-black text-[11px] uppercase tracking-widest bg-white">
+          <button data-type="Minifigures" onclick="setTypeFilter('Minifigures')" class="type-tab pb-3 border-b-2 text-[#ea580c] border-[#ea580c] transition-colors">Minifigures</button>
+          <button data-type="Building Sets" onclick="setTypeFilter('Building Sets')" class="type-tab pb-3 border-b-2 text-gray-400 border-transparent hover:text-gray-800 transition-colors">Building Sets</button>
+      </div>
+
+      <div class="px-4 py-3 space-y-3 bg-white/95 backdrop-blur-md">
+          <!-- Middle Level: Themes -->
+          <div id="theme-filters" class="flex overflow-x-auto gap-2 scrollbar-hide pb-1">
+              <!-- Dynamically Filled with Ninjago, Marvel, Spider, etc. -->
+          </div>
+          
+          <!-- Bottom Level: Prices -->
+          <div id="price-filters" class="flex overflow-x-auto gap-2 scrollbar-hide">
+              <div class="flex items-center px-2 border-r border-gray-200 mr-1 text-gray-400">
+                  <i class="fa-solid fa-filter text-[10px]"></i>
+              </div>
+              <button onclick="setPriceFilter('all', this)" class="price-btn px-4 py-1.5 rounded-full bg-gray-900 text-white border-transparent text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">All Prices</button>
+              <button onclick="setPriceFilter('under10', this)" class="price-btn px-4 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">Under $10</button>
+              <button onclick="setPriceFilter('10to50', this)" class="price-btn px-4 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">$10 - $50</button>
+              <button onclick="setPriceFilter('over50', this)" class="price-btn px-4 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">$50+</button>
+          </div>
       </div>
   </section>
 
   <!-- PRODUCT GRID -->
-  <main class="p-4 max-w-5xl mx-auto">
+  <main class="p-4 max-w-5xl mx-auto min-h-[50vh]">
       <!-- Class will be dynamically toggled between 2 and 3 columns -->
       <div id="product-grid" class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           <!-- Products loaded via JS -->
@@ -169,7 +186,6 @@
                   <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
                       <div>
                           <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Availability</p>
-                          <!-- Dynamic Stock Status will appear here -->
                           <span id="modal-stock" class="text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block">In Stock</span>
                       </div>
                       <div class="text-right">
@@ -178,7 +194,6 @@
                       </div>
                   </div>
 
-                  <!-- REPURPOSED TO ACT PURELY AS A GALLERY -->
                   <div id="variant-section" class="hidden bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
                       <p class="text-[10px] font-black text-gray-800 uppercase tracking-widest mb-3 font-['Kantumruy_Pro']">មើលរូបភាពបន្ថែម (Gallery Views)</p>
                       <div id="variant-grid" class="grid grid-cols-4 gap-2.5"></div>
@@ -203,10 +218,7 @@
                   <span id="modal-qty" class="font-black text-base w-6 text-center">1</span>
                   <button onclick="updateModalQty(1)" class="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm text-gray-600 active:scale-95"><i class="fa-solid fa-plus"></i></button>
               </div>
-              <!-- Dynamic Button Text (In Stock vs Pre-Order) -->
-              <button id="add-to-cart-btn" class="flex-1 text-white font-black rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
-                  <!-- Injected via JS -->
-              </button>
+              <button id="add-to-cart-btn" class="flex-1 text-white font-black rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']"></button>
           </div>
       </div>
   </div>
@@ -297,9 +309,11 @@
     let isProgrammaticScroll = false;
     let scrollTimeout;
 
-    // Filter Variables
-    let activeCategory = 'All';
+    // Filter Hierarchy Variables
+    let activeType = 'Minifigures'; // Default to Minifigures
+    let activeTheme = 'All'; // 'Ninjago', 'Marvel', etc.
     let activePriceRange = 'all';
+    let searchQuery = '';
 
     try {
         const savedCart = localStorage.getItem('sr_cart');
@@ -330,7 +344,15 @@
             const res = await fetch('/api/products/lego');
             const data = await res.json();
             allProducts = data.products;
-            renderCategoryFilters();
+            
+            // Setup Search Listener
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase();
+                renderFilteredProducts();
+            });
+
+            // Extract Theme categories dynamically
+            renderThemeFilters();
             renderFilteredProducts();
         } catch (e) {
             console.error("Error loading products", e);
@@ -340,34 +362,56 @@
         updateCartBadge();
     }
 
-    function renderCategoryFilters() {
-        // Enforce the primary categories to show up first
-        let catsArray = ['All', 'Building Sets', 'Minifigures'];
-        let extractedCats = new Set();
+    // --- NEW HIERARCHICAL FILTER LOGIC ---
+    function renderThemeFilters() {
+        let extractedThemes = new Set();
         
+        // Find all tags that are NOT 'Minifigures' or 'Building Sets' for the selected tab
         allProducts.forEach(p => {
+            const isMinifigure = p.category && p.category.includes('Minifigures');
+            if (activeType === 'Minifigures' && !isMinifigure) return;
+            if (activeType === 'Building Sets' && isMinifigure) return;
+
             if(p.category) {
                 p.category.split(',').forEach(c => {
                     const cleanCat = c.trim();
-                    if (!catsArray.includes(cleanCat)) {
-                        extractedCats.add(cleanCat);
+                    if (cleanCat && cleanCat !== 'Minifigures' && cleanCat !== 'Building Sets' && cleanCat !== 'All') {
+                        extractedThemes.add(cleanCat);
                     }
                 });
             }
         });
         
-        // Combine them
-        const finalCats = [...catsArray, ...Array.from(extractedCats)];
-
-        const container = document.getElementById('category-filters');
-        container.innerHTML = finalCats.map(c => 
-            `<button onclick="setCategoryFilter('${c}', this)" class="cat-btn px-4 py-1.5 rounded-full ${c === 'All' ? 'bg-gray-900 text-white border-transparent' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100'} text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">${c}</button>`
+        const finalThemes = ['All', ...Array.from(extractedThemes)];
+        const container = document.getElementById('theme-filters');
+        
+        container.innerHTML = finalThemes.map(c => 
+            `<button onclick="setThemeFilter('${c}', this)" class="theme-btn px-4 py-1.5 rounded-full ${c === activeTheme ? 'bg-gray-900 text-white border-transparent' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100'} text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">${c}</button>`
         ).join('');
     }
 
-    function setCategoryFilter(cat, btnEl) {
-        activeCategory = cat;
-        document.querySelectorAll('.cat-btn').forEach(b => { 
+    function setTypeFilter(type) {
+        activeType = type;
+        activeTheme = 'All'; // Reset theme filter when changing main tab
+        
+        // Update UI for Top-Level Tabs
+        document.querySelectorAll('.type-tab').forEach(el => {
+            if (el.dataset.type === type) {
+                el.classList.add('text-[#ea580c]', 'border-[#ea580c]');
+                el.classList.remove('text-gray-400', 'border-transparent', 'hover:text-gray-800');
+            } else {
+                el.classList.remove('text-[#ea580c]', 'border-[#ea580c]');
+                el.classList.add('text-gray-400', 'border-transparent', 'hover:text-gray-800');
+            }
+        });
+        
+        renderThemeFilters(); // Refresh available sub-categories for new tab
+        renderFilteredProducts();
+    }
+
+    function setThemeFilter(theme, btnEl) {
+        activeTheme = theme;
+        document.querySelectorAll('.theme-btn').forEach(b => { 
             b.classList.remove('bg-gray-900', 'text-white', 'border-transparent'); 
             b.classList.add('bg-gray-50', 'text-gray-600', 'border', 'border-gray-200'); 
         });
@@ -395,29 +439,45 @@
             }
             
             const basePriceUSD = variants.length > 0 ? parseFloat(variants[0].price) : parseFloat(p.price);
+            const isMinifigure = p.category && p.category.includes('Minifigures');
 
-            let passCat = (activeCategory === 'All') || (p.category && p.category.includes(activeCategory));
+            // 1. Filter by Main Type (Top Tabs)
+            let passType = false;
+            if (activeType === 'Minifigures') passType = isMinifigure;
+            else if (activeType === 'Building Sets') passType = !isMinifigure; // Assume anything without Minifigure tag is a Building Set
+
+            // 2. Filter by Theme (Middle row)
+            let passTheme = true;
+            if (activeTheme !== 'All') {
+                passTheme = p.category && p.category.includes(activeTheme);
+            }
+
+            // 3. Filter by Price (Bottom row)
             let passPrice = true;
-            if (activePriceRange === 'under50') passPrice = basePriceUSD < 50;
-            else if (activePriceRange === '50to100') passPrice = basePriceUSD >= 50 && basePriceUSD <= 100;
-            else if (activePriceRange === 'over100') passPrice = basePriceUSD > 100;
+            if (activePriceRange === 'under10') passPrice = basePriceUSD < 10;
+            else if (activePriceRange === '10to50') passPrice = basePriceUSD >= 10 && basePriceUSD <= 50;
+            else if (activePriceRange === 'over50') passPrice = basePriceUSD > 50;
 
-            return passCat && passPrice;
+            // 4. Filter by Search Query
+            let passSearch = true;
+            if (searchQuery) {
+                passSearch = p.title.toLowerCase().includes(searchQuery) || (p.category && p.category.toLowerCase().includes(searchQuery));
+            }
+
+            return passType && passTheme && passPrice && passSearch;
         });
         
         const grid = document.getElementById('product-grid');
         
-        // Modify Grid Layout Based on Category
-        if (activeCategory === 'Minifigures') {
-            // 3-column view on mobile for Minifigures
-            grid.className = "grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-4 lg:grid-cols-6";
+        // Switch Grid Layout based on Main Type
+        if (activeType === 'Minifigures') {
+            grid.className = "grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-4 lg:grid-cols-6"; // 3-grid for mobile
         } else {
-            // Standard 2-column view
-            grid.className = "grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4";
+            grid.className = "grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"; // 2-grid for building sets
         }
         
         if (filtered.length === 0) {
-            grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 font-bold uppercase tracking-widest text-[10px]">No sets found matching these filters.</div>`;
+            grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 font-bold uppercase tracking-widest text-[10px]">No products found.</div>`;
             return;
         }
 
@@ -432,10 +492,12 @@
             const image = variants.length > 0 ? variants[0].image : (p.image || p.thumbnail);
             const baseStock = variants.length > 0 ? parseInt(variants[0].stock) : parseInt(p.stock || 0);
             
+            const isMinifigure = p.category && p.category.includes('Minifigures');
+            
             // ==========================================
             // MINIFIGURES CARD LAYOUT
             // ==========================================
-            if (activeCategory === 'Minifigures') {
+            if (isMinifigure) {
                 return `
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col relative group">
                     ${baseStock <= 0 ? `<div class="absolute top-1 right-1 z-20 bg-[#ea580c] text-white text-[6px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest animate-pulse shadow-sm pointer-events-none">Pre-Order</div>` : ''}
@@ -497,7 +559,6 @@
 
     // --- QUICK ADD TO CART (For Minifigures Grid) ---
     function quickAddToCart(id, isPreOrder) {
-        // Load the product quietly
         currentModalProduct = allProducts.find(p => p.id === id);
         currentVariantIndex = 0; 
         modalQty = 1;
