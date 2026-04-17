@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -92,26 +91,23 @@
       <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl mb-6 bg-white p-2">
   </div>
 
-  <!-- 🌟 UNIFIED HEADER WITH DUAL LOGOS 🌟 -->
-  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 py-3 flex items-center justify-between shadow-sm">
+  <!-- 🌟 UNIFIED HEADER WITH DUAL LOGOS (TOY.HTML STYLE) 🌟 -->
+  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 sm:px-4 py-3 flex items-center justify-between shadow-sm">
     <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0">
         <i class="fa-solid fa-arrow-left"></i>
     </a>
     
-    <div class="flex items-center justify-center flex-1 px-1 gap-2 min-w-0">
-        <!-- Main Logo -->
-        <img src="static/images/logo.png" onerror="this.src='static/images/logo.jpg'" class="w-9 h-9 sm:w-11 sm:h-11 object-contain drop-shadow-sm shrink-0 rounded-full border border-gray-100" alt="Somphea Reak Logo">
+    <div class="flex items-center justify-center flex-1 px-1 sm:px-2 gap-2 min-w-0">
+        <img src="static/images/logo.png" onerror="this.src='static/images/logo.jpg'" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-sm shrink-0 rounded-full" alt="Logo">
         
-        <!-- Center Title -->
-        <div class="flex flex-col justify-center text-center">
-            <h1 class="text-[12px] sm:text-[14px] font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5 whitespace-nowrap">
-                សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-[10px] sm:text-xs">- Somphea Reak</span>
+        <div class="flex flex-col justify-center text-left flex-shrink min-w-0">
+            <h1 class="text-[14px] sm:text-lg font-black text-gray-900 leading-normal tracking-tight font-['Moul'] pb-0.5 truncate">
+                សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-[12px] sm:text-base">- Somphea Reak</span>
             </h1>
-            <p class="text-[9px] sm:text-[10px] font-bold text-[#ea580c] uppercase tracking-widest leading-none">LEGO Collection</p>
+            <p class="text-[10px] font-bold text-[#ea580c] uppercase tracking-widest leading-none">LEGO Collection</p>
         </div>
 
-        <!-- LEGO Logo -->
-        <img src="static/images/lego.jpg" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/2/24/LEGO_logo.svg'" class="w-9 h-9 sm:w-11 sm:h-11 object-contain drop-shadow-sm shrink-0 rounded-md border border-gray-100" alt="LEGO Logo">
+        <img src="static/images/lego.jpg" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/2/24/LEGO_logo.svg'" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-sm shrink-0 rounded-md border border-gray-100" alt="LEGO Logo">
     </div>
     
     <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0">
@@ -124,7 +120,7 @@
   <section class="px-4 py-3 bg-white border-b border-gray-100 sticky top-[65px] z-[90] space-y-3">
       <!-- Categories -->
       <div id="category-filters" class="flex overflow-x-auto gap-2 scrollbar-hide pb-1">
-          <button class="px-4 py-1.5 rounded-full bg-gray-900 text-white text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">All LEGO</button>
+          <!-- Dynamically Filled -->
       </div>
       
       <!-- Prices -->
@@ -141,6 +137,7 @@
 
   <!-- PRODUCT GRID -->
   <main class="p-4 max-w-5xl mx-auto">
+      <!-- Class will be dynamically toggled between 2 and 3 columns -->
       <div id="product-grid" class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           <!-- Products loaded via JS -->
       </div>
@@ -344,14 +341,26 @@
     }
 
     function renderCategoryFilters() {
-        let cats = new Set(['All']);
+        // Enforce the primary categories to show up first
+        let catsArray = ['All', 'Building Sets', 'Minifigures'];
+        let extractedCats = new Set();
+        
         allProducts.forEach(p => {
             if(p.category) {
-                p.category.split(',').forEach(c => cats.add(c.trim()));
+                p.category.split(',').forEach(c => {
+                    const cleanCat = c.trim();
+                    if (!catsArray.includes(cleanCat)) {
+                        extractedCats.add(cleanCat);
+                    }
+                });
             }
         });
+        
+        // Combine them
+        const finalCats = [...catsArray, ...Array.from(extractedCats)];
+
         const container = document.getElementById('category-filters');
-        container.innerHTML = Array.from(cats).map(c => 
+        container.innerHTML = finalCats.map(c => 
             `<button onclick="setCategoryFilter('${c}', this)" class="cat-btn px-4 py-1.5 rounded-full ${c === 'All' ? 'bg-gray-900 text-white border-transparent' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100'} text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors">${c}</button>`
         ).join('');
     }
@@ -385,10 +394,8 @@
                 try { variants = typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants; } catch(e){}
             }
             
-            // USD Price extraction
             const basePriceUSD = variants.length > 0 ? parseFloat(variants[0].price) : parseFloat(p.price);
 
-            // Filters
             let passCat = (activeCategory === 'All') || (p.category && p.category.includes(activeCategory));
             let passPrice = true;
             if (activePriceRange === 'under50') passPrice = basePriceUSD < 50;
@@ -400,8 +407,17 @@
         
         const grid = document.getElementById('product-grid');
         
+        // Modify Grid Layout Based on Category
+        if (activeCategory === 'Minifigures') {
+            // 3-column view on mobile for Minifigures
+            grid.className = "grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-4 lg:grid-cols-6";
+        } else {
+            // Standard 2-column view
+            grid.className = "grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4";
+        }
+        
         if (filtered.length === 0) {
-            grid.innerHTML = `<div class="col-span-2 md:col-span-3 lg:col-span-4 text-center py-10 text-gray-400 font-bold uppercase tracking-widest text-[10px]">No sets found matching these filters.</div>`;
+            grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 font-bold uppercase tracking-widest text-[10px]">No sets found matching these filters.</div>`;
             return;
         }
 
@@ -414,16 +430,50 @@
             const priceUSD = variants.length > 0 ? parseFloat(variants[0].price) : parseFloat(p.price);
             const priceKHR = priceUSD * RATE;
             const image = variants.length > 0 ? variants[0].image : (p.image || p.thumbnail);
-            
-            // Check stock for Pre-Order vs In-Stock badge
             const baseStock = variants.length > 0 ? parseInt(variants[0].stock) : parseInt(p.stock || 0);
             
-            // Clear status badges
+            // ==========================================
+            // MINIFIGURES CARD LAYOUT
+            // ==========================================
+            if (activeCategory === 'Minifigures') {
+                return `
+                <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col relative group">
+                    ${baseStock <= 0 ? `<div class="absolute top-1 right-1 z-20 bg-[#ea580c] text-white text-[6px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest animate-pulse shadow-sm pointer-events-none">Pre-Order</div>` : ''}
+                    
+                    <!-- Tiny LEGO Stamp -->
+                    <div class="absolute top-1 left-1 z-20 w-4 h-4 rounded overflow-hidden border border-gray-100 shadow-sm pointer-events-none">
+                        <img src="static/images/lego.jpg" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/2/24/LEGO_logo.svg'" class="w-full h-full object-cover">
+                    </div>
+
+                    <!-- Image Zoom Trigger -->
+                    <div onclick="openImageViewer('${image}')" class="aspect-square bg-white relative overflow-hidden flex items-center justify-center p-1 border-b border-gray-50 cursor-zoom-in">
+                        <img src="${image}" class="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300">
+                        <div class="absolute bottom-1 right-1 bg-white/90 backdrop-blur-sm rounded-full w-4 h-4 flex items-center justify-center shadow-sm text-gray-500"><i class="fa-solid fa-expand text-[7px]"></i></div>
+                    </div>
+                    
+                    <!-- Minifigure Details -->
+                    <div class="p-1.5 flex flex-col flex-grow bg-white">
+                        <h3 onclick="openProductModal(${p.id})" class="font-black text-[9px] text-gray-900 line-clamp-1 mb-0.5 cursor-pointer hover:text-[#ea580c] font-['Plus_Jakarta_Sans'] leading-tight">${p.title}</h3>
+                        <div onclick="openProductModal(${p.id})" class="mt-auto mb-1.5 cursor-pointer flex flex-col">
+                            <span class="font-black text-[10px] text-[#ea580c] leading-none mb-0.5">${priceKHR.toLocaleString()}៛</span>
+                            <span class="font-bold text-[8px] text-gray-400 leading-none">$${priceUSD.toFixed(2)}</span>
+                        </div>
+                        
+                        <!-- Quick Add Button -->
+                        <button onclick="quickAddToCart(${p.id}, ${baseStock <= 0})" class="w-full py-1.5 rounded text-white text-[8px] font-black uppercase tracking-widest transition-all active:scale-95 ${baseStock <= 0 ? 'bg-[#ea580c] shadow-md shadow-orange-500/20' : 'bg-black shadow-md shadow-black/20'}">
+                            ${baseStock <= 0 ? 'Pre-Order' : '<i class="fa-solid fa-cart-plus"></i> Add'}
+                        </button>
+                    </div>
+                </div>`;
+            }
+            
+            // ==========================================
+            // STANDARD BUILDING SETS CARD LAYOUT
+            // ==========================================
             const statusBadge = baseStock > 0 
                 ? `<div class="absolute top-2 left-2 z-20 bg-green-500 text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-md">In Stock</div>`
                 : `<div class="absolute top-2 left-2 z-20 bg-[#ea580c] text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-md animate-pulse">Pre-Order</div>`;
 
-            // Changed aspect-[4/5] to aspect-square and added bg-white for PNG safety
             return `
             <div onclick="openProductModal(${p.id})" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-all hover:shadow-xl group relative">
                 ${statusBadge}
@@ -443,6 +493,20 @@
                 </div>
             </div>`;
         }).join('');
+    }
+
+    // --- QUICK ADD TO CART (For Minifigures Grid) ---
+    function quickAddToCart(id, isPreOrder) {
+        // Load the product quietly
+        currentModalProduct = allProducts.find(p => p.id === id);
+        currentVariantIndex = 0; 
+        modalQty = 1;
+        
+        if (isPreOrder) {
+            showPreOrderReminder();
+        } else {
+            performAddToCart(false);
+        }
     }
 
     function openProductModal(id) {
@@ -507,13 +571,11 @@
         document.getElementById('product-modal').classList.remove('translate-y-full');
     }
 
-    // Dynamic Logic: Updates UI status and configures the Add to Cart button behavior
     function updateModalStockStatus(stock) {
         const stockEl = document.getElementById('modal-stock');
         const actionBtn = document.getElementById('add-to-cart-btn');
         
         if(parseInt(stock) > 0) {
-            // IN STOCK
             stockEl.innerText = "In Stock"; 
             stockEl.className = "text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block";
             
@@ -521,7 +583,6 @@
             actionBtn.innerHTML = `<i class="fa-solid fa-cart-plus"></i> បញ្ចូលទៅកន្ត្រក`;
             actionBtn.onclick = () => performAddToCart(false);
         } else {
-            // PRE ORDER
             stockEl.innerText = "Pre-Order Available"; 
             stockEl.className = "text-xs font-black text-[#ea580c] bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100 inline-block animate-pulse";
             
@@ -603,7 +664,6 @@
 
     function closeProductModal() { document.getElementById('product-modal').classList.add('translate-y-full'); }
 
-    // --- PRE-ORDER MODAL LOGIC ---
     function showPreOrderReminder() {
         document.getElementById('pre-order-modal').classList.remove('hidden');
         document.getElementById('pre-order-modal').classList.add('flex');
@@ -616,10 +676,9 @@
 
     function confirmPreOrder() {
         closePreOrderReminder();
-        performAddToCart(true); // Proceed to cart flag
+        performAddToCart(true); 
     }
 
-    // --- CORE ADD TO CART LOGIC ---
     function performAddToCart(isPreOrder) {
         if(!currentModalProduct) return;
         
@@ -631,7 +690,7 @@
         let dbId, price, image, stock, styleName;
 
         if(variants.length > 0) {
-            const v = variants[0]; // ALWAYS USE VARIANT 0 AS MASTER TEMPLATE
+            const v = variants[0];
             dbId = `${currentModalProduct.id}-0`;
             price = parseFloat(v.price) * RATE;
             image = v.image || currentModalProduct.thumbnail;
@@ -645,7 +704,6 @@
             styleName = "Standard Base";
         }
 
-        // Tag style label heavily if pre-ordered
         if(isPreOrder || (stock <= 0 && !styleName.includes('PRE-ORDER'))) {
             styleName = "[PRE-ORDER] " + styleName;
         }
@@ -669,7 +727,6 @@
         setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500);
     }
 
-    // --- UNIFIED CART DRAWER LOGIC ---
     function openCartDrawer() { renderCartUI(); document.getElementById('cart-drawer').classList.remove('translate-y-full'); }
     function closeCartDrawer() { document.getElementById('cart-drawer').classList.add('translate-y-full'); }
 
@@ -793,7 +850,6 @@
     function removeCartItem(id) { if(confirm("លុបចេញពីកន្ត្រក?")) { userCart = userCart.filter(i => i.id !== id); saveCart(); renderCartUI(); updateCartBadge(); } }
     function saveCart() { localStorage.setItem('sr_cart', JSON.stringify(userCart)); }
 
-    // --- CHECKOUT LOGIC ---
     function openCheckout() {
         const selectedItems = userCart.filter(i => i.selected);
         if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយដើម្បីបន្ត!");
