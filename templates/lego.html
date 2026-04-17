@@ -41,6 +41,12 @@
     
     /* Smooth shadow for sticky headers inside modal */
     .sticky-shadow { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025); }
+    
+    @keyframes bounce-in {
+        0% { transform: scale(0.9); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-bounce-in { animation: bounce-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
   </style>
 </head>
 <body class="text-gray-900 pb-20">
@@ -48,37 +54,64 @@
   <div class="pka-chan-bg"></div>
 
   <!-- TOAST NOTIFICATION -->
-  <div id="toast" style="pointer-events: none;" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[4000] bg-black/90 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl opacity-0 transition-opacity duration-200 scale-90">
+  <div id="toast" style="pointer-events: none;" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[8000] bg-black/90 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl opacity-0 transition-opacity duration-200 scale-90">
     <i id="toast-icon" class="fa-solid fa-circle-check text-green-400"></i>
     <span id="toast-text" class="text-xs font-bold uppercase tracking-widest font-['Kantumruy_Pro']">Added</span>
   </div>
 
   <!-- LOADING OVERLAY -->
-  <div id="loadingOverlay" style="display: none;" class="fixed inset-0 z-[5000] bg-black/90 backdrop-blur-md hidden flex-col items-center justify-center text-white">
+  <div id="loadingOverlay" style="display: none;" class="fixed inset-0 z-[9000] bg-black/90 backdrop-blur-md hidden flex-col items-center justify-center text-white">
       <div class="w-12 h-12 border-4 border-[#ea580c] border-t-transparent rounded-full animate-spin mb-4"></div>
       <p class="text-xs font-black uppercase tracking-[0.3em] font-['Moul']">កំពុងរៀបចំ...</p>
+  </div>
+
+  <!-- PRE-ORDER REMINDER POPUP -->
+  <div id="pre-order-modal" class="fixed inset-0 z-[7000] bg-black/80 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+      <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl relative overflow-hidden animate-bounce-in">
+          <div class="absolute top-0 left-0 w-full h-2 bg-[#ea580c]"></div>
+          <div class="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm -mt-2">
+              <i class="fa-solid fa-box-open text-2xl text-[#ea580c]"></i>
+          </div>
+          <h3 class="text-lg font-black text-center text-gray-900 mb-3 font-['Moul']">បញ្ជាក់ការកក់ទុកមុន</h3>
+          <p class="text-sm font-medium text-gray-600 text-center leading-relaxed font-['Plus_Jakarta_Sans'] mb-4">
+              អតិថិជនជាទីស្រឡាញ់ដោយទំនិញរបស់លោកអ្នកបានជ្រើសរើសជាទំនិញប្រភេទ <span class="font-black text-[#ea580c]">Pre Order</span>។<br><br>
+              ដូចនេះ ខាងយើងតម្រូវឱ្យលោកអ្នកធ្វើការកក់ប្រាក់ <span class="font-black text-gray-900">50%</span> នៃតម្លៃសរុបនៃទំនិញ។ បន្ទាប់ពីការកក់ប្រាក់រួចលោកអ្នកនឹងទទួលបានអីវ៉ាន់ក្នុងរយៈពេលពី <span class="font-black text-gray-900">14-20ថ្ងៃ</span>។<br><br>
+              ព័ត័មានបន្ថែមសូមទាក់ទងមកកាន់៖<br>
+              <a href="https://t.me/Somphea_Reak" target="_blank" class="inline-flex items-center justify-center gap-1.5 text-[#0088cc] font-black mt-2 bg-blue-50 border border-blue-100 px-4 py-2 rounded-xl active:scale-95 transition-transform"><i class="fa-brands fa-telegram text-xl"></i> t.me/Somphea_Reak</a>
+          </p>
+          <div class="grid grid-cols-2 gap-3 mt-6">
+              <button onclick="closePreOrderReminder()" class="py-3 px-4 bg-gray-100 text-gray-700 font-bold rounded-xl active:scale-95 transition-transform text-sm">បោះបង់</button>
+              <button onclick="confirmPreOrder()" class="py-3 px-4 bg-[#ea580c] text-white font-black rounded-xl active:scale-95 transition-transform shadow-lg shadow-orange-500/30 text-sm">យល់ព្រម</button>
+          </div>
+      </div>
   </div>
 
   <!-- IMAGE VIEWER MODAL -->
   <div id="image-viewer-modal" class="fixed inset-0 z-[6000] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
       <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
-      <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl mb-6">
+      <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl mb-6 bg-white p-2">
   </div>
 
-  <!-- 🌟 UNIFIED HEADER 🌟 -->
-  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 sm:px-4 py-3 flex items-center justify-between shadow-sm">
+  <!-- 🌟 UNIFIED HEADER WITH DUAL LOGOS 🌟 -->
+  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 py-3 flex items-center justify-between shadow-sm">
     <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0">
         <i class="fa-solid fa-arrow-left"></i>
     </a>
     
-    <div class="flex items-center justify-center flex-1 px-2 gap-2.5 min-w-0">
-        <img src="static/images/logo.png" onerror="this.src='static/images/logo.jpg'" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-sm shrink-0" alt="Logo">
-        <div class="flex flex-col justify-center text-left">
-            <h1 class="text-[15px] sm:text-lg font-black text-gray-900 leading-normal tracking-tight font-['Moul'] pb-0.5">
-                សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-sm sm:text-base whitespace-nowrap">- Somphea Reak</span>
+    <div class="flex items-center justify-center flex-1 px-1 gap-2 min-w-0">
+        <!-- Main Logo -->
+        <img src="static/images/logo.png" onerror="this.src='static/images/logo.jpg'" class="w-9 h-9 sm:w-11 sm:h-11 object-contain drop-shadow-sm shrink-0 rounded-full border border-gray-100" alt="Somphea Reak Logo">
+        
+        <!-- Center Title -->
+        <div class="flex flex-col justify-center text-center">
+            <h1 class="text-[12px] sm:text-[14px] font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5 whitespace-nowrap">
+                សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-[10px] sm:text-xs">- Somphea Reak</span>
             </h1>
-            <p class="text-[10px] font-bold text-[#ea580c] uppercase tracking-widest leading-none">LEGO Collection</p>
+            <p class="text-[9px] sm:text-[10px] font-bold text-[#ea580c] uppercase tracking-widest leading-none">LEGO Collection</p>
         </div>
+
+        <!-- LEGO Logo -->
+        <img src="static/images/lego.jpg" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/2/24/LEGO_logo.svg'" class="w-9 h-9 sm:w-11 sm:h-11 object-contain drop-shadow-sm shrink-0 rounded-md border border-gray-100" alt="LEGO Logo">
     </div>
     
     <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0">
@@ -123,7 +156,8 @@
               <button onclick="closeProductModal()" class="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark"></i></button>
           </div>
           
-          <div class="flex-1 overflow-y-auto pt-14 pb-6 scrollbar-hide relative bg-gray-50" id="modal-body">
+          <!-- Made deeply scrollable -->
+          <div class="flex-1 overflow-y-auto pt-14 pb-12 scrollbar-hide relative bg-gray-50" id="modal-body">
               <div class="sticky top-0 z-20 bg-white border-b border-gray-100 sticky-shadow">
                   <div id="modal-image-carousel" class="w-full h-[35vh] flex overflow-x-auto snap-x snap-mandatory scrollbar-hide relative" onscroll="handleCarouselScroll()">
                       <!-- Images injected here by JS -->
@@ -172,8 +206,9 @@
                   <span id="modal-qty" class="font-black text-base w-6 text-center">1</span>
                   <button onclick="updateModalQty(1)" class="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm text-gray-600 active:scale-95"><i class="fa-solid fa-plus"></i></button>
               </div>
-              <button onclick="addToCartFromModal()" class="flex-1 bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
-                  <i class="fa-solid fa-cart-plus"></i> បញ្ចូលទៅកន្ត្រក
+              <!-- Dynamic Button Text (In Stock vs Pre-Order) -->
+              <button id="add-to-cart-btn" class="flex-1 text-white font-black rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
+                  <!-- Injected via JS -->
               </button>
           </div>
       </div>
@@ -376,28 +411,33 @@
                 try { variants = typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants; } catch(e){}
             }
             
-            const price = variants.length > 0 ? (variants[0].price * RATE) : (p.price * RATE);
+            const priceUSD = variants.length > 0 ? parseFloat(variants[0].price) : parseFloat(p.price);
+            const priceKHR = priceUSD * RATE;
             const image = variants.length > 0 ? variants[0].image : (p.image || p.thumbnail);
-            const isHot = index % 5 === 0;
             
-            // Check stock specifically for pre-order logic
+            // Check stock for Pre-Order vs In-Stock badge
             const baseStock = variants.length > 0 ? parseInt(variants[0].stock) : parseInt(p.stock || 0);
             
-            // PRE-ORDER BADGE instead of sold out
-            const preOrderBadge = baseStock <= 0 ? `<div class="absolute top-2 right-2 z-20 bg-[#ea580c] text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-md">PRE-ORDER</div>` : '';
+            // Clear status badges
+            const statusBadge = baseStock > 0 
+                ? `<div class="absolute top-2 left-2 z-20 bg-green-500 text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-md">In Stock</div>`
+                : `<div class="absolute top-2 left-2 z-20 bg-[#ea580c] text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-md animate-pulse">Pre-Order</div>`;
 
+            // Changed aspect-[4/5] to aspect-square and added bg-white for PNG safety
             return `
             <div onclick="openProductModal(${p.id})" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-all hover:shadow-xl group relative">
-                ${preOrderBadge}
-                <div class="aspect-[4/5] bg-gray-50 relative overflow-hidden flex items-center justify-center p-2">
-                    ${isHot ? `<div class="absolute top-2 left-2 z-10 bg-red-500 text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-md animate-pulse">HOT</div>` : ''}
-                    <img src="${image}" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                ${statusBadge}
+                <div class="aspect-square bg-white relative overflow-hidden flex items-center justify-center p-2 border-b border-gray-50">
+                    <img src="${image}" class="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
                 <div class="p-3 flex flex-col flex-grow bg-white relative z-10">
                     <h3 class="font-black text-xs text-gray-900 line-clamp-2 mb-1 font-['Plus_Jakarta_Sans'] leading-tight group-hover:text-[#ea580c] transition-colors">${p.title}</h3>
                     <div class="mt-auto flex justify-between items-end pt-2">
-                        <span class="font-black text-sm text-[#ea580c]">${price.toLocaleString()}៛</span>
+                        <div>
+                            <span class="font-black text-sm text-[#ea580c] block leading-none">${priceKHR.toLocaleString()}៛</span>
+                            <span class="font-bold text-[10px] text-gray-400">$${priceUSD.toFixed(2)}</span>
+                        </div>
                         <div class="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center text-gray-900 group-hover:bg-[#ea580c] group-hover:text-white transition-colors shadow-sm"><i class="fa-solid fa-plus text-[10px]"></i></div>
                     </div>
                 </div>
@@ -423,35 +463,41 @@
         const varSection = document.getElementById('variant-section');
         const varGrid = document.getElementById('variant-grid');
         
+        let targetStock = 0;
+        
         if(variants.length > 0) {
             carousel.innerHTML = variants.map(v => `
-                <div class="min-w-full h-full snap-center relative cursor-pointer" onclick="openImageViewer('${v.image || currentModalProduct.thumbnail}')">
+                <div class="min-w-full h-full snap-center relative cursor-pointer bg-white" onclick="openImageViewer('${v.image || currentModalProduct.thumbnail}')">
                     <img src="${v.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain p-2">
-                    <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-sm"></i></div>
+                    <div class="absolute top-4 right-4 bg-gray-100/90 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-sm"></i></div>
                 </div>
             `).join('');
 
             varSection.classList.remove('hidden');
             varGrid.innerHTML = variants.map((v, i) => `
-                <div onclick="selectGalleryImage(${i})" class="variant-btn w-full aspect-[4/5] bg-gray-50 rounded-xl border-2 ${i === 0 ? 'border-[#ea580c]' : 'border-gray-100 hover:border-gray-300'} overflow-hidden cursor-pointer p-1 transition-colors relative">
+                <div onclick="selectGalleryImage(${i})" class="variant-btn w-full aspect-square bg-white rounded-xl border-2 ${i === 0 ? 'border-[#ea580c]' : 'border-gray-100 hover:border-gray-300'} overflow-hidden cursor-pointer p-1 transition-colors relative">
                     ${i === 0 ? '<div class="absolute top-1 right-1 w-2 h-2 bg-[#ea580c] rounded-full border border-white"></div>' : ''}
-                    <img src="${v.image || currentModalProduct.thumbnail}" class="w-full h-full object-cover rounded-lg">
+                    <img src="${v.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain rounded-lg">
                 </div>
             `).join('');
             
-            document.getElementById('modal-price').innerText = (parseFloat(variants[0].price) * RATE).toLocaleString() + '៛';
-            updateModalStockStatus(variants[0].stock);
+            const priceUSD = parseFloat(variants[0].price);
+            document.getElementById('modal-price').innerHTML = `${(priceUSD * RATE).toLocaleString()}៛ <span class="text-sm text-gray-400 font-bold ml-1">$${priceUSD.toFixed(2)}</span>`;
+            targetStock = variants[0].stock;
         } else {
             varSection.classList.add('hidden');
             carousel.innerHTML = `
-                <div class="min-w-full h-full snap-center relative cursor-pointer" onclick="openImageViewer('${currentModalProduct.image || currentModalProduct.thumbnail}')">
+                <div class="min-w-full h-full snap-center relative cursor-pointer bg-white" onclick="openImageViewer('${currentModalProduct.image || currentModalProduct.thumbnail}')">
                     <img src="${currentModalProduct.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain p-2">
-                    <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-sm"></i></div>
+                    <div class="absolute top-4 right-4 bg-gray-100/90 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-sm"></i></div>
                 </div>
             `;
-            document.getElementById('modal-price').innerText = (parseFloat(currentModalProduct.price) * RATE).toLocaleString() + '៛';
-            updateModalStockStatus(currentModalProduct.stock);
+            const priceUSD = parseFloat(currentModalProduct.price);
+            document.getElementById('modal-price').innerHTML = `${(priceUSD * RATE).toLocaleString()}៛ <span class="text-sm text-gray-400 font-bold ml-1">$${priceUSD.toFixed(2)}</span>`;
+            targetStock = currentModalProduct.stock;
         }
+        
+        updateModalStockStatus(targetStock);
         
         isProgrammaticScroll = true;
         carousel.scrollLeft = 0;
@@ -461,15 +507,27 @@
         document.getElementById('product-modal').classList.remove('translate-y-full');
     }
 
-    // Displays Pre-Order logic in Modal
+    // Dynamic Logic: Updates UI status and configures the Add to Cart button behavior
     function updateModalStockStatus(stock) {
         const stockEl = document.getElementById('modal-stock');
+        const actionBtn = document.getElementById('add-to-cart-btn');
+        
         if(parseInt(stock) > 0) {
+            // IN STOCK
             stockEl.innerText = "In Stock"; 
             stockEl.className = "text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block";
+            
+            actionBtn.className = "flex-1 bg-black text-white font-black rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']";
+            actionBtn.innerHTML = `<i class="fa-solid fa-cart-plus"></i> បញ្ចូលទៅកន្ត្រក`;
+            actionBtn.onclick = () => performAddToCart(false);
         } else {
+            // PRE ORDER
             stockEl.innerText = "Pre-Order Available"; 
-            stockEl.className = "text-xs font-black text-[#ea580c] bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100 inline-block";
+            stockEl.className = "text-xs font-black text-[#ea580c] bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100 inline-block animate-pulse";
+            
+            actionBtn.className = "flex-1 bg-[#ea580c] shadow-orange-500/30 text-white font-black rounded-2xl shadow-xl uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']";
+            actionBtn.innerHTML = `<i class="fa-solid fa-box-open"></i> ធ្វើការកក់ទុកមុន`;
+            actionBtn.onclick = () => showPreOrderReminder();
         }
     }
 
@@ -516,16 +574,16 @@
 
         const grid = document.getElementById('recommendations-grid');
         grid.innerHTML = shuffled.map(p => {
-            const price = p.parsed_variants && p.parsed_variants.length > 0 ? (p.parsed_variants[0].price * RATE) : (p.price * RATE);
+            const priceUSD = p.parsed_variants && p.parsed_variants.length > 0 ? parseFloat(p.parsed_variants[0].price) : parseFloat(p.price);
             const image = p.parsed_variants && p.parsed_variants.length > 0 ? p.parsed_variants[0].image : (p.image || p.thumbnail);
             return `
             <div onclick="swapToRecommendation(${p.id})" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-all hover:border-[#ea580c]">
-                <div class="aspect-[4/5] bg-gray-50 relative p-2">
-                    <img src="${image}" class="w-full h-full object-contain mix-blend-multiply">
+                <div class="aspect-square bg-white relative p-2 border-b border-gray-50">
+                    <img src="${image}" class="w-full h-full object-contain">
                 </div>
                 <div class="p-2 flex flex-col flex-grow bg-white">
                     <h3 class="font-bold text-[10px] text-gray-700 line-clamp-1 mb-1 font-['Plus_Jakarta_Sans'] leading-tight">${p.title}</h3>
-                    <span class="font-black text-xs text-[#ea580c] mt-auto">${price.toLocaleString()}៛</span>
+                    <span class="font-black text-xs text-[#ea580c] mt-auto">${(priceUSD * RATE).toLocaleString()}៛</span>
                 </div>
             </div>`;
         }).join('');
@@ -545,8 +603,24 @@
 
     function closeProductModal() { document.getElementById('product-modal').classList.add('translate-y-full'); }
 
-    // PRE-ORDER & CART LOGIC
-    function addToCartFromModal() {
+    // --- PRE-ORDER MODAL LOGIC ---
+    function showPreOrderReminder() {
+        document.getElementById('pre-order-modal').classList.remove('hidden');
+        document.getElementById('pre-order-modal').classList.add('flex');
+    }
+
+    function closePreOrderReminder() {
+        document.getElementById('pre-order-modal').classList.add('hidden');
+        document.getElementById('pre-order-modal').classList.remove('flex');
+    }
+
+    function confirmPreOrder() {
+        closePreOrderReminder();
+        performAddToCart(true); // Proceed to cart flag
+    }
+
+    // --- CORE ADD TO CART LOGIC ---
+    function performAddToCart(isPreOrder) {
         if(!currentModalProduct) return;
         
         let variants = currentModalProduct.parsed_variants || [];
@@ -571,8 +645,8 @@
             styleName = "Standard Base";
         }
 
-        // Apply Pre-Order label if stock is 0 (so you can see it easily in admin)
-        if(stock <= 0 && !styleName.includes('PRE-ORDER')) {
+        // Tag style label heavily if pre-ordered
+        if(isPreOrder || (stock <= 0 && !styleName.includes('PRE-ORDER'))) {
             styleName = "[PRE-ORDER] " + styleName;
         }
 
@@ -590,7 +664,7 @@
         saveCart(); updateCartBadge();
         
         const toast = document.getElementById('toast');
-        document.getElementById('toast-text').innerText = "Added to Cart";
+        document.getElementById('toast-text').innerText = isPreOrder ? "Pre-Order Added" : "Added to Cart";
         toast.classList.remove('opacity-0', 'scale-90'); 
         setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500);
     }
@@ -627,7 +701,6 @@
                             <span class="text-[10px] font-bold tracking-widest uppercase font-['Kantumruy_Pro']"><i class="fa-solid fa-gem text-orange-400 mr-1"></i> ${item.charms.length} Charms</span>
                             <span class="text-sm font-black text-orange-400">${itemTotal.toLocaleString()}៛</span>
                         </div>
-                        <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full w-7 h-7 flex items-center justify-center text-gray-800 shadow-sm opacity-80 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-expand text-[10px]"></i></div>
                     </div>
                     <div class="p-3">
                         <div class="flex justify-between items-start mb-2">
@@ -637,7 +710,6 @@
                                     <h4 class="font-black text-sm text-gray-900 leading-tight">Custom Bracelet #${customIndex++}</h4>
                                     <p class="text-[10px] font-bold text-gray-500 mt-1 uppercase tracking-widest flex items-center">
                                         Code: <span class="font-mono text-gray-800 ml-1">${item.code.substring(0,8)}</span>
-                                        <button type="button" onclick="copyCode('${item.code}')" class="text-gray-400 hover:text-orange-500 ml-2 p-1 active:scale-90"><i class="fa-regular fa-copy"></i></button>
                                     </p>
                                 </div>
                             </label>
@@ -646,9 +718,6 @@
                         <div class="flex justify-between items-center mt-3">
                             <button onclick="window.location.href='/custom_bracelet'" class="text-[10px] bg-blue-50 text-blue-600 px-3 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors font-black uppercase tracking-widest shadow-sm active:scale-95"><i class="fa-solid fa-pen-ruler mr-1"></i> Edit Design</button>
                             <div class="flex items-center gap-2">
-                                <div class="bg-orange-50 text-orange-600 text-[9px] font-black uppercase tracking-widest px-2 py-1.5 rounded-lg border border-orange-100 flex items-center gap-1 shadow-sm mr-1">
-                                    <i class="fa-solid ${item.pkgName === 'Premium Box' ? 'fa-gift text-orange-500' : 'fa-box-open text-gray-500'}"></i> ${item.pkgName || 'Normal'}
-                                </div>
                                 <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-1 border border-gray-100">
                                     <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
                                     <span class="font-black text-xs w-4 text-center">${item.qty}</span>
@@ -667,9 +736,9 @@
                     <label class="flex items-start gap-3 cursor-pointer">
                         <input type="checkbox" class="cart-checkbox mt-2 ml-1" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
                     </label>
-                    <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden cursor-pointer" onclick="openImageViewer('${item.image}')">
+                    <div class="w-20 h-24 bg-white rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden cursor-pointer" onclick="openImageViewer('${item.image}')">
                         <img src="${item.image}" class="max-w-full max-h-full object-contain">
-                        <div class="absolute top-1 right-1 bg-white/80 backdrop-blur-sm rounded-full w-5 h-5 flex flex-col items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-[9px]"></i></div>
+                        <div class="absolute top-1 right-1 bg-gray-100/80 backdrop-blur-sm rounded-full w-5 h-5 flex flex-col items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-[9px]"></i></div>
                     </div>
                     <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
                         <div>
@@ -677,8 +746,8 @@
                                 <h4 class="font-black text-xs text-gray-900 leading-tight truncate pr-2">${item.title}</h4>
                                 <button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 -mt-1 -mr-1 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
                             </div>
-                            <p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">
-                                ${item.style.includes('PRE-ORDER') ? `<span class="text-[#ea580c]">${item.style}</span>` : item.style}
+                            <p class="text-[9px] font-bold mt-0.5 uppercase tracking-widest truncate">
+                                ${item.style.includes('PRE-ORDER') ? `<span class="text-[#ea580c] bg-orange-50 px-1 py-0.5 rounded border border-orange-100">${item.style}</span>` : `<span class="text-gray-400">${item.style}</span>`}
                             </p>
                         </div>
                         <div class="flex justify-between items-end mt-2">
