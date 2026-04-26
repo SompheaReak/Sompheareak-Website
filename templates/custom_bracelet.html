@@ -139,6 +139,11 @@
         content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
         width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
     }
+
+    /* All Charms Scrolling Style Helper */
+    .style-2-item {
+        aspect-ratio: 3/4;
+    }
   </style>
 </head>
 <body class="text-gray-900 overflow-x-hidden">
@@ -157,8 +162,33 @@
       <p id="loadingText" class="text-xs font-black uppercase tracking-[0.3em] font-['Moul']">កំពុងរៀបចំ...</p>
   </div>
 
+  <!-- SIZE WARNING MODAL -->
+  <div id="sizeWarningModal" style="display: none;" class="fixed inset-0 z-[6000] bg-black/60 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+      <div class="bg-white w-full max-w-sm rounded-2xl p-6 relative shadow-2xl flex flex-col gap-4 text-center transform transition-transform animate-[pop_0.3s_ease-out]">
+          <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-[#ea580c] text-3xl mx-auto mb-2">
+              <i class="fa-solid fa-ruler"></i>
+          </div>
+          <h3 class="text-lg font-black text-[#ea580c] font-['Moul']" data-i18n="size_warning_title">ខ្សែដៃរបស់អ្នកមានទំហំតូច</h3>
+          <p class="text-sm font-bold text-gray-600 leading-relaxed font-['Kantumruy_Pro']" data-i18n="size_warning_desc">
+              យើងណែនាំឱ្យអ្នករើស៖<br>
+              <span class="text-[#ea580c] text-base font-black block mt-1">17-18 គ្រាប់ (ប្រុស)</span>
+              <span class="text-[#ea580c] text-base font-black block">16-17 គ្រាប់ (ស្រី)</span>
+              <span class="text-[10px] text-gray-400 mt-2 block">ព័ត៍មានបន្ថែមអាចពិចារណាតាមតារាងខាងក្រោម<br>(ចុចលើរូបភាពដើម្បីមើលពេញ)</span>
+          </p>
+          
+          <div class="w-full h-32 bg-gray-50 rounded-xl overflow-hidden cursor-pointer border border-gray-200 shadow-sm" onclick="openImageViewer('static/images/size_guide.jpg')">
+              <img src="static/images/size_guide.jpg" onerror="this.src='https://images.unsplash.com/photo-1616401784845-180882ba9ba8?auto=format&fit=crop&q=80&w=600'" class="w-full h-full object-cover hover:scale-105 transition-transform" alt="Size Guide">
+          </div>
+          
+          <div class="flex gap-2 mt-2">
+              <button onclick="closeSizeWarning()" class="flex-1 bg-gray-100 text-gray-600 font-black py-3.5 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-transform font-['Kantumruy_Pro']" data-i18n="btn_back">ថយក្រោយ</button>
+              <button onclick="proceedToPackaging()" class="flex-1 bg-[#ea580c] text-white font-black py-3.5 rounded-xl uppercase text-[10px] tracking-widest shadow-lg shadow-orange-500/30 active:scale-95 transition-transform font-['Kantumruy_Pro']" data-i18n="btn_continue">បន្ត</button>
+          </div>
+      </div>
+  </div>
+
   <!-- IMAGE VIEWER MODAL -->
-  <div id="image-viewer-modal" class="fixed inset-0 z-[5000] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+  <div id="image-viewer-modal" class="fixed inset-0 z-[7000] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
       <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
       <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl mb-6">
   </div>
@@ -308,18 +338,29 @@
     </div>
   </section>
 
-  <!-- CATEGORIES -->
+  <!-- CATEGORIES & CHARMS (WITH LAYOUT SWITCH) -->
   <section class="p-4 pb-48">
     <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2">
             <span class="romdul-icon" style="width:16px; height:16px;"></span>
-            <h4 class="text-[12px] text-gray-600 uppercase tracking-[0.1em] font-['Moul']" data-i18n="collection_title">ក្រុមកូឡិកសិន</h4>
+            <h4 id="collection-title-text" class="text-[12px] text-gray-600 uppercase tracking-[0.1em] font-['Moul']" data-i18n="collection_title">ក្រុមកូឡិកសិន</h4>
+        </div>
+        
+        <!-- TWO STYLE SWITCHER -->
+        <div class="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200 shadow-inner">
+            <button onclick="setDisplayStyle(1)" id="btn-style-1" class="px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all">Style 1</button>
+            <button onclick="setDisplayStyle(2)" id="btn-style-2" class="px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all">Style 2</button>
         </div>
     </div>
+    
+    <!-- STYLE 1: CATEGORY GALLERY -->
     <div id="categoryGallery" class="grid grid-cols-6 gap-2"></div>
+    
+    <!-- STYLE 2: ALL CHARMS (10 PER ROW SCROLLING) -->
+    <div id="allCharmsGallery" class="gap-1" style="display: none; grid-template-columns: repeat(10, minmax(0, 1fr));"></div>
   </section>
 
-  <!-- CHARM SELECTOR DRAWER -->
+  <!-- CHARM SELECTOR DRAWER (For Style 1) -->
   <div id="drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[200] translate-y-full pointer-events-none">
     <div class="absolute inset-0 bg-transparent transition-opacity pointer-events-auto" onclick="closeDrawer()"></div>
     <div class="absolute bottom-0 left-0 right-0 h-[55vh] bg-white rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden border-t border-gray-100 pointer-events-auto">
@@ -340,12 +381,19 @@
   </div>
 
   <!-- ADD TO CART BAR -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-4 z-[110] safe-area-pb">
-    <div class="max-w-md mx-auto flex gap-3">
-        <button onclick="addRandom()" class="w-14 h-14 flex-shrink-0 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-2xl text-gray-400 active:scale-90 transition-transform hover:bg-gray-100">
+  <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-3 sm:p-4 z-[110] safe-area-pb">
+    <div class="max-w-md mx-auto flex gap-2 sm:gap-3">
+        <!-- TELEGRAM BUTTON -->
+        <a href="https://t.me/your_telegram_username" target="_blank" class="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 flex items-center justify-center bg-[#e0f2fe] border border-[#bae6fd] rounded-2xl text-[#0284c7] active:scale-90 transition-transform shadow-sm hover:bg-[#bae6fd]">
+            <i class="fa-brands fa-telegram text-2xl"></i>
+        </a>
+        
+        <button onclick="addRandom()" class="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-2xl text-gray-400 active:scale-90 transition-transform hover:bg-gray-100">
             <i class="fa-solid fa-shuffle text-lg"></i>
         </button>
-        <button onclick="startPackagingFlow()" id="save-design-btn" disabled class="flex-grow bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
+        
+        <!-- Modified onclick to intercept size check -->
+        <button onclick="checkSizeBeforePackaging()" id="save-design-btn" disabled class="flex-grow bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
             <i class="fa-solid fa-cart-plus text-sm"></i>
             <span data-i18n="checkout_btn">បញ្ចូលទៅកន្ត្រក</span>
         </button>
@@ -511,6 +559,7 @@
             placeholder_load: "Paste Code នៅទីនេះ",
             hint_drag: "ចុចជាប់លើគ្រាប់ដើម្បីអូសប្តូរទីតាំង • ចុចម្ដងដើម្បីជ្រើសរើស",
             collection_title: "ប្រភេទគ្រាប់",
+            all_charms: "ត្បូងទាំងអស់",
             select_charm_title: "ជ្រើសរើសគ្រាប់",
             checkout_btn: "បញ្ជូលទៅកន្ត្រក",
             tutorial_title: "របៀបកម្ម៉ង់?",
@@ -540,7 +589,11 @@
             confirm_order: "បញ្ជាក់ការកម្ម៉ង់",
             name_ph: "ឈ្មោះរបស់អ្នក",
             phone_ph: "លេខទូរស័ព្ទ (ឧ. 012345678)",
-            address_ph: "អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ"
+            address_ph: "អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ",
+            size_warning_title: "ខ្សែដៃរបស់អ្នកមានទំហំតូច",
+            size_warning_desc: "យើងណែនាំឱ្យអ្នករើស៖<br><span class=\"text-[#ea580c] text-base font-black block mt-1\">17-18 គ្រាប់ (ប្រុស)</span><span class=\"text-[#ea580c] text-base font-black block\">16-17 គ្រាប់ (ស្រី)</span><span class=\"text-[10px] text-gray-400 mt-2 block\">ព័ត៍មានបន្ថែមអាចពិចារណាតាមតារាងខាងក្រោម<br>(ចុចលើរូបភាពដើម្បីមើលពេញ)</span>",
+            btn_back: "ថយក្រោយ",
+            btn_continue: "បន្ត"
         },
         EN: {
             brand_name: "Somphea Reak",
@@ -561,6 +614,7 @@
             placeholder_load: "Paste code to load...",
             hint_drag: "Hold and Drag to reorder • Tap once to select",
             collection_title: "Collections",
+            all_charms: "All Charms",
             select_charm_title: "Select Charm",
             checkout_btn: "Add to Cart",
             tutorial_title: "How to Order?",
@@ -590,12 +644,19 @@
             confirm_order: "Confirm & Send Order",
             name_ph: "Your Full Name",
             phone_ph: "Phone Number (Min. 8 digits)",
-            address_ph: "Full Delivery Address & Details"
+            address_ph: "Full Delivery Address & Details",
+            size_warning_title: "Your Bracelet Is Too Small",
+            size_warning_desc: "We recommend:<br><span class=\"text-[#ea580c] text-base font-black block mt-1\">17-18 Charms (Men)</span><span class=\"text-[#ea580c] text-base font-black block\">16-17 Charms (Women)</span><span class=\"text-[10px] text-gray-400 mt-2 block\">See size guide below for more info<br>(Tap image to view full size)</span>",
+            btn_back: "Go Back",
+            btn_continue: "Continue"
         }
     };
 
     let currentLang = localStorage.getItem('app_lang') || 'KH';
     const RATE = 4000;
+    
+    // TRACK THE CURRENT CHARM DISPLAY STYLE (1 = Categories, 2 = All Charms)
+    let currentStyle = 1;
 
     let allCharms = [];
     let selectedCharms = [];
@@ -642,6 +703,8 @@
         });
 
         renderCategories();
+        if (currentStyle === 2) renderAllCharmsGallery();
+        setDisplayStyle(currentStyle); // Re-apply text/layout
         updateUI(); 
     }
 
@@ -727,6 +790,32 @@
         modal.classList.remove('modal-active'); modal.classList.add('modal-hidden');
     }
 
+    // --- TWO STYLES IMPLEMENTATION ---
+    function setDisplayStyle(style) {
+        currentStyle = style;
+        const btn1 = document.getElementById('btn-style-1');
+        const btn2 = document.getElementById('btn-style-2');
+        const catGallery = document.getElementById('categoryGallery');
+        const allGallery = document.getElementById('allCharmsGallery');
+        const titleText = document.getElementById('collection-title-text');
+
+        if (style === 1) {
+            btn1.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
+            btn2.className = "px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
+            catGallery.style.display = 'grid';
+            allGallery.style.display = 'none';
+            titleText.innerText = t('collection_title');
+        } else {
+            btn2.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
+            btn1.className = "px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
+            catGallery.style.display = 'none';
+            allGallery.style.display = 'grid';
+            titleText.innerText = t('all_charms');
+            if(!allGallery.innerHTML) renderAllCharmsGallery();
+        }
+    }
+
+    // STYLE 1 RENDER
     function renderCategories() {
         const categories = Array.from(new Set(allCharms.flatMap(c => c.categories)));
         document.getElementById('categoryGallery').innerHTML = categories.map(cat => {
@@ -739,6 +828,22 @@
                         <img src="${charm.image}" class="w-full h-full object-contain drop-shadow-sm relative z-10">
                     </div>
                     <span class="text-[7px] font-bold text-gray-500 uppercase truncate w-full text-center tracking-wide font-['Kantumruy_Pro']">${cat}</span>
+                </div>`;
+        }).join('');
+    }
+
+    // STYLE 2 RENDER
+    function renderAllCharmsGallery() {
+        const allGallery = document.getElementById('allCharmsGallery');
+        allGallery.innerHTML = allCharms.map(c => {
+            let isOut = (c.stock !== undefined && c.stock <= 0);
+            return `
+                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" class="relative style-2-item flex flex-col items-center justify-center p-0.5 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer overflow-hidden'}">
+                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[4px] px-0.5 py-0.5 rounded-bl shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
+                    <img src="${c.image}" class="w-full h-full object-contain drop-shadow-sm mb-[6px]">
+                    <div class="absolute bottom-0 inset-x-0 w-full text-center bg-gray-50/90 py-[2px] border-t border-gray-100">
+                        <p class="text-[5px] sm:text-[6px] font-black text-[#ea580c] truncate px-0.5">${(c.price / 1000).toFixed(0)}k</p>
+                    </div>
                 </div>`;
         }).join('');
     }
@@ -786,9 +891,13 @@
     }
 
     function removeCharm(uid, event) {
-        if(event) event.stopPropagation();
+        if(event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
         selectedCharms = selectedCharms.filter(c => c.uid !== uid);
-        selectedCharmUids = selectedCharmUids.filter(id => id !== uid); updateUI();
+        selectedCharmUids = selectedCharmUids.filter(id => id !== uid); 
+        updateUI();
     }
     
     function deleteSelectedCharms() {
@@ -817,8 +926,9 @@
     }
 
     // --- ENHANCED DRAG AND DROP REORDERING SYSTEM ---
-    
     function handlePointerDown(e, uid, index) {
+        if (e.target.closest('.remove-btn-anim')) return;
+
         const isSelected = selectedCharmUids.includes(uid);
         
         dragItem = e.currentTarget;
@@ -932,7 +1042,11 @@
                      class="bracelet-link-container group ${isSelected ? 'selected' : ''}" 
                      data-uid="${c.uid}">
                     <img src="${c.image}" draggable="false">
-                    <button onclick="removeCharm('${c.uid}', event)" class="remove-btn-anim w-7 h-7 bg-red-500 text-white rounded-full items-center justify-center text-[12px] shadow-lg z-50 hover:bg-red-600 active:scale-90 transition-transform"><i class="fa-solid fa-trash-can"></i></button>
+                    
+                    <button onpointerdown="removeCharm('${c.uid}', event)" onclick="event.stopPropagation()" class="remove-btn-anim w-7 h-7 bg-red-500 text-white rounded-full items-center justify-center text-[12px] shadow-lg z-50 hover:bg-red-600 active:scale-90 transition-transform cursor-pointer">
+                        <i class="fa-solid fa-trash-can pointer-events-none"></i>
+                    </button>
+                    
                     <div class="absolute top-1/2 -right-[2px] w-1 h-3 bg-gray-300/50 rounded-full transform -translate-y-1/2 -z-10 pointer-events-none"></div>
                 </div>`;
         }).join('');
@@ -982,6 +1096,47 @@
         if(confirm(currentLang === 'KH' ? "តើអ្នកចង់ជម្រះការរចនានេះមែនទេ?" : "Clear current design?")) {
             selectedCharms = []; selectedCharmUids = []; updateUI(); showToast(t('cleared'), 'text-red-400', 'fa-trash');
         }
+    }
+
+    // --- SIZE WARNING LOGIC ---
+    function checkSizeBeforePackaging() {
+        if (selectedCharms.length > 0 && selectedCharms.length <= 16) {
+            const modal = document.getElementById('sizeWarningModal');
+            modal.style.display = 'flex';
+            // Give a tiny delay for the display block to register before removing hidden class to allow animations
+            setTimeout(() => {
+                modal.classList.remove('hidden');
+            }, 10);
+        } else {
+            proceedToPackaging();
+        }
+    }
+
+    function closeSizeWarning() {
+        const modal = document.getElementById('sizeWarningModal');
+        modal.classList.add('hidden');
+        setTimeout(() => { modal.style.display = 'none'; }, 300); // Wait for transition
+    }
+
+    function proceedToPackaging() {
+        closeSizeWarning();
+        startPackagingFlow();
+    }
+
+    // --- IMAGE VIEWER FOR CART AND SIZE GUIDE ---
+    function openImageViewer(src) {
+        document.getElementById('viewer-img').src = src;
+        document.getElementById('image-viewer-modal').style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('image-viewer-modal').classList.remove('hidden');
+        }, 10);
+    }
+    
+    function closeImageViewer() {
+        document.getElementById('image-viewer-modal').classList.add('hidden');
+        setTimeout(() => {
+            document.getElementById('image-viewer-modal').style.display = 'none';
+        }, 300);
     }
 
     async function startPackagingFlow() {
