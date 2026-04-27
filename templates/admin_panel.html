@@ -100,6 +100,34 @@
         <span id="client-toast-msg">Success</span>
     </div>
 
+    <!-- Expense Tracker Modal -->
+    <div id="expense-modal" class="fixed inset-0 z-[5000] flex items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeExpenseModal()"></div>
+        <div class="bg-white w-full max-w-md rounded-[24px] relative shadow-2xl flex flex-col overflow-hidden animate-slide-up">
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h2 class="font-black text-lg text-gray-900"><i class="fa-solid fa-wallet text-red-500 mr-2"></i>Expense Tracker</h2>
+                <button onclick="closeExpenseModal()" class="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center hover:bg-red-50 hover:text-red-600 shadow-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 flex flex-col gap-4">
+                <div class="flex items-end gap-2">
+                    <div class="flex-1 space-y-1">
+                        <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">New Expense Amount (USD)</label>
+                        <input type="number" id="new-expense-amount" placeholder="0.00" class="input-box text-lg py-2">
+                    </div>
+                    <button onclick="addExpense()" class="bg-red-500 text-white px-4 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-red-600 shadow-md h-[42px] active:scale-95 transition-transform"><i class="fa-solid fa-plus mr-1"></i> Add</button>
+                </div>
+                
+                <div class="space-y-2 mt-2">
+                    <h3 class="text-[10px] font-black text-gray-800 uppercase tracking-widest">Expense History</h3>
+                    <div id="expense-list" class="max-h-[300px] overflow-y-auto space-y-2 pr-2 hide-scrollbar">
+                        <!-- Expenses go here -->
+                        <div class="text-center p-4 text-gray-400 text-xs font-bold" id="expense-empty-state">No expenses tracked yet.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <header class="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
         <div class="flex items-center gap-3 md:gap-4">
             <a href="/" class="w-8 h-8 md:w-10 md:h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition-all shadow-inner"><i class="fa-solid fa-store text-xs md:text-base"></i></a>
@@ -195,19 +223,21 @@
                     <div class="p-5 md:p-6 bg-green-50/50 rounded-2xl border border-green-100 shadow-inner flex flex-col justify-center relative overflow-hidden">
                         <i class="fa-solid fa-sack-dollar absolute -right-4 -bottom-4 text-6xl text-green-600/5"></i>
                         <p class="text-[10px] md:text-xs font-black text-green-600 uppercase tracking-widest">Total Income</p>
-                        <p class="text-[8px] md:text-[9px] font-bold text-green-500 mb-2">Calculated from Official Receipts</p>
+                        <p class="text-[8px] md:text-[9px] font-bold text-green-500 mb-2">Calculated from FULFILLED Orders</p>
                         <h4 class="text-3xl md:text-4xl font-black text-green-700 mt-1 flex items-center"><span class="text-xl md:text-2xl mr-1">$</span><span id="calc-income">0.00</span></h4>
                     </div>
 
                     <!-- Spending Card -->
                     <div class="p-5 md:p-6 bg-red-50/50 rounded-2xl border border-red-100 shadow-inner flex flex-col justify-center relative overflow-hidden">
                         <i class="fa-solid fa-wallet absolute -right-4 -bottom-4 text-6xl text-red-600/5"></i>
-                        <p class="text-[10px] md:text-xs font-black text-red-600 uppercase tracking-widest">Total Spend</p>
-                        <p class="text-[8px] md:text-[9px] font-bold text-red-500 mb-2">Enter your total expenses here</p>
-                        <div class="flex items-center mt-1 border-b-2 border-red-200 focus-within:border-red-500 transition-colors">
-                            <span class="text-3xl md:text-4xl font-black text-red-700 mr-1">$</span>
-                            <input type="number" id="calc-spend" value="" placeholder="0.00" class="text-3xl md:text-4xl font-black text-red-700 bg-transparent outline-none w-full spend-input" oninput="calculateProfit()">
+                        <div class="flex justify-between items-start z-10">
+                            <div>
+                                <p class="text-[10px] md:text-xs font-black text-red-600 uppercase tracking-widest">Total Spend</p>
+                                <p class="text-[8px] md:text-[9px] font-bold text-red-500 mb-2">Track your expenses</p>
+                            </div>
+                            <button onclick="openExpenseModal()" class="bg-red-100 text-red-600 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-[8px] md:text-[9px] font-black uppercase tracking-widest hover:bg-red-200 shadow-sm active:scale-95 transition-all"><i class="fa-solid fa-plus mr-1"></i> Add</button>
                         </div>
+                        <h4 class="text-3xl md:text-4xl font-black text-red-700 mt-1 flex items-center z-10"><span class="text-xl md:text-2xl mr-1">$</span><span id="calc-spend-display">0.00</span></h4>
                     </div>
 
                     <!-- Profit/Loss Card -->
@@ -497,7 +527,7 @@
 
                 <!-- Receipt Header (Logo & Brand) -->
                 <div class="text-center pb-4 border-b-2 border-dashed border-gray-200 pt-2">
-                    <img src="static/images/logo.png" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=ff5000&color=fff'" class="w-14 h-14 rounded-full mx-auto mb-2 object-cover shadow-sm border border-gray-100">
+                    <img src="static/images/logo.jpg" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=ff5000&color=fff'" class="w-14 h-14 rounded-full mx-auto mb-2 object-cover shadow-sm border border-gray-100">
                     <h2 class="font-black text-[14px] uppercase tracking-wide text-gray-900 font-['Moul']">សម្ភារៈ - Somphea Reak</h2>
                     <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Official Receipt</p>
                     <p class="text-[9px] text-gray-400 font-mono mt-1">Order #{{ order.id }} • {{ order.date }}</p>
@@ -527,7 +557,7 @@
                                 {% if "Custom DIY Bracelet" in item.title %}
                                     {% if item.image %}
                                     <div class="w-full flex justify-center py-2 rounded-lg overflow-hidden border border-gray-200 cursor-zoom-in hover:opacity-90 transition-opacity bg-gray-50" onclick="openImageViewer('{{ item.image }}')">
-                                        <img src="{{ item.image }}" class="w-auto h-[200px] object-contain">
+                                        <img src="{{ item.image }}" class="w-full h-auto max-h-[180px] object-contain">
                                     </div>
                                     {% endif %}
                                     
@@ -1100,12 +1130,77 @@
             }, 3000);
         }
 
+        // --- EXPENSE TRACKER LOGIC ---
+        let expenses = []; // Array of { amount: number, dateStr: string }
+
+        function openExpenseModal() {
+            document.getElementById('expense-modal').classList.remove('hidden');
+        }
+
+        function closeExpenseModal() {
+            document.getElementById('expense-modal').classList.add('hidden');
+        }
+
+        function addExpense() {
+            const input = document.getElementById('new-expense-amount');
+            const amt = parseFloat(input.value);
+            if (isNaN(amt) || amt <= 0) return showClientToast("Enter a valid amount", true);
+            
+            const now = new Date();
+            const pad = (n) => n.toString().padStart(2, '0');
+            // Format: Amount | Date Day/Month/Year Time Hour/Minute/Second
+            const dateStr = `Date ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} Time ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            
+            expenses.push({ amount: amt, dateStr: dateStr });
+            input.value = '';
+            
+            renderExpenses();
+            calculateProfit();
+            showClientToast("Expense Logged");
+        }
+
+        function removeExpense(index) {
+            expenses.splice(index, 1);
+            renderExpenses();
+            calculateProfit();
+            showClientToast("Expense Removed");
+        }
+
+        function renderExpenses() {
+            const list = document.getElementById('expense-list');
+            const emptyState = document.getElementById('expense-empty-state');
+            
+            list.innerHTML = '';
+            let totalSpend = 0;
+            
+            if (expenses.length === 0) {
+                if(emptyState) list.appendChild(emptyState);
+            } else {
+                expenses.forEach((ex, idx) => {
+                    totalSpend += ex.amount;
+                    list.innerHTML += `
+                        <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm transition-all hover:border-red-200">
+                            <div>
+                                <p class="font-black text-red-600 text-[13px]">$${ex.amount.toFixed(2)}</p>
+                                <p class="text-[9px] font-bold text-gray-400 font-mono mt-0.5"><span class="text-gray-300">|</span> ${ex.dateStr}</p>
+                            </div>
+                            <button onclick="removeExpense(${idx})" class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 text-gray-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                        </div>
+                    `;
+                });
+            }
+            
+            document.getElementById('calc-spend-display').innerText = totalSpend.toFixed(2);
+        }
+
         // --- FINANCIAL LOGIC ---
         function calculateIncome() {
             let totalIncome = 0;
-            // Sums all receipts rendered on the page
+            // Only sum up recipes that are Completed (Fulfilled)
             document.querySelectorAll('.order-data-card').forEach(card => {
-                totalIncome += parseFloat(card.dataset.total || 0);
+                if (card.dataset.status === 'Completed' || card.dataset.status === 'completed') {
+                    totalIncome += parseFloat(card.dataset.total || 0);
+                }
             });
             document.getElementById('calc-income').innerText = totalIncome.toFixed(2);
             calculateProfit();
@@ -1113,7 +1208,7 @@
 
         function calculateProfit() {
             const income = parseFloat(document.getElementById('calc-income').innerText) || 0;
-            const spend = parseFloat(document.getElementById('calc-spend').value) || 0;
+            const spend = parseFloat(document.getElementById('calc-spend-display').innerText) || 0;
             const profit = income - spend;
             
             const profitEl = document.getElementById('calc-profit');
@@ -1138,8 +1233,8 @@
             }
         }
 
-        // --- PDF GENERATION LOGIC ---
-        window.jsPDF = window.jspdf.jsPDF; // Load jsPDF
+        // --- MULTI-PAGE PDF GENERATION LOGIC ---
+        window.jsPDF = window.jspdf.jsPDF; 
 
         function generateReceiptPDF(orderId) {
             const receiptEl = document.getElementById(`receipt-card-${orderId}`);
@@ -1158,22 +1253,35 @@
             const origShadow = receiptEl.style.boxShadow; receiptEl.style.boxShadow = 'none';
             receiptEl.classList.remove('ring-1', 'border-[#ff5000]');
 
-            showClientToast("Generating PDF...");
+            showClientToast("Generating Sheet-by-Sheet PDF...");
 
             html2canvas(receiptEl, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false }).then(canvas => {
                 const imgData = canvas.toDataURL('image/jpeg', 1.0);
                 
-                // Fit PDF precisely to the canvas dimensions
-                const pdfWidth = canvas.width / 3;
-                const pdfHeight = canvas.height / 3;
+                // Initialize A4 PDF (210x297mm)
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth(); // 210
+                const pageHeight = pdf.internal.pageSize.getHeight(); // 297
                 
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'px',
-                    format: [pdfWidth, pdfHeight]
-                });
+                // Calculate total image height mapped to PDF Width
+                const imgWidthPdf = pdfWidth;
+                const imgHeightPdf = (canvas.height * pdfWidth) / canvas.width;
                 
-                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                let heightLeft = imgHeightPdf;
+                let position = 0;
+
+                // Add First Page
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidthPdf, imgHeightPdf);
+                heightLeft -= pageHeight;
+
+                // Loop and add extra pages if the receipt is too long (Sheet by Sheet)
+                while (heightLeft > 0) {
+                    position -= pageHeight; // Shift the image up by exactly 1 page height
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, position, imgWidthPdf, imgHeightPdf);
+                    heightLeft -= pageHeight;
+                }
+                
                 pdf.save(`SompheaReak_Receipt_#${orderId}.pdf`);
                 
                 // Restore UI
