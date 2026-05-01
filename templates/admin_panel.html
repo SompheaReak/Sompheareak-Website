@@ -1286,17 +1286,24 @@
                 const isCompleted = (card.dataset.status === 'Completed' || card.dataset.status === 'completed');
                 const cardDateStr = card.dataset.date; 
                 
-                // Determine if card matches the selected month filter
-                let matchMonth = true;
-                if (filterMonth && cardDateStr) {
-                    try {
-                        const dateObj = new Date(cardDateStr);
-                        if (!isNaN(dateObj.getTime())) {
-                            const cardMonth = dateObj.getFullYear() + '-' + String(dateObj.getMonth() + 1).padStart(2, '0');
-                            matchMonth = (cardMonth === filterMonth);
+                let matchMonth = true; // Defaults to true if no filter is active
+                
+                // If a user has chosen a specific month to filter by
+                if (filterMonth) {
+                    matchMonth = false; // We assume it doesn't match until proven otherwise
+                    if (cardDateStr && cardDateStr.trim() !== '' && cardDateStr.trim() !== 'None') {
+                        try {
+                            const dateObj = new Date(cardDateStr);
+                            // Verify it is actually a valid parsable date before doing logic
+                            if (!isNaN(dateObj.getTime())) {
+                                const cardMonth = dateObj.getFullYear() + '-' + String(dateObj.getMonth() + 1).padStart(2, '0');
+                                if (cardMonth === filterMonth) {
+                                    matchMonth = true;
+                                }
+                            }
+                        } catch (e) {
+                            // If Date() fails to parse, it simply stays false and skips this card
                         }
-                    } catch (e) {
-                        console.error("Date parse error", e);
                     }
                 }
 
@@ -1598,13 +1605,15 @@
             const now = new Date();
             currentMonthInput.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
             
-            // Auto fill any empty dates in receipt with today's date if template failed to provide it
+            // Fix: Strip out "None" strings instead of overwriting with the Live Date
             document.querySelectorAll('.receipt-datetime').forEach(el => {
-                if(el.innerText.trim() === '' || el.innerText.includes('None')) {
-                    const today = new Date();
-                    const dateStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-                    const timeStr = today.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                    el.innerText = `${dateStr} ${timeStr}`;
+                if(el.innerText.includes('None')) {
+                    el.innerText = el.innerText.replace('None', '').trim();
+                }
+                
+                // Fallback for purely empty dates if backend sends nothing at all
+                if(el.innerText.trim() === '') {
+                    el.innerText = 'Date Not Provided';
                 }
             });
 
