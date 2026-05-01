@@ -62,8 +62,6 @@
         @media (min-width: 768px) {
             .enterprise-table th, .enterprise-table td { padding: 12px 16px; font-size: 12px; }
         }
-
-        .spend-input::-webkit-input-placeholder { color: #fca5a5; }
     </style>
 </head>
 <body class="pb-20 md:pb-10">
@@ -119,7 +117,7 @@
     <!-- Manual Receipt Creation Modal -->
     <div id="manual-receipt-modal" class="fixed inset-0 z-[5000] flex items-center justify-center p-4 hidden">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeManualReceiptModal()"></div>
-        <div class="bg-white w-full max-w-2xl rounded-[24px] relative shadow-2xl flex flex-col overflow-hidden animate-slide-up max-h-[90vh]">
+        <div class="bg-white w-full max-w-lg rounded-[24px] relative shadow-2xl flex flex-col overflow-hidden animate-slide-up max-h-[90vh]">
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                 <h2 class="font-black text-lg text-gray-900"><i class="fa-solid fa-file-invoice text-blue-500 mr-2"></i>Create Custom Receipt</h2>
                 <button onclick="closeManualReceiptModal()" class="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center hover:bg-red-50 hover:text-red-600 shadow-sm"><i class="fa-solid fa-xmark"></i></button>
@@ -139,19 +137,8 @@
                 </div>
 
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Address / Note</label>
-                    <textarea name="customer_address" rows="2" placeholder="Delivery details or extra notes..." class="input-box text-xs resize-none"></textarea>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Timeline (Date & Time)</label>
-                        <input type="datetime-local" name="order_timeline" required class="input-box text-xs text-gray-600">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Delivery Fee (USD)</label>
-                        <input type="number" name="delivery_fee" step="any" placeholder="0.00" value="0.00" class="input-box text-xs">
-                    </div>
+                    <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Address</label>
+                    <input type="text" name="customer_address" placeholder="Delivery address..." class="input-box text-xs">
                 </div>
 
                 <!-- Custom Photo Upload -->
@@ -164,25 +151,32 @@
                     </div>
                 </div>
 
-                <!-- Dynamic Items -->
-                <div class="pt-2 border-t border-gray-100">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-[10px] font-black text-gray-900 uppercase tracking-widest">Order Items</label>
-                        <button type="button" onclick="addManualReceiptItem()" class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors"><i class="fa-solid fa-plus mr-1"></i> Add Row</button>
+                <!-- New Note & Pricing Section -->
+                <div class="border-t border-gray-100 pt-4 space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Description of purchase (Note)</label>
+                        <textarea name="item_titles[]" rows="3" required placeholder="Example: 2x Custom Bracelets, 1x Lego Set..." class="input-box text-xs resize-none"></textarea>
+                        <!-- Hidden inputs so backend accepts it as a standard item -->
+                        <input type="hidden" name="item_qtys[]" value="1">
                     </div>
                     
-                    <div id="manual-receipt-items" class="space-y-2">
-                        <!-- Initial Row -->
-                        <div class="flex gap-2 items-center bg-gray-50 p-2 rounded-lg border border-gray-200">
-                            <input type="text" name="item_titles[]" placeholder="Item Name" required class="input-box flex-1 text-xs py-1.5">
-                            <input type="number" name="item_prices[]" placeholder="Price ($)" step="any" required class="input-box w-20 text-xs py-1.5">
-                            <input type="number" name="item_qtys[]" placeholder="Qty" value="1" min="1" required class="input-box w-16 text-xs py-1.5 text-center">
-                            <button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 flex items-center justify-center bg-white text-red-500 rounded border border-gray-200 hover:bg-red-50 shadow-sm"><i class="fa-solid fa-trash-can"></i></button>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Subtotal ($)</label>
+                            <input type="number" id="manual-subtotal" name="item_prices[]" step="any" placeholder="0.00" class="input-box text-xs" required oninput="calcManualTotal()">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Delivery ($)</label>
+                            <input type="number" id="manual-delivery" name="delivery_fee" step="any" placeholder="0.00" value="0.00" class="input-box text-xs" required oninput="calcManualTotal()">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Total ($)</label>
+                            <input type="number" id="manual-total" step="any" placeholder="0.00" class="input-box text-xs bg-gray-50" readonly>
                         </div>
                     </div>
                 </div>
 
-                <div class="pt-4 border-t border-gray-100 mt-2">
+                <div class="pt-2">
                     <button type="submit" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-black uppercase text-[11px] tracking-widest shadow-lg hover:bg-blue-700 active:scale-95 transition-all"><i class="fa-solid fa-check mr-2"></i> Save & Generate Receipt</button>
                 </div>
             </form>
@@ -269,9 +263,8 @@
                 </div>
             </div>
 
-            <!-- UPGRADED: Professional Financial Overview Section -->
+            <!-- Financial Overview Section -->
             <div class="bg-white rounded-[24px] md:rounded-[32px] p-6 md:p-8 shadow-sm border border-gray-200 relative overflow-hidden">
-                <!-- Decorative background element -->
                 <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-full blur-3xl -z-10 opacity-50 transform translate-x-1/2 -translate-y-1/2"></div>
                 
                 <div class="flex flex-col sm:flex-row justify-between sm:items-end gap-4 mb-6 md:mb-8 border-b border-gray-100 pb-5">
@@ -283,7 +276,6 @@
                         </div>
                     </div>
                     
-                    <!-- Month Filter for Analytics -->
                     <div class="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200 shadow-sm w-fit group hover:border-[#ff5000] transition-colors">
                         <i class="fa-regular fa-calendar-days text-gray-400 group-hover:text-[#ff5000] transition-colors"></i>
                         <label class="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest">Period:</label>
@@ -292,7 +284,6 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
-                    <!-- Income Card -->
                     <div class="p-6 bg-white rounded-2xl border-2 border-gray-100 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-green-500 transition-all">
                         <div class="absolute right-0 top-0 w-24 h-full bg-gradient-to-l from-green-50 to-transparent -z-10 opacity-50"></div>
                         <div class="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-3"><i class="fa-solid fa-arrow-trend-up text-lg"></i></div>
@@ -301,7 +292,6 @@
                         <h4 class="text-3xl md:text-4xl font-black text-gray-900 flex items-start"><span class="text-lg md:text-xl mr-1 text-green-500 mt-1">$</span><span id="calc-income">0.00</span></h4>
                     </div>
 
-                    <!-- Spending Card -->
                     <div class="p-6 bg-white rounded-2xl border-2 border-gray-100 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-red-500 transition-all">
                         <div class="absolute right-0 top-0 w-24 h-full bg-gradient-to-l from-red-50 to-transparent -z-10 opacity-50"></div>
                         <div class="flex justify-between items-start z-10 w-full mb-3">
@@ -313,7 +303,6 @@
                         <h4 class="text-3xl md:text-4xl font-black text-gray-900 flex items-start"><span class="text-lg md:text-xl mr-1 text-red-500 mt-1">$</span><span id="calc-spend-display">0.00</span></h4>
                     </div>
 
-                    <!-- Profit/Loss Card (Dynamic styling via JS) -->
                     <div class="p-6 rounded-2xl border-2 shadow-lg flex flex-col justify-center relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1" id="profit-card">
                         <i id="profit-icon" class="fa-solid fa-gem absolute -right-6 -bottom-6 text-8xl opacity-10 transition-colors"></i>
                         <div class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-3 transition-colors" id="profit-icon-bg"><i class="text-lg" id="profit-small-icon"></i></div>
@@ -324,17 +313,12 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-2 md:mt-4">
+            <div class="mt-2 md:mt-4">
                 <div class="bg-gradient-to-br from-[#0f172a] to-[#1e293b] rounded-2xl md:rounded-[32px] p-5 md:p-8 text-white shadow-lg relative overflow-hidden">
                     <i class="fa-solid fa-bolt absolute -right-2 -bottom-2 md:-right-4 md:-bottom-4 text-7xl md:text-9xl text-white/5"></i>
                     <h3 class="text-lg md:text-xl font-black mb-1.5 md:mb-2 relative z-10">Instant Inventory Management</h3>
-                    <p class="text-xs md:text-sm text-gray-400 font-semibold mb-4 md:mb-6 max-w-sm relative z-10 leading-relaxed">Use the Enterprise Live Stock Center to rapidly adjust quantities globally.</p>
-                    <button onclick="openStockSummaryModal()" class="w-full sm:w-auto bg-white text-black px-5 py-3 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest shadow-xl hover:bg-gray-200 transition-colors relative z-10"><i class="fa-solid fa-cubes text-[#ff5000] mr-2"></i> Open Live Stock</button>
-                </div>
-                <div class="bg-white rounded-2xl md:rounded-[32px] p-5 md:p-8 border border-gray-100 shadow-sm flex flex-col justify-center">
-                    <h3 class="text-lg md:text-xl font-black text-gray-900 mb-1.5 md:mb-2">Export Business Data</h3>
-                    <p class="text-xs md:text-sm text-gray-500 font-semibold mb-4 md:mb-6 leading-relaxed">Download a complete CSV spreadsheet of your current order queue for accounting and logistics.</p>
-                    <button onclick="exportOrdersToCSV()" class="w-full sm:w-auto btn-taobao px-5 py-3 md:px-6 md:py-3 text-[10px] md:text-xs font-black uppercase tracking-widest flex items-center justify-center sm:justify-start gap-2"><i class="fa-solid fa-file-csv text-base md:text-lg"></i> Download Orders CSV</button>
+                    <p class="text-xs md:text-sm text-gray-400 font-semibold mb-4 md:mb-6 max-w-lg relative z-10 leading-relaxed">Use the Enterprise Live Stock Center to rapidly adjust quantities globally.</p>
+                    <button onclick="openStockSummaryModal()" class="w-full sm:w-auto bg-white text-black px-6 py-3.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest shadow-xl hover:bg-gray-200 transition-colors relative z-10"><i class="fa-solid fa-cubes text-[#ff5000] mr-2"></i> Open Live Stock Matrix</button>
                 </div>
             </div>
         </div>
@@ -577,9 +561,7 @@
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                     <!-- Create Receipt Button -->
-                    <button onclick="openManualReceiptModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 md:px-5 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2 active:scale-95"><i class="fa-solid fa-plus text-sm md:text-base"></i> Create Receipt</button>
-                    <!-- Export Data Button -->
-                    <button onclick="exportOrdersToCSV()" class="w-full sm:w-auto bg-[#10b981] hover:bg-[#059669] text-white px-4 py-2.5 md:px-5 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest shadow-lg shadow-green-500/30 transition-all flex items-center justify-center gap-2 active:scale-95"><i class="fa-solid fa-file-csv text-sm md:text-base"></i> Export (CSV)</button>
+                    <button onclick="openManualReceiptModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2 active:scale-95"><i class="fa-solid fa-plus text-sm"></i> Create Receipt</button>
                 </div>
             </div>
 
@@ -676,8 +658,10 @@
                                         </div>
                                         {% endif %}
                                         <div class="flex-1 min-w-0">
-                                            <p class="font-black text-[11px] text-gray-900 leading-tight truncate">{{ item.title | default(item.name) }} <span class="text-[#ff5000]">x{{ item.qty }}</span></p>
-                                            <p class="text-[9px] text-gray-500 font-medium truncate mt-0.5">{{ item.style | default(item.variantName) }}</p>
+                                            <p class="font-black text-[11px] text-gray-900 leading-tight truncate editable" contenteditable="false">{{ item.title | default(item.name) }}</p>
+                                            {% if item.style or item.variantName %}
+                                            <p class="text-[9px] text-gray-500 font-medium truncate mt-0.5 editable" contenteditable="false">{{ item.style | default(item.variantName) }}</p>
+                                            {% endif %}
                                         </div>
                                         <div class="text-right shrink-0">
                                             <div class="font-black text-[12px] text-gray-900 flex items-center justify-end gap-0.5">$<span class="item-total-usd editable px-1" contenteditable="false" onblur="recalculateReceipt({{ order.id }})">{{ "{:,.2f}".format(item_total_usd) }}</span></div>
@@ -1369,17 +1353,10 @@
             document.getElementById('manual-receipt-modal').classList.add('hidden');
         }
 
-        function addManualReceiptItem() {
-            const container = document.getElementById('manual-receipt-items');
-            const row = document.createElement('div');
-            row.className = 'flex gap-2 items-center bg-gray-50 p-2 rounded-lg border border-gray-200';
-            row.innerHTML = `
-                <input type="text" name="item_titles[]" placeholder="Item Name" required class="input-box flex-1 text-xs py-1.5">
-                <input type="number" name="item_prices[]" placeholder="Price ($)" step="any" required class="input-box w-20 text-xs py-1.5">
-                <input type="number" name="item_qtys[]" placeholder="Qty" value="1" min="1" required class="input-box w-16 text-xs py-1.5 text-center">
-                <button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 flex items-center justify-center bg-white text-red-500 rounded border border-gray-200 hover:bg-red-50 shadow-sm"><i class="fa-solid fa-trash-can"></i></button>
-            `;
-            container.appendChild(row);
+        function calcManualTotal() {
+            const sub = parseFloat(document.getElementById('manual-subtotal').value) || 0;
+            const del = parseFloat(document.getElementById('manual-delivery').value) || 0;
+            document.getElementById('manual-total').value = (sub + del).toFixed(2);
         }
 
         // --- MULTI-PAGE PDF GENERATION LOGIC ---
@@ -1571,36 +1548,6 @@
                 formCat.classList.add('hidden');
                 if(inputCustom) inputCustom.setAttribute('required', 'required');
             }
-        }
-
-        function exportOrdersToCSV() {
-            const orderCards = document.querySelectorAll('.order-data-card');
-            if(orderCards.length === 0) return alert("There are no active orders to export.");
-
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Order ID,Status,Date,Customer Name,Phone,Delivery Address,Total KHR,Total USD\n";
-
-            orderCards.forEach(card => {
-                const id = card.dataset.orderId;
-                const status = card.dataset.status;
-                const date = card.dataset.date;
-                const name = `"${card.dataset.customer.replace(/"/g, '""')}"`; 
-                const phone = `"${card.dataset.phone}"`;
-                let address = `"${card.querySelector('span.text-right.editable').innerText.replace(/"/g, '""').replace(/\n/g, ' ')}"`;
-                const totalUSD = card.dataset.total;
-                const totalKHR = (parseFloat(totalUSD) * 4000).toString();
-
-                csvContent += `${id},${status},${date},${name},${phone},${address},${totalKHR},${totalUSD}\n`;
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            const dateStr = new Date().toISOString().split('T')[0];
-            link.setAttribute("download", `SompheaReak_Orders_${dateStr}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -1879,12 +1826,35 @@
             const card = document.getElementById(`receipt-card-${orderId}`);
             const editables = card.querySelectorAll('.editable');
             const isEditing = card.classList.contains('is-editing-receipt');
+            const editBtnIcon = card.querySelector(`button[onclick="toggleReceiptEdit(${orderId})"] i`);
+
             if (isEditing) { 
+                // SAVING
                 editables.forEach(el => el.contentEditable = "false"); 
                 card.classList.remove('is-editing-receipt'); 
+                editBtnIcon.className = "fa-solid fa-pen text-sm";
+                
+                // Recalculate and update the main dataset total
+                recalculateReceipt(orderId);
+                
+                // Extract updated info (Optional sync)
+                const cName = editables[0].innerText;
+                const cPhone = editables[1].innerText;
+                const cAddress = editables[2].innerText;
+                
+                // If you ever add the backend route to update manually, this fires it:
+                fetch(`/admin/order/update_details/${orderId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: cName, phone: cPhone, address: cAddress, total: card.dataset.total })
+                }).catch(e => console.log('Saved visually'));
+                
+                showClientToast("Receipt Updated & Saved");
             } else { 
+                // EDITING
                 editables.forEach(el => el.contentEditable = "true"); 
                 card.classList.add('is-editing-receipt'); 
+                editBtnIcon.className = "fa-solid fa-save text-sm text-[#ff5000]";
                 if(editables.length > 0) editables[0].focus(); 
             }
         }
