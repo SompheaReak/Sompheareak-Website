@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -197,7 +196,10 @@
         <div class="flex gap-4 md:gap-5 items-center">
             <button onclick="switchView('orders')" class="relative text-gray-400 hover:text-black transition-colors">
                 <i class="fa-solid fa-bell text-lg md:text-xl"></i>
-                <span id="header-pending-count" class="absolute -top-1 -right-1 w-2.5 h-2.5 md:w-3 md:h-3 bg-red-500 rounded-full border-2 border-white animate-pulse shadow-sm hidden"></span>
+                {% set pending_count = orders|selectattr('status', 'equalto', 'Pending')|list|length %}
+                {% if pending_count > 0 %}
+                <span class="absolute -top-1 -right-1 w-2.5 h-2.5 md:w-3 md:h-3 bg-red-500 rounded-full border-2 border-white animate-pulse shadow-sm"></span>
+                {% endif %}
             </button>
             <div class="h-5 md:h-6 w-px bg-gray-200"></div>
             <a href="/admin/logout" class="text-gray-400 hover:text-red-500 text-[10px] md:text-xs font-black uppercase flex items-center gap-1.5 md:gap-2 transition-colors"><i class="fa-solid fa-power-off text-base md:text-lg"></i> <span class="hidden sm:inline">Logout</span></a>
@@ -214,7 +216,7 @@
             </button>
             <button onclick="switchView('orders')" id="tab-orders" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all relative">
                 <i class="fa-solid fa-receipt mr-1 md:mr-1.5"></i> Orders
-                <span id="tab-pending-count" class="bg-[#ff5000] text-white px-1.5 py-0.5 rounded-full text-[7px] absolute top-1 right-1 hidden"></span>
+                {% if pending_count > 0 %}<span class="bg-[#ff5000] text-white px-1.5 py-0.5 rounded-full text-[7px] absolute top-1 right-1">{{ pending_count }}</span>{% endif %}
             </button>
             <button onclick="switchView('spin')" id="tab-spin" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all">
                 <i class="fa-solid fa-gamepad mr-1 md:mr-1.5"></i> Minifig Spin
@@ -238,7 +240,7 @@
                 <div class="bg-white rounded-2xl md:rounded-[24px] p-4 md:p-6 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between cursor-pointer hover:border-[#ff5000] hover:shadow-md transition-all group gap-2" onclick="switchView('orders')">
                     <div class="order-2 sm:order-1">
                         <p class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5 md:mb-1 group-hover:text-[#ff5000] transition-colors">Action Required</p>
-                        <h3 class="text-2xl md:text-3xl font-black text-gray-900" id="stat-pending-count">0</h3>
+                        <h3 class="text-2xl md:text-3xl font-black text-gray-900" id="stat-pending-count">{{ pending_count }}</h3>
                         <p class="text-[10px] md:text-xs font-bold text-gray-600 mt-0.5">Pending Orders</p>
                     </div>
                     <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 flex items-center justify-center text-[#ff5000] text-lg md:text-2xl group-hover:scale-110 transition-transform order-1 sm:order-2"><i class="fa-solid fa-clock"></i></div>
@@ -247,7 +249,7 @@
                 <div class="bg-white rounded-2xl md:rounded-[24px] p-4 md:p-6 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between cursor-pointer hover:border-blue-500 hover:shadow-md transition-all group gap-2" onclick="switchView('inventory')">
                     <div class="order-2 sm:order-1">
                         <p class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5 md:mb-1 group-hover:text-blue-500 transition-colors">Total Catalog</p>
-                        <h3 class="text-2xl md:text-3xl font-black text-gray-900" id="stat-product-count">0</h3>
+                        <h3 class="text-2xl md:text-3xl font-black text-gray-900">{{ products|length }}</h3>
                         <p class="text-[10px] md:text-xs font-bold text-gray-600 mt-0.5">Active Products</p>
                     </div>
                     <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500 text-lg md:text-2xl group-hover:scale-110 transition-transform order-1 sm:order-2"><i class="fa-solid fa-boxes-stacked"></i></div>
@@ -408,7 +410,9 @@
                         <div class="h-4 md:h-6 w-px bg-gray-200 mx-1 md:mx-2 shrink-0"></div>
                         <select id="category-filter" onchange="filterCategory()" class="px-2 py-1.5 md:px-3 md:py-2 bg-gray-50 border border-gray-200 rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black uppercase outline-none focus:border-[#ff5000] cursor-pointer shadow-sm shrink-0">
                             <option value="All">All Categories</option>
-                            <option value="Action Figures">Action Figures</option>
+                            {% for cat in categories %}
+                            <option value="{{cat.name}}">{{cat.name}}</option>
+                            {% endfor %}
                         </select>
                     </div>
                     
@@ -419,7 +423,140 @@
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4" id="main-inventory-list">
-                    <!-- Products will be dynamically populated here -->
+                    {% for p in products %}
+                    
+                    {% set group_cats = [] %}
+                    {% if p.category %}{% for mc in p.category.split(',') %}{% set trimmed = mc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}
+                    {% for v in p.parsed_variants %}{% if v.category %}{% for vc in v.category.split(',') %}{% set trimmed = vc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}{% endfor %}
+                    
+                    <div class="product-item bg-white rounded-xl md:rounded-[24px] border border-gray-100 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md {% if not p.is_visible %}bg-gray-50/50 grayscale-[0.5]{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}" data-categories="{{ group_cats | join(',') | lower }}">
+                        
+                        <div class="view-mode flex flex-col h-full">
+                            <div class="relative h-32 md:h-44 w-full bg-gray-50 p-2 md:p-3 flex items-center justify-center border-b border-gray-100 group">
+                                <img src="{{ p.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply drop-shadow-sm group-hover:scale-105 transition-transform duration-300">
+                                
+                                <div class="absolute top-2 left-2 md:top-3 md:left-3 flex flex-col gap-1 md:gap-1.5 items-start pointer-events-none">
+                                    <span class="text-[7px] md:text-[8px] font-black text-white bg-slate-900/80 backdrop-blur px-1.5 py-0.5 md:px-2 md:py-1 rounded shadow-sm uppercase tracking-widest">{{ p.store }}</span>
+                                    {% if not p.is_visible %}
+                                        <span class="text-[7px] md:text-[8px] font-black text-white bg-red-500/90 backdrop-blur px-1.5 py-0.5 md:px-2 md:py-1 rounded shadow-sm uppercase tracking-widest"><i class="fa-solid fa-eye-slash"></i> <span class="hidden sm:inline">Hidden</span></span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="absolute top-2 right-2 md:top-3 md:right-3 cursor-grab product-handle w-6 h-6 md:w-8 md:h-8 bg-white/90 backdrop-blur rounded-md md:rounded-xl flex items-center justify-center text-gray-400 hover:text-[#ff5000] shadow-sm transition-colors border border-gray-100">
+                                    <i class="fa-solid fa-arrows-up-down text-[10px] md:text-sm"></i>
+                                </div>
+                            </div>
+
+                            <div class="p-3 md:p-4 flex-1 flex flex-col">
+                                <h4 class="font-black text-xs md:text-sm text-gray-800 leading-tight mb-1 line-clamp-2 {% if not p.is_visible %}line-through text-gray-400{% endif %}" title="{{ p.title }}">{{ p.title }}</h4>
+                                <p class="text-[8px] md:text-[10px] font-bold text-gray-400 mb-2 md:mb-3 mt-auto">{{ p.parsed_variants|length }} Variant(s)</p>
+                                
+                                <div class="flex justify-between items-center mt-1 border-t border-gray-100 pt-2 md:pt-3">
+                                    <span class="text-xs md:text-sm font-black text-[#ff5000] leading-none">$ {{ "%.2f"|format(p.price) }}</span>
+                                    <span class="text-[7px] md:text-[9px] font-bold text-gray-300">ID: {{ p.id }}</span>
+                                </div>
+                            </div>
+
+                            <div class="p-1.5 md:p-2 border-t border-gray-100 bg-gray-50 flex justify-between items-center gap-1 md:gap-1.5">
+                                <form action="/admin/product/toggle/{{ p.id }}" method="POST" class="m-0 flex-1">
+                                    <button type="submit" class="w-full h-8 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center transition-colors {% if p.is_visible %}bg-white text-gray-500 hover:text-green-500 border border-gray-200 shadow-sm{% else %}bg-gray-200 text-gray-400{% endif %}" title="Toggle Visibility">
+                                        <i class="fa-solid {% if p.is_visible %}fa-eye{% else %}fa-eye-slash{% endif %} text-[10px] md:text-xs"></i>
+                                    </button>
+                                </form>
+                                <button onclick="toggleEdit({{p.id}})" class="flex-1 h-8 md:h-10 bg-white border border-gray-200 rounded-lg md:rounded-xl flex items-center justify-center text-blue-500 hover:bg-blue-50 transition-colors shadow-sm font-bold text-[9px] md:text-[10px] uppercase tracking-wider">
+                                    <i class="fa-solid fa-pen md:mr-1"></i> <span class="hidden sm:inline">Edit</span>
+                                </button>
+                                <form action="/admin/product/delete/{{ p.id }}" method="POST" class="m-0 flex-1" onsubmit="return confirm('Delete this product permanently?')">
+                                    <button type="submit" class="w-full h-8 md:h-10 bg-white border border-gray-200 rounded-lg md:rounded-xl flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors shadow-sm" title="Delete">
+                                        <i class="fa-solid fa-trash-can text-[10px] md:text-xs"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="edit-mode">
+                             <form action="/admin/product/update/{{p.id}}" method="POST" enctype="multipart/form-data" class="bg-gray-50 p-4 md:p-6 rounded-xl md:rounded-[24px] border-2 border-[#ff5000] shadow-xl relative w-full h-full">
+                                <div class="flex justify-between items-center border-b border-gray-200 pb-3 md:pb-4 mb-4 md:mb-5">
+                                    <div>
+                                        <h5 class="text-xs md:text-base font-black text-gray-900 uppercase tracking-widest"><i class="fa-solid fa-pen-to-square text-[#ff5000] mr-1.5 md:mr-2"></i>Edit Setup</h5>
+                                        <p class="text-[8px] md:text-[10px] text-gray-500 font-bold mt-0.5 md:mt-1">Product ID: {{ p.id }}</p>
+                                    </div>
+                                    <button type="button" onclick="toggleEdit({{p.id}})" class="text-[8px] md:text-[10px] font-black text-gray-600 bg-white border border-gray-200 hover:bg-gray-100 hover:text-black px-3 py-2 md:px-4 md:py-2 rounded-lg md:rounded-xl shadow-sm transition-colors uppercase tracking-widest"><span class="hidden sm:inline">Cancel</span><i class="fa-solid fa-xmark sm:hidden"></i></button>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-5">
+                                    <div class="space-y-1"><label class="text-[8px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest pl-1">Store</label>
+                                        <select name="store" class="input-box shadow-sm edit-store-select text-xs py-2 md:py-2.5" data-target="edit-cats-{{p.id}}" onchange="updateCatList(this, 'edit-cats-{{p.id}}')">
+                                            <option value="toy" {% if p.store == 'toy' %}selected{% endif %}>Toy Store</option>
+                                            <option value="lego" {% if p.store == 'lego' %}selected{% endif %}>LEGO Store</option>
+                                            <option value="bracelet" {% if p.store == 'bracelet' %}selected{% endif %}>Bracelet Store</option>
+                                            <option value="custom_bracelet" {% if p.store == 'custom_bracelet' %}selected{% endif %}>Custom Charms</option>
+                                        </select>
+                                    </div>
+                                    <div class="space-y-1"><label class="text-[8px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest pl-1">Categories</label>
+                                        <div class="tag-wrapper pt-0.5"><input type="hidden" name="category" class="hidden-category-input" value="{{p.category}}">
+                                            <div class="tag-container bg-white shadow-sm border border-gray-200 min-h-[36px] md:min-h-[42px]">
+                                                {% if p.category %}{% for pc in p.category.split(',') %}{% if pc.strip() != "" %}
+                                                <span class="tag-badge">{{ pc.strip() }} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i></span>
+                                                {% endif %}{% endfor %}{% endif %}
+                                                <input type="text" list="edit-cats-{{p.id}}" class="tag-input" placeholder="Add Tag..." autocomplete="off">
+                                            </div>
+                                        </div><datalist id="edit-cats-{{p.id}}"></datalist>
+                                    </div>
+                                    <div class="space-y-1"><label class="text-[8px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest pl-1">Group Title</label>
+                                        <input type="text" name="title" value="{{p.title}}" class="input-box shadow-sm border-gray-200 py-2 md:py-2.5 text-xs" placeholder="Title">
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-3 md:space-y-4 pt-4 md:pt-5 mt-4 md:mt-5 border-t border-gray-200">
+                                    <div class="flex items-center justify-between"><label class="text-[10px] md:text-[11px] font-black text-gray-900 uppercase tracking-widest">Variants</label><span class="text-[7px] md:text-[9px] font-bold text-gray-400">Drag to Reorder</span></div>
+                                    
+                                    <div id="sortable-variants-{{p.id}}" class="space-y-2 md:space-y-3 max-h-[50vh] overflow-y-auto pr-1 md:pr-2 hide-scrollbar">
+                                        {% for v in p.parsed_variants %}
+                                        <div class="variant-row flex flex-col sm:flex-row gap-3 md:gap-4 items-start bg-white p-3 md:p-4 rounded-xl md:rounded-2xl border border-gray-200 shadow-sm relative group hover:border-gray-300 transition-colors">
+                                            <div class="flex items-center w-full sm:w-auto sm:flex-col justify-between sm:justify-start gap-2 border-b border-gray-100 pb-2 sm:border-none sm:pb-0">
+                                                <i class="fa-solid fa-bars text-gray-300 handle p-2 text-sm md:text-base hover:text-black cursor-grab"></i>
+                                                <div class="w-10 h-10 md:w-16 md:h-16 bg-gray-50 border border-gray-100 rounded-lg md:rounded-xl p-1 shadow-inner shrink-0"><img src="{{v.image}}" class="w-full h-full object-contain rounded-md"></div>
+                                                <button type="button" onclick="this.closest('.variant-row').remove()" class="p-2 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-lg md:rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm sm:mt-auto"><i class="fa-solid fa-trash-can text-xs md:text-sm"></i></button>
+                                            </div>
+
+                                            <input type="hidden" name="v_ids[]" value="{{v.id}}"><input type="hidden" name="v_images[]" value="{{v.image}}">
+                                            
+                                            <div class="flex-1 w-full space-y-2 md:space-y-3 price-group">
+                                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+                                                    <div class="space-y-0.5 md:space-y-1"><span class="text-[7px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">Name</span><input type="text" name="v_names[]" value="{{v.name}}" class="w-full text-[10px] md:text-xs font-bold border-b border-gray-200 outline-none pb-1 focus:border-[#ff5000] bg-transparent"></div>
+                                                    <div class="space-y-0.5 md:space-y-1"><span class="text-[7px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">Price (USD)</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-[#ff5000]"><span class="text-[9px] md:text-[10px] font-black text-gray-400">$</span><input type="number" step="any" name="v_prices[]" value="{{v.price}}" class="w-full text-[10px] md:text-xs font-black outline-none usd-input bg-transparent" oninput="updatePrice(this, 'USD')"></div></div>
+                                                    <div class="space-y-0.5 md:space-y-1"><span class="text-[7px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">Price (KHR)</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-[#ff5000]"><span class="text-[9px] md:text-[10px] font-black text-gray-400">៛</span><input type="number" step="any" value="{{ (v.price * 4000) | int }}" class="w-full text-[10px] md:text-xs font-black outline-none khr-input bg-transparent" oninput="updatePrice(this, 'KHR')"></div></div>
+                                                    <div class="space-y-0.5 md:space-y-1"><span class="text-[7px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">Stock</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-[#ff5000] {% if v.stock|int <= 0 %}border-red-300 bg-red-50 px-1 rounded-t{% endif %}"><input type="number" name="v_stocks[]" value="{{v.stock}}" class="w-full text-[10px] md:text-xs font-black outline-none bg-transparent text-center {% if v.stock|int <= 0 %}text-red-600{% endif %}"></div></div>
+                                                </div>
+                                                <div class="tag-wrapper pt-1">
+                                                    <span class="text-[7px] md:text-[9px] font-black text-[#ff5000] uppercase tracking-widest mb-1 md:mb-1.5 block">Variant Tags:</span>
+                                                    <input type="hidden" name="v_categories[]" class="hidden-category-input" value="{{v.category}}">
+                                                    <div class="tag-container variant-tag-container border-gray-200 bg-gray-50/50 min-h-[28px] md:min-h-[32px]">
+                                                        {% if v.category %}{% for single_cat in v.category.split(',') %}{% if single_cat.strip() != "" %}
+                                                        <span class="tag-badge variant-tag-badge">{{ single_cat.strip() }} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i></span>
+                                                        {% endif %}{% endfor %}{% endif %}
+                                                        <input type="text" list="edit-cats-{{p.id}}" class="tag-input variant-tag-input text-[10px]" placeholder="Tags..." autocomplete="off">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <div class="bg-blue-50/50 p-4 md:p-5 rounded-xl md:rounded-2xl border border-blue-100 flex flex-col md:flex-row md:items-center gap-3 md:gap-5 mt-4 md:mt-5 shadow-inner">
+                                    <div class="flex-1 w-full">
+                                        <label class="text-[9px] md:text-[11px] font-black text-blue-600 uppercase tracking-widest block mb-1.5 md:mb-2"><i class="fa-solid fa-plus-circle mr-1"></i> Add Images</label>
+                                        <input type="file" name="new_images" multiple class="block w-full text-[9px] md:text-[10px] text-gray-500 file:mr-3 file:py-2 file:px-3 md:file:px-5 file:rounded-lg md:file:rounded-xl file:border-0 file:font-black file:bg-blue-600 file:text-white file:uppercase file:tracking-widest hover:file:bg-blue-700 cursor-pointer transition-colors shadow-sm bg-white border border-gray-200 p-1 rounded-xl">
+                                    </div>
+                                </div>
+                                <div class="pt-4 md:pt-5 mt-2 border-t border-gray-200">
+                                    <button type="submit" class="w-full btn-taobao py-3.5 md:py-4 rounded-xl text-[10px] md:text-[12px] font-black uppercase tracking-widest shadow-xl">Save Group Changes</button>
+                                </div>
+                             </form>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </section>
         </div>
@@ -440,15 +577,155 @@
                 </div>
             </div>
 
-            <div id="no-orders-message" class="py-16 md:py-24 text-center text-gray-300 bg-white rounded-2xl md:rounded-[32px] border-2 border-dashed border-gray-200 max-w-4xl mx-auto hidden">
+            {% if orders|length == 0 %}
+            <div class="py-16 md:py-24 text-center text-gray-300 bg-white rounded-2xl md:rounded-[32px] border-2 border-dashed border-gray-200 max-w-4xl mx-auto">
                 <i class="fa-solid fa-receipt text-5xl md:text-6xl mb-4 md:mb-5 text-gray-200"></i>
                 <h3 class="font-black text-lg md:text-xl text-gray-700 mb-1 md:mb-2">Inbox Zero!</h3>
                 <p class="font-bold text-xs md:text-sm text-gray-400">No active orders right now.</p>
             </div>
+            {% endif %}
 
             <!-- RECEIPT GRID LAYOUT -->
             <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-            <!-- Orders will be dynamically populated here -->
+            {% for order in orders %}
+            {% set is_completed = (order.status == 'Completed' or order.status == 'completed') %}
+            
+            <!-- INDIVIDUAL RECEIPT CARD -->
+            <div id="receipt-card-{{ order.id }}" class="bg-white rounded-xl border order-data-card shadow-sm p-5 md:p-6 space-y-4 relative transition-all duration-300 {% if is_completed %}border-gray-200 bg-gray-50/50 opacity-80{% else %}border-[#ff5000] ring-1 ring-[#ff5000]/20{% endif %} max-w-sm mx-auto w-full" data-order-id="{{ order.id }}" data-status="{{ order.status }}" data-customer="{{ order.customer_name }}" data-phone="{{ order.customer_phone }}" data-total="{{ order.total_usd }}" data-date="{{ order.date }}">
+                
+                <!-- Status Badge -->
+                <div class="absolute top-12 right-6 z-10 md:top-14">
+                    <span class="px-2 py-1 rounded border text-[8px] font-black uppercase tracking-widest shadow-sm {% if is_completed %}bg-green-50 text-green-600 border-green-200{% elif order.status == 'Pending' %}bg-[#ff5000] text-white border-orange-600 animate-pulse{% else %}bg-gray-100 text-gray-600 border-gray-200{% endif %}">{{ order.status }}</span>
+                </div>
+
+                <!-- Receipt Header (Logo & Brand) -->
+                <div class="text-center pb-4 border-b-2 border-dashed border-gray-200">
+                    <!-- NEW TOP-ALIGNED DATE & ORDER ID -->
+                    <div class="flex justify-between items-start text-[9px] mb-4">
+                        <span class="font-bold text-gray-400 uppercase tracking-widest">No. #{{ order.id }}</span>
+                        <span class="font-black text-gray-800 editable receipt-datetime text-right" contenteditable="false">{{ order.date }} {{ order.time|default('') }}</span>
+                    </div>
+
+                    <img src="static/images/logo.jpg" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=ff5000&color=fff'" class="w-14 h-14 rounded-full mx-auto mb-2 object-cover shadow-sm border border-gray-100">
+                    <h2 class="font-black text-[14px] uppercase tracking-wide text-gray-900 font-['Moul']">សម្ភារៈ - Somphea Reak</h2>
+                    <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Official Receipt</p>
+                </div>
+
+                <!-- Customer Info -->
+                <div class="space-y-2 pb-4 border-b-2 border-dashed border-gray-200 text-[11px] text-gray-700">
+                    <div class="flex justify-between items-center"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px]">Customer</span> <span class="font-black text-gray-900 editable" contenteditable="false">{{ order.customer_name }}</span></div>
+                    <div class="flex justify-between items-center"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px]">Phone</span> <a href="tel:{{ order.customer_phone }}" class="font-black text-blue-600 editable" contenteditable="false">{{ order.customer_phone }}</a></div>
+                    <div class="flex justify-between items-start gap-4"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px] shrink-0 mt-0.5">Address</span> <span class="font-black text-right editable" contenteditable="false">{{ order.customer_address }}</span></div>
+                </div>
+
+                <!-- Items -->
+                <div class="space-y-4 pb-4 border-b-2 border-dashed border-gray-200">
+                    <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3 flex justify-between">
+                        <span>Description</span>
+                        <span>Amount</span>
+                    </div>
+                    
+                    {% set subtotal_usd = namespace(value=0) %}
+                    {% for item in order.parsed_items %}
+                        {% if item.image != "hidden" %}
+                            {% set item_total_usd = item.price * item.qty %}
+                            {% set subtotal_usd.value = subtotal_usd.value + item_total_usd %}
+                            
+                            <div class="flex flex-col gap-2 relative group/item">
+                                {% if "Custom DIY Bracelet" in item.title %}
+                                    {% if item.image %}
+                                    <div class="w-full flex justify-center py-2 rounded-lg overflow-hidden border border-gray-200 cursor-zoom-in hover:opacity-90 transition-opacity bg-gray-50" onclick="openImageViewer('{{ item.image }}')">
+                                        <img src="{{ item.image }}" class="w-full h-auto max-h-[180px] object-contain">
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="flex justify-between items-start gap-2">
+                                        <div class="flex-1">
+                                            <p class="font-black text-[11px] text-gray-900 leading-tight">DIY Bracelet <span class="text-[#ff5000]">x{{ item.qty }}</span></p>
+                                            <div class="text-[9px] text-gray-500 font-medium mt-1 leading-relaxed break-words whitespace-normal">
+                                                {{ item.style | replace(' | ', ', ') }}
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="font-black text-[12px] text-gray-900 flex items-center justify-end gap-0.5">$<span class="item-total-usd editable px-1" contenteditable="false" onblur="recalculateReceipt({{ order.id }})">{{ "{:,.2f}".format(item_total_usd) }}</span></div>
+                                            <div class="font-bold text-[9px] text-gray-400 item-total-khr mt-0.5">{{ "{:,.0f}".format(item_total_usd * 4000) }} ៛</div>
+                                        </div>
+                                    </div>
+
+                                {% else %}
+                                    <div class="flex justify-between items-start gap-2">
+                                        {% if item.image %}
+                                        <div class="w-10 h-10 rounded border border-gray-200 bg-gray-50 shrink-0 cursor-zoom-in" onclick="openImageViewer('{{ item.image }}')">
+                                            <img src="{{ item.image }}" class="w-full h-full object-contain p-0.5">
+                                        </div>
+                                        {% endif %}
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-black text-[11px] text-gray-900 leading-tight truncate">{{ item.title }} <span class="text-[#ff5000]">x{{ item.qty }}</span></p>
+                                            <p class="text-[9px] text-gray-500 font-medium truncate mt-0.5">{{ item.style }}</p>
+                                        </div>
+                                        <div class="text-right shrink-0">
+                                            <div class="font-black text-[12px] text-gray-900 flex items-center justify-end gap-0.5">$<span class="item-total-usd editable px-1" contenteditable="false" onblur="recalculateReceipt({{ order.id }})">{{ "{:,.2f}".format(item_total_usd) }}</span></div>
+                                            <div class="font-bold text-[9px] text-gray-400 item-total-khr mt-0.5">{{ "{:,.0f}".format(item_total_usd * 4000) }} ៛</div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                {% set delivery_usd = order.total_usd - subtotal_usd.value %}
+                {% if delivery_usd < 0.01 %}{% set delivery_usd = 0 %}{% endif %}
+
+                <!-- Totals -->
+                <div class="space-y-1.5 text-[11px]">
+                    <div class="flex justify-between items-center text-gray-600">
+                        <span class="font-bold uppercase tracking-widest text-[9px]">Subtotal</span>
+                        <span class="font-black receipt-subtotal-usd">${{ "{:,.2f}".format(subtotal_usd.value) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-gray-600">
+                        <span class="font-bold uppercase tracking-widest text-[9px]">Delivery Fee</span>
+                        <div class="font-black flex items-center justify-end gap-0.5 text-[#ea580c]">$<span class="delivery-usd editable px-1" contenteditable="false" onblur="recalculateReceipt({{ order.id }})">{{ "{:,.2f}".format(delivery_usd) }}</span></div>
+                    </div>
+                    <div class="flex justify-between items-end border-t-2 border-dashed border-gray-200 pt-3 mt-2">
+                        <span class="font-black uppercase tracking-widest text-[11px] text-gray-900 mb-1">Total Due</span>
+                        <div class="text-right">
+                            <div class="font-black text-xl text-[#ea580c] flex items-center justify-end gap-0.5">$<span class="grand-total-usd">{{ "{:,.2f}".format(order.total_usd) }}</span></div>
+                            <div class="font-bold text-[10px] text-gray-500 mt-0.5"><span class="grand-total-khr">{{ "{:,.0f}".format(order.total_usd * 4000) }}</span> ៛</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Photo Display -->
+                {% if order.receipt_photo %}
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                    <span class="font-bold text-gray-400 uppercase tracking-widest text-[9px] mb-2 block"><i class="fa-solid fa-paperclip mr-1"></i> Attached Photo</span>
+                    <img src="{{ order.receipt_photo }}" class="w-full h-auto max-h-40 object-cover rounded-lg border border-gray-200 cursor-zoom-in hover:opacity-90 transition-opacity" onclick="openImageViewer('{{ order.receipt_photo }}')">
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="action-buttons flex gap-2 pt-2 border-t border-gray-100 mt-4">
+                    <button type="button" onclick="toggleReceiptEdit({{ order.id }})" title="Edit Prices & Text" class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all border border-blue-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-pen text-sm"></i></button>
+                    <!-- PDF BUTTON -->
+                    <button type="button" onclick="generateReceiptPDF({{ order.id }})" title="Save Receipt PDF" class="w-10 h-10 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white flex items-center justify-center transition-all border border-red-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-file-pdf text-sm"></i></button>
+                    <!-- JPG BUTTON -->
+                    <button type="button" onclick="generateReceiptImage({{ order.id }})" title="Save Receipt Image" class="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl hover:bg-[#ff5000] hover:text-white flex items-center justify-center transition-all border border-orange-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-image text-sm"></i></button>
+
+                    {% if is_completed %}
+                        <button type="button" disabled class="flex-1 bg-gray-100 text-gray-400 h-10 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-inner cursor-not-allowed flex items-center justify-center border border-gray-200"><i class="fa-solid fa-check-circle mr-1"></i> Completed</button>
+                    {% else %}
+                        <form action="/admin/order/status/{{ order.id }}/Completed" method="POST" class="flex-1 m-0 h-10" onsubmit="return confirm('Mark as finished? This will deduct stock permanently.')">
+                            <button type="submit" class="w-full h-full bg-[#10b981] text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:bg-[#059669] transition-transform active:scale-95 flex items-center justify-center"><i class="fa-solid fa-box-open mr-1"></i> Fulfill</button>
+                        </form>
+                    {% endif %}
+
+                    <form action="/admin/order/delete/{{ order.id }}" method="POST" onsubmit="return confirm('WARNING: Delete order history permanently?')" class="m-0 h-10 shrink-0">
+                        <button type="submit" class="w-10 h-full bg-gray-50 text-gray-400 border border-gray-200 rounded-xl hover:text-red-500 hover:bg-red-50 hover:border-red-200 flex items-center justify-center transition-all shadow-sm"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
             </div>
         </div>
 
@@ -480,8 +757,28 @@
                                 <span id="multi-sel-count" class="text-[8px] md:text-[9px] font-black text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">0 Selected</span>
                             </div>
                             
-                            <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 p-2 bg-indigo-50/30 border border-indigo-200 rounded-xl max-h-[220px] overflow-y-auto hide-scrollbar" id="spin-catalog-items">
-                                <!-- Catalog items for spin pool will be populated here -->
+                            <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 p-2 bg-indigo-50/30 border border-indigo-200 rounded-xl max-h-[220px] overflow-y-auto hide-scrollbar">
+                                {% for p in products %}
+                                    {% if p.store == 'toy' %}
+                                        {% if p.parsed_variants %}
+                                            {% for v in p.parsed_variants %}
+                                                <label class="cursor-pointer relative group aspect-square">
+                                                    <input type="checkbox" name="catalog_items[]" value="{{ p.id }}|{{ loop.index0 }}" class="hidden peer" onchange="updateMultiCount()">
+                                                    <img src="{{ v.image }}" class="w-full h-full object-cover rounded-lg border-2 border-transparent peer-checked:border-indigo-600 peer-checked:opacity-100 opacity-60 hover:opacity-100 transition-all bg-white shadow-sm">
+                                                    <div class="absolute top-1 right-1 hidden peer-checked:flex items-center justify-center w-4 h-4 text-white bg-indigo-600 rounded-full shadow-sm text-[10px]"><i class="fa-solid fa-check"></i></div>
+                                                    <div class="absolute bottom-1 left-1 right-1 hidden peer-checked:block text-[8px] text-center font-black text-white bg-indigo-600/80 rounded backdrop-blur-sm truncate px-1">Stock: {{ v.stock }}</div>
+                                                </label>
+                                            {% endfor %}
+                                        {% else %}
+                                            <label class="cursor-pointer relative group aspect-square">
+                                                <input type="checkbox" name="catalog_items[]" value="{{ p.id }}|-1" class="hidden peer" onchange="updateMultiCount()">
+                                                <img src="{{ p.image }}" class="w-full h-full object-cover rounded-lg border-2 border-transparent peer-checked:border-indigo-600 peer-checked:opacity-100 opacity-60 hover:opacity-100 transition-all bg-white shadow-sm">
+                                                <div class="absolute top-1 right-1 hidden peer-checked:flex items-center justify-center w-4 h-4 text-white bg-indigo-600 rounded-full shadow-sm text-[10px]"><i class="fa-solid fa-check"></i></div>
+                                                <div class="absolute bottom-1 left-1 right-1 hidden peer-checked:block text-[8px] text-center font-black text-white bg-indigo-600/80 rounded backdrop-blur-sm truncate px-1">Stock: {{ p.stock|default(0) }}</div>
+                                            </label>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
                             </div>
                             <script>
                                 function updateMultiCount() {
@@ -595,7 +892,44 @@
                                 </tr>
                             </thead>
                             <tbody id="live-history-tbody" class="text-[11px] md:text-sm font-semibold text-gray-700 divide-y divide-gray-100">
-                                <!-- Spin history will be populated here -->
+                                {% for draw in history|default([]) %}
+                                <tr class="hover:bg-indigo-50/30 transition-colors">
+                                    <td class="text-center p-2">
+                                        <input type="checkbox" class="history-checkbox w-4 h-4 cursor-pointer accent-indigo-600 rounded" value="{{ draw.id }}">
+                                    </td>
+                                    <td class="font-mono text-[9px] md:text-[10px] text-gray-500">{{ draw.cambodia_time }}</td>
+                                    <td><span class="bg-gray-100 border border-gray-200 px-1.5 py-0.5 md:px-2 md:py-1 rounded font-mono text-[9px] md:text-[10px] text-gray-600">{{ draw.player_id }}</span></td>
+                                    
+                                    <td class="font-black text-[10px] md:text-xs">
+                                        <div class="flex items-center gap-2">
+                                            {% if draw.image %}
+                                            <div class="w-6 h-6 bg-white rounded border border-gray-100 p-0.5 shrink-0 shadow-sm">
+                                                <img src="{{ draw.image }}" class="w-full h-full object-contain">
+                                            </div>
+                                            {% endif %}
+                                            <span>{{ draw.item_name }}</span>
+                                        </div>
+                                    </td>
+                                    
+                                    <td>
+                                        <span class="px-1.5 py-1 md:px-2 md:py-1.5 rounded text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border
+                                            {% if draw.rarity == 'Legendary' %}bg-yellow-50 text-yellow-600 border-yellow-200
+                                            {% elif draw.rarity == 'Epic' %}bg-purple-50 text-purple-600 border-purple-200
+                                            {% elif draw.rarity == 'Rare' %}bg-blue-50 text-blue-600 border-blue-200
+                                            {% else %}bg-gray-100 text-gray-600 border-gray-200{% endif %}">
+                                            {{ draw.rarity }}
+                                        </span>
+                                    </td>
+                                    <td class="text-red-500 font-black text-center text-[10px] md:text-xs bg-red-50/50">{{ draw.stock_remaining }}</td>
+                                    <td class="text-right">
+                                        <form action="/admin/spin/history/delete/{{ draw.id }}" method="POST" class="m-0" onsubmit="return confirm('Delete history record?')">
+                                            <button type="submit" class="w-6 h-6 md:w-8 md:h-8 rounded bg-gray-50 text-gray-400 hover:text-red-50 hover:bg-red-50 border border-gray-200 transition-colors"><i class="fa-solid fa-xmark text-[10px] md:text-xs"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="7" class="p-8 text-center text-gray-300 text-[9px] md:text-[10px] font-black uppercase tracking-widest"><i class="fa-solid fa-ghost text-3xl md:text-4xl mb-2 md:mb-3 block opacity-20"></i>No plays yet.</td></tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
@@ -626,8 +960,46 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 max-h-[400px] overflow-y-auto pr-1 md:pr-2 hide-scrollbar pb-2" id="prize-matrix-container">
-                        <!-- Prize pool will be populated here -->
+                    <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 max-h-[400px] overflow-y-auto pr-1 md:pr-2 hide-scrollbar pb-2">
+                        {% for item in pool|default([]) %}
+                        <div class="matrix-item-container border border-gray-200 rounded-xl md:rounded-2xl p-2 md:p-3 flex flex-col items-center relative shadow-sm {% if item.stock <= 0 %}bg-red-50/50 grayscale-[0.3] border-red-200{% else %}bg-gray-50{% endif %} transition-all group">
+                            
+                            <input type="checkbox" class="pool-checkbox absolute top-2 right-2 md:top-3 md:right-3 z-20 w-4 h-4 cursor-pointer accent-indigo-600 rounded opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity" value="{{ item.id }}">
+
+                            <form action="/admin/spin/pool/update_rarity/{{ item.id }}" method="POST" class="absolute top-2 left-2 md:top-3 md:left-3 z-10 matrix-update-form">
+                                <div class="relative group/sel bg-white border border-gray-200 rounded text-[8px] md:text-[9px] shadow-sm overflow-hidden flex items-center hover:border-indigo-300 transition-colors">
+                                    <div class="bg-gray-100 p-0.5 px-1 md:p-1 md:px-1.5 border-r border-gray-200 text-gray-400"><i class="fa-solid fa-star text-[7px] md:text-[8px]"></i></div>
+                                    <select name="rarity" onchange="markMatrixDirty(this)" class="pl-1 pr-3 py-0.5 md:pl-1.5 md:pr-4 md:py-1 font-black uppercase tracking-wider outline-none cursor-pointer appearance-none border-none
+                                        {% if item.rarity == 'Legendary' %}bg-yellow-50 text-yellow-700
+                                        {% elif item.rarity == 'Epic' %}bg-purple-50 text-purple-700
+                                        {% elif item.rarity == 'Rare' %}bg-blue-50 text-blue-700
+                                        {% else %}bg-white text-gray-600{% endif %}">
+                                        <option value="Common" {% if item.rarity == 'Common' %}selected{% endif %}>Common</option>
+                                        <option value="Rare" {% if item.rarity == 'Rare' %}selected{% endif %}>Rare</option>
+                                        <option value="Epic" {% if item.rarity == 'Epic' %}selected{% endif %}>Epic</option>
+                                        <option value="Legendary" {% if item.rarity == 'Legendary' %}selected{% endif %}>Legendary</option>
+                                    </select>
+                                    <i class="fa-solid fa-caret-down absolute right-1 md:right-1.5 top-1/2 -translate-y-1/2 text-[7px] md:text-[8px] pointer-events-none text-gray-400 group-hover/sel:text-indigo-500"></i>
+                                </div>
+                            </form>
+
+                            <div class="w-12 h-12 md:w-16 md:h-16 bg-white border border-gray-100 shadow-sm rounded-lg md:rounded-xl mb-2 mt-6 md:mt-8 flex items-center justify-center p-1"><img src="{{ item.image }}" class="max-w-full max-h-full object-contain"></div>
+                            <h4 class="text-[9px] md:text-[10px] font-black text-center leading-tight mb-1 h-6 overflow-hidden text-gray-800 uppercase tracking-widest px-1" title="{{ item.name }}">{{ item.name }}</h4>
+                            
+                            <div class="text-[7px] md:text-[8px] font-black text-indigo-500 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded mb-2 text-center w-full uppercase tracking-widest" title="This stock is shared with the main Toy Store inventory"><i class="fa-solid fa-link mr-1"></i> Shared Stock</div>
+                            
+                            <div class="flex items-center gap-1 w-full mt-auto">
+                                <form action="/admin/spin/pool/update_order/{{ item.id }}" method="POST" class="w-10 md:w-12 shrink-0 m-0 matrix-update-form">
+                                    <input type="number" name="sort_order" value="{{ item.sort_order | default(loop.index) }}" onchange="markMatrixDirty(this)" class="w-full text-center text-[10px] md:text-xs font-black outline-none border border-gray-300 rounded-lg md:rounded-xl bg-white shadow-sm focus:border-indigo-500 h-[32px] md:h-[36px]" title="Sort Position (1 shows first)">
+                                </form>
+                                <form action="/admin/spin/update_stock/{{ item.id }}" method="POST" class="w-full m-0 flex items-center border border-gray-300 rounded-lg md:rounded-xl p-1 bg-white shadow-sm focus-within:border-indigo-500 transition-colors h-[32px] md:h-[36px] matrix-update-form">
+                                    <button type="button" onclick="let i=this.nextElementSibling; i.value=Math.max(0, parseInt(i.value)-1); markMatrixDirty(this)" class="w-6 h-full md:w-7 bg-gray-50 hover:bg-red-50 hover:text-red-600 rounded md:rounded-lg text-gray-400 font-black transition-colors border border-transparent hover:border-red-200">-</button>
+                                    <input type="number" name="stock" value="{{ item.stock }}" onchange="markMatrixDirty(this)" class="w-full text-center text-[10px] md:text-xs font-black outline-none hide-scrollbar text-indigo-700 bg-transparent">
+                                    <button type="button" onclick="let i=this.previousElementSibling; i.value=parseInt(i.value)+1; markMatrixDirty(this)" class="w-6 h-full md:w-7 bg-gray-50 hover:bg-green-50 hover:text-green-600 rounded md:rounded-lg text-gray-400 font-black transition-colors border border-transparent hover:border-green-200">+</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
 
@@ -661,8 +1033,24 @@
                                     <th>Claimed By (UID)</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-[11px] md:text-xs" id="codes-table-body">
-                                <!-- Codes will be populated here -->
+                            <tbody class="text-[11px] md:text-xs">
+                                {% for code in codes|default([]) %}
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="text-center p-2 md:p-3">
+                                        <input type="checkbox" class="code-checkbox w-4 h-4 cursor-pointer accent-indigo-600 rounded" value="{{ code.id }}">
+                                    </td>
+                                    <td class="font-mono font-black tracking-widest text-indigo-600">{{ code.code }}</td>
+                                    <td class="font-black">{{ code.value }} ៛</td>
+                                    <td>
+                                        {% if code.status == 'Active' %}
+                                            <span class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 md:px-2.5 md:py-1 rounded text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm">Active</span>
+                                        {% else %}
+                                            <span class="bg-gray-100 text-gray-400 border border-gray-200 px-2 py-0.5 md:px-2.5 md:py-1 rounded text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm">Redeemed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="font-mono text-[9px] md:text-[10px] text-gray-400">{{ code.redeemed_by if code.redeemed_by else '---' }}</td>
+                                </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
@@ -712,7 +1100,9 @@
                     </select>
                     <select id="ls-cat-filter" onchange="filterLiveStock()" class="input-box py-2.5 md:py-3 shadow-sm border-gray-200 cursor-pointer hidden md:block text-xs">
                         <option value="all">All Categories</option>
-                        <option value="action figures">Action Figures</option>
+                        {% for cat in categories %}
+                        <option value="{{cat.name|lower}}">{{cat.name}}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 
@@ -721,7 +1111,53 @@
 
             <!-- Redesigned Grid layout -->
             <div class="overflow-y-auto flex-1 bg-gray-50 p-2 touch-pan-y hide-scrollbar w-full grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 content-start" id="live-stock-list">
-                <!-- Live stock items will be populated here -->
+                {% for p in products %}
+                    {% set group_cats = [] %}
+                    {% if p.category %}{% for mc in p.category.split(',') %}{% set trimmed = mc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}
+                    {% for v in p.parsed_variants %}{% if v.category %}{% for vc in v.category.split(',') %}{% set trimmed = vc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}{% endfor %}
+                    {% set lower_cats = group_cats | join(',') | lower %}
+
+                    {% if p.parsed_variants|length > 0 %}
+                        {% for v in p.parsed_variants %}
+                            {% set is_gallery = ('building sets' in lower_cats and loop.index0 > 0) or (v.category and 'gallery' in v.category|lower) %}
+                            {% if not is_gallery %}
+                                <div class="ls-item bg-white border border-gray-200 rounded-lg p-1.5 flex flex-col gap-1.5 shadow-sm relative transition-colors" data-store="{{ p.store }}" data-stock="{{ v.stock }}" data-name="{{ v.name|lower }} {{ p.title|lower }}" data-categories="{{ lower_cats }}">
+                                    
+                                    <span class="stock-badge absolute top-0 right-0 text-white text-[7px] font-black px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg z-10 shadow-sm" style="{% if v.stock|int > 0 %}display:none;{% endif %} {% if p.store == 'lego' %}background-color:#ff5000;{% else %}background-color:#dc2626;{% endif %}">
+                                        {% if p.store == 'lego' %}PRE-ORDER{% else %}EMPTY{% endif %}
+                                    </span>
+
+                                    <div class="w-full aspect-square bg-gray-50 rounded border border-gray-100 flex items-center justify-center p-1 cursor-zoom-in hover:opacity-80 transition-opacity" onclick="openImageViewer('{{ v.image }}')">
+                                        <img src="{{ v.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply">
+                                    </div>
+
+                                    <div class="flex items-center justify-between w-full bg-white border border-gray-300 rounded-md focus-within:border-[#ff5000] focus-within:ring-1 focus-within:ring-orange-200 transition-all h-8">
+                                        <button type="button" onclick="queueStockUpdate({{ p.id }}, {{ loop.index0 }}, -1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-red-50 hover:text-red-600 rounded-l-md font-black text-sm border-r border-gray-200 transition-colors">-</button>
+                                        <input type="number" id="quick-stock-{{p.id}}-{{loop.index0}}" value="{{ v.stock }}" onchange="queueExactStock({{ p.id }}, {{ loop.index0 }}, this)" class="w-full text-center text-[11px] font-black outline-none hide-scrollbar text-gray-900 bg-transparent px-0">
+                                        <button type="button" onclick="queueStockUpdate({{ p.id }}, {{ loop.index0 }}, 1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-green-50 hover:text-green-600 rounded-r-md font-black text-sm border-l border-gray-200 transition-colors">+</button>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="ls-item bg-white border border-gray-200 rounded-lg p-1.5 flex flex-col gap-1.5 shadow-sm relative transition-colors" data-store="{{ p.store }}" data-stock="{{ p.stock|default(0) }}" data-name="{{ p.title|lower }}" data-categories="{{ lower_cats }}">
+                            
+                            <span class="stock-badge absolute top-0 right-0 text-white text-[7px] font-black px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg z-10 shadow-sm" style="{% if p.stock|default(0)|int > 0 %}display:none;{% endif %} {% if p.store == 'lego' %}background-color:#ff5000;{% else %}background-color:#dc2626;{% endif %}">
+                                {% if p.store == 'lego' %}PRE-ORDER{% else %}EMPTY{% endif %}
+                            </span>
+
+                            <div class="w-full aspect-square bg-gray-50 rounded border border-gray-100 flex items-center justify-center p-1 cursor-zoom-in hover:opacity-80 transition-opacity" onclick="openImageViewer('{{ p.image }}')">
+                                <img src="{{ p.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply">
+                            </div>
+
+                            <div class="flex items-center justify-between w-full bg-white border border-gray-300 rounded-md focus-within:border-[#ff5000] focus-within:ring-1 focus-within:ring-orange-200 transition-all h-8">
+                                <button type="button" onclick="queueStockUpdate({{ p.id }}, -1, -1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-red-50 hover:text-red-600 rounded-l-md font-black text-sm border-r border-gray-200 transition-colors">-</button>
+                                <input type="number" id="quick-stock-{{p.id}}--1" value="{{ p.stock|default(0) }}" onchange="queueExactStock({{ p.id }}, -1, this)" class="w-full text-center text-[11px] font-black outline-none hide-scrollbar text-gray-900 bg-transparent px-0">
+                                <button type="button" onclick="queueStockUpdate({{ p.id }}, -1, 1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-green-50 hover:text-green-600 rounded-r-md font-black text-sm border-l border-gray-200 transition-colors">+</button>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
             </div>
         </div>
     </div>
@@ -739,7 +1175,21 @@
 
             <form action="/admin/categories/update" method="POST" enctype="multipart/form-data" class="p-4 md:p-5 flex flex-col overflow-hidden submit-form flex-1">
                 <div id="category-sortable" class="overflow-y-auto space-y-2 md:space-y-3 pr-1 md:pr-2 hide-scrollbar flex-1 pb-2 md:pb-4 touch-pan-y">
-                    <!-- Categories will be populated here -->
+                    {% for cat in categories %}
+                    <div class="cat-modal-item flex gap-3 md:gap-4 items-center bg-white p-2 md:p-3 rounded-xl md:rounded-2xl border border-gray-200 shadow-sm relative group hover:border-blue-300 transition-colors" data-store="{{cat.store}}">
+                        <i class="fa-solid fa-grip-vertical text-gray-300 handle px-1.5 md:px-2 text-base md:text-lg hover:text-black transition-colors cursor-grab"></i>
+                        <input type="hidden" name="cat_ids[]" value="{{cat.id}}">
+                        <div class="relative w-12 h-12 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden border border-gray-200 bg-gray-50 cursor-pointer hover:border-blue-500 transition-colors shadow-inner flex items-center justify-center shrink-0" onclick="document.getElementById('cat-file-{{cat.id}}').click()" title="Click to replace image">
+                            <img src="{{cat.image}}" class="max-w-full max-h-full object-cover">
+                            <input type="file" name="cat_image_{{cat.id}}" id="cat-file-{{cat.id}}" accept="image/*" class="hidden">
+                        </div>
+                        <div class="flex-1 space-y-1 md:space-y-1.5 min-w-0">
+                            <input type="text" name="cat_names[]" value="{{cat.name}}" class="text-xs md:text-sm font-black border-b border-gray-200 outline-none w-full pb-0.5 md:pb-1 focus:border-[#ff5000] text-gray-900 transition-colors truncate">
+                            <span class="text-[7px] md:text-[9px] font-black text-gray-500 uppercase tracking-widest block bg-gray-100 border border-gray-200 w-fit px-1.5 py-0.5 md:px-2 md:py-0.5 rounded">{{cat.store}}</span>
+                        </div>
+                        <button type="button" onclick="deleteCategory({{cat.id}})" class="w-8 h-8 md:w-10 md:h-10 shrink-0 flex items-center justify-center text-gray-400 bg-gray-50 border border-gray-200 rounded-lg md:rounded-xl hover:text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors shadow-sm"><i class="fa-solid fa-trash-can text-xs md:text-sm"></i></button>
+                    </div>
+                    {% endfor %}
                 </div>
                 <div class="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-100">
                     <button type="submit" class="w-full btn-taobao py-3.5 md:py-4 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-transform">Save Configuration</button>
@@ -748,660 +1198,500 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-        import { getFirestore, collection, query, onSnapshot, doc, setDoc, deleteDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+    <script>
+        // --- CUSTOM TOAST ---
+        function showClientToast(msg, isError = false) {
+            const toast = document.getElementById('client-toast');
+            const icon = toast.querySelector('i');
+            document.getElementById('client-toast-msg').innerText = msg;
+            icon.className = isError ? "fa-solid fa-triangle-exclamation text-red-400 text-sm" : "fa-solid fa-circle-check text-green-400 text-sm";
+            toast.classList.remove('-translate-y-10', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.add('-translate-y-10', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
 
-        // --- Custom Base64 Images for Mock Data ---
-        const MOCK_IMG_TOY1 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2U1ZTVlNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNHB4IiBmaWxsPSIjOTk5Ij5Ub3kgMTwvdGV4dD48L3N2Zz4=';
-        const MOCK_IMG_TOY2 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2U1ZTVlNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNHB4IiBmaWxsPSIjOTk5Ij5Ub3kgMjwvdGV4dD48L3N2Zz4=';
+        // --- EXPENSE TRACKER LOGIC ---
+        let expenses = []; // Array of { amount: number, dateStr: string }
 
-        // Initialize Firebase
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            // Mock config for local testing if needed
-        };
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        function openExpenseModal() {
+            document.getElementById('expense-modal').classList.remove('hidden');
+        }
 
-        let currentUser = null;
-        let globalProducts = [];
-        let globalOrders = [];
+        function closeExpenseModal() {
+            document.getElementById('expense-modal').classList.add('hidden');
+        }
 
-        // Make functions globally available for inline event handlers
-        window.switchView = switchView;
-        window.openExpenseModal = openExpenseModal;
-        window.closeExpenseModal = closeExpenseModal;
-        window.addExpense = addExpense;
-        window.removeExpense = removeExpense;
-        window.calculateIncome = calculateIncome;
-        window.calculateProfit = calculateProfit;
-        window.openManualReceiptModal = openManualReceiptModal;
-        window.closeManualReceiptModal = closeManualReceiptModal;
-        window.addManualReceiptItem = addManualReceiptItem;
-        window.generateReceiptPDF = generateReceiptPDF;
-        window.generateReceiptImage = generateReceiptImage;
-        window.filterStore = filterStore;
-        window.filterCategory = filterCategory;
-        window.openCatModal = openCatModal;
-        window.closeCatModal = closeCatModal;
-        window.openStockSummaryModal = openStockSummaryModal;
-        window.closeStockSummaryModal = closeStockSummaryModal;
-        window.filterLiveStock = filterLiveStock;
-        window.toggleOutOfStock = toggleOutOfStock;
-        window.queueStockUpdate = queueStockUpdate;
-        window.queueExactStock = queueExactStock;
-        window.saveAllStockChanges = saveAllStockChanges;
-        window.submitMatrixChanges = submitMatrixChanges;
-        window.toggleAllHistory = toggleAllHistory;
-        window.submitBulkHistoryDelete = submitBulkHistoryDelete;
-        window.toggleAllPool = toggleAllPool;
-        window.submitBulkPoolDelete = submitBulkPoolDelete;
-        window.toggleAllCodes = toggleAllCodes;
-        window.submitBulkCodeDelete = submitBulkCodeDelete;
-        window.syncLuckyDrawTags = syncLuckyDrawTags;
-        window.toggleSpinAddMode = toggleSpinAddMode;
-        window.exportOrdersToCSV = exportOrdersToCSV;
-        window.openImageViewer = openImageViewer;
-        window.closeImageViewer = closeImageViewer;
-        window.recalculateReceipt = recalculateReceipt;
-        window.toggleReceiptEdit = toggleReceiptEdit;
-        window.renderUploadVariants = renderUploadVariants;
-        window.updateCatList = updateCatList;
-        window.updatePrice = updatePrice;
-        window.deleteCategory = deleteCategory;
-        window.toggleEdit = toggleEdit;
-        window.markMatrixDirty = markMatrixDirty;
+        function addExpense() {
+            const input = document.getElementById('new-expense-amount');
+            const amt = parseFloat(input.value);
+            if (isNaN(amt) || amt <= 0) return showClientToast("Enter a valid amount", true);
+            
+            const now = new Date();
+            const pad = (n) => n.toString().padStart(2, '0');
+            const dateStr = `Date ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} Time ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            
+            expenses.push({ amount: amt, dateStr: dateStr });
+            input.value = '';
+            
+            renderExpenses();
+            calculateProfit();
+            showClientToast("Expense Logged");
+        }
 
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
+        function removeExpense(index) {
+            expenses.splice(index, 1);
+            renderExpenses();
+            calculateProfit();
+            showClientToast("Expense Removed");
+        }
+
+        function renderExpenses() {
+            const list = document.getElementById('expense-list');
+            const emptyState = document.getElementById('expense-empty-state');
+            
+            list.innerHTML = '';
+            let totalSpend = 0;
+            
+            if (expenses.length === 0) {
+                if(emptyState) list.appendChild(emptyState);
             } else {
-                await signInAnonymously(auth);
-            }
-        };
-
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (user) {
-                setupListeners(user.uid);
-            }
-        });
-
-        initAuth();
-
-        function setupListeners(uid) {
-            // Listen to Products
-            const productsQuery = query(collection(db, 'artifacts', appId, 'users', uid, 'products'));
-            onSnapshot(productsQuery, (snapshot) => {
-                const products = [];
-                snapshot.forEach(doc => {
-                    products.push({ id: doc.id, ...doc.data() });
+                expenses.forEach((ex, idx) => {
+                    totalSpend += ex.amount;
+                    list.innerHTML += `
+                        <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm transition-all hover:border-red-200">
+                            <div>
+                                <p class="font-black text-red-600 text-[13px]">$${ex.amount.toFixed(2)}</p>
+                                <p class="text-[9px] font-bold text-gray-400 font-mono mt-0.5"><span class="text-gray-300">|</span> ${ex.dateStr}</p>
+                            </div>
+                            <button onclick="removeExpense(${idx})" class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 text-gray-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                        </div>
+                    `;
                 });
-                globalProducts = products;
+            }
+            
+            // Auto update the main input field so it syncs together seamlessly
+            document.getElementById('calc-spend-input').value = totalSpend.toFixed(2);
+        }
+
+        // --- FINANCIAL LOGIC WITH MONTHLY FILTER ---
+        function calculateIncome() {
+            let totalIncome = 0;
+            const filterMonth = document.getElementById('finance-month-filter').value; // e.g., "2023-10"
+
+            document.querySelectorAll('.order-data-card').forEach(card => {
+                const isCompleted = (card.dataset.status === 'Completed' || card.dataset.status === 'completed');
+                const cardDateStr = card.dataset.date; 
                 
-                // If empty, add mock data
-                if (products.length === 0) {
-                    addMockProducts(uid);
-                } else {
-                    renderInventory(products);
-                    renderLiveStock(products);
-                    renderSpinCatalog(products);
-                    updateDashboardStats();
-                }
-            }, (error) => {
-                console.error("Error fetching products:", error);
-                showClientToast("Error loading products", true);
-            });
-
-            // Listen to Orders
-            const ordersQuery = query(collection(db, 'artifacts', appId, 'users', uid, 'orders'));
-            onSnapshot(ordersQuery, (snapshot) => {
-                const orders = [];
-                snapshot.forEach(doc => {
-                    orders.push({ id: doc.id, ...doc.data() });
-                });
-                globalOrders = orders;
-
-                // If empty, add mock data
-                if (orders.length === 0) {
-                    addMockOrders(uid);
-                } else {
-                    renderOrders(orders);
-                    updateDashboardStats();
-                    calculateIncome();
-                }
-            }, (error) => {
-                console.error("Error fetching orders:", error);
-                showClientToast("Error loading orders", true);
-            });
-            
-             // Listen to Categories
-             const categoriesQuery = query(collection(db, 'artifacts', appId, 'users', uid, 'categories'));
-            onSnapshot(categoriesQuery, (snapshot) => {
-                const categories = [];
-                snapshot.forEach(doc => {
-                    categories.push({ id: doc.id, ...doc.data() });
-                });
+                let matchMonth = true; // Defaults to true if no filter is active
                 
-                // If empty, add mock data
-                if (categories.length === 0) {
-                    addMockCategories(uid);
-                } else {
-                    renderCategories(categories);
+                // If a user has chosen a specific month to filter by
+                if (filterMonth) {
+                    matchMonth = false; // We assume it doesn't match until proven otherwise
+                    if (cardDateStr && cardDateStr.trim() !== '' && cardDateStr.trim() !== 'None') {
+                        try {
+                            const dateObj = new Date(cardDateStr);
+                            // Verify it is actually a valid parsable date before doing logic
+                            if (!isNaN(dateObj.getTime())) {
+                                const cardMonth = dateObj.getFullYear() + '-' + String(dateObj.getMonth() + 1).padStart(2, '0');
+                                if (cardMonth === filterMonth) {
+                                    matchMonth = true;
+                                }
+                            }
+                        } catch (e) {
+                            // If Date() fails to parse, it simply stays false and skips this card
+                        }
+                    }
                 }
-            }, (error) => {
-                console.error("Error fetching categories:", error);
+
+                if (isCompleted && matchMonth) {
+                    totalIncome += parseFloat(card.dataset.total || 0);
+                }
             });
+            document.getElementById('calc-income').innerText = totalIncome.toFixed(2);
+            calculateProfit();
+        }
+
+        function calculateProfit() {
+            const income = parseFloat(document.getElementById('calc-income').innerText) || 0;
+            // Now reading directly from the user-editable input box
+            const spend = parseFloat(document.getElementById('calc-spend-input').value) || 0;
+            const profit = income - spend;
             
-            // Listen to Spin Pool
-             const poolQuery = query(collection(db, 'artifacts', appId, 'users', uid, 'spin_pool'));
-            onSnapshot(poolQuery, (snapshot) => {
-                const pool = [];
-                snapshot.forEach(doc => {
-                    pool.push({ id: doc.id, ...doc.data() });
-                });
-                
-                renderSpinPool(pool);
-            }, (error) => {
-                console.error("Error fetching pool:", error);
-            });
-        }
-
-        async function addMockProducts(uid) {
-            const mockProducts = [
-                {
-                    title: "Superhero Action Figure",
-                    store: "toy",
-                    category: "Action Figures",
-                    image: MOCK_IMG_TOY1,
-                    price: 15.99,
-                    stock: 50,
-                    is_visible: true,
-                    parsed_variants: []
-                },
-                {
-                    title: "Mystery Mini Figure Box",
-                    store: "toy",
-                    category: "Action Figures, Lucky Draw",
-                    image: MOCK_IMG_TOY2,
-                    price: 5.99,
-                    stock: 0,
-                    is_visible: true,
-                    parsed_variants: [
-                        { name: "Red Variant", price: 5.99, stock: 10, image: MOCK_IMG_TOY1 },
-                        { name: "Blue Variant", price: 6.99, stock: 0, image: MOCK_IMG_TOY2 }
-                    ]
-                }
-            ];
-
-            for (const prod of mockProducts) {
-                try {
-                    await setDoc(doc(collection(db, 'artifacts', appId, 'users', uid, 'products')), prod);
-                } catch (e) {
-                    console.error("Error adding mock product", e);
-                }
-            }
-        }
-
-        async function addMockOrders(uid) {
-             const mockOrders = [
-                {
-                    customer_name: "Alice Smith",
-                    customer_phone: "012345678",
-                    customer_address: "123 Main St",
-                    date: "May 01, 2026",
-                    time: "10:30 AM",
-                    status: "Pending",
-                    total_usd: 25.99,
-                    parsed_items: [
-                        { title: "Superhero Action Figure", qty: 1, price: 15.99, image: MOCK_IMG_TOY1 },
-                        { title: "Delivery", qty: 1, price: 10.00, image: "hidden" }
-                    ]
-                },
-                {
-                    customer_name: "Bob Jones",
-                    customer_phone: "098765432",
-                    customer_address: "456 Oak Ave",
-                    date: "April 30, 2026",
-                    time: "14:15 PM",
-                    status: "Completed",
-                    total_usd: 15.99,
-                    parsed_items: [
-                        { title: "Superhero Action Figure", qty: 1, price: 15.99, image: MOCK_IMG_TOY1 }
-                    ]
-                }
-            ];
-
-            for (const order of mockOrders) {
-                 try {
-                    await setDoc(doc(collection(db, 'artifacts', appId, 'users', uid, 'orders')), order);
-                } catch (e) {
-                    console.error("Error adding mock order", e);
-                }
-            }
-        }
-        
-        async function addMockCategories(uid) {
-             const mockCats = [
-                { name: "Action Figures", store: "toy", image: MOCK_IMG_TOY1 },
-                { name: "Building Sets", store: "lego", image: MOCK_IMG_TOY2 }
-            ];
-
-            for (const cat of mockCats) {
-                 try {
-                    await setDoc(doc(collection(db, 'artifacts', appId, 'users', uid, 'categories')), cat);
-                } catch (e) {
-                    console.error("Error adding mock category", e);
-                }
-            }
-        }
-
-        // --- RENDER FUNCTIONS ---
-        function updateDashboardStats() {
-            const pendingOrders = globalOrders.filter(o => o.status === 'Pending').length;
-            document.getElementById('stat-pending-count').innerText = pendingOrders;
-            document.getElementById('stat-product-count').innerText = globalProducts.length;
+            const profitEl = document.getElementById('calc-profit');
+            const profitLabel = document.getElementById('profit-label');
+            const profitCard = document.getElementById('profit-card');
+            const profitIcon = document.getElementById('profit-icon');
             
-            const tabPending = document.getElementById('tab-pending-count');
-            const headerPending = document.getElementById('header-pending-count');
+            profitEl.innerText = Math.abs(profit).toFixed(2);
             
-            if (pendingOrders > 0) {
-                tabPending.innerText = pendingOrders;
-                tabPending.classList.remove('hidden');
-                headerPending.classList.remove('hidden');
+            if (profit >= 0) {
+                profitLabel.innerText = "Net Profit";
+                profitCard.className = "p-5 md:p-6 bg-blue-50/50 rounded-2xl border border-blue-100 shadow-sm flex flex-col justify-center relative overflow-hidden transition-colors";
+                profitEl.parentElement.className = "text-3xl md:text-4xl font-black text-blue-700 mt-1 flex items-center transition-colors";
+                profitLabel.className = "text-[10px] md:text-xs font-black text-blue-600 uppercase tracking-widest transition-colors";
+                profitIcon.className = "fa-solid fa-piggy-bank absolute -right-4 -bottom-4 text-6xl text-blue-600/5 transition-colors";
             } else {
-                tabPending.classList.add('hidden');
-                headerPending.classList.add('hidden');
+                profitLabel.innerText = "Net Loss / Waste";
+                profitCard.className = "p-5 md:p-6 bg-orange-50/50 rounded-2xl border border-orange-200 shadow-sm flex flex-col justify-center relative overflow-hidden transition-colors";
+                profitEl.parentElement.className = "text-3xl md:text-4xl font-black text-orange-600 mt-1 flex items-center transition-colors";
+                profitLabel.className = "text-[10px] md:text-xs font-black text-orange-600 uppercase tracking-widest transition-colors";
+                profitIcon.className = "fa-solid fa-arrow-trend-down absolute -right-4 -bottom-4 text-6xl text-orange-600/5 transition-colors";
             }
         }
 
-        function renderInventory(products) {
-            const container = document.getElementById('main-inventory-list');
-            container.innerHTML = '';
+        // --- MANUAL RECEIPT LOGIC ---
+        function openManualReceiptModal() {
+            document.getElementById('manual-receipt-modal').classList.remove('hidden');
+        }
+
+        function closeManualReceiptModal() {
+            document.getElementById('manual-receipt-modal').classList.add('hidden');
+        }
+
+        function addManualReceiptItem() {
+            const container = document.getElementById('manual-receipt-items');
+            const row = document.createElement('div');
+            row.className = 'flex gap-2 items-center bg-gray-50 p-2 rounded-lg border border-gray-200';
+            row.innerHTML = `
+                <input type="text" name="item_titles[]" placeholder="Item Name" required class="input-box flex-1 text-xs py-1.5">
+                <input type="number" name="item_prices[]" placeholder="Price ($)" step="any" required class="input-box w-20 text-xs py-1.5">
+                <input type="number" name="item_qtys[]" placeholder="Qty" value="1" min="1" required class="input-box w-16 text-xs py-1.5 text-center">
+                <button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 flex items-center justify-center bg-white text-red-500 rounded border border-gray-200 hover:bg-red-50 shadow-sm"><i class="fa-solid fa-trash-can"></i></button>
+            `;
+            container.appendChild(row);
+        }
+
+        // --- MULTI-PAGE PDF GENERATION LOGIC ---
+        window.jsPDF = window.jspdf.jsPDF; 
+
+        function generateReceiptPDF(orderId) {
+            const receiptEl = document.getElementById(`receipt-card-${orderId}`);
             
-            products.forEach(p => {
-                let groupCats = [];
-                if (p.category) {
-                    p.category.split(',').forEach(c => {
-                        const t = c.trim();
-                        if (t && !groupCats.includes(t)) groupCats.push(t);
-                    });
+            // Clean UI for PDF rendering
+            receiptEl.classList.remove('is-editing-receipt');
+            receiptEl.querySelectorAll('.editable').forEach(el => el.contentEditable = "false");
+            
+            const actionRow = receiptEl.querySelector('.action-buttons');
+            const originalDisplay = actionRow.style.display; 
+            actionRow.style.display = 'none';
+            
+            // Remove CSS effects to ensure a clean white PDF
+            const origRadius = receiptEl.style.borderRadius; receiptEl.style.borderRadius = '0px';
+            const origBorder = receiptEl.style.border; receiptEl.style.border = 'none';
+            const origShadow = receiptEl.style.boxShadow; receiptEl.style.boxShadow = 'none';
+            receiptEl.classList.remove('ring-1', 'border-[#ff5000]');
+
+            showClientToast("Generating Sheet-by-Sheet PDF...");
+
+            html2canvas(receiptEl, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false }).then(canvas => {
+                const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                
+                // Initialize A4 PDF (210x297mm)
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth(); // 210
+                const pageHeight = pdf.internal.pageSize.getHeight(); // 297
+                
+                // Calculate total image height mapped to PDF Width
+                const imgWidthPdf = pdfWidth;
+                const imgHeightPdf = (canvas.height * pdfWidth) / canvas.width;
+                
+                let heightLeft = imgHeightPdf;
+                let position = 0;
+
+                // Add First Page
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidthPdf, imgHeightPdf);
+                heightLeft -= pageHeight;
+
+                // Loop and add extra pages if the receipt is too long (Sheet by Sheet)
+                while (heightLeft > 0) {
+                    position -= pageHeight; // Shift the image up by exactly 1 page height
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, position, imgWidthPdf, imgHeightPdf);
+                    heightLeft -= pageHeight;
                 }
                 
-                const variants = p.parsed_variants || [];
-                variants.forEach(v => {
-                    if (v.category) {
-                        v.category.split(',').forEach(c => {
-                            const t = c.trim();
-                            if (t && !groupCats.includes(t)) groupCats.push(t);
+                pdf.save(`SompheaReak_Receipt_#${orderId}.pdf`);
+                
+                // Restore UI
+                actionRow.style.display = originalDisplay; 
+                receiptEl.style.borderRadius = origRadius;
+                receiptEl.style.border = origBorder;
+                receiptEl.style.boxShadow = origShadow;
+                receiptEl.classList.add('ring-1', 'border-[#ff5000]');
+
+                showClientToast("PDF Downloaded Successfully");
+            }).catch(err => { 
+                alert("Error generating receipt PDF."); 
+                actionRow.style.display = originalDisplay; 
+            });
+        }
+
+
+        // --- LIVE SYNC & SYSTEM VARS ---
+        function startLiveSync() {
+            setInterval(() => {
+                const activeTab = localStorage.getItem('adminActiveTab') || 'dashboard';
+                if (activeTab !== 'spin' && activeTab !== 'dashboard') return;
+
+                fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(res => res.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    const newHistory = doc.getElementById('live-history-tbody');
+                    const oldHistory = document.getElementById('live-history-tbody');
+                    if(newHistory && oldHistory) {
+                        const checkedIds = Array.from(oldHistory.querySelectorAll('.history-checkbox:checked')).map(cb => cb.value);
+                        oldHistory.innerHTML = newHistory.innerHTML;
+                        checkedIds.forEach(id => {
+                            const cb = oldHistory.querySelector(`.history-checkbox[value="${id}"]`);
+                            if(cb) cb.checked = true;
                         });
                     }
-                });
-
-                const groupCatsStr = groupCats.join(',').toLowerCase();
-                const isVisibleClass = p.is_visible ? '' : 'bg-gray-50/50 grayscale-[0.5]';
-                const isVisibleTextClass = p.is_visible ? '' : 'line-through text-gray-400';
-                const eyeIcon = p.is_visible ? 'fa-eye' : 'fa-eye-slash';
-                const eyeBtnClass = p.is_visible ? 'bg-white text-gray-500 hover:text-green-500 border border-gray-200 shadow-sm' : 'bg-gray-200 text-gray-400';
-
-                const html = `
-                    <div class="product-item bg-white rounded-xl md:rounded-[24px] border border-gray-100 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md ${isVisibleClass}" id="item-${p.id}" data-store="${p.store}" data-categories="${groupCatsStr}">
-                        <div class="view-mode flex flex-col h-full">
-                            <div class="relative h-32 md:h-44 w-full bg-gray-50 p-2 md:p-3 flex items-center justify-center border-b border-gray-100 group">
-                                <img src="${p.image || ''}" class="max-w-full max-h-full object-contain mix-blend-multiply drop-shadow-sm group-hover:scale-105 transition-transform duration-300" onerror="this.src='${MOCK_IMG_TOY1}'">
-                                <div class="absolute top-2 left-2 md:top-3 md:left-3 flex flex-col gap-1 md:gap-1.5 items-start pointer-events-none">
-                                    <span class="text-[7px] md:text-[8px] font-black text-white bg-slate-900/80 backdrop-blur px-1.5 py-0.5 md:px-2 md:py-1 rounded shadow-sm uppercase tracking-widest">${p.store || 'Unknown'}</span>
-                                    ${!p.is_visible ? `<span class="text-[7px] md:text-[8px] font-black text-white bg-red-500/90 backdrop-blur px-1.5 py-0.5 md:px-2 md:py-1 rounded shadow-sm uppercase tracking-widest"><i class="fa-solid fa-eye-slash"></i> <span class="hidden sm:inline">Hidden</span></span>` : ''}
-                                </div>
-                            </div>
-                            <div class="p-3 md:p-4 flex-1 flex flex-col">
-                                <h4 class="font-black text-xs md:text-sm text-gray-800 leading-tight mb-1 line-clamp-2 ${isVisibleTextClass}" title="${p.title || 'Untitled'}">${p.title || 'Untitled'}</h4>
-                                <p class="text-[8px] md:text-[10px] font-bold text-gray-400 mb-2 md:mb-3 mt-auto">${variants.length} Variant(s)</p>
-                                <div class="flex justify-between items-center mt-1 border-t border-gray-100 pt-2 md:pt-3">
-                                    <span class="text-xs md:text-sm font-black text-[#ff5000] leading-none">$ ${(p.price || 0).toFixed(2)}</span>
-                                    <span class="text-[7px] md:text-[9px] font-bold text-gray-300">ID: ${p.id.substring(0,6)}</span>
-                                </div>
-                            </div>
-                            <div class="p-1.5 md:p-2 border-t border-gray-100 bg-gray-50 flex justify-between items-center gap-1 md:gap-1.5">
-                                 <button onclick="toggleVisibility('${p.id}', ${!p.is_visible})" class="w-full h-8 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center transition-colors ${eyeBtnClass}" title="Toggle Visibility">
-                                    <i class="fa-solid ${eyeIcon} text-[10px] md:text-xs"></i>
-                                </button>
-                                <button onclick="toggleEdit('${p.id}')" class="flex-1 h-8 md:h-10 bg-white border border-gray-200 rounded-lg md:rounded-xl flex items-center justify-center text-blue-500 hover:bg-blue-50 transition-colors shadow-sm font-bold text-[9px] md:text-[10px] uppercase tracking-wider">
-                                    <i class="fa-solid fa-pen md:mr-1"></i> <span class="hidden sm:inline">Edit</span>
-                                </button>
-                                <button onclick="deleteProduct('${p.id}')" class="w-full h-8 md:h-10 bg-white border border-gray-200 rounded-lg md:rounded-xl flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors shadow-sm" title="Delete">
-                                    <i class="fa-solid fa-trash-can text-[10px] md:text-xs"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="edit-mode p-4 text-center text-sm font-bold text-gray-500">Edit form placeholder (Implement full edit form logic here)</div>
-                    </div>
-                `;
-                container.innerHTML += html;
-            });
-            applyFilters();
+                    
+                    ['stat-pending-count'].forEach(id => {
+                        const newVal = doc.getElementById(id);
+                        const oldVal = document.getElementById(id);
+                        if(newVal && oldVal) oldVal.innerText = newVal.innerText;
+                    });
+                })
+                .catch(err => console.log('Live Sync Paused'));
+            }, 5000); 
         }
 
-        function renderLiveStock(products) {
-            const container = document.getElementById('live-stock-list');
-            container.innerHTML = '';
-            
-            products.forEach(p => {
-                let groupCats = [];
-                if (p.category) p.category.split(',').forEach(c => { const t = c.trim(); if(t) groupCats.push(t); });
-                const variants = p.parsed_variants || [];
-                variants.forEach(v => { if (v.category) v.category.split(',').forEach(c => { const t = c.trim(); if(t) groupCats.push(t); }); });
-                const lowerCats = groupCats.join(',').toLowerCase();
+        const allInventoryItems = [
+            {% for p in products %}
+            {
+                id: "{{ p.id }}",
+                category: "{{ p.category|lower if p.category else '' }}",
+                variants: [
+                    {% for v in p.parsed_variants %}
+                    { index: {{ loop.index0 }}, category: "{{ v.category|lower if v.category else '' }}" },
+                    {% endfor %}
+                ]
+            },
+            {% endfor %}
+        ];
 
-                if (variants.length > 0) {
-                    variants.forEach((v, idx) => {
-                        const isGallery = ('building sets' === lowerCats && idx > 0) || (v.category && v.category.toLowerCase().includes('gallery'));
-                        if (!isGallery) {
-                            addStockCard(p, v.stock, v.name, lowerCats, v.image, idx);
+        async function syncLuckyDrawTags(btn) {
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Scanning & Syncing...';
+            btn.disabled = true;
+
+            const itemsToSync = [];
+            
+            allInventoryItems.forEach(product => {
+                const pCats = product.category ? product.category.split(',').map(c => c.trim().toLowerCase()) : [];
+                
+                if (product.variants && product.variants.length > 0) {
+                    product.variants.forEach(v => {
+                        const vCats = v.category ? v.category.split(',').map(c => c.trim().toLowerCase()) : [];
+                        if (pCats.includes('lucky draw') || vCats.includes('lucky draw')) {
+                            itemsToSync.push({ id: product.id, variantIndex: v.index });
                         }
                     });
                 } else {
-                    addStockCard(p, p.stock || 0, p.title, lowerCats, p.image, -1);
+                    if (pCats.includes('lucky draw')) {
+                        itemsToSync.push({ id: product.id, variantIndex: -1 });
+                    }
                 }
             });
-            filterLiveStock();
-        }
-        
-        function addStockCard(product, stock, name, lowerCats, image, variantIndex) {
-            const container = document.getElementById('live-stock-list');
-            const isOOS = parseInt(stock) <= 0;
-            const badgeBg = product.store === 'lego' ? '#ff5000' : '#dc2626';
-            const badgeText = product.store === 'lego' ? 'PRE-ORDER' : 'EMPTY';
-            
-            const html = `
-                <div class="ls-item bg-white border border-gray-200 rounded-lg p-1.5 flex flex-col gap-1.5 shadow-sm relative transition-colors" data-store="${product.store}" data-stock="${stock}" data-name="${name ? name.toLowerCase() : ''}" data-categories="${lowerCats}">
-                    <span class="stock-badge absolute top-0 right-0 text-white text-[7px] font-black px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg z-10 shadow-sm" style="${!isOOS ? 'display:none;' : ''} background-color:${badgeBg};">${badgeText}</span>
-                    <div class="w-full aspect-square bg-gray-50 rounded border border-gray-100 flex items-center justify-center p-1 cursor-zoom-in hover:opacity-80 transition-opacity" onclick="openImageViewer('${image}')">
-                        <img src="${image}" class="max-w-full max-h-full object-contain mix-blend-multiply" onerror="this.src='${MOCK_IMG_TOY1}'">
-                    </div>
-                    <div class="flex items-center justify-between w-full bg-white border border-gray-300 rounded-md focus-within:border-[#ff5000] focus-within:ring-1 focus-within:ring-orange-200 transition-all h-8">
-                        <button type="button" onclick="queueStockUpdate('${product.id}', ${variantIndex}, -1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-red-50 hover:text-red-600 rounded-l-md font-black text-sm border-r border-gray-200 transition-colors">-</button>
-                        <input type="number" id="quick-stock-${product.id}-${variantIndex}" value="${stock}" onchange="queueExactStock('${product.id}', ${variantIndex}, this)" class="w-full text-center text-[11px] font-black outline-none hide-scrollbar text-gray-900 bg-transparent px-0">
-                        <button type="button" onclick="queueStockUpdate('${product.id}', ${variantIndex}, 1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-green-50 hover:text-green-600 rounded-r-md font-black text-sm border-l border-gray-200 transition-colors">+</button>
-                    </div>
-                </div>
-            `;
-            container.innerHTML += html;
-        }
-        
-        function renderCategories(categories) {
-            const container = document.getElementById('category-sortable');
-            const catFilter = document.getElementById('category-filter');
-            const lsCatFilter = document.getElementById('ls-cat-filter');
-            
-            if(container) container.innerHTML = '';
-            
-            let filterHtml = '<option value="All">All Categories</option>';
-            let lsFilterHtml = '<option value="all">All Categories</option>';
-            
-            categories.forEach(cat => {
-                filterHtml += `<option value="${cat.name}">${cat.name}</option>`;
-                lsFilterHtml += `<option value="${cat.name.toLowerCase()}">${cat.name}</option>`;
-                
-                if(container) {
-                    container.innerHTML += `
-                        <div class="cat-modal-item flex gap-3 md:gap-4 items-center bg-white p-2 md:p-3 rounded-xl md:rounded-2xl border border-gray-200 shadow-sm relative group hover:border-blue-300 transition-colors" data-store="${cat.store}">
-                            <i class="fa-solid fa-grip-vertical text-gray-300 handle px-1.5 md:px-2 text-base md:text-lg hover:text-black transition-colors cursor-grab"></i>
-                            <div class="relative w-12 h-12 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden border border-gray-200 bg-gray-50 cursor-pointer hover:border-blue-500 transition-colors shadow-inner flex items-center justify-center shrink-0">
-                                <img src="${cat.image || MOCK_IMG_TOY1}" class="max-w-full max-h-full object-cover">
-                            </div>
-                            <div class="flex-1 space-y-1 md:space-y-1.5 min-w-0">
-                                <input type="text" value="${cat.name}" class="text-xs md:text-sm font-black border-b border-gray-200 outline-none w-full pb-0.5 md:pb-1 focus:border-[#ff5000] text-gray-900 transition-colors truncate" readonly>
-                                <span class="text-[7px] md:text-[9px] font-black text-gray-500 uppercase tracking-widest block bg-gray-100 border border-gray-200 w-fit px-1.5 py-0.5 md:px-2 md:py-0.5 rounded">${cat.store}</span>
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-            
-            if(catFilter) catFilter.innerHTML = filterHtml;
-            if(lsCatFilter) lsCatFilter.innerHTML = lsFilterHtml;
-        }
 
-        function renderOrders(orders) {
-            const container = document.getElementById('orders-container');
-            const noOrdersMsg = document.getElementById('no-orders-message');
-            
-            if (orders.length === 0) {
-                container.innerHTML = '';
-                if(noOrdersMsg) noOrdersMsg.classList.remove('hidden');
+            if (itemsToSync.length === 0) {
+                alert('No products found with the "Lucky Draw" category. Add this tag to your inventory items first!');
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
                 return;
             }
-            
-            if(noOrdersMsg) noOrdersMsg.classList.add('hidden');
-            container.innerHTML = '';
 
-            orders.forEach(order => {
-                const isCompleted = order.status.toLowerCase() === 'completed';
-                const items = order.parsed_items || [];
-                let subtotal = 0;
-                let itemsHtml = '';
-                
-                items.forEach(item => {
-                    if(item.image !== "hidden") {
-                        const itemTotal = item.price * item.qty;
-                        subtotal += itemTotal;
-                        itemsHtml += `
-                            <div class="flex justify-between items-start gap-2">
-                                ${item.image ? `<div class="w-10 h-10 rounded border border-gray-200 bg-gray-50 shrink-0 cursor-zoom-in" onclick="openImageViewer('${item.image}')"><img src="${item.image}" class="w-full h-full object-contain p-0.5" onerror="this.src='${MOCK_IMG_TOY1}'"></div>` : ''}
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-black text-[11px] text-gray-900 leading-tight truncate">${item.title || 'Item'} <span class="text-[#ff5000]">x${item.qty}</span></p>
-                                    ${item.style ? `<p class="text-[9px] text-gray-500 font-medium truncate mt-0.5">${item.style}</p>` : ''}
-                                </div>
-                                <div class="text-right shrink-0">
-                                    <div class="font-black text-[12px] text-gray-900 flex items-center justify-end gap-0.5">$<span class="item-total-usd editable px-1" contenteditable="false" onblur="recalculateReceipt('${order.id}')">${itemTotal.toFixed(2)}</span></div>
-                                    <div class="font-bold text-[9px] text-gray-400 item-total-khr mt-0.5">${(itemTotal * 4000).toLocaleString()} ៛</div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                });
+            let successCount = 0;
+            for (const item of itemsToSync) {
+                try {
+                    const formData = new FormData();
+                    formData.append('catalog_items[]', `${item.id}|${item.variantIndex}`);
+                    formData.append('rarity', 'Common'); 
+                    
+                    await fetch('/admin/spin/add_pool_catalog', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    successCount++;
+                } catch(e) {
+                    console.error('Failed to sync item', item);
+                }
+            }
 
-                let deliveryFee = (order.total_usd || 0) - subtotal;
-                if (deliveryFee < 0.01) deliveryFee = 0;
-                
-                const statusBadgeClass = isCompleted ? 'bg-green-50 text-green-600 border-green-200' : 
-                                         order.status === 'Pending' ? 'bg-[#ff5000] text-white border-orange-600 animate-pulse' : 
-                                         'bg-gray-100 text-gray-600 border-gray-200';
-
-                const html = `
-                    <div id="receipt-card-${order.id}" class="bg-white rounded-xl border order-data-card shadow-sm p-5 md:p-6 space-y-4 relative transition-all duration-300 ${isCompleted ? 'border-gray-200 bg-gray-50/50 opacity-80' : 'border-[#ff5000] ring-1 ring-[#ff5000]/20'} max-w-sm mx-auto w-full" data-order-id="${order.id}" data-status="${order.status}" data-customer="${order.customer_name || ''}" data-phone="${order.customer_phone || ''}" data-total="${order.total_usd || 0}" data-date="${order.date || ''}">
-                        
-                        <div class="absolute top-12 right-6 z-10 md:top-14">
-                            <span class="px-2 py-1 rounded border text-[8px] font-black uppercase tracking-widest shadow-sm ${statusBadgeClass}">${order.status}</span>
-                        </div>
-
-                        <div class="text-center pb-4 border-b-2 border-dashed border-gray-200">
-                            <div class="flex justify-between items-start text-[9px] mb-4">
-                                <span class="font-bold text-gray-400 uppercase tracking-widest">No. #${order.id.substring(0,8)}</span>
-                                <span class="font-black text-gray-800 editable receipt-datetime text-right" contenteditable="false">${order.date || 'Date Not Provided'} ${order.time || ''}</span>
-                            </div>
-                            <h2 class="font-black text-[14px] uppercase tracking-wide text-gray-900 font-['Moul']">សម្ភារៈ - Somphea Reak</h2>
-                            <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Official Receipt</p>
-                        </div>
-
-                        <div class="space-y-2 pb-4 border-b-2 border-dashed border-gray-200 text-[11px] text-gray-700">
-                            <div class="flex justify-between items-center"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px]">Customer</span> <span class="font-black text-gray-900 editable" contenteditable="false">${order.customer_name || 'N/A'}</span></div>
-                            <div class="flex justify-between items-center"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px]">Phone</span> <a href="tel:${order.customer_phone}" class="font-black text-blue-600 editable" contenteditable="false">${order.customer_phone || 'N/A'}</a></div>
-                            <div class="flex justify-between items-start gap-4"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px] shrink-0 mt-0.5">Address</span> <span class="font-black text-right editable" contenteditable="false">${order.customer_address || 'N/A'}</span></div>
-                        </div>
-
-                        <div class="space-y-4 pb-4 border-b-2 border-dashed border-gray-200">
-                            <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3 flex justify-between">
-                                <span>Description</span>
-                                <span>Amount</span>
-                            </div>
-                            ${itemsHtml}
-                        </div>
-
-                        <div class="space-y-1.5 text-[11px]">
-                            <div class="flex justify-between items-center text-gray-600">
-                                <span class="font-bold uppercase tracking-widest text-[9px]">Subtotal</span>
-                                <span class="font-black receipt-subtotal-usd">$${subtotal.toFixed(2)}</span>
-                            </div>
-                            <div class="flex justify-between items-center text-gray-600">
-                                <span class="font-bold uppercase tracking-widest text-[9px]">Delivery Fee</span>
-                                <div class="font-black flex items-center justify-end gap-0.5 text-[#ea580c]">$<span class="delivery-usd editable px-1" contenteditable="false" onblur="recalculateReceipt('${order.id}')">${deliveryFee.toFixed(2)}</span></div>
-                            </div>
-                            <div class="flex justify-between items-end border-t-2 border-dashed border-gray-200 pt-3 mt-2">
-                                <span class="font-black uppercase tracking-widest text-[11px] text-gray-900 mb-1">Total Due</span>
-                                <div class="text-right">
-                                    <div class="font-black text-xl text-[#ea580c] flex items-center justify-end gap-0.5">$<span class="grand-total-usd">${(order.total_usd || 0).toFixed(2)}</span></div>
-                                    <div class="font-bold text-[10px] text-gray-500 mt-0.5"><span class="grand-total-khr">${((order.total_usd || 0) * 4000).toLocaleString()}</span> ៛</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="action-buttons flex gap-2 pt-2 border-t border-gray-100 mt-4">
-                            <button type="button" onclick="toggleReceiptEdit('${order.id}')" title="Edit Prices & Text" class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all border border-blue-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-pen text-sm"></i></button>
-                            <button type="button" onclick="generateReceiptPDF('${order.id}')" title="Save Receipt PDF" class="w-10 h-10 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white flex items-center justify-center transition-all border border-red-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-file-pdf text-sm"></i></button>
-                            <button type="button" onclick="generateReceiptImage('${order.id}')" title="Save Receipt Image" class="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl hover:bg-[#ff5000] hover:text-white flex items-center justify-center transition-all border border-orange-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-image text-sm"></i></button>
-
-                            ${isCompleted ? 
-                                `<button type="button" disabled class="flex-1 bg-gray-100 text-gray-400 h-10 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-inner cursor-not-allowed flex items-center justify-center border border-gray-200"><i class="fa-solid fa-check-circle mr-1"></i> Completed</button>` : 
-                                `<button type="button" onclick="fulfillOrder('${order.id}')" class="flex-1 h-10 bg-[#10b981] text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:bg-[#059669] transition-transform active:scale-95 flex items-center justify-center"><i class="fa-solid fa-box-open mr-1"></i> Fulfill</button>`
-                            }
-                            <button type="button" onclick="deleteOrder('${order.id}')" class="w-10 h-10 shrink-0 bg-gray-50 text-gray-400 border border-gray-200 rounded-xl hover:text-red-500 hover:bg-red-50 hover:border-red-200 flex items-center justify-center transition-all shadow-sm"><i class="fa-solid fa-trash-can text-sm"></i></button>
-                        </div>
-                    </div>
-                `;
-                container.innerHTML += html;
-            });
+            btn.innerHTML = `<i class="fa-solid fa-check mr-1.5"></i> Synced ${successCount} Items`;
+            setTimeout(() => {
+                window.location.reload(); 
+            }, 1000);
         }
-        
-        function renderSpinCatalog(products) {
-            const container = document.getElementById('spin-catalog-items');
-            if(!container) return;
-            container.innerHTML = '';
+
+        document.getElementById('current-date-display').innerText = new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+
+        function toggleSpinAddMode(mode) {
+            const btnCat = document.getElementById('btn-mode-catalog');
+            const btnCust = document.getElementById('btn-mode-custom');
+            const formCat = document.getElementById('form-spin-catalog');
+            const formCust = document.getElementById('form-spin-custom');
+            const inputCustom = document.getElementById('custom-image-input');
             
-            products.forEach(p => {
-                if(p.store === 'toy') {
-                    if(p.parsed_variants && p.parsed_variants.length > 0) {
-                        p.parsed_variants.forEach((v, idx) => {
-                             container.innerHTML += `
-                                <label class="cursor-pointer relative group aspect-square">
-                                    <input type="checkbox" name="catalog_items[]" value="${p.id}|${idx}" class="hidden peer" onchange="updateMultiCount()">
-                                    <img src="${v.image || MOCK_IMG_TOY1}" class="w-full h-full object-cover rounded-lg border-2 border-transparent peer-checked:border-indigo-600 peer-checked:opacity-100 opacity-60 hover:opacity-100 transition-all bg-white shadow-sm" onerror="this.src='${MOCK_IMG_TOY1}'">
-                                    <div class="absolute top-1 right-1 hidden peer-checked:flex items-center justify-center w-4 h-4 text-white bg-indigo-600 rounded-full shadow-sm text-[10px]"><i class="fa-solid fa-check"></i></div>
-                                    <div class="absolute bottom-1 left-1 right-1 hidden peer-checked:block text-[8px] text-center font-black text-white bg-indigo-600/80 rounded backdrop-blur-sm truncate px-1">Stock: ${v.stock}</div>
-                                </label>
-                            `;
-                        });
-                    } else {
-                         container.innerHTML += `
-                            <label class="cursor-pointer relative group aspect-square">
-                                <input type="checkbox" name="catalog_items[]" value="${p.id}|-1" class="hidden peer" onchange="updateMultiCount()">
-                                <img src="${p.image || MOCK_IMG_TOY1}" class="w-full h-full object-cover rounded-lg border-2 border-transparent peer-checked:border-indigo-600 peer-checked:opacity-100 opacity-60 hover:opacity-100 transition-all bg-white shadow-sm" onerror="this.src='${MOCK_IMG_TOY1}'">
-                                <div class="absolute top-1 right-1 hidden peer-checked:flex items-center justify-center w-4 h-4 text-white bg-indigo-600 rounded-full shadow-sm text-[10px]"><i class="fa-solid fa-check"></i></div>
-                                <div class="absolute bottom-1 left-1 right-1 hidden peer-checked:block text-[8px] text-center font-black text-white bg-indigo-600/80 rounded backdrop-blur-sm truncate px-1">Stock: ${p.stock || 0}</div>
-                            </label>
-                        `;
-                    }
+            if(mode === 'catalog') {
+                btnCat.className = "flex-1 bg-white shadow-sm py-2 rounded-lg text-[9px] font-black uppercase text-indigo-600 transition-all";
+                btnCust.className = "flex-1 py-2 rounded-lg text-[9px] font-black uppercase text-gray-500 hover:text-gray-700 transition-all";
+                formCat.classList.remove('hidden');
+                formCust.classList.add('hidden');
+                if(inputCustom) inputCustom.removeAttribute('required');
+            } else {
+                btnCust.className = "flex-1 bg-white shadow-sm py-2 rounded-lg text-[9px] font-black uppercase text-indigo-600 transition-all";
+                btnCat.className = "flex-1 py-2 rounded-lg text-[9px] font-black uppercase text-gray-500 hover:text-gray-700 transition-all";
+                formCust.classList.remove('hidden');
+                formCat.classList.add('hidden');
+                if(inputCustom) inputCustom.setAttribute('required', 'required');
+            }
+        }
+
+        function exportOrdersToCSV() {
+            const orderCards = document.querySelectorAll('.order-data-card');
+            if(orderCards.length === 0) return alert("There are no active orders to export.");
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Order ID,Status,Date,Customer Name,Phone,Delivery Address,Total KHR,Total USD\n";
+
+            orderCards.forEach(card => {
+                const id = card.dataset.orderId;
+                const status = card.dataset.status;
+                const date = card.dataset.date;
+                const name = `"${card.dataset.customer.replace(/"/g, '""')}"`; 
+                const phone = `"${card.dataset.phone}"`;
+                let address = `"${card.querySelector('span.text-right.editable').innerText.replace(/"/g, '""').replace(/\n/g, ' ')}"`;
+                const totalUSD = card.dataset.total;
+                const totalKHR = (parseFloat(totalUSD) * 4000).toString();
+
+                csvContent += `${id},${status},${date},${name},${phone},${address},${totalKHR},${totalUSD}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const dateStr = new Date().toISOString().split('T')[0];
+            link.setAttribute("download", `SompheaReak_Orders_${dateStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const activeTab = localStorage.getItem('adminActiveTab') || 'dashboard'; 
+            switchView(activeTab);
+
+            document.querySelectorAll('.tag-wrapper').forEach(wrapper => { updateHiddenTags(wrapper); });
+            const addSelect = document.getElementById('add-store-select'); 
+            if(addSelect) {
+                updateCatList(addSelect, 'add-cats');
+                if(addSelect.value === 'lego') {
+                    document.getElementById('lego-type-container').classList.remove('hidden');
+                }
+            }
+            document.querySelectorAll('.edit-store-select').forEach(sel => { updateCatList(sel, sel.dataset.target); });
+
+            // Set current month filter automatically on load
+            const currentMonthInput = document.getElementById('finance-month-filter');
+            const now = new Date();
+            currentMonthInput.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            
+            // Fix: Strip out "None" strings instead of overwriting with the Live Date
+            document.querySelectorAll('.receipt-datetime').forEach(el => {
+                if(el.innerText.includes('None')) {
+                    el.innerText = el.innerText.replace('None', '').trim();
+                }
+                
+                // Fallback for purely empty dates if backend sends nothing at all
+                if(el.innerText.trim() === '') {
+                    el.innerText = 'Date Not Provided';
+                }
+            });
+
+            // Initialize Financials
+            calculateIncome();
+            
+            // FIX: Initialize Sortable for all variant lists
+            document.querySelectorAll('[id^="sortable-variants-"]').forEach(list => {
+                new Sortable(list, { handle: '.handle', animation: 150 });
+            });
+
+            startLiveSync();
+        });
+
+        function switchView(view) {
+            localStorage.setItem('adminActiveTab', view);
+
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); 
+            const activeBtn = document.getElementById('tab-' + view);
+            if(activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); 
+            }
+            
+            ['dashboard', 'inventory', 'orders', 'spin'].forEach(v => {
+                const el = document.getElementById('view-' + v);
+                if(el) { el.classList.add('hidden-view'); el.style.display = 'none'; }
+            });
+            
+            const target = document.getElementById('view-' + view);
+            if(target) {
+                target.classList.remove('hidden-view');
+                if(view === 'inventory' || view === 'spin') target.style.display = 'grid';
+                else target.style.display = 'block';
+            }
+        }
+
+        let showOnlyOutOfStock = false;
+        
+        function filterLiveStock() {
+            const storeFilter = document.getElementById('ls-store-filter').value;
+            const catFilter = document.getElementById('ls-cat-filter').value;
+            const term = document.getElementById('ls-search').value.toLowerCase();
+            const items = document.querySelectorAll('.ls-item');
+
+            items.forEach(item => {
+                const itemStore = item.dataset.store;
+                const itemCats = item.dataset.categories || "";
+                const itemStock = parseInt(item.dataset.stock);
+                const itemName = item.dataset.name;
+
+                let matchStore = (storeFilter === 'all' || itemStore === storeFilter);
+                let matchCat = (catFilter === 'all' || itemCats.includes(catFilter));
+                let matchSearch = itemName.includes(term);
+                let matchStock = showOnlyOutOfStock ? itemStock <= 0 : true;
+
+                if(matchStore && matchCat && matchSearch && matchStock) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
                 }
             });
         }
-        
-        function renderSpinPool(pool) {
-            const container = document.getElementById('prize-matrix-container');
-            if(!container) return;
-            container.innerHTML = '';
-            
-            pool.forEach((item, idx) => {
-                const rarityColors = {
-                    'Legendary': 'bg-yellow-50 text-yellow-700',
-                    'Epic': 'bg-purple-50 text-purple-700',
-                    'Rare': 'bg-blue-50 text-blue-700',
-                    'Common': 'bg-white text-gray-600'
-                };
-                const rarityColor = rarityColors[item.rarity] || rarityColors['Common'];
-                
-                container.innerHTML += `
-                    <div class="matrix-item-container border border-gray-200 rounded-xl md:rounded-2xl p-2 md:p-3 flex flex-col items-center relative shadow-sm ${item.stock <= 0 ? 'bg-red-50/50 grayscale-[0.3] border-red-200' : 'bg-gray-50'} transition-all group">
-                        <input type="checkbox" class="pool-checkbox absolute top-2 right-2 md:top-3 md:right-3 z-20 w-4 h-4 cursor-pointer accent-indigo-600 rounded opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity" value="${item.id}">
-                        <div class="absolute top-2 left-2 md:top-3 md:left-3 z-10 matrix-update-form">
-                            <div class="relative group/sel bg-white border border-gray-200 rounded text-[8px] md:text-[9px] shadow-sm overflow-hidden flex items-center hover:border-indigo-300 transition-colors">
-                                <div class="bg-gray-100 p-0.5 px-1 md:p-1 md:px-1.5 border-r border-gray-200 text-gray-400"><i class="fa-solid fa-star text-[7px] md:text-[8px]"></i></div>
-                                <select name="rarity" onchange="markMatrixDirty(this)" class="pl-1 pr-3 py-0.5 md:pl-1.5 md:pr-4 md:py-1 font-black uppercase tracking-wider outline-none cursor-pointer appearance-none border-none ${rarityColor}">
-                                    <option value="Common" ${item.rarity === 'Common' ? 'selected' : ''}>Common</option>
-                                    <option value="Rare" ${item.rarity === 'Rare' ? 'selected' : ''}>Rare</option>
-                                    <option value="Epic" ${item.rarity === 'Epic' ? 'selected' : ''}>Epic</option>
-                                    <option value="Legendary" ${item.rarity === 'Legendary' ? 'selected' : ''}>Legendary</option>
-                                </select>
-                                <i class="fa-solid fa-caret-down absolute right-1 md:right-1.5 top-1/2 -translate-y-1/2 text-[7px] md:text-[8px] pointer-events-none text-gray-400 group-hover/sel:text-indigo-500"></i>
-                            </div>
-                        </div>
-                        <div class="w-12 h-12 md:w-16 md:h-16 bg-white border border-gray-100 shadow-sm rounded-lg md:rounded-xl mb-2 mt-6 md:mt-8 flex items-center justify-center p-1"><img src="${item.image}" class="max-w-full max-h-full object-contain" onerror="this.src='${MOCK_IMG_TOY1}'"></div>
-                        <h4 class="text-[9px] md:text-[10px] font-black text-center leading-tight mb-1 h-6 overflow-hidden text-gray-800 uppercase tracking-widest px-1" title="${item.name}">${item.name}</h4>
-                        <div class="text-[7px] md:text-[8px] font-black text-indigo-500 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded mb-2 text-center w-full uppercase tracking-widest" title="This stock is shared with the main Toy Store inventory"><i class="fa-solid fa-link mr-1"></i> Shared Stock</div>
-                        <div class="flex items-center gap-1 w-full mt-auto">
-                            <div class="w-10 md:w-12 shrink-0 m-0 matrix-update-form">
-                                <input type="number" name="sort_order" value="${item.sort_order || (idx+1)}" onchange="markMatrixDirty(this)" class="w-full text-center text-[10px] md:text-xs font-black outline-none border border-gray-300 rounded-lg md:rounded-xl bg-white shadow-sm focus:border-indigo-500 h-[32px] md:h-[36px]" title="Sort Position (1 shows first)">
-                            </div>
-                            <div class="w-full m-0 flex items-center border border-gray-300 rounded-lg md:rounded-xl p-1 bg-white shadow-sm focus-within:border-indigo-500 transition-colors h-[32px] md:h-[36px] matrix-update-form">
-                                <button type="button" onclick="let i=this.nextElementSibling; i.value=Math.max(0, parseInt(i.value)-1); markMatrixDirty(this)" class="w-6 h-full md:w-7 bg-gray-50 hover:bg-red-50 hover:text-red-600 rounded md:rounded-lg text-gray-400 font-black transition-colors border border-transparent hover:border-red-200">-</button>
-                                <input type="number" name="stock" value="${item.stock || 0}" onchange="markMatrixDirty(this)" class="w-full text-center text-[10px] md:text-xs font-black outline-none hide-scrollbar text-indigo-700 bg-transparent">
-                                <button type="button" onclick="let i=this.previousElementSibling; i.value=parseInt(i.value)+1; markMatrixDirty(this)" class="w-6 h-full md:w-7 bg-gray-50 hover:bg-green-50 hover:text-green-600 rounded md:rounded-lg text-gray-400 font-black transition-colors border border-transparent hover:border-green-200">+</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
+
+        function toggleOutOfStock() {
+            showOnlyOutOfStock = !showOnlyOutOfStock;
+            const btn = document.getElementById('ls-oos-btn');
+            const btnText = document.getElementById('oos-btn-text');
+            if(showOnlyOutOfStock) {
+                btn.classList.add('bg-red-600', 'text-white', 'border-red-700', 'hover:bg-red-700');
+                btn.classList.replace('bg-white', 'bg-red-600'); 
+                btnText.innerText = "Clear Empty Filter";
+            } else {
+                btn.classList.remove('bg-red-600', 'text-white', 'border-red-700', 'hover:bg-red-700');
+                btn.classList.replace('bg-red-600', 'bg-white');
+                btnText.innerText = "Filter Out of Stock";
+            }
+            filterLiveStock();
         }
-
-        // --- FIREBASE ACTION FUNCTIONS ---
-        window.toggleVisibility = async function(productId, currentStatus) {
-            if (!currentUser) return;
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'products', productId);
-                await updateDoc(docRef, { is_visible: !currentStatus });
-                showClientToast(`Product visibility updated`);
-            } catch (error) {
-                console.error("Error updating visibility:", error);
-                showClientToast("Error updating visibility", true);
-            }
-        };
-
-        window.deleteProduct = async function(productId) {
-            if (!currentUser || !confirm("Delete this product permanently?")) return;
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'products', productId));
-                showClientToast("Product deleted");
-            } catch (error) {
-                console.error("Error deleting product:", error);
-                showClientToast("Error deleting product", true);
-            }
-        };
-
-        window.fulfillOrder = async function(orderId) {
-            if (!currentUser || !confirm("Mark as finished?")) return;
-             try {
-                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'orders', orderId);
-                await updateDoc(docRef, { status: "Completed" });
-                showClientToast("Order fulfilled");
-            } catch (error) {
-                console.error("Error fulfilling order:", error);
-                showClientToast("Error updating order", true);
-            }
-        };
-
-        window.deleteOrder = async function(orderId) {
-             if (!currentUser || !confirm("WARNING: Delete order history permanently?")) return;
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'orders', orderId));
-                showClientToast("Order deleted");
-            } catch (error) {
-                console.error("Error deleting order:", error);
-                showClientToast("Error deleting order", true);
-            }
-        };
 
         let pendingStockChanges = {};
 
@@ -1451,7 +1741,6 @@
         }
 
         async function saveAllStockChanges() {
-            if(!currentUser) return;
             const changes = Object.values(pendingStockChanges);
             if(changes.length === 0) return;
 
@@ -1462,26 +1751,17 @@
 
             for (const change of changes) {
                 try {
-                    const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'products', change.productId);
-                    const product = globalProducts.find(p => p.id === change.productId);
-                    if(product) {
-                        if (change.variantIndex === -1) {
-                            await updateDoc(docRef, { stock: change.stock });
-                        } else {
-                            const updatedVariants = [...product.parsed_variants];
-                            if(updatedVariants[change.variantIndex]) {
-                                updatedVariants[change.variantIndex].stock = change.stock;
-                                await updateDoc(docRef, { parsed_variants: updatedVariants });
-                            }
-                        }
-                    }
-
+                    await fetch('/admin/product/quick_stock', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ product_id: change.productId, variant_index: change.variantIndex, stock: change.stock })
+                    });
                     change.rowElement.classList.remove('bg-orange-50/40', 'border-orange-200');
                     change.inputContainer.classList.remove('border-[#ff5000]', 'ring-1', 'ring-orange-200');
                     change.inputContainer.classList.add('border-green-400', 'bg-green-50');
                     setTimeout(() => change.inputContainer.classList.remove('border-green-400', 'bg-green-50'), 600);
                 } catch (e) {
-                    console.error('Error saving item ID ' + change.productId, e);
+                    console.error('Error saving item ID ' + change.productId);
                 }
             }
 
@@ -1499,314 +1779,6 @@
             }, 2000);
         }
 
-        // --- UI Interactions and Helpers ---
-        function showClientToast(msg, isError = false) {
-            const toast = document.getElementById('client-toast');
-            const icon = toast.querySelector('i');
-            document.getElementById('client-toast-msg').innerText = msg;
-            icon.className = isError ? "fa-solid fa-triangle-exclamation text-red-400 text-sm" : "fa-solid fa-circle-check text-green-400 text-sm";
-            toast.classList.remove('-translate-y-10', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-            setTimeout(() => {
-                toast.classList.add('-translate-y-10', 'opacity-0');
-                toast.classList.remove('translate-y-0', 'opacity-100');
-            }, 3000);
-        }
-
-        let expenses = [];
-        function openExpenseModal() { document.getElementById('expense-modal').classList.remove('hidden'); }
-        function closeExpenseModal() { document.getElementById('expense-modal').classList.add('hidden'); }
-        function addExpense() {
-            const input = document.getElementById('new-expense-amount');
-            const amt = parseFloat(input.value);
-            if (isNaN(amt) || amt <= 0) return showClientToast("Enter a valid amount", true);
-            const now = new Date();
-            const pad = (n) => n.toString().padStart(2, '0');
-            const dateStr = `Date ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} Time ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-            expenses.push({ amount: amt, dateStr: dateStr });
-            input.value = '';
-            renderExpenses();
-            calculateProfit();
-            showClientToast("Expense Logged");
-        }
-        function removeExpense(index) {
-            expenses.splice(index, 1);
-            renderExpenses();
-            calculateProfit();
-            showClientToast("Expense Removed");
-        }
-        function renderExpenses() {
-            const list = document.getElementById('expense-list');
-            const emptyState = document.getElementById('expense-empty-state');
-            list.innerHTML = '';
-            let totalSpend = 0;
-            if (expenses.length === 0) {
-                if(emptyState) list.appendChild(emptyState);
-            } else {
-                expenses.forEach((ex, idx) => {
-                    totalSpend += ex.amount;
-                    list.innerHTML += `
-                        <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm transition-all hover:border-red-200">
-                            <div>
-                                <p class="font-black text-red-600 text-[13px]">$${ex.amount.toFixed(2)}</p>
-                                <p class="text-[9px] font-bold text-gray-400 font-mono mt-0.5"><span class="text-gray-300">|</span> ${ex.dateStr}</p>
-                            </div>
-                            <button onclick="removeExpense(${idx})" class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 text-gray-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors"><i class="fa-solid fa-trash-can text-xs"></i></button>
-                        </div>
-                    `;
-                });
-            }
-            document.getElementById('calc-spend-input').value = totalSpend.toFixed(2);
-        }
-
-        function calculateIncome() {
-            let totalIncome = 0;
-            const filterMonth = document.getElementById('finance-month-filter').value;
-            globalOrders.forEach(order => {
-                 const isCompleted = (order.status === 'Completed' || order.status === 'completed');
-                 const cardDateStr = order.date;
-                 let matchMonth = true;
-                 if (filterMonth) {
-                    matchMonth = false;
-                    if (cardDateStr && cardDateStr.trim() !== '' && cardDateStr.trim() !== 'None') {
-                        try {
-                            const dateObj = new Date(cardDateStr);
-                            if (!isNaN(dateObj.getTime())) {
-                                const cardMonth = dateObj.getFullYear() + '-' + String(dateObj.getMonth() + 1).padStart(2, '0');
-                                if (cardMonth === filterMonth) {
-                                    matchMonth = true;
-                                }
-                            }
-                        } catch (e) {}
-                    }
-                }
-                if (isCompleted && matchMonth) {
-                    totalIncome += parseFloat(order.total_usd || 0);
-                }
-            });
-            document.getElementById('calc-income').innerText = totalIncome.toFixed(2);
-            calculateProfit();
-        }
-
-        function calculateProfit() {
-            const income = parseFloat(document.getElementById('calc-income').innerText) || 0;
-            const spend = parseFloat(document.getElementById('calc-spend-input').value) || 0;
-            const profit = income - spend;
-            
-            const profitEl = document.getElementById('calc-profit');
-            const profitLabel = document.getElementById('profit-label');
-            const profitCard = document.getElementById('profit-card');
-            const profitIcon = document.getElementById('profit-icon');
-            
-            profitEl.innerText = Math.abs(profit).toFixed(2);
-            
-            if (profit >= 0) {
-                profitLabel.innerText = "Net Profit";
-                profitCard.className = "p-5 md:p-6 bg-blue-50/50 rounded-2xl border border-blue-100 shadow-sm flex flex-col justify-center relative overflow-hidden transition-colors";
-                profitEl.parentElement.className = "text-3xl md:text-4xl font-black text-blue-700 mt-1 flex items-center transition-colors";
-                profitLabel.className = "text-[10px] md:text-xs font-black text-blue-600 uppercase tracking-widest transition-colors";
-                profitIcon.className = "fa-solid fa-piggy-bank absolute -right-4 -bottom-4 text-6xl text-blue-600/5 transition-colors";
-            } else {
-                profitLabel.innerText = "Net Loss / Waste";
-                profitCard.className = "p-5 md:p-6 bg-orange-50/50 rounded-2xl border border-orange-200 shadow-sm flex flex-col justify-center relative overflow-hidden transition-colors";
-                profitEl.parentElement.className = "text-3xl md:text-4xl font-black text-orange-600 mt-1 flex items-center transition-colors";
-                profitLabel.className = "text-[10px] md:text-xs font-black text-orange-600 uppercase tracking-widest transition-colors";
-                profitIcon.className = "fa-solid fa-arrow-trend-down absolute -right-4 -bottom-4 text-6xl text-orange-600/5 transition-colors";
-            }
-        }
-
-        function openManualReceiptModal() { document.getElementById('manual-receipt-modal').classList.remove('hidden'); }
-        function closeManualReceiptModal() { document.getElementById('manual-receipt-modal').classList.add('hidden'); }
-        function addManualReceiptItem() {
-            const container = document.getElementById('manual-receipt-items');
-            const row = document.createElement('div');
-            row.className = 'flex gap-2 items-center bg-gray-50 p-2 rounded-lg border border-gray-200';
-            row.innerHTML = `
-                <input type="text" name="item_titles[]" placeholder="Item Name" required class="input-box flex-1 text-xs py-1.5">
-                <input type="number" name="item_prices[]" placeholder="Price ($)" step="any" required class="input-box w-20 text-xs py-1.5">
-                <input type="number" name="item_qtys[]" placeholder="Qty" value="1" min="1" required class="input-box w-16 text-xs py-1.5 text-center">
-                <button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 flex items-center justify-center bg-white text-red-500 rounded border border-gray-200 hover:bg-red-50 shadow-sm"><i class="fa-solid fa-trash-can"></i></button>
-            `;
-            container.appendChild(row);
-        }
-
-        function generateReceiptPDF(orderId) {
-            const receiptEl = document.getElementById(`receipt-card-${orderId}`);
-            receiptEl.classList.remove('is-editing-receipt');
-            receiptEl.querySelectorAll('.editable').forEach(el => el.contentEditable = "false");
-            const actionRow = receiptEl.querySelector('.action-buttons');
-            const originalDisplay = actionRow.style.display; 
-            actionRow.style.display = 'none';
-            const origRadius = receiptEl.style.borderRadius; receiptEl.style.borderRadius = '0px';
-            const origBorder = receiptEl.style.border; receiptEl.style.border = 'none';
-            const origShadow = receiptEl.style.boxShadow; receiptEl.style.boxShadow = 'none';
-            receiptEl.classList.remove('ring-1', 'border-[#ff5000]');
-            showClientToast("Generating Sheet-by-Sheet PDF...");
-
-            html2canvas(receiptEl, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false }).then(canvas => {
-                const imgData = canvas.toDataURL('image/jpeg', 1.0);
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
-                const imgWidthPdf = pdfWidth;
-                const imgHeightPdf = (canvas.height * pdfWidth) / canvas.width;
-                let heightLeft = imgHeightPdf;
-                let position = 0;
-                pdf.addImage(imgData, 'JPEG', 0, position, imgWidthPdf, imgHeightPdf);
-                heightLeft -= pageHeight;
-                while (heightLeft > 0) {
-                    position -= pageHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'JPEG', 0, position, imgWidthPdf, imgHeightPdf);
-                    heightLeft -= pageHeight;
-                }
-                pdf.save(`SompheaReak_Receipt_#${orderId}.pdf`);
-                actionRow.style.display = originalDisplay; 
-                receiptEl.style.borderRadius = origRadius;
-                receiptEl.style.border = origBorder;
-                receiptEl.style.boxShadow = origShadow;
-                receiptEl.classList.add('ring-1', 'border-[#ff5000]');
-                showClientToast("PDF Downloaded Successfully");
-            }).catch(err => { 
-                alert("Error generating receipt PDF."); 
-                actionRow.style.display = originalDisplay; 
-            });
-        }
-
-        function generateReceiptImage(orderId) {
-            const receiptEl = document.getElementById(`receipt-card-${orderId}`);
-            receiptEl.classList.remove('is-editing-receipt');
-            receiptEl.querySelectorAll('.editable').forEach(el => el.contentEditable = "false");
-            const actionRow = receiptEl.querySelector('.action-buttons');
-            const originalDisplay = actionRow.style.display; 
-            actionRow.style.display = 'none';
-            const origRadius = receiptEl.style.borderRadius; receiptEl.style.borderRadius = '0px';
-            const origBorder = receiptEl.style.border; receiptEl.style.border = 'none';
-            const origShadow = receiptEl.style.boxShadow; receiptEl.style.boxShadow = 'none';
-            receiptEl.classList.remove('ring-1', 'border-[#ff5000]');
-
-            html2canvas(receiptEl, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false }).then(canvas => {
-                const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
-                openImageViewer(dataUrl);
-                actionRow.style.display = originalDisplay; 
-                receiptEl.style.borderRadius = origRadius;
-                receiptEl.style.border = origBorder;
-                receiptEl.style.boxShadow = origShadow;
-                receiptEl.classList.add('ring-1', 'border-[#ff5000]');
-            }).catch(err => { alert("Error generating receipt image."); actionRow.style.display = originalDisplay; });
-        }
-
-        function syncLuckyDrawTags(btn) { alert("Mock sync initiated."); }
-        function toggleSpinAddMode(mode) {
-             const btnCat = document.getElementById('btn-mode-catalog');
-            const btnCust = document.getElementById('btn-mode-custom');
-            const formCat = document.getElementById('form-spin-catalog');
-            const formCust = document.getElementById('form-spin-custom');
-            const inputCustom = document.getElementById('custom-image-input');
-            
-            if(mode === 'catalog') {
-                btnCat.className = "flex-1 bg-white shadow-sm py-2 rounded-lg text-[9px] font-black uppercase text-indigo-600 transition-all";
-                btnCust.className = "flex-1 py-2 rounded-lg text-[9px] font-black uppercase text-gray-500 hover:text-gray-700 transition-all";
-                formCat.classList.remove('hidden');
-                formCust.classList.add('hidden');
-                if(inputCustom) inputCustom.removeAttribute('required');
-            } else {
-                btnCust.className = "flex-1 bg-white shadow-sm py-2 rounded-lg text-[9px] font-black uppercase text-indigo-600 transition-all";
-                btnCat.className = "flex-1 py-2 rounded-lg text-[9px] font-black uppercase text-gray-500 hover:text-gray-700 transition-all";
-                formCust.classList.remove('hidden');
-                formCat.classList.add('hidden');
-                if(inputCustom) inputCustom.setAttribute('required', 'required');
-            }
-        }
-
-        function exportOrdersToCSV() {
-            const orderCards = document.querySelectorAll('.order-data-card');
-            if(orderCards.length === 0) return alert("There are no active orders to export.");
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Order ID,Status,Date,Customer Name,Phone,Delivery Address,Total KHR,Total USD\n";
-            orderCards.forEach(card => {
-                const id = card.dataset.orderId;
-                const status = card.dataset.status;
-                const date = card.dataset.date;
-                const name = `"${card.dataset.customer.replace(/"/g, '""')}"`; 
-                const phone = `"${card.dataset.phone}"`;
-                let address = `"${card.querySelector('span.text-right.editable').innerText.replace(/"/g, '""').replace(/\n/g, ' ')}"`;
-                const totalUSD = card.dataset.total;
-                const totalKHR = (parseFloat(totalUSD) * 4000).toString();
-                csvContent += `${id},${status},${date},${name},${phone},${address},${totalKHR},${totalUSD}\n`;
-            });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            const dateStr = new Date().toISOString().split('T')[0];
-            link.setAttribute("download", `SompheaReak_Orders_${dateStr}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function switchView(view) {
-            localStorage.setItem('adminActiveTab', view);
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); 
-            const activeBtn = document.getElementById('tab-' + view);
-            if(activeBtn) {
-                activeBtn.classList.add('active');
-                activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); 
-            }
-            ['dashboard', 'inventory', 'orders', 'spin'].forEach(v => {
-                const el = document.getElementById('view-' + v);
-                if(el) { el.classList.add('hidden-view'); el.style.display = 'none'; }
-            });
-            const target = document.getElementById('view-' + view);
-            if(target) {
-                target.classList.remove('hidden-view');
-                if(view === 'inventory' || view === 'spin') target.style.display = 'grid';
-                else target.style.display = 'block';
-            }
-        }
-
-        let showOnlyOutOfStock = false;
-        function filterLiveStock() {
-            const storeFilter = document.getElementById('ls-store-filter').value;
-            const catFilter = document.getElementById('ls-cat-filter').value;
-            const term = document.getElementById('ls-search').value.toLowerCase();
-            const items = document.querySelectorAll('.ls-item');
-
-            items.forEach(item => {
-                const itemStore = item.dataset.store;
-                const itemCats = item.dataset.categories || "";
-                const itemStock = parseInt(item.dataset.stock);
-                const itemName = item.dataset.name;
-
-                let matchStore = (storeFilter === 'all' || itemStore === storeFilter);
-                let matchCat = (catFilter === 'all' || itemCats.includes(catFilter));
-                let matchSearch = itemName.includes(term);
-                let matchStock = showOnlyOutOfStock ? itemStock <= 0 : true;
-
-                if(matchStore && matchCat && matchSearch && matchStock) {
-                    item.style.display = '';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-        }
-
-        function toggleOutOfStock() {
-            showOnlyOutOfStock = !showOnlyOutOfStock;
-            const btn = document.getElementById('ls-oos-btn');
-            const btnText = document.getElementById('oos-btn-text');
-            if(showOnlyOutOfStock) {
-                btn.classList.add('bg-red-600', 'text-white', 'border-red-700', 'hover:bg-red-700');
-                btn.classList.replace('bg-white', 'bg-red-600'); 
-                btnText.innerText = "Clear Empty Filter";
-            } else {
-                btn.classList.remove('bg-red-600', 'text-white', 'border-red-700', 'hover:bg-red-700');
-                btn.classList.replace('bg-red-600', 'bg-white');
-                btnText.innerText = "Filter Out of Stock";
-            }
-            filterLiveStock();
-        }
-
         function openStockSummaryModal() {
             document.getElementById('stock-summary-modal').classList.remove('hidden');
             document.getElementById('stock-summary-modal').classList.add('flex');
@@ -1814,44 +1786,65 @@
             modalContent.classList.add('animate-slide-up');
             setTimeout(() => modalContent.classList.remove('animate-slide-up'), 500);
         }
+        
         function closeStockSummaryModal() {
             if (Object.keys(pendingStockChanges).length > 0) {
                 if(!confirm("You have unsaved stock changes! Are you sure you want to close?")) return;
             }
             document.getElementById('stock-summary-modal').classList.add('hidden');
             document.getElementById('stock-summary-modal').classList.remove('flex');
+            window.location.reload();
         }
 
         let matrixDirtyItems = new Set();
+
         function markMatrixDirty(inputElement) {
             const container = inputElement.closest('.matrix-item-container');
             container.classList.add('border-[#ff5000]', 'ring-2', 'ring-orange-100');
             matrixDirtyItems.add(container);
+            
             const btn = document.getElementById('save-matrix-btn');
             btn.disabled = false;
         }
 
         async function submitMatrixChanges() {
-             if(matrixDirtyItems.size === 0) return;
+            if(matrixDirtyItems.size === 0) return;
             const btn = document.getElementById('save-matrix-btn');
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Saving Matrix...';
             btn.disabled = true;
-            // Mock Save
-            setTimeout(()=>{
-                 matrixDirtyItems.forEach(container => {
-                    container.classList.remove('border-[#ff5000]', 'ring-2', 'ring-orange-100');
-                    container.classList.add('border-green-400', 'bg-green-50');
-                    setTimeout(() => container.classList.remove('border-green-400', 'bg-green-50'), 1000);
-                });
-                matrixDirtyItems.clear();
-                btn.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i> Matrix Saved';
-                btn.classList.replace('bg-slate-900', 'bg-green-600');
-                setTimeout(() => {
-                    btn.innerHTML = '<i class="fa-solid fa-save mr-1.5"></i> Save Matrix Changes';
-                    btn.classList.replace('bg-green-600', 'bg-slate-900');
-                    btn.disabled = true;
-                }, 2000);
-            }, 500);
+
+            const formsToSubmit = [];
+            matrixDirtyItems.forEach(container => {
+                const forms = container.querySelectorAll('form.matrix-update-form');
+                forms.forEach(f => formsToSubmit.push(f));
+            });
+
+            for(let form of formsToSubmit) {
+                try {
+                    const formData = new FormData(form);
+                    await fetch(form.action, {
+                        method: form.method,
+                        body: formData
+                    });
+                } catch (err) {
+                    console.error("Error submitting form", form.action, err);
+                }
+            }
+
+            matrixDirtyItems.forEach(container => {
+                container.classList.remove('border-[#ff5000]', 'ring-2', 'ring-orange-100');
+                container.classList.add('border-green-400', 'bg-green-50');
+                setTimeout(() => container.classList.remove('border-green-400', 'bg-green-50'), 1000);
+            });
+            matrixDirtyItems.clear();
+
+            btn.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i> Matrix Saved';
+            btn.classList.replace('bg-slate-900', 'bg-green-600');
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-solid fa-save mr-1.5"></i> Save Matrix Changes';
+                btn.classList.replace('bg-green-600', 'bg-slate-900');
+                btn.disabled = true;
+            }, 2000);
         }
 
         let currentStore = 'All'; let currentCategory = 'all';
@@ -1892,6 +1885,7 @@
         function recalculateReceipt(orderId) {
             const card = document.getElementById(`receipt-card-${orderId}`);
             if (!card) return;
+
             let subtotal = 0;
             const itemTotals = card.querySelectorAll('.item-total-usd');
             itemTotals.forEach(el => {
@@ -1904,48 +1898,269 @@
                 }
                 el.innerText = val.toFixed(2);
             });
+
             const deliveryEl = card.querySelector('.delivery-usd');
             let delivery = parseFloat(deliveryEl.innerText.replace(/,/g, '')) || 0;
             deliveryEl.innerText = delivery.toFixed(2);
+
             let grandTotal = subtotal + delivery;
+
             card.querySelector('.receipt-subtotal-usd').innerText = '$' + subtotal.toFixed(2);
             card.querySelector('.grand-total-usd').innerText = grandTotal.toFixed(2);
             card.querySelector('.grand-total-khr').innerText = (grandTotal * 4000).toLocaleString();
+            
             card.dataset.total = grandTotal.toFixed(2);
+
+            // Trigger financial update on receipt change
             calculateIncome();
         }
 
+        function generateReceiptImage(orderId) {
+            const receiptEl = document.getElementById(`receipt-card-${orderId}`);
+            
+            receiptEl.classList.remove('is-editing-receipt');
+            receiptEl.querySelectorAll('.editable').forEach(el => el.contentEditable = "false");
+            
+            const actionRow = receiptEl.querySelector('.action-buttons');
+            const originalDisplay = actionRow.style.display; 
+            actionRow.style.display = 'none';
+            
+            const origRadius = receiptEl.style.borderRadius; receiptEl.style.borderRadius = '0px';
+            const origBorder = receiptEl.style.border; receiptEl.style.border = 'none';
+            const origShadow = receiptEl.style.boxShadow; receiptEl.style.boxShadow = 'none';
+            receiptEl.classList.remove('ring-1', 'border-[#ff5000]');
+
+            html2canvas(receiptEl, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false }).then(canvas => {
+                const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
+                openImageViewer(dataUrl);
+                
+                actionRow.style.display = originalDisplay; 
+                receiptEl.style.borderRadius = origRadius;
+                receiptEl.style.border = origBorder;
+                receiptEl.style.boxShadow = origShadow;
+                receiptEl.classList.add('ring-1', 'border-[#ff5000]');
+            }).catch(err => { alert("Error generating receipt image."); actionRow.style.display = originalDisplay; });
+        }
+
         function toggleAllCodes(source) { document.querySelectorAll('.code-checkbox').forEach(cb => cb.checked = source.checked); }
-        function submitBulkCodeDelete() { alert("Mock delete initiated");}
+        function submitBulkCodeDelete() {
+            const selected = Array.from(document.querySelectorAll('.code-checkbox:checked')).map(cb => cb.value);
+            if(selected.length === 0) return alert('No codes selected.');
+            if(confirm('Permanently delete ' + selected.length + ' selected codes?')) {
+                document.getElementById('bulk-code-ids').value = selected.join(',');
+                document.getElementById('bulk-delete-code-form').submit();
+            }
+        }
         function toggleAllPool(source) { document.querySelectorAll('.pool-checkbox').forEach(cb => cb.checked = source.checked); }
-        function submitBulkPoolDelete() { alert("Mock delete initiated"); }
+        function submitBulkPoolDelete() {
+            const selected = Array.from(document.querySelectorAll('.pool-checkbox:checked')).map(cb => cb.value);
+            if(selected.length === 0) return alert('No items selected.');
+            if(confirm('Permanently delete ' + selected.length + ' items?')) {
+                document.getElementById('bulk-pool-ids').value = selected.join(',');
+                document.getElementById('bulk-delete-pool-form').submit();
+            }
+        }
+
         function toggleAllHistory(source) { document.querySelectorAll('.history-checkbox').forEach(cb => cb.checked = source.checked); }
-        function submitBulkHistoryDelete() { alert("Mock delete initiated"); }
+        function submitBulkHistoryDelete() {
+            const selected = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(cb => cb.value);
+            if(selected.length === 0) return alert('No history records selected.');
+            if(confirm('Permanently delete ' + selected.length + ' records?')) {
+                document.getElementById('bulk-history-ids').value = selected.join(',');
+                document.getElementById('bulk-delete-history-form').submit();
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.tag-container')) {
+                const container = e.target.closest('.tag-container'); const input = container.querySelector('.tag-input');
+                if (input && e.target !== input && !e.target.closest('.remove-tag-btn')) input.focus();
+            }
+            if (e.target.closest('.remove-tag-btn')) { const badge = e.target.closest('.tag-badge'); const wrapper = badge.closest('.tag-wrapper'); badge.remove(); updateHiddenTags(wrapper); }
+        });
+        document.addEventListener('focusin', function(e) { if (e.target.classList.contains('tag-input')) e.target.closest('.tag-container').classList.add('highlight'); });
+        document.addEventListener('focusout', function(e) { if (e.target.classList.contains('tag-input')) { e.target.closest('.tag-container').classList.remove('highlight'); if (e.target.value.trim() !== '') addTag(e.target); } });
+        document.addEventListener('keydown', function(e) {
+            if (e.target.classList.contains('tag-input')) {
+                if (e.key === ',' || e.key === 'Enter') { e.preventDefault(); addTag(e.target); } 
+                else if (e.key === 'Backspace' && e.target.value === '') {
+                    const wrapper = e.target.closest('.tag-wrapper'); const badges = wrapper.querySelectorAll('.tag-badge');
+                    if (badges.length > 0) { badges[badges.length - 1].remove(); updateHiddenTags(wrapper); }
+                }
+            }
+        });
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('tag-input')) {
+                const val = e.target.value.trim(); const datalistId = e.target.getAttribute('list');
+                if (datalistId) { const dl = document.getElementById(datalistId); if (dl && Array.from(dl.options).map(o => o.value).includes(val)) addTag(e.target); }
+            }
+        });
+
+        function addTag(inputElement) {
+            const val = inputElement.value.trim().replace(/,/g, ''); if (!val) return;
+            const wrapper = inputElement.closest('.tag-wrapper');
+            const existingTags = Array.from(wrapper.querySelectorAll('.tag-badge')).map(b => b.textContent.trim().replace(' ', '').toLowerCase());
+            if (existingTags.includes(val.toLowerCase())) { inputElement.value = ''; return; }
+            const isVariant = wrapper.querySelector('.variant-tag-container') !== null;
+            const badgeClass = isVariant ? 'tag-badge variant-tag-badge' : 'tag-badge';
+            const span = document.createElement('span'); span.className = badgeClass;
+            span.innerHTML = `${val} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i>`;
+            inputElement.parentNode.insertBefore(span, inputElement); inputElement.value = ''; updateHiddenTags(wrapper);
+        }
+
+        function updateHiddenTags(wrapper) {
+            const hiddenInput = wrapper.querySelector('.hidden-category-input');
+            const tags = Array.from(wrapper.querySelectorAll('.tag-badge')).map(b => b.textContent.trim());
+            hiddenInput.value = tags.join(', '); 
+        }
+
         function openImageViewer(src) { document.getElementById('viewer-img').src = src; document.getElementById('viewer-download').href = src; document.getElementById('image-viewer-modal').classList.remove('hidden'); document.getElementById('image-viewer-modal').classList.add('flex'); }
         function closeImageViewer() { document.getElementById('image-viewer-modal').classList.add('hidden'); document.getElementById('image-viewer-modal').classList.remove('flex'); }
         function openCatModal() { document.getElementById('cat-modal').classList.remove('hidden'); }
         function closeCatModal() { document.getElementById('cat-modal').classList.add('hidden'); }
-        function updateCatList(selectEl, datalistId) { /* Mock implementation */ }
+
+        const allSystemCats = [ {% for cat in categories %} { name: "{{ cat.name|replace('\"', '\\\"')|replace('\'', '\\\'') }}", store: "{{ cat.store }}" }, {% endfor %} ];
+
+        function updateCatList(selectEl, datalistId) {
+            const dl = document.getElementById(datalistId); if(!dl) return; dl.innerHTML = '';
+            const store = selectEl.value; const cats = allSystemCats.filter(c => c.store === store);
+            const unique = [...new Set(cats.map(c => c.name))];
+            unique.forEach(name => { const opt = document.createElement('option'); opt.value = name; dl.appendChild(opt); });
+        }
+
         function updatePrice(element, type) {
             const group = element.closest('.price-group'); const usdInput = group.querySelector('.usd-input'); const khrInput = group.querySelector('.khr-input');
             const rate = 4000;
             if (type === 'USD') { const usdVal = parseFloat(usdInput.value); if (!isNaN(usdVal)) khrInput.value = (usdVal * rate).toFixed(0); else khrInput.value = ''; } 
             else { const khrVal = parseFloat(khrInput.value); if (!isNaN(khrVal)) usdInput.value = (khrVal / rate).toFixed(2); else usdInput.value = ''; }
         }
-        function renderUploadVariants() { /* Mock implementation */ }
-        function deleteCategory(id) { alert("Mock delete"); }
-        function toggleEdit(id) { document.getElementById(`item-${id}`).classList.toggle('is-editing'); }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const activeTab = localStorage.getItem('adminActiveTab') || 'dashboard'; 
-            switchView(activeTab);
-            document.getElementById('current-date-display').innerText = new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
-            
-            const currentMonthInput = document.getElementById('finance-month-filter');
-            const now = new Date();
-            currentMonthInput.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        // --- NEW LEGO UPLOAD LOGIC ---
+        const fileInput = document.getElementById('file-input'); 
+        const configArea = document.getElementById('variant-config'); 
+        const variantList = document.getElementById('variant-list'); 
+        const mainCatInput = document.getElementById('main-category-input');
+        const storeSelect = document.getElementById('add-store-select');
+        const legoTypeSelect = document.getElementById('lego-type-select');
+        const legoTypeContainer = document.getElementById('lego-type-container');
+
+        let currentUploadFiles = [];
+
+        storeSelect.addEventListener('change', function() {
+            updateCatList(this, 'add-cats');
+            if (this.value === 'lego') {
+                legoTypeContainer.classList.remove('hidden');
+            } else {
+                legoTypeContainer.classList.add('hidden');
+            }
+            renderUploadVariants();
         });
 
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                currentUploadFiles = Array.from(this.files).slice(0, 20); 
+                renderUploadVariants();
+            });
+        }
+
+        function renderUploadVariants() {
+            if (currentUploadFiles.length === 0) return;
+            
+            configArea.classList.remove('hidden'); 
+            variantList.innerHTML = '';
+            
+            const store = storeSelect.value;
+            const legoType = legoTypeSelect.value;
+            
+            let defaultTagString = mainCatInput.value.trim();
+            if (store === 'lego') {
+                const requiredTag = legoType === 'building_sets' ? 'Building Sets' : 'Minifigures';
+                if (!defaultTagString.toLowerCase().includes(requiredTag.toLowerCase())) {
+                    defaultTagString = defaultTagString ? defaultTagString + ', ' + requiredTag : requiredTag;
+                }
+            }
+
+            let initialTagHtml = '';
+            if(defaultTagString) { 
+                const tagsArray = defaultTagString.split(',').map(t => t.trim()).filter(Boolean); 
+                tagsArray.forEach(tag => { 
+                    initialTagHtml += `<span class="tag-badge variant-tag-badge">${tag} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i></span>`; 
+                }); 
+            }
+
+            currentUploadFiles.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const isBuildingSetGallery = (store === 'lego' && legoType === 'building_sets' && idx > 0);
+                    
+                    const row = document.createElement('div'); 
+                    row.className = "flex gap-2 md:gap-3 items-start bg-white p-2 md:p-3 rounded-xl md:rounded-2xl border border-gray-200 shadow-sm relative variant-row";
+                    
+                    if (isBuildingSetGallery) {
+                        row.innerHTML = `
+                            <div class="w-12 h-12 md:w-14 md:h-14 flex-shrink-0 bg-gray-50 border border-gray-100 rounded-lg md:rounded-xl p-1 mt-1"><img src="${e.target.result}" class="w-full h-full object-contain rounded-md"></div>
+                            <div class="flex-1 flex items-center h-12 md:h-14 mt-1 border border-gray-100 rounded-xl px-4 bg-gray-50/50">
+                                <span class="text-[10px] md:text-xs font-black text-gray-500 uppercase tracking-widest"><i class="fa-solid fa-image mr-2 text-gray-400"></i>Gallery Detail Image</span>
+                                <input type="hidden" name="variant_names[]" value="Gallery Detail ${idx}">
+                                <input type="hidden" name="variant_prices[]" value="0">
+                                <input type="hidden" name="variant_stocks[]" value="0">
+                                <input type="hidden" name="variant_categories[]" value="Gallery">
+                            </div>
+                            <button type="button" onclick="this.closest('.variant-row').remove()" class="p-1 md:p-2 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-lg md:rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors mt-1 shadow-sm"><i class="fa-solid fa-trash-can text-[10px] md:text-sm"></i></button>
+                        `;
+                    } else {
+                        row.innerHTML = `
+                            <div class="w-12 h-12 md:w-14 md:h-14 flex-shrink-0 bg-gray-50 border border-gray-100 rounded-lg md:rounded-xl p-1 mt-1"><img src="${e.target.result}" class="w-full h-full object-contain rounded-md"></div>
+                            <div class="flex-1 space-y-1.5 md:space-y-2 price-group">
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+                                    <div class="space-y-1"><span class="text-[7px] md:text-[8px] font-black text-gray-400 uppercase tracking-widest">Image Name</span><input type="text" name="variant_names[]" placeholder="${store === 'lego' && legoType === 'building_sets' ? 'Box Set Template' : 'Variant ' + (idx + 1)}" class="w-full text-[10px] md:text-[11px] font-bold outline-none border-b border-gray-200 pb-1 text-gray-900 focus:border-[#ff5000]"></div>
+                                    <div class="space-y-1"><span class="text-[7px] md:text-[8px] font-black text-gray-400 uppercase tracking-widest">Price (USD)</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-[#ff5000]"><span class="text-[8px] md:text-[10px] font-black text-gray-400">$</span><input type="number" step="any" name="variant_prices[]" required placeholder="0.00" class="w-full text-[10px] md:text-[11px] font-black outline-none usd-input" oninput="updatePrice(this, 'USD')"></div></div>
+                                    <div class="space-y-1"><span class="text-[7px] md:text-[8px] font-black text-gray-400 uppercase tracking-widest">Price (KHR)</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-[#ff5000]"><span class="text-[8px] md:text-[10px] font-black text-gray-400">៛</span><input type="number" step="any" placeholder="0" class="w-full text-[10px] md:text-[11px] font-black outline-none khr-input" oninput="updatePrice(this, 'KHR')"></div></div>
+                                    <div class="space-y-1"><span class="text-[7px] md:text-[8px] font-black text-gray-400 uppercase tracking-widest">Stock Qty</span><div class="flex items-center gap-1 border-b border-gray-200 pb-1 focus-within:border-[#ff5000]"><input type="number" name="variant_stocks[]" value="1" required class="w-full text-[10px] md:text-[11px] font-black outline-none text-center"></div></div>
+                                </div>
+                                <div class="tag-wrapper pt-1">
+                                    <span class="text-[7px] md:text-[8px] font-black text-[#ff5000] uppercase tracking-widest mb-1 block">Categories for this image:</span>
+                                    <input type="hidden" name="variant_categories[]" class="hidden-category-input" value="${defaultTagString}">
+                                    <div class="tag-container variant-tag-container border-gray-200 bg-gray-50/50 min-h-[28px] md:min-h-[32px]">${initialTagHtml}<input type="text" list="add-cats" class="tag-input variant-tag-input text-[10px]" placeholder="Tags..." autocomplete="off"></div>
+                                </div>
+                            </div>
+                            <button type="button" onclick="this.closest('.variant-row').remove()" class="p-1 md:p-2 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-lg md:rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors mt-1 shadow-sm"><i class="fa-solid fa-trash-can text-[10px] md:text-sm"></i></button>
+                        `;
+                    }
+                    variantList.appendChild(row);
+                }; 
+                reader.readAsDataURL(file);
+            });
+        }
+
+        document.querySelectorAll('.submit-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const titleInput = this.querySelector('input[name="title"]'); 
+                const catInput = this.querySelector('input[name="category"]');
+                const mainCatRaw = catInput ? catInput.value.trim() : "";
+                let firstMainCategory = ""; if(mainCatRaw) firstMainCategory = mainCatRaw.split(',')[0].trim();
+                if (titleInput && !titleInput.value.trim() && firstMainCategory) titleInput.value = firstMainCategory + ' Group';
+                const vNames = this.querySelectorAll('input[name="v_names[]"], input[name="variant_names[]"]');
+                vNames.forEach((vn, idx) => { if (!vn.value.trim()) vn.value = (firstMainCategory ? firstMainCategory : 'Variant') + ' ' + (idx + 1); });
+                document.getElementById('loading-overlay').classList.remove('hidden'); document.getElementById('loading-overlay').classList.add('flex');
+            });
+        });
+
+        setTimeout(() => { document.querySelectorAll('.animate-slide-up').forEach(t => t.style.display = 'none'); }, 6000);
+
+        if(document.getElementById('main-inventory-list')) {
+            new Sortable(document.getElementById('main-inventory-list'), { handle: '.product-handle', animation: 150, onEnd: function () {
+                const items = document.querySelectorAll('.product-item'); const ids = Array.from(items).map(item => item.id.replace('item-', ''));
+                fetch('/admin/product/reorder', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: ids }) });
+            }});
+        }
+
+        if(document.getElementById('category-sortable')) {
+            new Sortable(document.getElementById('category-sortable'), { handle: '.handle', animation: 150 });
+        }
+        
+        function deleteCategory(id) { if(confirm('Delete category? Assigned items will move to "Uncategorized".')) { const form = document.getElementById('delete-cat-form'); form.action = '/admin/category/delete/' + id; form.submit(); } }
+        function toggleEdit(id) { document.getElementById(`item-${id}`).classList.toggle('is-editing'); }
     </script>
 </body>
 </html>
