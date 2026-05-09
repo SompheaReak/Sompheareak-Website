@@ -146,48 +146,67 @@
         </div>
     </div>
 
-    <!-- PRODUCT DETAIL MODAL -->
-    <div id="product-modal" class="fixed inset-0 z-[1000] flex flex-col justify-end translate-y-full">
-        <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeProductModal()"></div>
-        <div class="relative w-full h-[92vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
-            <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-[30] absolute top-0 left-0 right-0 shadow-sm">
-                <h2 class="text-base font-black text-gray-900 font-['Moul'] truncate pr-4" id="modal-title">Product</h2>
-                <button onclick="closeProductModal()" class="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark"></i></button>
+    <!-- 🌟 PRODUCT DETAIL MODAL (FULL SCREEN) 🌟 -->
+    <div id="product-modal" class="fixed inset-0 z-[1000] flex flex-col bg-white translate-y-full transition-transform">
+        
+        <!-- Header: X Button and Cart Button Top Right -->
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100 z-[30] sticky top-0 shadow-sm">
+            <h2 class="text-base font-black text-gray-900 font-['Moul'] truncate flex-1 pr-4" id="modal-title">Product</h2>
+            <div class="flex items-center gap-3 shrink-0">
+                <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-full text-gray-800 hover:bg-gray-100 active:scale-90 transition-all">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span id="modal-cart-badge" class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden">0</span>
+                </button>
+                <button onclick="closeProductModal()" class="w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-full text-gray-800 hover:text-red-500 hover:bg-red-50 active:scale-90 transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
             </div>
-            <div class="flex-1 overflow-y-auto pt-14 pb-6 scrollbar-hide relative bg-gray-50" id="modal-body">
-                <div class="sticky top-0 z-20 bg-white border-b border-gray-100 sticky-shadow">
-                    <div id="modal-image-carousel" class="w-full h-[35vh] flex overflow-x-auto snap-x snap-mandatory scrollbar-hide relative" onscroll="handleCarouselScroll()"></div>
-                    <div class="absolute bottom-3 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl shadow-md border border-gray-100 flex flex-col pointer-events-none">
-                        <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-0.5">Price</span>
-                        <span id="modal-price" class="text-xl font-black text-[#ea580c] leading-none">0៛</span>
-                    </div>
-                </div>
-                <div class="px-5 space-y-6 mt-5 relative z-10">
-                    <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                        <div>
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Availability</p>
-                            <span id="modal-stock" class="text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block">In Stock</span>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Authentic</p>
-                            <span class="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 inline-block"><i class="fa-solid fa-shield-check"></i> 100% Quality</span>
-                        </div>
-                    </div>
-                    <div id="variant-section" class="hidden bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                        <p class="text-[10px] font-black text-gray-800 uppercase tracking-widest mb-3 font-['Kantumruy_Pro']">ជ្រើសរើសម៉ូត (Select Style)</p>
-                        <div id="variant-grid" class="grid grid-cols-4 gap-2.5"></div>
-                    </div>
-                    <div class="pt-2">
-                        <div class="flex items-center gap-2 mb-4">
-                            <div class="h-px bg-gray-200 flex-1"></div>
-                            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">You Might Also Like</h3>
-                            <div class="h-px bg-gray-200 flex-1"></div>
-                        </div>
-                        <div id="recommendations-grid" class="grid grid-cols-2 gap-3 pb-4"></div>
-                    </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto pb-6 scrollbar-hide relative bg-gray-50 flex flex-col items-center" id="modal-body">
+            
+            <!-- Product Images (SQUARE 900x900px max) -->
+            <div class="w-full max-w-[900px] aspect-square bg-white border-b border-gray-100 shadow-sm relative z-20">
+                <div id="modal-image-carousel" class="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-hide relative" onscroll="handleCarouselScroll()"></div>
+                
+                <div class="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl shadow-md border border-gray-100 flex flex-col pointer-events-none">
+                    <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-0.5">Price</span>
+                    <span id="modal-price" class="text-2xl font-black text-[#ea580c] leading-none">0៛</span>
                 </div>
             </div>
-            <div class="bg-white border-t border-gray-100 p-4 z-[30] flex gap-3 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
+
+            <!-- Product Details -->
+            <div class="w-full max-w-[900px] px-5 space-y-6 mt-5 relative z-10">
+                <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Availability</p>
+                        <span id="modal-stock" class="text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block">In Stock</span>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Authentic</p>
+                        <span class="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 inline-block"><i class="fa-solid fa-shield-check"></i> 100% Quality</span>
+                    </div>
+                </div>
+
+                <div id="variant-section" class="hidden bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                    <p class="text-[10px] font-black text-gray-800 uppercase tracking-widest mb-3 font-['Kantumruy_Pro']">ជ្រើសរើសម៉ូត (Select Style)</p>
+                    <div id="variant-grid" class="grid grid-cols-4 gap-2.5"></div>
+                </div>
+
+                <div class="pt-2">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="h-px bg-gray-200 flex-1"></div>
+                        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">You Might Also Like</h3>
+                        <div class="h-px bg-gray-200 flex-1"></div>
+                    </div>
+                    <div id="recommendations-grid" class="grid grid-cols-2 gap-3 pb-4"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add to Cart Footer -->
+        <div class="bg-white border-t border-gray-100 p-4 z-[30] flex justify-center shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
+            <div class="w-full max-w-[900px] flex gap-3">
                 <div class="flex items-center gap-3 bg-gray-50 rounded-2xl p-1 border border-gray-100">
                     <button onclick="updateModalQty(-1)" class="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm text-gray-600 active:scale-95"><i class="fa-solid fa-minus"></i></button>
                     <span id="modal-qty" class="font-black text-base w-6 text-center">1</span>
@@ -297,12 +316,22 @@
         }
 
         function updateCartBadge() {
-            const badge = document.getElementById('cart-badge');
-            if(userCart.length > 0) {
-                badge.innerText = userCart.length; badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
+            // Update all cart badges across the app
+            const badges = [
+                document.getElementById('cart-badge'),
+                document.getElementById('modal-cart-badge')
+            ];
+            
+            badges.forEach(badge => {
+                if(badge) {
+                    if(userCart.length > 0) {
+                        badge.innerText = userCart.length; 
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+            });
         }
 
         async function fetchProducts() {
@@ -318,10 +347,10 @@
             } catch (e) {
                 console.warn("Using mock data for preview.", e);
                 allProducts = [
-                    { id: 101, title: "Lego Technic Race Car", price: 25, category: "Building Blocks, Vehicles", image: "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=500&auto=format&fit=crop&q=60", stock: 12, parsed_variants: [] },
-                    { id: 102, title: "Soft Teddy Bear Premium", price: 15, category: "Plushies, Soft Toys", image: "https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=500&auto=format&fit=crop&q=60", stock: 20, parsed_variants: [] },
-                    { id: 103, title: "Classic Rubik's Cube 3x3", price: 5, category: "Puzzles, Brain Teasers", image: "https://images.unsplash.com/photo-1591991731833-b4807cf7ef94?w=500&auto=format&fit=crop&q=60", stock: 50, parsed_variants: [] },
-                    { id: 104, title: "RC Fast Drift Car 4WD", price: 40, category: "RC Vehicles", image: "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?w=500&auto=format&fit=crop&q=60", stock: 8, parsed_variants: [] }
+                    { id: 101, title: "Lego Technic Race Car", price: 25, category: "Building Blocks, Vehicles", image: "https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?w=900&h=900&auto=format&fit=crop&q=80", stock: 12, parsed_variants: [] },
+                    { id: 102, title: "Soft Teddy Bear Premium", price: 15, category: "Plushies, Soft Toys", image: "https://images.unsplash.com/photo-1559454403-b8fb88521f11?w=900&h=900&auto=format&fit=crop&q=80", stock: 20, parsed_variants: [] },
+                    { id: 103, title: "Classic Rubik's Cube 3x3", price: 5, category: "Puzzles, Brain Teasers", image: "https://images.unsplash.com/photo-1591991731833-b4807cf7ef94?w=900&h=900&auto=format&fit=crop&q=80", stock: 50, parsed_variants: [] },
+                    { id: 104, title: "RC Fast Drift Car 4WD", price: 40, category: "RC Vehicles", image: "https://images.unsplash.com/photo-1594787318286-3d835c1d207f?w=900&h=900&auto=format&fit=crop&q=80", stock: 8, parsed_variants: [] }
                 ];
             } finally {
                 document.getElementById('loadingOverlay').style.display = 'none';
@@ -524,10 +553,11 @@
             const varGrid = document.getElementById('variant-grid');
             
             if(variants.length > 0) {
+                // Ensure image wrapper forces object-contain within square container
                 carousel.innerHTML = variants.map(v => `
-                    <div class="min-w-full h-full snap-center relative cursor-pointer" onclick="openImageViewer('${v.image || currentModalProduct.image || currentModalProduct.thumbnail}')">
-                        <img src="${v.image || currentModalProduct.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain p-2">
-                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-sm"></i></div>
+                    <div class="min-w-full h-full snap-center relative cursor-pointer bg-gray-50 flex items-center justify-center" onclick="openImageViewer('${v.image || currentModalProduct.image || currentModalProduct.thumbnail}')">
+                        <img src="${v.image || currentModalProduct.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain p-2 mix-blend-multiply">
+                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-10 h-10 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand"></i></div>
                     </div>
                 `).join('');
 
@@ -543,9 +573,9 @@
             } else {
                 varSection.classList.add('hidden');
                 carousel.innerHTML = `
-                    <div class="min-w-full h-full snap-center relative cursor-pointer" onclick="openImageViewer('${currentModalProduct.image || currentModalProduct.thumbnail}')">
-                        <img src="${currentModalProduct.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain p-2">
-                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-sm"></i></div>
+                    <div class="min-w-full h-full snap-center relative cursor-pointer bg-gray-50 flex items-center justify-center" onclick="openImageViewer('${currentModalProduct.image || currentModalProduct.thumbnail}')">
+                        <img src="${currentModalProduct.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain p-2 mix-blend-multiply">
+                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-10 h-10 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand"></i></div>
                     </div>
                 `;
                 updatePriceAndStock(currentModalProduct.price, currentModalProduct.stock);
@@ -686,7 +716,9 @@
                 });
             }
             
-            saveCart(); updateCartBadge(); closeProductModal();
+            // Save cart, update badges and show Taobao-style success toast WITHOUT closing the modal
+            saveCart(); 
+            updateCartBadge(); 
             
             const toast = document.getElementById('toast');
             document.getElementById('toast-text').innerText = "Added to Cart";
