@@ -47,8 +47,11 @@
     }
     
     .bracelet-preview-container::-webkit-scrollbar { display: none; }
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Custom vertical scrollbar for the Style 2 container */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
 
     /* CHARM SIZING */
     .bracelet-link-container {
@@ -62,10 +65,7 @@
         touch-action: pan-x;
     }
 
-    .bracelet-link-container.selected {
-        touch-action: none; 
-        z-index: 40;
-    }
+    .bracelet-link-container.selected { touch-action: none; z-index: 40; }
     
     .bracelet-link-container img {
         width: 100%; height: 100%; object-fit: contain; display: block;
@@ -73,33 +73,21 @@
     }
 
     .bracelet-link-container.selected img { 
-        filter: drop-shadow(0 0 10px rgba(234, 88, 12, 0.4)); 
-        transform: translateY(-4px); 
+        filter: drop-shadow(0 0 10px rgba(234, 88, 12, 0.4)); transform: translateY(-4px); 
     }
     
     /* DRAGGING STATES */
     .bracelet-link-container.is-dragging {
-        z-index: 100;
-        opacity: 0.9;
-        scale: 1.15;
-        cursor: grabbing;
-        transition: none; 
+        z-index: 100; opacity: 0.9; scale: 1.15; cursor: grabbing; transition: none; 
     }
 
     .remove-btn-anim { 
-        opacity: 0; 
-        pointer-events: none; 
-        transform: translateX(-50%) scale(0.5); 
+        opacity: 0; pointer-events: none; transform: translateX(-50%) scale(0.5); 
         transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        display: flex !important;
-        position: absolute;
-        top: -20px;
-        left: 50%;
+        display: flex !important; position: absolute; top: -20px; left: 50%;
     }
     .bracelet-link-container.selected .remove-btn-anim { 
-        opacity: 1; 
-        pointer-events: auto; 
-        transform: translateX(-50%) scale(1); 
+        opacity: 1; pointer-events: auto; transform: translateX(-50%) scale(1); 
     }
 
     #drawer, #cart-drawer, #tutorialModal, #styleSelectorModal { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease; }
@@ -140,25 +128,14 @@
         width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
     }
 
-    /* Pop Animation */
-    @keyframes pop {
-        0% { transform: scale(0.9); opacity: 0; }
-        100% { transform: scale(1); opacity: 1; }
-    }
+    @keyframes pop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     
     .pulse-ring {
-        position: absolute;
-        width: 100%; height: 100%;
-        border-radius: 50%;
-        animation: pulsate 2s infinite ease-out;
-        border: 2px solid #ea580c;
-        opacity: 0;
+        position: absolute; width: 100%; height: 100%; border-radius: 50%;
+        animation: pulsate 2s infinite ease-out; border: 2px solid #ea580c; opacity: 0;
     }
-    @keyframes pulsate {
-        0% { transform: scale(1); opacity: 0.8; }
-        100% { transform: scale(1.5); opacity: 0; }
-    }
+    @keyframes pulsate { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
   </style>
 </head>
 <body class="text-gray-900 overflow-x-hidden">
@@ -247,8 +224,11 @@
 
   <!-- IMAGE VIEWER MODAL -->
   <div id="image-viewer-modal" class="fixed inset-0 z-[7000] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-      <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
-      <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl mb-6">
+      <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-[#ea580c] transition-colors z-50">
+          <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+      <img id="viewer-img" src="" class="max-w-[95vw] max-h-[85vh] object-contain rounded-xl shadow-2xl transition-transform transform scale-100">
+      <p class="text-white text-xs font-bold mt-4 uppercase tracking-widest opacity-70">Tap outside to close</p>
   </div>
 
   <!-- TUTORIAL MODAL -->
@@ -402,7 +382,7 @@
     </div>
   </section>
 
-  <!-- CATEGORIES & CHARMS (WITH LAYOUT SWITCH) -->
+  <!-- CATEGORIES & CHARMS MAIN CONTENT SECTION -->
   <section id="main-content-section" class="p-4 pb-48 transition-all duration-300">
     <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2">
@@ -421,9 +401,21 @@
     <div id="categoryGallery" class="grid grid-cols-6 gap-2"></div>
     
   </section>
-  
-  <!-- STYLE 2: ALL CHARMS (STICKY HORIZONTAL GRID AT BOTTOM) -->
-  <div id="allCharmsGallery" class="fixed bottom-[72px] sm:bottom-[76px] left-0 right-0 z-[85] bg-white/95 backdrop-blur-xl border-t border-gray-200 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] p-3 overflow-x-auto hide-scrollbar" style="display: none; grid-template-rows: repeat(2, 1fr); grid-auto-flow: column; gap: 10px;"></div>
+
+  <!-- STYLE 2: ALL CHARMS (STICKY VERTICAL GRID AT BOTTOM) -->
+  <div id="allCharmsGalleryContainer" class="fixed bottom-[72px] sm:bottom-[76px] left-0 right-0 z-[85] bg-gray-50/95 backdrop-blur-xl border-t border-gray-200 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] p-2 pt-3 overflow-y-auto h-[40vh] sm:h-[45vh] transition-transform duration-300 custom-scrollbar" style="display: none; overscroll-behavior: contain;">
+      <div class="w-full max-w-4xl mx-auto relative">
+           <!-- Subtle hint text anchored to top of scrolling container -->
+           <div class="sticky top-0 w-full flex justify-center mb-2 z-10 pointer-events-none">
+               <div class="bg-black/30 backdrop-blur-md px-3 py-1 rounded-full text-[8px] font-black text-white uppercase tracking-widest pointer-events-auto shadow-sm">
+                  Scroll for more <i class="fa-solid fa-arrow-down ml-1"></i>
+               </div>
+           </div>
+           
+           <!-- Grid enforcing exactly 10 images per row -->
+           <div id="allCharmsGrid" class="grid grid-cols-10 gap-1 sm:gap-1.5 pb-8"></div>
+      </div>
+  </div>
 
   <!-- CHARM SELECTOR DRAWER (For Style 1) -->
   <div id="drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[200] translate-y-full pointer-events-none">
@@ -439,7 +431,7 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        <div class="flex-grow overflow-y-auto p-4 bg-gray-50 hide-scrollbar">
+        <div class="flex-grow overflow-y-auto p-4 bg-gray-50 custom-scrollbar">
             <div id="charmGrid" class="grid grid-cols-7 gap-1.5 pb-20"></div>
         </div>
     </div>
@@ -457,6 +449,7 @@
             <i class="fa-solid fa-shuffle text-lg"></i>
         </button>
         
+        <!-- Modified onclick to intercept size check -->
         <button onclick="checkSizeBeforePackaging()" id="save-design-btn" disabled class="flex-grow bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
             <i class="fa-solid fa-cart-plus text-sm"></i>
             <span data-i18n="checkout_btn">បញ្ចូលទៅកន្ត្រក</span>
@@ -480,7 +473,7 @@
               <div class="w-full bg-slate-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center relative overflow-hidden">
                    <div class="absolute top-0 right-0 w-16 h-16 bg-orange-100 rounded-bl-full -mr-8 -mt-8 opacity-50 z-0"></div>
                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 relative z-10" data-i18n="your_design">ការរចនារបស់អ្នក</p>
-                   <div class="w-full overflow-x-auto flex justify-center relative z-10">
+                   <div class="w-full overflow-x-auto flex justify-center relative z-10 custom-scrollbar">
                         <img id="initialPreviewImg" class="h-auto object-contain max-h-[150px] shadow-sm rounded-lg border border-gray-200 bg-white" src="" alt="Bracelet Preview">
                    </div>
               </div>
@@ -546,7 +539,7 @@
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
-        <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+        <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar"></div>
         <div class="bg-white border-t border-gray-100 p-5 z-10">
             <!-- NEW ITEMIZED TOTALS -->
             <div class="space-y-2 mb-4">
@@ -579,7 +572,7 @@
           <h2 class="text-xl font-black font-['Moul']" data-i18n="delivery_details">ព័ត៌មានដឹកជញ្ជូន</h2>
           <button onclick="closeCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
-      <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50">
+      <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50 custom-scrollbar">
           <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
               <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
               <div class="flex justify-between text-xs font-bold text-gray-500"><span data-i18n="subtotal">តម្លៃទំនិញសរុប:</span><span id="check-subtotal">៛0</span></div>
@@ -856,6 +849,13 @@
                 showTutorial();
             }
         }, 800);
+        
+        // Add listener to close image viewer if clicking backdrop
+        document.getElementById('image-viewer-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageViewer();
+            }
+        });
     }
 
     function startBannerSlideshow() {
@@ -899,7 +899,7 @@
         const btn1 = document.getElementById('btn-style-1');
         const btn2 = document.getElementById('btn-style-2');
         const catGallery = document.getElementById('categoryGallery');
-        const allGallery = document.getElementById('allCharmsGallery');
+        const allGalleryContainer = document.getElementById('allCharmsGalleryContainer');
         const titleText = document.getElementById('collection-title-text');
         const mainSection = document.getElementById('main-content-section');
 
@@ -907,23 +907,24 @@
             btn1.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
             btn2.className = "px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
             catGallery.style.display = 'grid';
-            allGallery.style.display = 'none';
+            allGalleryContainer.style.display = 'none';
             titleText.innerText = t('collection_title');
             
-            mainSection.classList.remove('pb-[260px]');
+            // Remove massive bottom padding used for sticky gallery
+            mainSection.classList.remove('pb-[45vh]', 'sm:pb-[50vh]');
             mainSection.classList.add('pb-48');
         } else {
             btn2.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
             btn1.className = "px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
             catGallery.style.display = 'none';
-            allGallery.style.display = 'grid'; 
+            allGalleryContainer.style.display = 'block'; 
             titleText.innerText = t('all_charms');
             
-            // Add extra bottom padding so content isn't hidden by the new sticky bottom gallery
+            // Add massive padding so workspace can scroll past the fixed height container
             mainSection.classList.remove('pb-48');
-            mainSection.classList.add('pb-[260px]'); 
+            mainSection.classList.add('pb-[45vh]', 'sm:pb-[50vh]'); 
             
-            if(!allGallery.innerHTML) renderAllCharmsGallery();
+            if(!document.getElementById('allCharmsGrid').innerHTML) renderAllCharmsGallery();
         }
     }
 
@@ -944,17 +945,28 @@
         }).join('');
     }
 
-    // STYLE 2 RENDER (Fixed Horizontal Scrolling Grid)
+    // STYLE 2 RENDER (Fixed Vertical Scrolling Grid with 10 Columns)
     function renderAllCharmsGallery() {
-        const allGallery = document.getElementById('allCharmsGallery');
-        allGallery.innerHTML = allCharms.map(c => {
+        const allGalleryGrid = document.getElementById('allCharmsGrid');
+        allGalleryGrid.innerHTML = allCharms.map(c => {
             let isOut = (c.stock !== undefined && c.stock <= 0);
             return `
-                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" class="relative flex flex-col items-center justify-center p-1 bg-white rounded-xl border border-gray-200 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer overflow-hidden'}" style="width: 65px; height: 85px;">
-                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1 py-0.5 rounded-bl shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
-                    <img src="${c.image}" class="w-full h-full object-contain drop-shadow-sm mb-3">
-                    <div class="absolute bottom-0 inset-x-0 w-full text-center bg-gray-50/90 py-0.5 border-t border-gray-100">
-                        <p class="text-[7px] font-black text-[#ea580c] truncate px-0.5">${(c.price / 1000).toFixed(0)}k</p>
+                <div class="relative flex flex-col bg-white rounded border border-gray-200 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'overflow-hidden hover:border-[#ea580c] transition-colors'}" style="aspect-ratio: 9/15;">
+                    ${isOut ? `<div class="absolute top-0 left-0 bg-red-600 text-white text-[4px] px-0.5 py-0.5 rounded-br shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
+                    
+                    <!-- View Image Enlarger Button -->
+                    <button onclick="event.stopPropagation(); openImageViewer('${c.image}')" class="absolute top-0 right-0 w-5 h-5 sm:w-6 sm:h-6 bg-black/40 hover:bg-[#ea580c] backdrop-blur-sm text-white flex items-center justify-center rounded-bl z-20 transition-all active:scale-90 shadow-sm" aria-label="View Full Image">
+                        <i class="fa-solid fa-expand text-[8px] sm:text-[10px]"></i>
+                    </button>
+
+                    <!-- Clickable Area to ADD Charm -->
+                    <div class="w-full h-full flex flex-col cursor-pointer active:scale-95 transition-transform" onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}">
+                        <div class="flex-1 p-0.5 flex items-center justify-center">
+                            <img src="${c.image}" class="w-full h-full object-contain drop-shadow-sm pointer-events-none">
+                        </div>
+                        <div class="w-full text-center bg-gray-50 border-t border-gray-100 py-[2px] z-10">
+                            <p class="text-[5px] sm:text-[6px] font-black text-[#ea580c] truncate leading-none">${(c.price / 1000).toFixed(0)}k</p>
+                        </div>
                     </div>
                 </div>`;
         }).join('');
@@ -1234,19 +1246,28 @@
         startPackagingFlow();
     }
 
-    // --- IMAGE VIEWER FOR CART AND SIZE GUIDE ---
+    // --- ENHANCED IMAGE VIEWER FOR CART AND SIZE GUIDE ---
     function openImageViewer(src) {
-        document.getElementById('viewer-img').src = src;
-        document.getElementById('image-viewer-modal').style.display = 'flex';
+        const img = document.getElementById('viewer-img');
+        img.src = src;
+        
+        const modal = document.getElementById('image-viewer-modal');
+        modal.style.display = 'flex';
+        
+        // Add tiny pop animation for viewing images
         setTimeout(() => {
-            document.getElementById('image-viewer-modal').classList.remove('hidden');
+            modal.classList.remove('hidden');
+            img.classList.add('scale-105');
+            setTimeout(() => img.classList.remove('scale-105'), 200);
         }, 10);
     }
     
     function closeImageViewer() {
-        document.getElementById('image-viewer-modal').classList.add('hidden');
+        const modal = document.getElementById('image-viewer-modal');
+        modal.classList.add('hidden');
         setTimeout(() => {
-            document.getElementById('image-viewer-modal').style.display = 'none';
+            modal.style.display = 'none';
+            document.getElementById('viewer-img').src = '';
         }, 300);
     }
 
