@@ -46,9 +46,9 @@
         touch-action: pan-x; 
     }
     
-    .bracelet-preview-container::-webkit-scrollbar {
-        display: none; 
-    }
+    .bracelet-preview-container::-webkit-scrollbar { display: none; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
     /* CHARM SIZING */
     .bracelet-link-container {
@@ -102,7 +102,7 @@
         transform: translateX(-50%) scale(1); 
     }
 
-    #drawer, #cart-drawer, #tutorialModal { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease; }
+    #drawer, #cart-drawer, #tutorialModal, #styleSelectorModal { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease; }
     .modal-active { opacity: 1; pointer-events: auto; transform: scale(1); }
     .modal-hidden { opacity: 0; pointer-events: none; transform: scale(0.95); }
 
@@ -140,9 +140,24 @@
         width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
     }
 
-    /* All Charms Scrolling Style Helper */
-    .style-2-item {
-        aspect-ratio: 3/4;
+    /* Pop Animation */
+    @keyframes pop {
+        0% { transform: scale(0.9); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    
+    .pulse-ring {
+        position: absolute;
+        width: 100%; height: 100%;
+        border-radius: 50%;
+        animation: pulsate 2s infinite ease-out;
+        border: 2px solid #ea580c;
+        opacity: 0;
+    }
+    @keyframes pulsate {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.5); opacity: 0; }
     }
   </style>
 </head>
@@ -160,6 +175,49 @@
   <div id="loadingOverlay" style="display: none;" class="fixed inset-0 z-[4000] bg-black/90 backdrop-blur-md hidden flex-col items-center justify-center text-white">
       <div class="w-12 h-12 border-4 border-[#ea580c] border-t-transparent rounded-full animate-spin mb-4"></div>
       <p id="loadingText" class="text-xs font-black uppercase tracking-[0.3em] font-['Moul']">កំពុងរៀបចំ...</p>
+  </div>
+  
+  <!-- STYLE SELECTOR ONBOARDING MODAL -->
+  <div id="styleSelectorModal" class="fixed inset-0 z-[5000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-md transition-opacity modal-hidden">
+      <div class="bg-white w-full max-w-sm rounded-3xl p-6 relative shadow-2xl flex flex-col gap-6 text-center transform transition-transform animate-pop">
+          <div class="relative w-20 h-20 mx-auto">
+              <div class="pulse-ring"></div>
+              <div class="absolute inset-0 bg-gradient-to-tr from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-3xl shadow-lg z-10">
+                  <i class="fa-solid fa-wand-magic-sparkles animate-bounce"></i>
+              </div>
+          </div>
+          
+          <div>
+              <h3 class="text-lg font-black text-gray-900 font-['Moul'] leading-tight mb-2" data-i18n="choose_style_title">តើអ្នកចង់ជ្រើសរើសរបៀបបង្ហាញមួយណា?</h3>
+              <p class="text-[10px] font-bold text-gray-500 font-['Kantumruy_Pro']" data-i18n="choose_style_desc">អ្នកអាចផ្លាស់ប្តូរវានៅពេលក្រោយបាន</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+              <!-- Style 1 Option -->
+              <button onclick="selectInitialStyle(1)" class="group flex flex-col items-center gap-3 bg-gray-50 p-4 rounded-2xl border-2 border-transparent hover:border-[#ea580c] hover:bg-orange-50 transition-all active:scale-95 shadow-sm hover:shadow-md">
+                  <div class="w-14 h-14 bg-white rounded-xl shadow-sm flex items-center justify-center text-[#ea580c] text-xl group-hover:scale-110 transition-transform">
+                      <i class="fa-solid fa-layer-group"></i>
+                  </div>
+                  <div>
+                      <p class="text-[11px] font-black text-gray-900 font-['Moul']" data-i18n="style1_name">តាមប្រភេទ</p>
+                      <p class="text-[8px] font-bold text-gray-500 mt-1 font-['Kantumruy_Pro']" data-i18n="style1_desc">បង្ហាញជាក្រុម (Category)</p>
+                  </div>
+              </button>
+              
+              <!-- Style 2 Option -->
+              <button onclick="selectInitialStyle(2)" class="group flex flex-col items-center gap-3 bg-gray-50 p-4 rounded-2xl border-2 border-transparent hover:border-[#ea580c] hover:bg-orange-50 transition-all active:scale-95 shadow-sm hover:shadow-md relative overflow-hidden">
+                  <div class="absolute top-0 right-0 bg-red-500 text-white text-[6px] font-black px-2 py-0.5 rounded-bl-lg uppercase">Hot</div>
+                  <div class="w-14 h-14 bg-white rounded-xl shadow-sm flex items-center justify-center text-[#ea580c] text-xl group-hover:scale-110 transition-transform relative overflow-hidden">
+                      <i class="fa-solid fa-table-cells"></i>
+                      <div class="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-orange-100 to-transparent"></div>
+                  </div>
+                  <div>
+                      <p class="text-[11px] font-black text-gray-900 font-['Moul']" data-i18n="style2_name">បង្ហាញទាំងអស់</p>
+                      <p class="text-[8px] font-bold text-gray-500 mt-1 font-['Kantumruy_Pro']" data-i18n="style2_desc">អូសរើសជាប់ជានិច្ច (Sticky)</p>
+                  </div>
+              </button>
+          </div>
+      </div>
   </div>
 
   <!-- SIZE WARNING MODAL -->
@@ -193,6 +251,7 @@
       <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl mb-6">
   </div>
 
+  <!-- TUTORIAL MODAL -->
   <div id="tutorialModal" class="fixed inset-0 z-[1300] flex items-center justify-center px-4 modal-hidden">
       <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeTutorial()"></div>
       <div class="bg-white w-full max-w-sm rounded-2xl p-6 relative shadow-2xl flex flex-col items-center gap-4 text-center transform transition-transform">
@@ -232,6 +291,11 @@
           <button onclick="toggleLanguage()" class="w-10 h-10 hidden sm:flex items-center justify-center bg-gray-900 rounded-full text-white text-[10px] font-bold border border-gray-800 active:scale-90 transition-transform shrink-0">
               <span id="lang-display">KH</span>
           </button>
+
+          <!-- TELEGRAM HEADER ICON -->
+          <a href="https://t.me/somphea_reak" target="_blank" class="relative w-10 h-10 flex items-center justify-center bg-[#e0f2fe] border border-[#bae6fd] rounded-full text-[#0284c7] shadow-sm active:scale-90 transition-transform shrink-0 hover:bg-[#bae6fd]">
+              <i class="fa-brands fa-telegram text-xl"></i>
+          </a>
            
           <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0">
               <i class="fa-solid fa-cart-shopping"></i>
@@ -339,7 +403,7 @@
   </section>
 
   <!-- CATEGORIES & CHARMS (WITH LAYOUT SWITCH) -->
-  <section class="p-4 pb-48">
+  <section id="main-content-section" class="p-4 pb-48 transition-all duration-300">
     <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2">
             <span class="romdul-icon" style="width:16px; height:16px;"></span>
@@ -356,9 +420,10 @@
     <!-- STYLE 1: CATEGORY GALLERY -->
     <div id="categoryGallery" class="grid grid-cols-6 gap-2"></div>
     
-    <!-- STYLE 2: ALL CHARMS (10 PER ROW SCROLLING) -->
-    <div id="allCharmsGallery" class="gap-1" style="display: none; grid-template-columns: repeat(10, minmax(0, 1fr));"></div>
   </section>
+  
+  <!-- STYLE 2: ALL CHARMS (STICKY HORIZONTAL GRID AT BOTTOM) -->
+  <div id="allCharmsGallery" class="fixed bottom-[72px] sm:bottom-[76px] left-0 right-0 z-[85] bg-white/95 backdrop-blur-xl border-t border-gray-200 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] p-3 overflow-x-auto hide-scrollbar" style="display: none; grid-template-rows: repeat(2, 1fr); grid-auto-flow: column; gap: 10px;"></div>
 
   <!-- CHARM SELECTOR DRAWER (For Style 1) -->
   <div id="drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[200] translate-y-full pointer-events-none">
@@ -374,7 +439,7 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        <div class="flex-grow overflow-y-auto p-4 bg-gray-50">
+        <div class="flex-grow overflow-y-auto p-4 bg-gray-50 hide-scrollbar">
             <div id="charmGrid" class="grid grid-cols-7 gap-1.5 pb-20"></div>
         </div>
     </div>
@@ -392,7 +457,6 @@
             <i class="fa-solid fa-shuffle text-lg"></i>
         </button>
         
-        <!-- Modified onclick to intercept size check -->
         <button onclick="checkSizeBeforePackaging()" id="save-design-btn" disabled class="flex-grow bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
             <i class="fa-solid fa-cart-plus text-sm"></i>
             <span data-i18n="checkout_btn">បញ្ចូលទៅកន្ត្រក</span>
@@ -593,7 +657,13 @@
             size_warning_title: "ខ្សែដៃរបស់អ្នកមានទំហំតូច",
             size_warning_desc: "យើងណែនាំឱ្យអ្នករើស៖<br><span class=\"text-[#ea580c] text-base font-black block mt-1\">17-18 គ្រាប់ (ប្រុស)</span><span class=\"text-[#ea580c] text-base font-black block\">16-17 គ្រាប់ (ស្រី)</span><span class=\"text-[10px] text-gray-400 mt-2 block\">ព័ត៍មានបន្ថែមអាចពិចារណាតាមតារាងខាងក្រោម<br>(ចុចលើរូបភាពដើម្បីមើលពេញ)</span>",
             btn_back: "ថយក្រោយ",
-            btn_continue: "បន្ត"
+            btn_continue: "បន្ត",
+            choose_style_title: "តើអ្នកចង់ជ្រើសរើសរបៀបបង្ហាញមួយណា?",
+            choose_style_desc: "អ្នកអាចផ្លាស់ប្តូរវានៅពេលក្រោយបានគ្រប់ពេល",
+            style1_name: "តាមប្រភេទ",
+            style1_desc: "បង្ហាញជាក្រុម (Category)",
+            style2_name: "បង្ហាញទាំងអស់",
+            style2_desc: "អូសរើសជាប់ជានិច្ច (Sticky)"
         },
         EN: {
             brand_name: "Somphea Reak",
@@ -648,7 +718,13 @@
             size_warning_title: "Your Bracelet Is Too Small",
             size_warning_desc: "We recommend:<br><span class=\"text-[#ea580c] text-base font-black block mt-1\">17-18 Charms (Men)</span><span class=\"text-[#ea580c] text-base font-black block\">16-17 Charms (Women)</span><span class=\"text-[10px] text-gray-400 mt-2 block\">See size guide below for more info<br>(Tap image to view full size)</span>",
             btn_back: "Go Back",
-            btn_continue: "Continue"
+            btn_continue: "Continue",
+            choose_style_title: "Choose Display Style",
+            choose_style_desc: "You can easily switch styles later",
+            style1_name: "By Category",
+            style1_desc: "Grouped neatly in folders",
+            style2_name: "All Charms",
+            style2_desc: "Always stick on screen"
         }
     };
 
@@ -704,7 +780,7 @@
 
         renderCategories();
         if (currentStyle === 2) renderAllCharmsGallery();
-        setDisplayStyle(currentStyle); // Re-apply text/layout
+        setDisplayStyle(currentStyle); 
         updateUI(); 
     }
 
@@ -770,10 +846,16 @@
         updateCartBadge();
         startBannerSlideshow();
 
+        // Onboarding Flow
         setTimeout(() => {
-            const modal = document.getElementById('tutorialModal');
-            modal.classList.remove('modal-hidden'); modal.classList.add('modal-active');
-        }, 3000);
+            const savedStylePref = localStorage.getItem('bracelet_ui_style');
+            if (!savedStylePref) {
+                showStyleSelector();
+            } else {
+                setDisplayStyle(parseInt(savedStylePref));
+                showTutorial();
+            }
+        }, 800);
     }
 
     function startBannerSlideshow() {
@@ -784,20 +866,42 @@
             document.getElementById(`slide${currentSlide}`).classList.add('active');
         }, 4000); 
     }
+    
+    // --- ONBOARDING & STYLE SWITCHING ---
+    function showStyleSelector() {
+        const modal = document.getElementById('styleSelectorModal');
+        modal.classList.remove('modal-hidden');
+    }
+    
+    function selectInitialStyle(style) {
+        localStorage.setItem('bracelet_ui_style', style);
+        setDisplayStyle(style);
+        const modal = document.getElementById('styleSelectorModal');
+        modal.classList.add('modal-hidden');
+        
+        setTimeout(() => { showTutorial(); }, 500);
+    }
+
+    function showTutorial() {
+        const modal = document.getElementById('tutorialModal');
+        modal.classList.remove('modal-hidden'); modal.classList.add('modal-active');
+    }
 
     function closeTutorial() {
         const modal = document.getElementById('tutorialModal');
         modal.classList.remove('modal-active'); modal.classList.add('modal-hidden');
     }
 
-    // --- TWO STYLES IMPLEMENTATION ---
     function setDisplayStyle(style) {
         currentStyle = style;
+        localStorage.setItem('bracelet_ui_style', style);
+        
         const btn1 = document.getElementById('btn-style-1');
         const btn2 = document.getElementById('btn-style-2');
         const catGallery = document.getElementById('categoryGallery');
         const allGallery = document.getElementById('allCharmsGallery');
         const titleText = document.getElementById('collection-title-text');
+        const mainSection = document.getElementById('main-content-section');
 
         if (style === 1) {
             btn1.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
@@ -805,12 +909,20 @@
             catGallery.style.display = 'grid';
             allGallery.style.display = 'none';
             titleText.innerText = t('collection_title');
+            
+            mainSection.classList.remove('pb-[260px]');
+            mainSection.classList.add('pb-48');
         } else {
             btn2.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
             btn1.className = "px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
             catGallery.style.display = 'none';
-            allGallery.style.display = 'grid';
+            allGallery.style.display = 'grid'; 
             titleText.innerText = t('all_charms');
+            
+            // Add extra bottom padding so content isn't hidden by the new sticky bottom gallery
+            mainSection.classList.remove('pb-48');
+            mainSection.classList.add('pb-[260px]'); 
+            
             if(!allGallery.innerHTML) renderAllCharmsGallery();
         }
     }
@@ -832,17 +944,17 @@
         }).join('');
     }
 
-    // STYLE 2 RENDER
+    // STYLE 2 RENDER (Fixed Horizontal Scrolling Grid)
     function renderAllCharmsGallery() {
         const allGallery = document.getElementById('allCharmsGallery');
         allGallery.innerHTML = allCharms.map(c => {
             let isOut = (c.stock !== undefined && c.stock <= 0);
             return `
-                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" class="relative style-2-item flex flex-col items-center justify-center p-0.5 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer overflow-hidden'}">
-                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[4px] px-0.5 py-0.5 rounded-bl shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
-                    <img src="${c.image}" class="w-full h-full object-contain drop-shadow-sm mb-[6px]">
-                    <div class="absolute bottom-0 inset-x-0 w-full text-center bg-gray-50/90 py-[2px] border-t border-gray-100">
-                        <p class="text-[5px] sm:text-[6px] font-black text-[#ea580c] truncate px-0.5">${(c.price / 1000).toFixed(0)}k</p>
+                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" class="relative flex flex-col items-center justify-center p-1 bg-white rounded-xl border border-gray-200 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer overflow-hidden'}" style="width: 65px; height: 85px;">
+                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1 py-0.5 rounded-bl shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
+                    <img src="${c.image}" class="w-full h-full object-contain drop-shadow-sm mb-3">
+                    <div class="absolute bottom-0 inset-x-0 w-full text-center bg-gray-50/90 py-0.5 border-t border-gray-100">
+                        <p class="text-[7px] font-black text-[#ea580c] truncate px-0.5">${(c.price / 1000).toFixed(0)}k</p>
                     </div>
                 </div>`;
         }).join('');
@@ -1103,7 +1215,6 @@
         if (selectedCharms.length > 0 && selectedCharms.length <= 16) {
             const modal = document.getElementById('sizeWarningModal');
             modal.style.display = 'flex';
-            // Give a tiny delay for the display block to register before removing hidden class to allow animations
             setTimeout(() => {
                 modal.classList.remove('hidden');
             }, 10);
@@ -1115,7 +1226,7 @@
     function closeSizeWarning() {
         const modal = document.getElementById('sizeWarningModal');
         modal.classList.add('hidden');
-        setTimeout(() => { modal.style.display = 'none'; }, 300); // Wait for transition
+        setTimeout(() => { modal.style.display = 'none'; }, 300); 
     }
 
     function proceedToPackaging() {
@@ -1216,11 +1327,10 @@
             if (item.type === 'custom_bracelet') {
                 itemTotal = (item.baseTotal + item.pkgPrice) * item.qty;
             } else {
-                itemTotal = (item.price || 0) * item.qty; // Support shared normal items
+                itemTotal = (item.price || 0) * item.qty; 
             }
             if(item.selected) subtotal += itemTotal;
             
-            // Custom bracelet layout
             if (item.type === 'custom_bracelet') {
                 return `
                 <div class="bg-white rounded-2xl border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col overflow-hidden mb-4 shadow-sm">
@@ -1250,7 +1360,6 @@
                     </div>
                 </div>`;
             } else {
-                // Standard item layout (for cross-page shared carts)
                 return `
                 <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
                     <label class="flex items-start gap-3 cursor-pointer">
@@ -1280,7 +1389,6 @@
             }
         }).join('');
         
-        // APPLY MATH
         const delivery = calculateDelivery(subtotal);
         const grandTotalKHR = subtotal + delivery;
         const grandTotalUSD = grandTotalKHR / RATE;
