@@ -401,8 +401,8 @@
     <div id="categoryGallery" class="grid grid-cols-6 gap-2"></div>
   </section>
 
-  <!-- STYLE 2: ALL CHARMS (STICKY VERTICAL GRID AT BOTTOM) -->
-  <div id="allCharmsGalleryContainer" class="fixed bottom-[72px] sm:bottom-[76px] left-0 right-0 z-[85] bg-gray-50/95 backdrop-blur-xl border-t border-gray-200 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] p-2 pt-3 overflow-y-auto h-[40vh] sm:h-[45vh] transition-transform duration-300 custom-scrollbar" style="display: none; overscroll-behavior: contain;">
+  <!-- STYLE 2: ALL CHARMS (STICKY VERTICAL GRID AT BOTTOM FLOATING UPWARD OF EVERYTHING) -->
+  <div id="allCharmsGalleryContainer" class="fixed bottom-[72px] sm:bottom-[76px] left-0 right-0 z-[120] bg-gray-50/98 backdrop-blur-xl border-t border-gray-200 shadow-[0_-15px_45px_rgba(0,0,0,0.2)] p-2 pt-3 overflow-y-auto h-[40vh] sm:h-[45vh] transition-transform duration-300 custom-scrollbar animate-pop" style="display: none; overscroll-behavior: contain;">
       <div class="w-full max-w-4xl mx-auto relative">
            <!-- Hint text anchored to top of scrolling container -->
            <div class="sticky top-0 w-full flex justify-center mb-2 z-10 pointer-events-none">
@@ -411,8 +411,8 @@
                </div>
            </div>
            
-           <!-- Responsive grid with comfortable sizing on mobile -->
-           <div id="allCharmsGrid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 pb-8"></div>
+           <!-- Grid enforcing exactly 10 columns per row -->
+           <div id="allCharmsGrid" class="grid grid-cols-10 gap-0.5 sm:gap-1 pb-8"></div>
       </div>
   </div>
 
@@ -944,22 +944,22 @@
         }).join('');
     }
 
-    // STYLE 2 RENDER (Clean 4-column responsive grid, zoom buttons removed, clear Khmer Riel prices)
+    // STYLE 2 RENDER (Clean 10-column responsive grid, zoom buttons removed, clear Khmer Riel prices)
     function renderAllCharmsGallery() {
         const allGalleryGrid = document.getElementById('allCharmsGrid');
         allGalleryGrid.innerHTML = allCharms.map(c => {
             let isOut = (c.stock !== undefined && c.stock <= 0);
             return `
-                <div class="relative flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'overflow-hidden hover:border-[#ea580c] transition-all duration-200'}" style="aspect-ratio: 1/1.45;">
-                    ${isOut ? `<div class="absolute top-0 left-0 bg-red-600 text-white text-[7px] px-1.5 py-0.5 rounded-br-lg shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
+                <div class="relative flex flex-col bg-white rounded border border-gray-200 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'overflow-hidden hover:border-[#ea580c] transition-all duration-200'}" style="aspect-ratio: 1/1.55;">
+                    ${isOut ? `<div class="absolute top-0 left-0 bg-red-600 text-white text-[5px] px-1 py-0.5 rounded-br shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
                     
                     <!-- Clickable Area to ADD Charm directly -->
                     <div class="w-full h-full flex flex-col cursor-pointer active:scale-95 transition-transform" onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}">
-                        <div class="flex-grow p-1.5 flex items-center justify-center min-h-0">
+                        <div class="flex-grow p-0.5 flex items-center justify-center min-h-0">
                             <img src="${c.image}" class="max-h-full max-w-full object-contain drop-shadow-sm pointer-events-none">
                         </div>
-                        <div class="w-full text-center bg-orange-50/60 border-t border-orange-100 py-1 px-1 z-10 shrink-0">
-                            <p class="text-[9px] sm:text-[10px] font-black text-[#ea580c] leading-none truncate font-['Kantumruy_Pro']">${c.price.toLocaleString()}រៀល</p>
+                        <div class="w-full text-center bg-orange-50 border-t border-orange-100 py-0.5 px-0.5 z-10 shrink-0">
+                            <p class="text-[5px] xs:text-[6px] sm:text-[9px] font-black text-[#ea580c] leading-none tracking-tighter truncate font-['Kantumruy_Pro']">${c.price.toLocaleString()}រៀល</p>
                         </div>
                     </div>
                 </div>`;
@@ -1191,6 +1191,7 @@
         navigator.clipboard.writeText(input.value).then(() => showToast(t('copy'), 'text-white', 'fa-copy'));
     }
 
+    // --- ACCURATE CODE PARSER ---
     function loadDesignCode() {
         const input = document.getElementById('load-code-input'); 
         const code = input.value.trim().replace(/-/g, '').toLowerCase();
@@ -1315,7 +1316,7 @@
     function openCartDrawer() { renderCartUI(); const drawer = document.getElementById('cart-drawer'); drawer.style.transform = 'translateY(0%)'; drawer.style.pointerEvents = 'auto'; }
     function closeCartDrawer() { const drawer = document.getElementById('cart-drawer'); drawer.style.transform = 'translateY(100%)'; drawer.style.pointerEvents = 'none'; }
 
-    // --- DELIVER LOGIC ---
+    // --- DELIVERY LOGIC ---
     function calculateDelivery(subtotalKHR) {
         if (subtotalKHR === 0) return 0;
         if (subtotalKHR < 20000) return 8000;
@@ -1515,6 +1516,3 @@
   </script>
 </body>
 </html>
-
-
-
