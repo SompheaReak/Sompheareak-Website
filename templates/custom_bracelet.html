@@ -3,23 +3,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Somphea Reak - Italy Bracelet Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          screens: {
-            'xs': '400px',
-          }
-        }
-      }
-    }
-  </script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Moul&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     
@@ -43,7 +32,6 @@
         z-index: -1;
     }
 
-    /* SHORTER WORKSPACE PREVIEW BOX */
     .bracelet-preview-container {
         display: flex;
         overflow-x: auto;
@@ -56,79 +44,76 @@
         padding-right: 10vw;
         position: relative;
         touch-action: pan-x; 
-        min-height: 115px;
-        padding-top: 24px;
-        padding-bottom: 16px;
     }
     
-    .bracelet-preview-container::-webkit-scrollbar { display: none; }
-    
-    /* Custom vertical scrollbar */
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+    .bracelet-preview-container::-webkit-scrollbar {
+        display: none; 
+    }
 
-    /* CHARM SIZING - Connected snugly together with 3px space and exact 3:5 ratio box (900x1500px) */
+    /* CHARM SIZING */
     .bracelet-link-container {
-        flex: 0 0 8vw; 
-        width: 8vw; 
-        min-width: 32px;
-        max-width: 50px;
-        aspect-ratio: 3 / 5; /* Perfect vertical rectangle 900x1500px proportion */
+        flex: 0 0 10vw; 
+        width: 10vw; 
+        aspect-ratio: 2 / 3.5;
         position: relative;
         cursor: grab;
         transition: transform 0.3s cubic-bezier(0.2, 0, 0.2, 1), opacity 0.2s ease;
         user-select: none;
         touch-action: pan-x;
-        z-index: 10;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 3px; /* Connected with a tiny bit of separation space as requested */
     }
 
-    .bracelet-link-container:last-child {
-        margin-right: 0;
+    .bracelet-link-container.selected {
+        touch-action: none; 
+        z-index: 40;
     }
-
-    .bracelet-link-container.selected { touch-action: none; z-index: 40; }
     
     .bracelet-link-container img {
         width: 100%; height: 100%; object-fit: contain; display: block;
-        pointer-events: none; filter: drop-shadow(0 3px 5px rgba(0,0,0,0.15)); transition: all 0.2s;
+        pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); transition: all 0.2s;
     }
 
     .bracelet-link-container.selected img { 
-        filter: drop-shadow(0 0 10px rgba(234, 88, 12, 0.5)); transform: scale(1.05) translateY(-5px); 
+        filter: drop-shadow(0 0 10px rgba(234, 88, 12, 0.4)); 
+        transform: translateY(-4px); 
     }
     
     /* DRAGGING STATES */
     .bracelet-link-container.is-dragging {
-        z-index: 100; opacity: 0.9; scale: 1.12; cursor: grabbing; transition: none; 
+        z-index: 100;
+        opacity: 0.9;
+        scale: 1.15;
+        cursor: grabbing;
+        transition: none; 
     }
 
     .remove-btn-anim { 
-        opacity: 0; pointer-events: none; transform: translateX(-50%) scale(0.5); 
+        opacity: 0; 
+        pointer-events: none; 
+        transform: translateX(-50%) scale(0.5); 
         transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        display: flex !important; position: absolute; top: -18px; left: 50%;
+        display: flex !important;
+        position: absolute;
+        top: -20px;
+        left: 50%;
     }
     .bracelet-link-container.selected .remove-btn-anim { 
-        opacity: 1; pointer-events: auto; transform: translateX(-50%) scale(1); 
+        opacity: 1; 
+        pointer-events: auto; 
+        transform: translateX(-50%) scale(1); 
     }
 
-    #drawer, #cart-drawer, #tutorialModal, #styleSelectorModal { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease; }
+    #drawer, #cart-drawer, #tutorialModal { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease; }
     .modal-active { opacity: 1; pointer-events: auto; transform: scale(1); }
     .modal-hidden { opacity: 0; pointer-events: none; transform: scale(0.95); }
 
     .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease-in-out; z-index: 0; }
     .slide.active { opacity: 1; z-index: 10; }
 
-    .nav-indicator-container { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 4px; margin-bottom: 6px; transition: opacity 0.3s ease; }
+    .nav-indicator-container { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 5px; margin-bottom: 8px; transition: opacity 0.3s ease; }
     .nav-arrow {
-        width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
-        background: white; border: 1px solid #e2e8f0; border-radius: 8px; color: #64748b; font-size: 10px; transition: all 0.2s;
+        width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+        background: white; border: 1px solid #e2e8f0; border-radius: 6px; color: #64748b; font-size: 10px; transition: all 0.2s;
     }
-    .nav-arrow:active { background: #f1f5f9; transform: scale(0.9); }
     #scroll-track { height: 4px; background: #f1f5f9; border-radius: 10px; width: 80px; position: relative; overflow: hidden; }
     #scroll-thumb { position: absolute; height: 100%; width: 30%; background: #ea580c; border-radius: 10px; left: 0; transition: left 0.1s linear; }
 
@@ -149,31 +134,19 @@
         outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
         background: white; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
     }
-    .cart-checkbox:checked { background-color: #ea580c; border-color: #ea580c; box-shadow: 0 2px 8px rgba(234, 12, 12, 0.3); }
+    .cart-checkbox:checked { background-color: #ea580c; border-color: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3); }
     .cart-checkbox:checked::after { 
         content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
         width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
     }
 
-    @keyframes pop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-    .animate-pop { animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-    
-    .pulse-ring {
-        position: absolute; width: 100%; height: 100%; border-radius: 50%;
-        animation: pulsate 2s infinite ease-out; border: 2px solid #ea580c; opacity: 0;
-    }
-    @keyframes pulsate { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
-
-    /* Support for modern mobile notch/home-indicator screen space */
-    .safe-area-pb {
-        padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-    }
-    .safe-area-mb {
-        margin-bottom: env(safe-area-inset-bottom, 0px);
+    /* All Charms Scrolling Style Helper */
+    .style-2-item {
+        aspect-ratio: 3/4;
     }
   </style>
 </head>
-<body class="text-gray-900 overflow-x-hidden pb-12">
+<body class="text-gray-900 overflow-x-hidden">
 
   <div class="pka-chan-bg"></div>
 
@@ -187,49 +160,6 @@
   <div id="loadingOverlay" style="display: none;" class="fixed inset-0 z-[4000] bg-black/90 backdrop-blur-md hidden flex-col items-center justify-center text-white">
       <div class="w-12 h-12 border-4 border-[#ea580c] border-t-transparent rounded-full animate-spin mb-4"></div>
       <p id="loadingText" class="text-xs font-black uppercase tracking-[0.3em] font-['Moul']">កំពុងរៀបចំ...</p>
-  </div>
-  
-  <!-- STYLE SELECTOR ONBOARDING MODAL -->
-  <div id="styleSelectorModal" class="fixed inset-0 z-[5000] bg-black/80 flex items-center justify-center p-4 backdrop-blur-md transition-opacity modal-hidden">
-      <div class="bg-white w-full max-w-sm rounded-3xl p-6 relative shadow-2xl flex flex-col gap-6 text-center transform transition-transform animate-pop">
-          <div class="relative w-20 h-20 mx-auto">
-              <div class="pulse-ring"></div>
-              <div class="absolute inset-0 bg-gradient-to-tr from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-3xl shadow-lg z-10">
-                  <i class="fa-solid fa-wand-magic-sparkles animate-bounce"></i>
-              </div>
-          </div>
-          
-          <div>
-              <h3 class="text-lg font-black text-gray-900 font-['Moul'] leading-tight mb-2" data-i18n="choose_style_title">តើអ្នកចង់ជ្រើសរើសរបៀបបង្ហាញមួយណា?</h3>
-              <p class="text-[10px] font-bold text-gray-500 font-['Kantumruy_Pro']" data-i18n="choose_style_desc">អ្នកអាចផ្លាស់ប្តូរវានៅពេលក្រោយបាន</p>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-              <!-- Style 1 Option -->
-              <button onclick="selectInitialStyle(1)" class="group flex flex-col items-center gap-3 bg-gray-50 p-4 rounded-2xl border-2 border-transparent hover:border-[#ea580c] hover:bg-orange-50 transition-all active:scale-95 shadow-sm hover:shadow-md">
-                  <div class="w-14 h-14 bg-white rounded-xl shadow-sm flex items-center justify-center text-[#ea580c] text-xl group-hover:scale-110 transition-transform">
-                      <i class="fa-solid fa-layer-group"></i>
-                  </div>
-                  <div>
-                      <p class="text-[11px] font-black text-gray-900 font-['Moul']" data-i18n="style1_name">តាមប្រភេទ</p>
-                      <p class="text-[8px] font-bold text-gray-500 mt-1 font-['Kantumruy_Pro']" data-i18n="style1_desc">បង្ហាញជាក្រុម (Category)</p>
-                  </div>
-              </button>
-              
-              <!-- Style 2 Option -->
-              <button onclick="selectInitialStyle(2)" class="group flex flex-col items-center gap-3 bg-gray-50 p-4 rounded-2xl border-2 border-transparent hover:border-[#ea580c] hover:bg-orange-50 transition-all active:scale-95 shadow-sm hover:shadow-md relative overflow-hidden">
-                  <div class="absolute top-0 right-0 bg-red-500 text-white text-[6px] font-black px-2 py-0.5 rounded-bl-lg uppercase">Hot</div>
-                  <div class="w-14 h-14 bg-white rounded-xl shadow-sm flex items-center justify-center text-[#ea580c] text-xl group-hover:scale-110 transition-transform relative overflow-hidden">
-                      <i class="fa-solid fa-table-cells"></i>
-                      <div class="absolute bottom-0 w-full h-1/3 bg-gradient-to-t from-orange-100 to-transparent"></div>
-                  </div>
-                  <div>
-                      <p class="text-[11px] font-black text-gray-900 font-['Moul']" data-i18n="style2_name">បង្ហាញទាំងអស់</p>
-                      <p class="text-[8px] font-bold text-gray-500 mt-1 font-['Kantumruy_Pro']" data-i18n="style2_desc">អូសរើសជាប់ជានិច្ច (Sticky)</p>
-                  </div>
-              </button>
-          </div>
-      </div>
   </div>
 
   <!-- SIZE WARNING MODAL -->
@@ -259,17 +189,13 @@
 
   <!-- IMAGE VIEWER MODAL -->
   <div id="image-viewer-modal" class="fixed inset-0 z-[7000] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-      <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-[#ea580c] transition-colors z-50">
-          <i class="fa-solid fa-xmark text-xl"></i>
-      </button>
-      <img id="viewer-img" src="" class="max-w-[95vw] max-h-[85vh] object-contain rounded-xl shadow-2xl transition-transform transform scale-100">
-      <p class="text-white text-xs font-bold mt-4 uppercase tracking-widest opacity-70">Tap outside to close</p>
+      <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl mb-6">
   </div>
 
-  <!-- TUTORIAL MODAL -->
   <div id="tutorialModal" class="fixed inset-0 z-[1300] flex items-center justify-center px-4 modal-hidden">
       <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeTutorial()"></div>
-      <div class="bg-white w-full max-w-sm rounded-3xl p-6 relative shadow-2xl flex flex-col items-center gap-4 text-center transform transition-transform">
+      <div class="bg-white w-full max-w-sm rounded-2xl p-6 relative shadow-2xl flex flex-col items-center gap-4 text-center transform transition-transform">
           <div class="w-full h-2 bg-[#ea580c] rounded-full opacity-20 mb-2"></div>
           <button onclick="closeTutorial()" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 transition-colors">
               <i class="fa-solid fa-xmark"></i>
@@ -295,22 +221,17 @@
           <img src="static/images/logo.png" onerror="this.src='static/images/logo.jpg'" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-sm shrink-0" alt="Logo">
           
           <div class="flex flex-col justify-center text-left">
-              <h1 class="text-[14px] xs:text-[15px] sm:text-lg font-black text-gray-900 leading-normal tracking-tight font-['Moul'] pb-0.5">
-                  សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-[11px] xs:text-sm sm:text-base whitespace-nowrap">- Somphea Reak</span>
+              <h1 class="text-[15px] sm:text-lg font-black text-gray-900 leading-normal tracking-tight font-['Moul'] pb-0.5">
+                  សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-sm sm:text-base whitespace-nowrap">- Somphea Reak</span>
               </h1>
-              <p class="text-[9px] font-bold text-[#ea580c] uppercase tracking-widest leading-none">Italy Bracelet Studio</p>
+              <p class="text-[10px] font-bold text-[#ea580c] uppercase tracking-widest leading-none">Italy Bracelet Studio</p>
           </div>
       </div>
       
-      <div class="flex items-center gap-1.5 shrink-0">
+      <div class="flex items-center gap-2 shrink-0">
           <button onclick="toggleLanguage()" class="w-10 h-10 hidden sm:flex items-center justify-center bg-gray-900 rounded-full text-white text-[10px] font-bold border border-gray-800 active:scale-90 transition-transform shrink-0">
               <span id="lang-display">KH</span>
           </button>
-
-          <!-- TELEGRAM HEADER ICON -->
-          <a href="https://t.me/somphea_reak" target="_blank" class="relative w-10 h-10 flex items-center justify-center bg-[#e0f2fe] border border-[#bae6fd] rounded-full text-[#0284c7] shadow-sm active:scale-90 transition-transform shrink-0 hover:bg-[#bae6fd]">
-              <i class="fa-brands fa-telegram text-xl"></i>
-          </a>
            
           <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0">
               <i class="fa-solid fa-cart-shopping"></i>
@@ -373,19 +294,22 @@
             
             <div class="flex items-center gap-1.5 flex-wrap justify-end">
                 <button id="delete-selected-btn" onclick="deleteSelectedCharms()" class="hidden bg-red-50 text-red-500 hover:bg-red-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 items-center gap-1 font-['Kantumruy_Pro'] border border-red-100">
-                    <i class="fa-solid fa-trash-can"></i> <span class="hidden xs:inline" data-i18n="delete">លុប</span>
+                    <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline" data-i18n="delete">លុប</span>
                 </button>
                 <button id="duplicate-btn" onclick="duplicateSelectedCharms()" class="hidden bg-blue-50 text-blue-500 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 items-center gap-1 font-['Kantumruy_Pro'] border border-blue-100">
-                    <i class="fa-solid fa-copy"></i> <span class="hidden xs:inline" data-i18n="duplicate">ចម្លង</span>
+                    <i class="fa-solid fa-copy"></i> <span class="hidden sm:inline" data-i18n="duplicate">ចម្លង</span>
                 </button>
                 <button onclick="clearBracelet()" class="bg-gray-50 text-gray-500 hover:bg-gray-100 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 flex items-center gap-1 font-['Kantumruy_Pro'] border border-gray-200">
-                    <i class="fa-solid fa-rotate-left"></i> <span class="hidden xs:inline" data-i18n="reset">ជម្រះ</span>
+                    <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline" data-i18n="reset">ជម្រះ</span>
                 </button>
             </div>
         </div>
 
-        <div id="bracelet-preview" onclick="handleBackgroundClick(event)" onscroll="handlePreviewScroll(this)" class="bracelet-preview-container bg-slate-50 relative">
-            <!-- Completely empty workspace thread shown when no charms selected -->
+        <div id="bracelet-preview" onclick="handleBackgroundClick(event)" onscroll="handlePreviewScroll(this)" class="bracelet-preview-container bg-slate-50 relative min-h-[140px] pt-10 pb-4">
+            <div class="w-full text-center opacity-20 flex flex-col items-center">
+                <i class="fa-solid fa-layer-group text-2xl mb-1"></i>
+                <p class="text-[8px] font-black uppercase tracking-[0.2em] font-['Kantumruy_Pro']" data-i18n="start_design">ចាប់ផ្តើមរចនា</p>
+            </div>
         </div>
 
         <div class="nav-indicator-container">
@@ -399,76 +323,66 @@
         <div class="px-4 space-y-2">
             <div class="flex gap-2">
                 <div class="relative flex-grow">
-                    <input type="text" id="share-code-input" readonly class="w-full bg-gray-100 border border-gray-200 rounded-xl py-2 px-3 text-[10px] font-mono text-gray-600 focus:outline-none uppercase tracking-widest" placeholder="XXXX-XXXX">
+                    <input type="text" id="share-code-input" readonly class="w-full bg-gray-100 border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono text-gray-600 focus:outline-none uppercase tracking-widest" placeholder="XXXX-XXXX">
                     <div class="absolute right-1 top-1 bottom-1">
-                        <button onclick="copyDesignCode()" class="h-full px-3 bg-white border border-gray-200 rounded-lg text-[9px] font-bold uppercase text-gray-500 hover:text-[#ea580c] transition-colors font-['Kantumruy_Pro']" data-i18n="copy">ចម្លង</button>
+                        <button onclick="copyDesignCode()" class="h-full px-3 bg-white border border-gray-200 rounded-md text-[9px] font-bold uppercase text-gray-500 hover:text-[#ea580c] transition-colors font-['Kantumruy_Pro']" data-i18n="copy">ចម្លង</button>
                     </div>
                 </div>
             </div>
             <div class="flex gap-2">
-                <input type="text" id="load-code-input" class="flex-grow bg-white border border-gray-200 rounded-xl py-2 px-3 text-[10px] font-mono uppercase tracking-widest text-gray-900 focus:border-[#ea580c] focus:ring-1 focus:ring-orange-50 outline-none transition-all placeholder:normal-case placeholder:text-gray-400 font-['Kantumruy_Pro']" placeholder="ដាក់លេខកូដដើម្បីរចនាបន្ត..." data-i18n-placeholder="placeholder_load">
-                <button onclick="loadDesignCode()" class="bg-gray-900 text-white px-4 rounded-xl text-[10px] font-bold uppercase tracking-wide active:scale-95 transition-transform shadow-lg shadow-gray-200 font-['Kantumruy_Pro']" data-i18n="load">ដាក់កូដ</button>
+                <input type="text" id="load-code-input" class="flex-grow bg-white border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono uppercase tracking-widest text-gray-900 focus:border-[#ea580c] focus:ring-1 focus:ring-orange-500 outline-none transition-all placeholder:normal-case placeholder:text-gray-400 font-['Kantumruy_Pro']" placeholder="ដាក់លេខកូដដើម្បីរចនាបន្ត..." data-i18n-placeholder="placeholder_load">
+                <button onclick="loadDesignCode()" class="bg-gray-900 text-white px-4 rounded-lg text-[10px] font-bold uppercase tracking-wide active:scale-95 transition-transform shadow-lg shadow-gray-200 font-['Kantumruy_Pro']" data-i18n="load">ដាក់កូដ</button>
             </div>
-
-            <!-- TWO STYLE SWITCHER -->
-            <div class="flex items-center justify-between pt-2 pb-1 mt-1 border-t border-gray-100">
-                <div class="flex items-center gap-2">
-                    <span class="romdul-icon" style="width:16px; height:16px;"></span>
-                    <h4 id="collection-title-text" class="text-[11px] text-gray-600 font-black uppercase tracking-[0.05em] font-['Moul']" data-i18n="collection_title">ក្រុមកូឡិកសិន</h4>
-                </div>
-                <div class="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200 shadow-inner">
-                    <button onclick="setDisplayStyle(1)" id="btn-style-1" class="px-3 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all">Style 1</button>
-                    <button onclick="setDisplayStyle(2)" id="btn-style-2" class="px-3 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all">Style 2</button>
-                </div>
-            </div>
-
-            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-center font-['Kantumruy_Pro']" data-i18n="hint_drag">ចុចជាប់លើគ្រាប់ដើម្បីអូសប្តូរទីតាំង • ចុចម្ដងដើម្បីជ្រើសរើស</p>
+            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-center pt-1 font-['Kantumruy_Pro']" data-i18n="hint_drag">ចុចជាប់លើគ្រាប់ដើម្បីអូសប្តូរទីតាំង • ចុចម្ដងដើម្បីជ្រើសរើស</p>
         </div>
     </div>
   </section>
 
-  <!-- CATEGORIES & CHARMS MAIN CONTENT SECTION (Style 1 and Style 2 share the same content space) -->
-  <section id="main-content-section" class="p-4 pb-48 transition-all duration-300">
-    
-    <!-- STYLE 1: CATEGORY GALLERY (Exactly 6 columns on mobile, matching user prompt) -->
-    <div id="categoryGallery" class="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 sm:gap-3"></div>
-
-    <!-- STYLE 2: ALL CHARMS GALLERY (Exactly 10 columns on mobile, matching user prompt, same card size look) -->
-    <div id="allCharmsGalleryContainer" style="display: none;" class="w-full">
-         <div id="allCharmsGrid" class="grid grid-cols-10 gap-1 sm:gap-2"></div>
+  <!-- CATEGORIES & CHARMS (WITH LAYOUT SWITCH) -->
+  <section class="p-4 pb-48">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+            <span class="romdul-icon" style="width:16px; height:16px;"></span>
+            <h4 id="collection-title-text" class="text-[12px] text-gray-600 uppercase tracking-[0.1em] font-['Moul']" data-i18n="collection_title">ក្រុមកូឡិកសិន</h4>
+        </div>
+        
+        <!-- TWO STYLE SWITCHER -->
+        <div class="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200 shadow-inner">
+            <button onclick="setDisplayStyle(1)" id="btn-style-1" class="px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all">Style 1</button>
+            <button onclick="setDisplayStyle(2)" id="btn-style-2" class="px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all">Style 2</button>
+        </div>
     </div>
-
+    
+    <!-- STYLE 1: CATEGORY GALLERY -->
+    <div id="categoryGallery" class="grid grid-cols-6 gap-2"></div>
+    
+    <!-- STYLE 2: ALL CHARMS (10 PER ROW SCROLLING) -->
+    <div id="allCharmsGallery" class="gap-1" style="display: none; grid-template-columns: repeat(10, minmax(0, 1fr));"></div>
   </section>
 
   <!-- CHARM SELECTOR DRAWER (For Style 1) -->
-  <div id="drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[1300] translate-y-full pointer-events-none">
-    <div class="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity pointer-events-auto" onclick="closeDrawer()"></div>
-    <div class="absolute bottom-0 left-0 right-0 h-[55vh] bg-white rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden border-t border-gray-100 pointer-events-auto">
-        
-        <!-- Drawer Top Handle Bar -->
-        <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-3 shrink-0"></div>
-        
-        <div class="bg-white border-b border-gray-100 sticky top-0 z-10 px-6 py-4 flex items-center justify-between relative overflow-hidden shrink-0">
+  <div id="drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[200] translate-y-full pointer-events-none">
+    <div class="absolute inset-0 bg-transparent transition-opacity pointer-events-auto" onclick="closeDrawer()"></div>
+    <div class="absolute bottom-0 left-0 right-0 h-[55vh] bg-white rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden border-t border-gray-100 pointer-events-auto">
+        <div class="bg-white border-b border-gray-100 sticky top-0 z-10 px-6 py-4 flex items-center justify-between relative overflow-hidden">
              <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-100 via-orange-300 to-orange-100 opacity-50"></div>
             <div>
                 <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1 font-['Kantumruy_Pro']" data-i18n="select_charm_title">ជ្រើសរើសត្បូង</p>
-                <h4 id="drawer-title" class="text-lg text-gray-900 leading-none font-['Moul']">Category</h4>
+                <h4 id="drawer-title" class="text-xl text-gray-900 leading-none font-['Moul']">Category</h4>
             </div>
-            <button onclick="closeDrawer()" class="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 active:scale-90 transition-transform">
+            <button onclick="closeDrawer()" class="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 active:scale-90 transition-transform">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        
-        <!-- Grid list in drawer scaled for mobile touch thumbs (Style 1 nested list matches Style 2 card box size) -->
-        <div class="flex-grow overflow-y-auto p-4 bg-gray-50 custom-scrollbar">
-            <div id="charmGrid" class="grid grid-cols-10 gap-1 pb-24"></div>
+        <div class="flex-grow overflow-y-auto p-4 bg-gray-50">
+            <div id="charmGrid" class="grid grid-cols-7 gap-1.5 pb-20"></div>
         </div>
     </div>
   </div>
 
   <!-- ADD TO CART BAR -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-3 sm:p-4 z-[110] safe-area-pb shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
-    <div class="max-w-md mx-auto flex gap-2.5 sm:gap-3">
+  <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-3 sm:p-4 z-[110] safe-area-pb">
+    <div class="max-w-md mx-auto flex gap-2 sm:gap-3">
         <!-- TELEGRAM BUTTON -->
         <a href="https://t.me/somphea_reak" target="_blank" class="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 flex items-center justify-center bg-[#e0f2fe] border border-[#bae6fd] rounded-2xl text-[#0284c7] active:scale-90 transition-transform shadow-sm hover:bg-[#bae6fd]">
             <i class="fa-brands fa-telegram text-2xl"></i>
@@ -479,7 +393,7 @@
         </button>
         
         <!-- Modified onclick to intercept size check -->
-        <button onclick="checkSizeBeforePackaging()" id="save-design-btn" disabled class="flex-grow bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] xs:text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
+        <button onclick="checkSizeBeforePackaging()" id="save-design-btn" disabled class="flex-grow bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
             <i class="fa-solid fa-cart-plus text-sm"></i>
             <span data-i18n="checkout_btn">បញ្ចូលទៅកន្ត្រក</span>
         </button>
@@ -502,7 +416,7 @@
               <div class="w-full bg-slate-50 border border-gray-200 rounded-2xl p-4 flex flex-col items-center relative overflow-hidden">
                    <div class="absolute top-0 right-0 w-16 h-16 bg-orange-100 rounded-bl-full -mr-8 -mt-8 opacity-50 z-0"></div>
                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 relative z-10" data-i18n="your_design">ការរចនារបស់អ្នក</p>
-                   <div class="w-full overflow-x-auto flex justify-center relative z-10 custom-scrollbar">
+                   <div class="w-full overflow-x-auto flex justify-center relative z-10">
                         <img id="initialPreviewImg" class="h-auto object-contain max-h-[150px] shadow-sm rounded-lg border border-gray-200 bg-white" src="" alt="Bracelet Preview">
                    </div>
               </div>
@@ -559,18 +473,18 @@
   <div id="cart-drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[2000] flex flex-col justify-end">
     <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeCartDrawer()"></div>
     <div class="relative w-full h-[85vh] bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
-        <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10 shrink-0">
+        <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10">
             <div>
-                <h2 class="text-lg font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2>
+                <h2 class="text-xl font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2>
                 <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Your Shopping Cart</p>
             </div>
             <button onclick="closeCartDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
-        <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar"></div>
-        <div class="bg-white border-t border-gray-100 p-5 z-10 safe-area-pb">
-            <!-- ITEMIZED TOTALS -->
+        <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+        <div class="bg-white border-t border-gray-100 p-5 z-10">
+            <!-- NEW ITEMIZED TOTALS -->
             <div class="space-y-2 mb-4">
                 <div class="flex justify-between items-center text-xs font-bold text-gray-500">
                     <span data-i18n="subtotal">Subtotal (តម្លៃទំនិញ)</span>
@@ -583,8 +497,8 @@
                 <div class="flex justify-between items-end pt-2 border-t border-gray-100">
                     <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest" data-i18n="total_to_pay">សរុប (Grand Total)</span>
                     <div class="text-right">
-                        <span id="cart-grand-total-khr" class="text-xl font-black text-[#ea580c] leading-none block">0៛</span>
-                        <span id="cart-grand-total-usd" class="text-[11px] text-gray-400 font-bold block mt-1">$0.00</span>
+                        <span id="cart-grand-total-khr" class="text-2xl font-black text-[#ea580c] leading-none block">0៛</span>
+                        <span id="cart-grand-total-usd" class="text-xs text-gray-400 font-bold block mt-1">$0.00</span>
                     </div>
                 </div>
             </div>
@@ -597,11 +511,11 @@
 
   <!-- CHECKOUT MODAL -->
   <div id="checkout-modal" class="fixed inset-0 z-[3000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
-      <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm shrink-0">
-          <h2 class="text-lg font-black font-['Moul']" data-i18n="delivery_details">ព័ត៌មានដឹកជញ្ជូន</h2>
+      <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
+          <h2 class="text-xl font-black font-['Moul']" data-i18n="delivery_details">ព័ត៌មានដឹកជញ្ជូន</h2>
           <button onclick="closeCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
-      <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50 custom-scrollbar">
+      <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50">
           <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
               <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
               <div class="flex justify-between text-xs font-bold text-gray-500"><span data-i18n="subtotal">តម្លៃទំនិញសរុប:</span><span id="check-subtotal">៛0</span></div>
@@ -619,7 +533,7 @@
               <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ" data-i18n-placeholder="address_ph"></textarea>
           </div>
       </div>
-      <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 safe-area-pb shadow-lg z-10">
+      <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:pb-5">
           <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-[#ea580c] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']" data-i18n="confirm_order">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
       </div>
   </div>
@@ -639,7 +553,7 @@
             reset: "ជម្រះ",
             duplicate: "ចម្លង",
             delete: "លុប",
-            start_design: "", // Completely removed text
+            start_design: "ចាប់ផ្តើមឌីហ្សាញ់",
             copy: "Copy",
             load: "បញ្ជូន",
             placeholder_load: "Paste Code នៅទីនេះ",
@@ -679,13 +593,7 @@
             size_warning_title: "ខ្សែដៃរបស់អ្នកមានទំហំតូច",
             size_warning_desc: "យើងណែនាំឱ្យអ្នករើស៖<br><span class=\"text-[#ea580c] text-base font-black block mt-1\">17-18 គ្រាប់ (ប្រុស)</span><span class=\"text-[#ea580c] text-base font-black block\">16-17 គ្រាប់ (ស្រី)</span><span class=\"text-[10px] text-gray-400 mt-2 block\">ព័ត៍មានបន្ថែមអាចពិចារណាតាមតារាងខាងក្រោម<br>(ចុចលើរូបភាពដើម្បីមើលពេញ)</span>",
             btn_back: "ថយក្រោយ",
-            btn_continue: "បន្ត",
-            choose_style_title: "តើអ្នកចង់ជ្រើសរើសរបៀបបង្ហាញមួយណា?",
-            choose_style_desc: "អ្នកអាចផ្លាស់ប្តូរវានៅពេលក្រោយបានគ្រប់ពេល",
-            style1_name: "តាមប្រភេទ",
-            style1_desc: "បង្ហាញជាក្រុម (Category)",
-            style2_name: "បង្ហាញទាំងអស់",
-            style2_desc: "អូសរើសជាប់ជានិច្ច (Sticky)"
+            btn_continue: "បន្ត"
         },
         EN: {
             brand_name: "Somphea Reak",
@@ -700,7 +608,7 @@
             reset: "Reset",
             duplicate: "Duplicate",
             delete: "Delete",
-            start_design: "", // Completely removed text
+            start_design: "Start Designing",
             copy: "Copy",
             load: "Load",
             placeholder_load: "Paste code to load...",
@@ -740,13 +648,7 @@
             size_warning_title: "Your Bracelet Is Too Small",
             size_warning_desc: "We recommend:<br><span class=\"text-[#ea580c] text-base font-black block mt-1\">17-18 Charms (Men)</span><span class=\"text-[#ea580c] text-base font-black block\">16-17 Charms (Women)</span><span class=\"text-[10px] text-gray-400 mt-2 block\">See size guide below for more info<br>(Tap image to view full size)</span>",
             btn_back: "Go Back",
-            btn_continue: "Continue",
-            choose_style_title: "Choose Display Style",
-            choose_style_desc: "You can easily switch styles later",
-            style1_name: "By Category",
-            style1_desc: "Grouped neatly in folders",
-            style2_name: "All Charms",
-            style2_desc: "Always stick on screen"
+            btn_continue: "Continue"
         }
     };
 
@@ -802,7 +704,7 @@
 
         renderCategories();
         if (currentStyle === 2) renderAllCharmsGallery();
-        setDisplayStyle(currentStyle); 
+        setDisplayStyle(currentStyle); // Re-apply text/layout
         updateUI(); 
     }
 
@@ -868,23 +770,10 @@
         updateCartBadge();
         startBannerSlideshow();
 
-        // Onboarding Flow
         setTimeout(() => {
-            const savedStylePref = localStorage.getItem('bracelet_ui_style');
-            if (!savedStylePref) {
-                showStyleSelector();
-            } else {
-                setDisplayStyle(parseInt(savedStylePref));
-                showTutorial();
-            }
-        }, 800);
-        
-        // Add listener to close image viewer if clicking backdrop
-        document.getElementById('image-viewer-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeImageViewer();
-            }
-        });
+            const modal = document.getElementById('tutorialModal');
+            modal.classList.remove('modal-hidden'); modal.classList.add('modal-active');
+        }, 3000);
     }
 
     function startBannerSlideshow() {
@@ -895,60 +784,38 @@
             document.getElementById(`slide${currentSlide}`).classList.add('active');
         }, 4000); 
     }
-    
-    // --- ONBOARDING & STYLE SWITCHING ---
-    function showStyleSelector() {
-        const modal = document.getElementById('styleSelectorModal');
-        modal.classList.remove('modal-hidden');
-    }
-    
-    function selectInitialStyle(style) {
-        localStorage.setItem('bracelet_ui_style', style);
-        setDisplayStyle(style);
-        const modal = document.getElementById('styleSelectorModal');
-        modal.classList.add('modal-hidden');
-        
-        setTimeout(() => { showTutorial(); }, 500);
-    }
-
-    function showTutorial() {
-        const modal = document.getElementById('tutorialModal');
-        modal.classList.remove('modal-hidden'); modal.classList.add('modal-active');
-    }
 
     function closeTutorial() {
         const modal = document.getElementById('tutorialModal');
         modal.classList.remove('modal-active'); modal.classList.add('modal-hidden');
     }
 
+    // --- TWO STYLES IMPLEMENTATION ---
     function setDisplayStyle(style) {
         currentStyle = style;
-        localStorage.setItem('bracelet_ui_style', style);
-        
         const btn1 = document.getElementById('btn-style-1');
         const btn2 = document.getElementById('btn-style-2');
         const catGallery = document.getElementById('categoryGallery');
-        const allGalleryContainer = document.getElementById('allCharmsGalleryContainer');
+        const allGallery = document.getElementById('allCharmsGallery');
         const titleText = document.getElementById('collection-title-text');
 
         if (style === 1) {
-            btn1.className = "px-3 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
-            btn2.className = "px-3 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
+            btn1.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
+            btn2.className = "px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
             catGallery.style.display = 'grid';
-            allGalleryContainer.style.display = 'none';
+            allGallery.style.display = 'none';
             titleText.innerText = t('collection_title');
         } else {
-            btn2.className = "px-3 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
-            btn1.className = "px-3 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
+            btn2.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
+            btn1.className = "px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
             catGallery.style.display = 'none';
-            allGalleryContainer.style.display = 'block'; 
+            allGallery.style.display = 'grid';
             titleText.innerText = t('all_charms');
-            
-            if(!document.getElementById('allCharmsGrid').innerHTML) renderAllCharmsGallery();
+            if(!allGallery.innerHTML) renderAllCharmsGallery();
         }
     }
 
-    // STYLE 1 RENDER (Exactly 6 category columns per row, matching category looks)
+    // STYLE 1 RENDER
     function renderCategories() {
         const categories = Array.from(new Set(allCharms.flatMap(c => c.categories)));
         document.getElementById('categoryGallery').innerHTML = categories.map(cat => {
@@ -956,46 +823,43 @@
             if(!charm || !charm.image) return '';
             return `
                 <div onclick="openDrawer('${cat}')" class="flex flex-col gap-1 active:scale-95 transition-transform cursor-pointer group">
-                    <div class="w-full aspect-square bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden p-1.5 flex items-center justify-center group-hover:shadow-md transition-shadow relative">
+                    <div class="w-full aspect-square bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden p-1 flex items-center justify-center group-hover:shadow-md transition-shadow relative">
                         <div class="absolute inset-0 bg-gradient-to-tr from-gray-50 to-transparent opacity-50"></div>
                         <img src="${charm.image}" class="w-full h-full object-contain drop-shadow-sm relative z-10">
                     </div>
-                    <span class="text-[8px] sm:text-[9px] font-bold text-gray-500 uppercase truncate w-full text-center tracking-wide font-['Kantumruy_Pro']">${cat}</span>
+                    <span class="text-[7px] font-bold text-gray-500 uppercase truncate w-full text-center tracking-wide font-['Kantumruy_Pro']">${cat}</span>
                 </div>`;
         }).join('');
     }
 
-    // STYLE 2 RENDER (Exactly 10 columns per row, matching Style 1's exact box/border card dimensions)
+    // STYLE 2 RENDER
     function renderAllCharmsGallery() {
-        const allGalleryGrid = document.getElementById('allCharmsGrid');
-        allGalleryGrid.innerHTML = allCharms.map(c => {
+        const allGallery = document.getElementById('allCharmsGallery');
+        allGallery.innerHTML = allCharms.map(c => {
             let isOut = (c.stock !== undefined && c.stock <= 0);
             return `
-                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" class="flex flex-col gap-1 active:scale-95 transition-transform cursor-pointer group ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : ''}">
-                    <div class="w-full aspect-square bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden p-1 flex items-center justify-center group-hover:shadow-md transition-shadow relative">
-                        <div class="absolute inset-0 bg-gradient-to-tr from-gray-50 to-transparent opacity-50"></div>
-                        <img src="${c.image}" class="w-full h-full object-contain drop-shadow-sm relative z-10 pointer-events-none">
-                        ${isOut ? `<div class="absolute top-0 left-0 bg-red-600 text-white text-[5px] px-1 py-0.5 rounded-br-lg shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
+                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" class="relative style-2-item flex flex-col items-center justify-center p-0.5 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer overflow-hidden'}">
+                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[4px] px-0.5 py-0.5 rounded-bl shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
+                    <img src="${c.image}" class="w-full h-full object-contain drop-shadow-sm mb-[6px]">
+                    <div class="absolute bottom-0 inset-x-0 w-full text-center bg-gray-50/90 py-[2px] border-t border-gray-100">
+                        <p class="text-[5px] sm:text-[6px] font-black text-[#ea580c] truncate px-0.5">${(c.price / 1000).toFixed(0)}k</p>
                     </div>
-                    <span class="text-[6px] sm:text-[8px] font-black text-orange-600 truncate w-full text-center tracking-tighter font-['Kantumruy_Pro']">${c.price.toLocaleString()}៛</span>
                 </div>`;
         }).join('');
     }
 
-    // STYLE 1 POPUP (Grid matches Style 2 exact design layout grid layout)
     function openDrawer(cat) {
         document.getElementById('drawer-title').innerText = cat;
         const grid = document.getElementById('charmGrid');
         grid.innerHTML = allCharms.filter(c => c.categories.includes(cat)).map(c => {
             let isOut = (c.stock !== undefined && c.stock <= 0);
             return `
-                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" class="flex flex-col gap-1 active:scale-95 transition-transform cursor-pointer group ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : ''}">
-                    <div class="w-full aspect-square bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden p-1 flex items-center justify-center group-hover:shadow-md transition-shadow relative">
-                        <div class="absolute inset-0 bg-gradient-to-tr from-gray-50 to-transparent opacity-50"></div>
-                        <img src="${c.image}" class="w-full h-full object-contain drop-shadow-sm relative z-10 pointer-events-none">
-                        ${isOut ? `<div class="absolute top-0 left-0 bg-red-600 text-white text-[5px] px-1 py-0.5 rounded-br-lg shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
+                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" class="relative flex flex-col items-center gap-1 p-1 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer'}">
+                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1.5 py-0.5 rounded shadow-sm z-20 font-black tracking-widest uppercase font-['Kantumruy_Pro']">${t('sold_out')}</div>` : ''}
+                    <img src="${c.image}" class="w-full aspect-square object-contain drop-shadow-sm">
+                    <div class="w-full text-center border-t border-gray-50 pt-0.5 mt-0.5">
+                        <p class="text-[7px] font-black text-gray-900">${c.price.toLocaleString()}៛</p>
                     </div>
-                    <span class="text-[6px] sm:text-[8px] font-black text-orange-600 truncate w-full text-center tracking-tighter font-['Kantumruy_Pro']">${c.price.toLocaleString()}៛</span>
                 </div>`;
         }).join('');
         const drawer = document.getElementById('drawer');
@@ -1017,7 +881,6 @@
         setTimeout(() => { const preview = document.getElementById('bracelet-preview'); preview.scrollTo({ left: preview.scrollWidth, behavior: 'smooth' }); }, 50);
     }
 
-    // Toggle selection
     function toggleSelection(uid) {
         if(selectedCharmUids.includes(uid)) {
             selectedCharmUids = [];
@@ -1027,7 +890,6 @@
         updateUI();
     }
 
-    // Remove charm safely
     function removeCharm(uid, event) {
         if(event) {
             event.stopPropagation();
@@ -1165,15 +1027,14 @@
         }
 
         if (selectedCharms.length === 0) {
-            preview.className = "bracelet-preview-container bg-slate-50 justify-center";
-            preview.innerHTML = ``; // Completely clean workspace with no strings or placeholders as requested
+            preview.className = "bracelet-preview-container bg-slate-50 min-h-[140px] pt-10 pb-4 justify-center";
+            preview.innerHTML = `<div class="w-full text-center opacity-30 flex flex-col items-center"><i class="fa-solid fa-layer-group text-2xl mb-1"></i><p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 font-['Kantumruy_Pro']" data-i18n="start_design">${t('start_design')}</p></div>`;
             document.getElementById('save-design-btn').disabled = true; document.querySelector('.nav-indicator-container').style.opacity = '0'; return;
         }
 
-        preview.className = "bracelet-preview-container bg-slate-50";
+        preview.className = "bracelet-preview-container bg-slate-50 min-h-[140px] pt-10 pb-4";
         document.querySelector('.nav-indicator-container').style.opacity = '1';
         
-        // Render charms sticking together without border/connector elements
         preview.innerHTML = selectedCharms.map((c, index) => {
             const isSelected = selectedCharmUids.includes(c.uid);
             return `
@@ -1182,9 +1043,11 @@
                      data-uid="${c.uid}">
                     <img src="${c.image}" draggable="false">
                     
-                    <button onpointerdown="removeCharm('${c.uid}', event)" onclick="event.stopPropagation()" class="remove-btn-anim w-8 h-8 bg-red-500 text-white rounded-full items-center justify-center text-[11px] shadow-lg z-50 hover:bg-red-600 active:scale-90 transition-transform cursor-pointer">
+                    <button onpointerdown="removeCharm('${c.uid}', event)" onclick="event.stopPropagation()" class="remove-btn-anim w-7 h-7 bg-red-500 text-white rounded-full items-center justify-center text-[12px] shadow-lg z-50 hover:bg-red-600 active:scale-90 transition-transform cursor-pointer">
                         <i class="fa-solid fa-trash-can pointer-events-none"></i>
                     </button>
+                    
+                    <div class="absolute top-1/2 -right-[2px] w-1 h-3 bg-gray-300/50 rounded-full transform -translate-y-1/2 -z-10 pointer-events-none"></div>
                 </div>`;
         }).join('');
         
@@ -1205,13 +1068,11 @@
         navigator.clipboard.writeText(code).then(() => showToast('Code Copied', 'text-white', 'fa-copy'));
     }
 
-    // Copy to clipboard
     function copyDesignCode() {
         const input = document.getElementById('share-code-input'); if(!input.value) return;
         navigator.clipboard.writeText(input.value).then(() => showToast(t('copy'), 'text-white', 'fa-copy'));
     }
 
-    // --- ACCURATE CODE PARSER ---
     function loadDesignCode() {
         const input = document.getElementById('load-code-input'); 
         const code = input.value.trim().replace(/-/g, '').toLowerCase();
@@ -1242,6 +1103,7 @@
         if (selectedCharms.length > 0 && selectedCharms.length <= 16) {
             const modal = document.getElementById('sizeWarningModal');
             modal.style.display = 'flex';
+            // Give a tiny delay for the display block to register before removing hidden class to allow animations
             setTimeout(() => {
                 modal.classList.remove('hidden');
             }, 10);
@@ -1253,7 +1115,7 @@
     function closeSizeWarning() {
         const modal = document.getElementById('sizeWarningModal');
         modal.classList.add('hidden');
-        setTimeout(() => { modal.style.display = 'none'; }, 300); 
+        setTimeout(() => { modal.style.display = 'none'; }, 300); // Wait for transition
     }
 
     function proceedToPackaging() {
@@ -1261,27 +1123,19 @@
         startPackagingFlow();
     }
 
-    // --- ENHANCED IMAGE VIEWER FOR CART AND SIZE GUIDE ---
+    // --- IMAGE VIEWER FOR CART AND SIZE GUIDE ---
     function openImageViewer(src) {
-        const img = document.getElementById('viewer-img');
-        img.src = src;
-        
-        const modal = document.getElementById('image-viewer-modal');
-        modal.style.display = 'flex';
-        
+        document.getElementById('viewer-img').src = src;
+        document.getElementById('image-viewer-modal').style.display = 'flex';
         setTimeout(() => {
-            modal.classList.remove('hidden');
-            img.classList.add('scale-105');
-            setTimeout(() => img.classList.remove('scale-105'), 200);
+            document.getElementById('image-viewer-modal').classList.remove('hidden');
         }, 10);
     }
     
     function closeImageViewer() {
-        const modal = document.getElementById('image-viewer-modal');
-        modal.classList.add('hidden');
+        document.getElementById('image-viewer-modal').classList.add('hidden');
         setTimeout(() => {
-            modal.style.display = 'none';
-            document.getElementById('viewer-img').src = '';
+            document.getElementById('image-viewer-modal').style.display = 'none';
         }, 300);
     }
 
@@ -1335,7 +1189,7 @@
     function openCartDrawer() { renderCartUI(); const drawer = document.getElementById('cart-drawer'); drawer.style.transform = 'translateY(0%)'; drawer.style.pointerEvents = 'auto'; }
     function closeCartDrawer() { const drawer = document.getElementById('cart-drawer'); drawer.style.transform = 'translateY(100%)'; drawer.style.pointerEvents = 'none'; }
 
-    // --- DELIVERY LOGIC ---
+    // --- NEW CORE DELIVERY LOGIC ---
     function calculateDelivery(subtotalKHR) {
         if (subtotalKHR === 0) return 0;
         if (subtotalKHR < 20000) return 8000;
@@ -1362,10 +1216,11 @@
             if (item.type === 'custom_bracelet') {
                 itemTotal = (item.baseTotal + item.pkgPrice) * item.qty;
             } else {
-                itemTotal = (item.price || 0) * item.qty; 
+                itemTotal = (item.price || 0) * item.qty; // Support shared normal items
             }
             if(item.selected) subtotal += itemTotal;
             
+            // Custom bracelet layout
             if (item.type === 'custom_bracelet') {
                 return `
                 <div class="bg-white rounded-2xl border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col overflow-hidden mb-4 shadow-sm">
@@ -1395,6 +1250,7 @@
                     </div>
                 </div>`;
             } else {
+                // Standard item layout (for cross-page shared carts)
                 return `
                 <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
                     <label class="flex items-start gap-3 cursor-pointer">
@@ -1424,6 +1280,7 @@
             }
         }).join('');
         
+        // APPLY MATH
         const delivery = calculateDelivery(subtotal);
         const grandTotalKHR = subtotal + delivery;
         const grandTotalUSD = grandTotalKHR / RATE;
