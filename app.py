@@ -135,7 +135,7 @@ def get_reward_config():
         with open(REWARD_CONFIG_FILE, 'r') as f:
             return json.load(f)
     # Default Probabilities (Percent)
-    return {"0": 50, "500": 20, "1000": 15, "2000": 10, "5000": 3, "10000": 1.5, "50000": 0.5}
+    return {"0": 50.0, "500": 20.0, "1000": 15.0, "2000": 10.0, "5000": 3.0, "10000": 1.5, "50000": 0.5}
 
 def save_reward_config(data):
     with open(REWARD_CONFIG_FILE, 'w') as f:
@@ -155,7 +155,7 @@ def _sync_product_to_pool(product_id, variant_index, new_stock):
                     variants = json.loads(product.variants)
                     if 0 <= variant_index < len(variants):
                         target_image = variants[variant_index].get('image', target_image)
-                except: pass
+                except Exception: pass
             
             prize = MinifigurePool.query.filter_by(image=target_image).first()
             if prize:
@@ -174,7 +174,7 @@ def _sync_pool_to_product(pool_item):
                         variants[pool_item.linked_variant_index]['stock'] = pool_item.stock
                         product.variants = json.dumps(variants)
                         product.stock = sum(int(v.get('stock', 0)) for v in variants)
-                except: pass
+                except Exception: pass
             else:
                 product.stock = pool_item.stock
     else:
@@ -194,7 +194,7 @@ def _sync_pool_to_product(pool_item):
                         p.variants = json.dumps(variants)
                         p.stock = sum(int(v.get('stock', 0)) for v in variants)
                         break
-                except: pass
+                except Exception: pass
             elif p.image == pool_item.image:
                 p.stock = pool_item.stock
                 pool_item.linked_product_id = p.id
@@ -220,8 +220,7 @@ def custom_bracelet(): return render_template('custom_bracelet.html')
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    if client_ip and ',' in client_ip:
-        client_ip = client_ip.split(',')[0].strip()
+    if client_ip and ',' in client_ip: client_ip = client_ip.split(',')[0].strip()
         
     current_time = time.time()
     if client_ip in spam_tracker:
@@ -253,11 +252,6 @@ def login():
             return redirect(url_for('admin_panel'))
         flash('Invalid Username or Password', 'error')
     return render_template('admin_login.html')
-
-@app.route('/admin/logout')
-def logout():
-    session.pop('admin', None)
-    return redirect(url_for('login'))
 
 @app.route('/admin/panel')
 @login_required
@@ -361,8 +355,7 @@ def update_categories():
                 cat.sort_order = i
                 file = request.files.get(f'cat_image_{cid}')
                 if file and file.filename != '':
-                    res = optimize_and_upload(file)
-                    cat.image = res['secure_url']
+                    cat.image = optimize_and_upload(file)['secure_url']
         db.session.commit()
     except: pass
     return redirect(url_for('admin_panel'))
@@ -740,3 +733,4 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
