@@ -27,12 +27,7 @@ cloudinary.config(
 
 def optimize_and_upload(file):
     return cloudinary.uploader.upload(
-        file,
-        format="webp",
-        quality="auto",      
-        width=900,           
-        height=900,          
-        crop="limit"         
+        file, format="webp", quality="auto", width=900, height=900, crop="limit"
     )
 
 # --- 2. PERMANENT DATABASE CONFIG ---
@@ -44,9 +39,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    "pool_pre_ping": True,  
-    "pool_recycle": 300,    
-    "pool_timeout": 30      
+    "pool_pre_ping": True, "pool_recycle": 300, "pool_timeout": 30      
 }
 
 db = SQLAlchemy(app)
@@ -118,14 +111,8 @@ class MinifigurePool(db.Model):
     rarity = db.Column(db.String(50), nullable=False)
     stock = db.Column(db.Integer, default=0)
     sort_order = db.Column(db.Integer, default=0)
-    
-    # --- NEW COLUMNS FOR SYNCING ---
     linked_product_id = db.Column(db.Integer, nullable=True)
     linked_variant_index = db.Column(db.Integer, nullable=True)
-
-    @property
-    def is_catalog_linked(self):
-        return self.linked_product_id is not None
 
 class DrawHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -135,22 +122,31 @@ class DrawHistory(db.Model):
     stock_remaining = db.Column(db.Integer, nullable=False)
     timestamp_utc = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Cambodia Time (UTC+7)
     @property
     def cambodia_time(self):
         kh_time = self.timestamp_utc + timedelta(hours=7)
         return kh_time.strftime('%d-%b-%Y %I:%M %p')
 
+# --- 5x SPIN CASH REWARD CONFIG ---
+REWARD_CONFIG_FILE = 'spin_rewards.json'
 
-# --- SYNC HELPER FUNCTIONS (SELF-HEALING ENABLED) ---
+def get_reward_config():
+    if os.path.exists(REWARD_CONFIG_FILE):
+        with open(REWARD_CONFIG_FILE, 'r') as f:
+            return json.load(f)
+    # Default Probabilities (Percent)
+    return {"0": 50, "500": 20, "1000": 15, "2000": 10, "5000": 3, "10000": 1.5, "50000": 0.5}
+
+def save_reward_config(data):
+    with open(REWARD_CONFIG_FILE, 'w') as f:
+        json.dump(data, f)
+
+# --- SYNC HELPER FUNCTIONS ---
 def _sync_product_to_pool(product_id, variant_index, new_stock):
-    """Updates the Spin Pool when the Store Stock changes"""
     linked_prize = MinifigurePool.query.filter_by(linked_product_id=product_id, linked_variant_index=variant_index).first()
-    
     if linked_prize:
         linked_prize.stock = new_stock
     else:
-        # FALLBACK (SELF-HEALING): Find unlinked old items by Image URL
         product = Product.query.get(product_id)
         if product:
             target_image = product.image
@@ -159,18 +155,15 @@ def _sync_product_to_pool(product_id, variant_index, new_stock):
                     variants = json.loads(product.variants)
                     if 0 <= variant_index < len(variants):
                         target_image = variants[variant_index].get('image', target_image)
-                except Exception:
-                    pass
+                except: pass
             
             prize = MinifigurePool.query.filter_by(image=target_image).first()
             if prize:
                 prize.stock = new_stock
-                # Fix the broken link permanently!
                 prize.linked_product_id = product_id
                 prize.linked_variant_index = variant_index
 
 def _sync_pool_to_product(pool_item):
-    """Updates the Store Stock when the Spin Pool Stock changes (wins or admin edits)"""
     if pool_item.linked_product_id is not None:
         product = Product.query.get(pool_item.linked_product_id)
         if product:
@@ -181,15 +174,12 @@ def _sync_pool_to_product(pool_item):
                         variants[pool_item.linked_variant_index]['stock'] = pool_item.stock
                         product.variants = json.dumps(variants)
                         product.stock = sum(int(v.get('stock', 0)) for v in variants)
-                except Exception:
-                    pass
+                except: pass
             else:
                 product.stock = pool_item.stock
     else:
-        # FALLBACK (SELF-HEALING): Find unlinked old items by Image URL
         products = Product.query.all()
         for p in products:
-            # Check variants first
             if p.variants:
                 try:
                     variants = json.loads(p.variants)
@@ -198,23 +188,18 @@ def _sync_pool_to_product(pool_item):
                         if v.get('image') == pool_item.image:
                             variants[idx]['stock'] = pool_item.stock
                             updated = True
-                            # Fix the broken link permanently!
                             pool_item.linked_product_id = p.id
                             pool_item.linked_variant_index = idx
                     if updated:
                         p.variants = json.dumps(variants)
                         p.stock = sum(int(v.get('stock', 0)) for v in variants)
                         break
-                except Exception:
-                    pass
-            # Check main product image
+                except: pass
             elif p.image == pool_item.image:
                 p.stock = pool_item.stock
-                # Fix the broken link permanently!
                 pool_item.linked_product_id = p.id
                 pool_item.linked_variant_index = -1
                 break
-
 
 # --- 5. PUBLIC & STORE ROUTES ---
 @app.route('/')
@@ -239,23 +224,19 @@ def checkout():
         client_ip = client_ip.split(',')[0].strip()
         
     current_time = time.time()
-    
     if client_ip in spam_tracker:
         last_time, count = spam_tracker[client_ip]
         if current_time - last_time < 300:
-            if count >= 2: 
-                return jsonify({'status': 'error', 'message': 'Too many orders placed. Please try again in 5 minutes.'}), 429
+            if count >= 2: return jsonify({'status': 'error', 'message': 'Too many orders. Try again in 5 minutes.'}), 429
             spam_tracker[client_ip] = (last_time, count + 1)
-        else:
-            spam_tracker[client_ip] = (current_time, 1)
-    else:
-        spam_tracker[client_ip] = (current_time, 1)
+        else: spam_tracker[client_ip] = (current_time, 1)
+    else: spam_tracker[client_ip] = (current_time, 1)
 
     data = request.json
     try:
         new_order = Order(
             customer_name=data['name'], customer_phone=data['phone'], customer_address=data['address'],
-            items_json=json.dumps(data['items']), total_usd=float(data['total']), status="Pending", stock_deducted=False
+            items_json=json.dumps(data['items']), total_usd=float(data['total']), status="Pending"
         )
         db.session.add(new_order)
         db.session.commit()
@@ -267,26 +248,20 @@ def checkout():
 @app.route('/admin/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        if username == ADMIN_USERNAME and password == ADMIN_PASS:
+        if request.form.get('username') == ADMIN_USERNAME and request.form.get('password') == ADMIN_PASS:
             session['admin'] = True
-            flash('Login Successful!', 'success')
             return redirect(url_for('admin_panel'))
-        else:
-            flash('Invalid Username or Password', 'error')
+        flash('Invalid Username or Password', 'error')
     return render_template('admin_login.html')
 
 @app.route('/admin/logout')
 def logout():
     session.pop('admin', None)
-    flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
 
 @app.route('/admin/panel')
 @login_required
 def admin_panel():
-    # Store Data
     unique_cats = db.session.query(Product.category, Product.store).distinct().all()
     for c_name, c_store in unique_cats:
         if c_name != "Other" and not Category.query.filter_by(name=c_name, store=c_store).first():
@@ -295,19 +270,18 @@ def admin_panel():
     
     products = Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
     for p in products: p.parsed_variants = json.loads(p.variants) if p.variants else []
-        
     categories = Category.query.order_by(Category.sort_order).all()
     orders = Order.query.order_by(Order.timestamp.desc()).all()
     for o in orders: o.parsed_items = json.loads(o.items_json)
 
-    # Spinner Game Data
     codes = RedeemCode.query.order_by(RedeemCode.timestamp.desc()).all()
     pool = MinifigurePool.query.order_by(MinifigurePool.sort_order.asc(), MinifigurePool.id.desc()).all()
     history = DrawHistory.query.order_by(DrawHistory.timestamp_utc.desc()).limit(100).all()
+    
+    reward_config = get_reward_config()
 
-    return render_template('admin_panel.html', products=products, categories=categories, orders=orders, codes=codes, pool=pool, history=history)
+    return render_template('admin_panel.html', products=products, categories=categories, orders=orders, codes=codes, pool=pool, history=history, reward_config=reward_config)
 
-# Quick API to edit stock instantly from the Modal
 @app.route('/admin/product/quick_stock', methods=['POST'])
 @login_required
 def quick_update_stock():
@@ -317,8 +291,7 @@ def quick_update_stock():
     new_stock = int(data.get('stock', 0))
 
     product = Product.query.get(p_id)
-    if not product:
-        return jsonify({'success': False, 'message': 'Product not found'})
+    if not product: return jsonify({'success': False, 'message': 'Product not found'})
 
     if v_idx != -1 and product.variants:
         variants = json.loads(product.variants)
@@ -326,15 +299,11 @@ def quick_update_stock():
             variants[v_idx]['stock'] = new_stock
             product.variants = json.dumps(variants)
             product.stock = sum(int(v.get('stock', 0)) for v in variants)
-    else:
-        product.stock = new_stock
+    else: product.stock = new_stock
 
-    # --- SYNC ---
     _sync_product_to_pool(p_id, v_idx, new_stock)
-    
     db.session.commit()
-    return jsonify({'success': True, 'new_stock': new_stock, 'total_stock': product.stock})
-
+    return jsonify({'success': True})
 
 @app.route('/admin/order/status/<int:id>/<string:status>', methods=['POST'])
 @login_required
@@ -353,28 +322,21 @@ def update_order_status(id, status):
                         
                         product = Product.query.get(p_id)
                         if product:
-                            # Handle Variant Stock Deduction
                             if product.variants and v_idx != -1:
                                 variants = json.loads(product.variants)
                                 if 0 <= v_idx < len(variants):
                                     variants[v_idx]['stock'] = max(0, variants[v_idx]['stock'] - qty_bought)
                                     product.variants = json.dumps(variants)
                                     product.stock = sum(v.get('stock', 0) for v in variants)
-                                    # SYNC
                                     _sync_product_to_pool(p_id, v_idx, variants[v_idx]['stock'])
-                            # Handle Normal Single Product Stock Deduction
                             else:
                                 product.stock = max(0, product.stock - qty_bought)
-                                # SYNC
                                 _sync_product_to_pool(p_id, -1, product.stock)
-            except Exception as e:
-                pass
-            
+            except: pass
             order.stock_deducted = True
 
         order.status = status
         db.session.commit()
-        flash(f'Order {id} marked as {status}.', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/order/delete/<int:id>', methods=['POST'])
@@ -384,7 +346,6 @@ def delete_order(id):
     if order:
         db.session.delete(order)
         db.session.commit()
-        flash('Order deleted.', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/categories/update', methods=['POST'])
@@ -392,7 +353,6 @@ def delete_order(id):
 def update_categories():
     cat_ids = request.form.getlist('cat_ids[]')
     cat_names = request.form.getlist('cat_names[]')
-    
     try:
         for i, cid in enumerate(cat_ids):
             cat = Category.query.get(int(cid))
@@ -404,10 +364,7 @@ def update_categories():
                     res = optimize_and_upload(file)
                     cat.image = res['secure_url']
         db.session.commit()
-        flash('Categories updated successfully!', 'success')
-    except Exception as e:
-        flash(f'Upload Error: Check API Keys. Details: {str(e)}', 'error')
-        
+    except: pass
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/category/delete/<int:id>', methods=['POST'])
@@ -419,14 +376,12 @@ def delete_category(id):
         for p in products: p.category = "Other"
         db.session.delete(c)
         db.session.commit()
-        flash('Category deleted.', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/product/reorder', methods=['POST'])
 @login_required
 def reorder_products():
-    data = request.json
-    for i, pid in enumerate(data.get('ids', [])):
+    for i, pid in enumerate(request.json.get('ids', [])):
         p = Product.query.get(int(pid))
         if p: p.sort_order = i
     db.session.commit()
@@ -439,7 +394,6 @@ def toggle_product(id):
     if p:
         p.is_visible = not p.is_visible
         db.session.commit()
-        flash(f'Product visibility updated.', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/product/delete/<int:id>', methods=['POST'])
@@ -449,7 +403,6 @@ def delete_product(id):
     if p:
         db.session.delete(p)
         db.session.commit()
-        flash('Product successfully deleted.', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/product/update/<int:id>', methods=['POST'])
@@ -469,19 +422,13 @@ def update_product(id):
     
     updated_variants = []
     total_stock = 0
-    
     for i in range(len(v_ids)):
         stock = int(v_stocks[i])
         updated_variants.append({
-            "id": int(v_ids[i]), 
-            "image": v_images[i], 
-            "name": v_names[i],
-            "price": float(v_prices[i]), 
-            "stock": stock,
-            "category": v_cats[i] if i < len(v_cats) else p.category
+            "id": int(v_ids[i]), "image": v_images[i], "name": v_names[i],
+            "price": float(v_prices[i]), "stock": stock, "category": v_cats[i] if i < len(v_cats) else p.category
         })
         total_stock += stock
-        # SYNC
         _sync_product_to_pool(p.id, int(v_ids[i]), stock)
 
     new_files = request.files.getlist('new_images')
@@ -493,23 +440,17 @@ def update_product(id):
                     res = optimize_and_upload(f)
                     last_id += 1
                     updated_variants.append({
-                        "id": last_id, "name": f"New Style {last_id}", 
-                        "price": updated_variants[0]['price'] if updated_variants else 0, 
+                        "id": last_id, "name": f"New Style {last_id}", "price": updated_variants[0]['price'] if updated_variants else 0, 
                         "stock": 1, "image": res['secure_url'], "category": p.category 
                     })
                     total_stock += 1
-                    
         p.variants = json.dumps(updated_variants)
         p.stock = total_stock
         if updated_variants:
             p.image = updated_variants[0]['image']
             p.price = updated_variants[0]['price']
-        
         db.session.commit()
-        flash('Product updated successfully!', 'success')
-    except Exception as e:
-        flash(f'Cloud Error: Cannot upload new styles. ({str(e)})', 'error')
-        
+    except: pass
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/product/add', methods=['POST'])
@@ -528,10 +469,7 @@ def add_product():
     uploaded_urls = []
     try:
         for f in files:
-            if f and f.filename != '':
-                res = optimize_and_upload(f)
-                uploaded_urls.append(res['secure_url'])
-                
+            if f and f.filename != '': uploaded_urls.append(optimize_and_upload(f)['secure_url'])
         if uploaded_urls:
             vars_json = []
             total_stock = 0
@@ -539,23 +477,12 @@ def add_product():
                 price = float(v_prices[i]) if i < len(v_prices) else 0
                 stock = int(v_stocks[i]) if i < len(v_stocks) else 0
                 cat_str = v_categories[i] if i < len(v_categories) else category
-                
-                vars_json.append({
-                    "id": i, "name": v_names[i] if i < len(v_names) else f"Style {i+1}", 
-                    "price": price, "stock": stock, "image": url, "category": cat_str 
-                })
+                vars_json.append({"id": i, "name": v_names[i] if i < len(v_names) else f"Style {i+1}", "price": price, "stock": stock, "image": url, "category": cat_str})
                 total_stock += stock
-            
             new_p = Product(title=title, price=vars_json[0]['price'], stock=total_stock, image=uploaded_urls[0], category=category, store=store, variants=json.dumps(vars_json), sort_order=-1, is_visible=True)
             db.session.add(new_p)
             db.session.commit()
-            flash('Product published successfully!', 'success')
-        else:
-            flash('Warning: No valid images found to upload.', 'error')
-            
-    except Exception as e:
-        flash(f'Upload Failed! Details: {str(e)}', 'error')
-
+    except: pass
     return redirect(url_for('admin_panel'))
 
 @app.route('/api/products/<store_name>')
@@ -567,25 +494,20 @@ def get_api(store_name):
             "products": [{"id": p.id, "title": p.title, "price": p.price, "stock": p.stock, "category": p.category, "thumbnail": p.image, "variants": json.loads(p.variants)} for p in products],
             "categories": [{"name": c.name, "image": c.image} for c in categories]
         })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
+    except Exception as e: return jsonify({"error": str(e)}), 500
 
 # --- 7. SPINNER GAME FRONTEND & API LOGIC ---
 
 @app.route('/mystery-box')
 @app.route('/lucky-draw')
 @app.route('/spin')
-def mystery_box(): 
-    return render_template('lucky_draw.html')
+def mystery_box(): return render_template('lucky_draw.html')
 
 def get_player():
     if 'player_id' not in session:
-        # Generate an 8-digit random ID
         new_id = str(random.randint(10000000, 99999999))
         session['player_id'] = new_id
-        new_player = PlayerSession(player_id=new_id, balance=0)
-        db.session.add(new_player)
+        db.session.add(PlayerSession(player_id=new_id, balance=0))
         db.session.commit()
     
     player = PlayerSession.query.filter_by(player_id=session['player_id']).first()
@@ -628,7 +550,6 @@ def execute_spin():
     if not available_items or sum([item.stock for item in available_items]) < count:
         return jsonify({"error": "Not enough stock in the prize pool!"}), 400
 
-    # Build Weighted Pool for Draw
     pool = []
     for item in available_items:
         if item.rarity == 'Legendary': weight = 2
@@ -637,136 +558,102 @@ def execute_spin():
         else: weight = 58 
         pool.extend([item] * weight)
 
-    if not pool:
-        return jsonify({"error": "Error building prize pool"}), 400
+    if not pool: return jsonify({"error": "Error building prize pool"}), 400
 
     prizes = []
     for _ in range(count):
         winner = random.choice(pool)
-        winner.stock -= 1 # DEDUCT STOCK PERMANENTLY
-        
-        # --- SYNC: Deduct from linked store product ---
+        winner.stock -= 1 
         _sync_pool_to_product(winner)
-        
-        # Log to Admin Panel with Cambodia Time tracking
-        history = DrawHistory(
-            player_id=player.player_id, 
-            item_name=winner.name, 
-            rarity=winner.rarity, 
-            stock_remaining=winner.stock
-        )
-        db.session.add(history)
-        
-        prizes.append({
-            "id": winner.id, "name": winner.name, 
-            "image": winner.image, "rarity": winner.rarity
-        })
-        # Remove out of stock items for the next iteration if doing 5x spin
+        db.session.add(DrawHistory(player_id=player.player_id, item_name=winner.name, rarity=winner.rarity, stock_remaining=winner.stock))
+        prizes.append({"id": winner.id, "name": winner.name, "image": winner.image, "rarity": winner.rarity})
         pool = [i for i in pool if i.stock > 0]
-        if not pool and _ < count - 1:
-            break
+        if not pool and _ < count - 1: break
 
-    player.balance -= cost # DEDUCT RIEL
+    player.balance -= cost 
+
+    # --- 5X EXTRA REWARD LOGIC ---
+    extra_reward_amount = 0
+    if count == 5:
+        cfg = get_reward_config()
+        amounts = [0, 500, 1000, 2000, 5000, 10000, 50000]
+        try:
+            weights = [float(cfg.get(str(a), 0)) for a in amounts]
+            if sum(weights) <= 0: weights = [100, 0, 0, 0, 0, 0, 0] # Fallback if admin put 0 for everything
+            extra_reward_amount = random.choices(amounts, weights=weights, k=1)[0]
+            if extra_reward_amount > 0:
+                player.balance += extra_reward_amount
+        except Exception as e:
+            print(f"Error calculating extra reward: {e}")
+
     db.session.commit()
-    return jsonify({"success": True, "new_balance": player.balance, "prizes": prizes})
+    return jsonify({"success": True, "new_balance": player.balance, "prizes": prizes, "extra_reward": extra_reward_amount})
 
 @app.route('/api/spin/pool', methods=['GET'])
 def get_live_pool():
     items = MinifigurePool.query.all()
-    data = [{"id": i.id, "name": i.name, "image": i.image, "rarity": i.rarity, "stock": i.stock} for i in items]
-    return jsonify({"pool": data})
-
+    return jsonify({"pool": [{"id": i.id, "name": i.name, "image": i.image, "rarity": i.rarity, "stock": i.stock} for i in items]})
 
 # --- 8. SPINNER ADMIN ROUTES ---
+
+@app.route('/admin/spin/update_rewards', methods=['POST'])
+@login_required
+def update_spin_rewards():
+    data = {
+        "0": float(request.form.get("pct_0", 50)),
+        "500": float(request.form.get("pct_500", 20)),
+        "1000": float(request.form.get("pct_1000", 15)),
+        "2000": float(request.form.get("pct_2000", 10)),
+        "5000": float(request.form.get("pct_5000", 3)),
+        "10000": float(request.form.get("pct_10000", 1.5)),
+        "50000": float(request.form.get("pct_50000", 0.5)),
+    }
+    save_reward_config(data)
+    flash('5x Spin Reward Probabilities updated!', 'success')
+    return redirect(url_for('admin_panel'))
+
 @app.route('/admin/spin/generate_codes', methods=['POST'])
 @login_required
 def generate_codes():
     quantity = int(request.form.get('quantity', 5))
     value = int(request.form.get('value', 1000))
-    characters = string.ascii_uppercase + string.digits
     for _ in range(quantity):
-        code_str = ''.join(random.choice(characters) for i in range(8))
-        db.session.add(RedeemCode(code=code_str, value=value))
+        db.session.add(RedeemCode(code=''.join(random.choice(string.ascii_uppercase + string.digits) for i in range(8)), value=value))
     db.session.commit()
-    flash(f'Generated {quantity} codes!', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/spin/add_pool_catalog', methods=['POST'])
 @login_required
 def add_pool_catalog():
-    selected_items = request.form.getlist('catalog_items[]')
-    rarity = request.form.get('rarity', 'Common')
-    
-    added_count = 0
-    for item_data in selected_items:
+    for item_data in request.form.getlist('catalog_items[]'):
         parts = item_data.split('|')
         if len(parts) == 2:
-            p_id = int(parts[0])
-            v_idx = int(parts[1])
-            
+            p_id, v_idx = int(parts[0]), int(parts[1])
             product = Product.query.get(p_id)
             if product:
-                image = product.image
-                name = product.title
-                stock = product.stock
-                
-                # Fetch specific variant info if it's a multi-variant product
+                image, name, stock = product.image, product.title, product.stock
                 if v_idx != -1 and product.variants:
-                    variants = json.loads(product.variants)
-                    if 0 <= v_idx < len(variants):
-                        image = variants[v_idx].get('image', image)
-                        name = f"{variants[v_idx].get('name', 'Variant')} {product.title}"
-                        stock = variants[v_idx].get('stock', 0)
-                
-                # Check if it's already linked to prevent duplicates
-                existing = MinifigurePool.query.filter_by(linked_product_id=p_id, linked_variant_index=v_idx).first()
-                if existing:
-                    existing.stock = stock
-                    existing.image = image
-                    existing.name = name
-                    added_count += 1
-                else:
-                    new_item = MinifigurePool(name=name, rarity=rarity, stock=stock, image=image, linked_product_id=p_id, linked_variant_index=v_idx)
-                    db.session.add(new_item)
-                    added_count += 1
-                
-    if added_count > 0:
-        db.session.commit()
-        flash(f'Successfully linked {added_count} catalog items to the Prize Pool!', 'success')
-    else:
-        flash('No valid items selected to link.', 'error')
-        
+                    try:
+                        variants = json.loads(product.variants)
+                        if 0 <= v_idx < len(variants):
+                            image = variants[v_idx].get('image', image)
+                            name = f"{variants[v_idx].get('name', 'Variant')} {product.title}"
+                            stock = variants[v_idx].get('stock', 0)
+                    except: pass
+                if not MinifigurePool.query.filter_by(linked_product_id=p_id, linked_variant_index=v_idx).first():
+                    db.session.add(MinifigurePool(name=name, rarity=request.form.get('rarity', 'Common'), stock=stock, image=image, linked_product_id=p_id, linked_variant_index=v_idx))
+    db.session.commit()
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/spin/add_pool', methods=['POST'])
 @login_required
 def add_spin_pool():
-    name_input = request.form.get('name', '').strip()
     rarity = request.form.get('rarity')
-    stock = int(request.form.get('stock', 1)) # Default 1 now
-    
-    files = request.files.getlist('images')
-    
-    uploaded_count = 0
-    try:
-        for file in files:
-            if file and file.filename != '':
-                res = optimize_and_upload(file) # Uses Cloudinary
-                item_name = name_input if name_input else f"Mystery {rarity} Prize"
-                
-                new_item = MinifigurePool(name=item_name, rarity=rarity, stock=stock, image=res['secure_url'])
-                db.session.add(new_item)
-                uploaded_count += 1
-                
-        if uploaded_count > 0:
-            db.session.commit()
-            flash(f'{uploaded_count} Prize(s) added to game pool!', 'success')
-        else:
-            flash('No valid images found to upload.', 'error')
-            
-    except Exception as e:
-        flash(f'Upload failed: {str(e)}', 'error')
-        
+    stock = int(request.form.get('stock', 1))
+    for file in request.files.getlist('images'):
+        if file and file.filename != '':
+            db.session.add(MinifigurePool(name=request.form.get('name', '').strip() or f"Mystery {rarity} Prize", rarity=rarity, stock=stock, image=optimize_and_upload(file)['secure_url']))
+    db.session.commit()
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/spin/update_stock/<int:id>', methods=['POST'])
@@ -775,122 +662,81 @@ def update_spin_stock(id):
     item = MinifigurePool.query.get(id)
     if item:
         item.stock = int(request.form.get('stock', 0))
-        # SYNC
         _sync_pool_to_product(item)
         db.session.commit()
-        flash('Prize stock updated.', 'success')
     return redirect(url_for('admin_panel'))
 
-# NEW ROUTE: For handling the Bulk Matrix Changes from Admin Panel
 @app.route('/admin/spin/pool/update_bulk', methods=['POST'])
 @login_required
 def admin_spin_update_bulk():
-    data = request.json
-    item = MinifigurePool.query.get(data.get('id'))
+    item = MinifigurePool.query.get(request.json.get('id'))
     if item:
-        item.rarity = data.get('rarity', item.rarity)
-        item.sort_order = int(data.get('sort_order', item.sort_order))
-        item.stock = int(data.get('stock', item.stock))
-        
-        # SYNC TO STORE
+        item.rarity, item.sort_order, item.stock = request.json.get('rarity', item.rarity), int(request.json.get('sort_order', item.sort_order)), int(request.json.get('stock', item.stock))
         _sync_pool_to_product(item)
         db.session.commit()
     return jsonify({"status": "success"})
 
-
 @app.route('/admin/spin/pool/update_order/<int:item_id>', methods=['POST'])
 @login_required
 def update_spin_pool_order(item_id):
-    item = MinifigurePool.query.get_or_404(item_id)
-    item.sort_order = int(request.form.get('sort_order', 0))
+    MinifigurePool.query.get_or_404(item_id).sort_order = int(request.form.get('sort_order', 0))
     db.session.commit()
     return redirect(url_for('admin_panel'))
 
-
-# --- INDIVIDUAL & BULK DELETE ROUTES FOR GAME ---
 @app.route('/admin/spin/pool/update_rarity/<int:item_id>', methods=['POST'])
 @login_required
 def admin_spin_update_rarity(item_id):
-    item = MinifigurePool.query.get_or_404(item_id)
-    item.rarity = request.form.get('rarity')
+    MinifigurePool.query.get_or_404(item_id).rarity = request.form.get('rarity')
     db.session.commit()
-    flash('Item rarity updated successfully!', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/spin/pool/bulk_delete', methods=['POST'])
 @login_required
 def admin_spin_bulk_delete_pool():
-    item_ids = request.form.get('item_ids', '')
-    if item_ids:
-        ids = [int(x) for x in item_ids.split(',') if x.isdigit()]
-        MinifigurePool.query.filter(MinifigurePool.id.in_(ids)).delete(synchronize_session=False)
+    if request.form.get('item_ids'):
+        MinifigurePool.query.filter(MinifigurePool.id.in_([int(x) for x in request.form.get('item_ids').split(',') if x.isdigit()])).delete(synchronize_session=False)
         db.session.commit()
-        flash(f'Deleted {len(ids)} items from the Prize Pool!', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/spin/code/bulk_delete', methods=['POST'])
 @login_required
 def admin_spin_bulk_delete_code():
-    code_ids = request.form.get('code_ids', '')
-    if code_ids:
-        ids = [int(x) for x in code_ids.split(',') if x.isdigit()]
-        RedeemCode.query.filter(RedeemCode.id.in_(ids)).delete(synchronize_session=False)
+    if request.form.get('code_ids'):
+        RedeemCode.query.filter(RedeemCode.id.in_([int(x) for x in request.form.get('code_ids').split(',') if x.isdigit()])).delete(synchronize_session=False)
         db.session.commit()
-        flash(f'Deleted {len(ids)} codes!', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/spin/history/bulk_delete', methods=['POST'])
 @login_required
 def admin_spin_bulk_delete_history():
-    history_ids = request.form.get('history_ids', '')
-    if history_ids:
-        ids = [int(x) for x in history_ids.split(',') if x.isdigit()]
-        DrawHistory.query.filter(DrawHistory.id.in_(ids)).delete(synchronize_session=False)
+    if request.form.get('history_ids'):
+        DrawHistory.query.filter(DrawHistory.id.in_([int(x) for x in request.form.get('history_ids').split(',') if x.isdigit()])).delete(synchronize_session=False)
         db.session.commit()
-        flash(f'Deleted {len(ids)} history records!', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/spin/pool/delete/<int:item_id>', methods=['POST'])
 @login_required
 def admin_spin_delete_pool(item_id):
-    item = MinifigurePool.query.get_or_404(item_id)
-    db.session.delete(item)
+    db.session.delete(MinifigurePool.query.get_or_404(item_id))
     db.session.commit()
-    flash('Prize Pool item deleted!', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/spin/history/delete/<int:draw_id>', methods=['POST'])
 @login_required
 def admin_spin_delete_history(draw_id):
-    draw = DrawHistory.query.get_or_404(draw_id)
-    db.session.delete(draw)
+    db.session.delete(DrawHistory.query.get_or_404(draw_id))
     db.session.commit()
-    flash('Live draw history record deleted!', 'success')
     return redirect(url_for('admin_panel'))
 
-
-# --- 9. STARTUP & MIGRATIONS ---
 @app.errorhandler(413)
-def request_entity_too_large(error):
-    flash('File too large!', 'error')
-    return redirect(url_for('admin_panel'))
+def request_entity_too_large(error): return redirect(url_for('admin_panel'))
 
 with app.app_context():
     db.create_all()
-    
-    # --- AUTO MIGRATIONS FOR THE NEW SYNC FEATURES ---
-    try:
-        db.session.execute(text('ALTER TABLE minifigure_pool ADD COLUMN sort_order INTEGER DEFAULT 0'))
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-        
-    try:
-        db.session.execute(text('ALTER TABLE minifigure_pool ADD COLUMN linked_product_id INTEGER'))
-        db.session.execute(text('ALTER TABLE minifigure_pool ADD COLUMN linked_variant_index INTEGER'))
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
+    try: db.session.execute(text('ALTER TABLE minifigure_pool ADD COLUMN sort_order INTEGER DEFAULT 0')); db.session.commit()
+    except: db.session.rollback()
+    try: db.session.execute(text('ALTER TABLE minifigure_pool ADD COLUMN linked_product_id INTEGER')); db.session.execute(text('ALTER TABLE minifigure_pool ADD COLUMN linked_variant_index INTEGER')); db.session.commit()
+    except: db.session.rollback()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
