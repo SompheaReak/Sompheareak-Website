@@ -20,7 +20,7 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* Unified Pka Chan Background Pattern */
+        /* Unified Background Pattern */
         .pka-chan-bg {
             background-color: #fdfbf7;
             background-image: radial-gradient(#ea580c 0.5px, transparent 0.5px), radial-gradient(#ea580c 0.5px, #fdfbf7 0.5px);
@@ -59,7 +59,6 @@
         .rarity-badge-Rare { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
         .rarity-badge-Common { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
 
-        /* Filter Styles */
         .pool-flt.active { background-color: #0f172a; color: white; border-color: #0f172a; }
 
         /* Animations */
@@ -424,7 +423,6 @@
 
                 setTimeout(() => {
                     boxIcon.classList.remove('anim-shake'); machine.classList.add('anim-float');
-                    // FIX: Pass the extra_reward data to the showPrizes function
                     showPrizes(data.prizes, data.extra_reward || 0);
                     fetchPool(); 
                 }, 1000);
@@ -436,7 +434,7 @@
             }
         }
 
-        // --- REVEAL MODAL LOGIC (UPDATED WITH CASH BONUS) ---
+        // --- REVEAL MODAL LOGIC (CASH BONUS) ---
         function showPrizes(prizes, extraReward = 0) {
             const modal = document.getElementById('prize-modal');
             const showcase = document.getElementById('prize-showcase');
@@ -444,13 +442,11 @@
             
             showcase.innerHTML = ''; 
             
-            // Trigger confetti if they hit a legendary OR a big cash bonus
             const hasLegendary = prizes.some(p => p.rarity === 'Legendary') || extraReward >= 5000;
             if(hasLegendary) fireConfetti();
 
             let delayOffset = 0;
 
-            // --- INJECT CASH BONUS CARD IF THEY WON ---
             if (extraReward > 0) {
                 const bonusHtml = `
                     <div class="anim-pop opacity-0 bg-gradient-to-b from-green-50 to-green-100 rounded-3xl p-4 border-2 border-green-400 flex flex-col items-center w-[45%] sm:w-40 shadow-xl relative" style="animation-delay: 0s">
@@ -464,7 +460,7 @@
                     </div>
                 `;
                 showcase.innerHTML += bonusHtml;
-                delayOffset = 1; // Delay the minifigure reveals slightly so the cash pops first!
+                delayOffset = 1; 
             }
 
             prizes.forEach((prize, index) => {
@@ -758,3 +754,6 @@
     </script>
 </body>
 </html>
+
+
+
