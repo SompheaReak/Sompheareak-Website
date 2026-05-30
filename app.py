@@ -26,7 +26,9 @@ cloudinary.config(
 )
 
 def optimize_and_upload(file):
-    return cloudinary.uploader.upload(file, format="webp", quality="auto", width=900, height=900, crop="limit")
+    return cloudinary.uploader.upload(
+        file, format="webp", quality="auto", width=900, height=900, crop="limit"
+    )
 
 # --- 2. PERMANENT DATABASE CONFIG ---
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///fallback.db')
@@ -202,9 +204,11 @@ def inject_global_data():
         products = Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
         for p in products: p.parsed_variants = json.loads(p.variants) if p.variants else []
         categories = Category.query.order_by(Category.sort_order).all()
+        pending_count = Order.query.filter_by(status='Pending').count()
         return dict(
             global_products=products,
-            global_categories=categories
+            global_categories=categories,
+            pending_count=pending_count
         )
     return dict()
 
@@ -260,6 +264,11 @@ def login():
         flash('Invalid Username or Password', 'error')
     return render_template('admin_login.html')
 
+@app.route('/admin/logout')
+def logout():
+    session.pop('admin', None)
+    return redirect(url_for('login'))
+
 @app.route('/admin/panel')
 @login_required
 def admin_panel():
@@ -275,7 +284,23 @@ def admin_dashboard():
 @app.route('/admin/inventory')
 @login_required
 def admin_inventory():
-    return render_template('admin/inventory.html')
+    # 1. SMART AUTO-SYNC CATEGORIES
+    unique_cats = db.session.query(Product.category, Product.store).distinct().all()
+    for c_name, c_store in unique_cats:
+        if c_name:
+            # Handles comma separated tags perfectly
+            for sub_cat in c_name.split(','):
+                sub_cat = sub_cat.strip()
+                if sub_cat and sub_cat != "Other" and not Category.query.filter_by(name=sub_cat, store=c_store).first():
+                    db.session.add(Category(name=sub_cat, store=c_store, sort_order=999))
+    db.session.commit()
+    
+    # 2. LOAD INVENTORY
+    products = Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
+    for p in products: p.parsed_variants = json.loads(p.variants) if p.variants else []
+    categories = Category.query.order_by(Category.sort_order).all()
+    
+    return render_template('admin/inventory.html', products=products, categories=categories)
 
 @app.route('/admin/orders')
 @login_required
@@ -518,7 +543,8 @@ def execute_spin():
     if player.balance < cost: return jsonify({"error": "Insufficient Riel."}), 400
 
     available_items = MinifigurePool.query.filter(MinifigurePool.stock > 0).all()
-    if not available_items or sum([item.stock for item in available_items]) < count: return jsonify({"error": "Not enough stock!"}), 400
+    if not available_items or sum([item.stock for item in available_items]) < count:
+        return jsonify({"error": "Not enough stock!"}), 400
 
     pool = []
     for item in available_items:
@@ -569,9 +595,12 @@ def get_live_pool():
 @login_required
 def update_spin_rewards():
     data = {
-        "0": float(request.form.get("pct_0", 50)), "500": float(request.form.get("pct_500", 20)),
-        "1000": float(request.form.get("pct_1000", 15)), "2000": float(request.form.get("pct_2000", 10)),
-        "5000": float(request.form.get("pct_5000", 3)), "10000": float(request.form.get("pct_10000", 1.5)),
+        "0": float(request.form.get("pct_0", 50)),
+        "500": float(request.form.get("pct_500", 20)),
+        "1000": float(request.form.get("pct_1000", 15)),
+        "2000": float(request.form.get("pct_2000", 10)),
+        "5000": float(request.form.get("pct_5000", 3)),
+        "10000": float(request.form.get("pct_10000", 1.5)),
         "50000": float(request.form.get("pct_50000", 0.5)),
     }
     save_reward_config(data)
