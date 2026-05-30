@@ -1,1 +1,179 @@
-.
+
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+    <section class="lg:col-span-4 xl:col-span-3">
+        <div class="bg-white p-4 md:p-6 rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 lg:sticky lg:top-24">
+            <h2 class="font-black text-base md:text-lg mb-4 md:mb-6"><i class="fa-solid fa-cloud-arrow-up text-[#ff5000] mr-2"></i>Quick Upload</h2>
+            <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-4 md:space-y-5 submit-form">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2 bg-orange-50/50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-orange-100">
+                    <div class="flex flex-col gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[8px] md:text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">1. Select Store</label>
+                            <select name="store" class="input-box border-2 border-orange-200 bg-white" id="add-store-select">
+                                <option value="toy">Toy Store</option>
+                                <option value="lego">LEGO Store</option>
+                                <option value="bracelet">Bracelet Store</option>
+                                <option value="custom_bracelet">Custom Charms</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="space-y-1 h-full">
+                        <label class="text-[8px] md:text-[9px] font-black text-[#ff5000] uppercase tracking-widest pl-1">2. Main Categories</label>
+                        <div class="tag-wrapper pt-0.5 h-full">
+                            <input type="hidden" name="category" id="main-category-input" class="hidden-category-input" value="">
+                            <div class="tag-container border-2 border-orange-200 bg-white h-[calc(100%-16px)] items-start">
+                                <input type="text" list="add-cats" class="tag-input" placeholder="e.g. Ninjago..." autocomplete="off">
+                            </div>
+                        </div>
+                        <datalist id="add-cats"></datalist>
+                    </div>
+                </div>
+
+                <div onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-gray-200 rounded-xl md:rounded-2xl p-6 md:p-8 text-center bg-gray-50 cursor-pointer hover:border-[#ff5000] hover:bg-orange-50/50 transition-all group">
+                    <input type="file" name="images" id="file-input" accept="image/*" multiple required class="hidden">
+                    <div class="w-12 h-12 md:w-14 md:h-14 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-images text-xl md:text-2xl text-gray-400 group-hover:text-[#ff5000]"></i>
+                    </div>
+                    <p class="text-[10px] md:text-[11px] font-black text-gray-700 mt-3 md:mt-4 uppercase tracking-widest">3. Select Photos</p>
+                    <p class="text-[8px] md:text-[9px] font-bold text-gray-400 mt-1">Upload images to configure variants</p>
+                </div>
+                
+                <div class="pt-1">
+                    <input type="text" name="title" placeholder="Product Title (Auto generated if blank)" class="input-box text-xs bg-gray-50 border-gray-100 text-gray-600 focus:bg-white">
+                </div>
+
+                <button type="submit" class="w-full btn-taobao py-3.5 md:py-4 mt-2 shadow-xl shadow-orange-100 uppercase text-[10px] md:text-[11px] font-black tracking-widest">Publish Item</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="lg:col-span-8 xl:col-span-9 space-y-3 md:space-y-4">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white border border-gray-100 p-1.5 md:p-2 rounded-xl md:rounded-[20px] shadow-sm gap-2 md:gap-3">
+            <div class="flex gap-1 flex-1 min-w-max items-center overflow-x-auto hide-scrollbar w-full touch-pan-x">
+                <button onclick="filterStore('All')" id="flt-All" class="store-flt bg-black text-white px-3 py-2 md:px-4 md:py-2.5 text-[8px] md:text-[9px] font-black uppercase rounded-lg md:rounded-xl transition-all whitespace-nowrap">All</button>
+                <button onclick="filterStore('toy')" id="flt-toy" class="store-flt text-gray-400 px-3 py-2 md:px-4 md:py-2.5 text-[8px] md:text-[9px] font-black uppercase rounded-lg md:rounded-xl hover:text-black hover:bg-gray-100 transition-all whitespace-nowrap">Toys</button>
+                <button onclick="filterStore('lego')" id="flt-lego" class="store-flt text-gray-400 px-3 py-2 md:px-4 md:py-2.5 text-[8px] md:text-[9px] font-black uppercase rounded-lg md:rounded-xl hover:text-black hover:bg-gray-100 transition-all whitespace-nowrap">LEGO</button>
+                <button onclick="filterStore('bracelet')" id="flt-bracelet" class="store-flt text-gray-400 px-3 py-2 md:px-4 md:py-2.5 text-[8px] md:text-[9px] font-black uppercase rounded-lg md:rounded-xl hover:text-black hover:bg-gray-100 transition-all whitespace-nowrap">Bracelets</button>
+                <button onclick="filterStore('custom_bracelet')" id="flt-custom_bracelet" class="store-flt text-gray-400 px-3 py-2 md:px-4 md:py-2.5 text-[8px] md:text-[9px] font-black uppercase rounded-lg md:rounded-xl hover:text-black hover:bg-gray-100 transition-all whitespace-nowrap">Custom</button>
+                
+                <div class="h-4 md:h-6 w-px bg-gray-200 mx-1 md:mx-2 shrink-0"></div>
+                <select id="category-filter" onchange="filterCategory()" class="px-2 py-1.5 md:px-3 md:py-2 bg-gray-50 border border-gray-200 rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black uppercase outline-none focus:border-[#ff5000] cursor-pointer shadow-sm shrink-0">
+                    <option value="All">All Categories</option>
+                    {% for cat in global_categories %}<option value="{{cat.name}}">{{cat.name}}</option>{% endfor %}
+                </select>
+            </div>
+            
+            <div class="flex gap-1.5 md:gap-2 shrink-0 w-full md:w-auto">
+                <button onclick="openCatModal()" class="flex-1 md:flex-none px-3 py-2 md:px-4 md:py-2.5 bg-gray-50 text-gray-800 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-black uppercase border border-gray-200 shadow-sm hover:bg-gray-100 transition-colors"><i class="fa-solid fa-folder-tree md:mr-1"></i> <span class="hidden sm:inline">Categories</span></button>
+                <button onclick="openStockSummaryModal()" class="flex-1 md:flex-none px-3 py-2 md:px-4 md:py-2.5 btn-taobao rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-black uppercase shadow-md active:scale-95 transition-transform"><i class="fa-solid fa-bolt md:mr-1"></i> Live Stock</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4" id="main-inventory-list">
+            {% for p in global_products %}
+            {% set group_cats = [] %}
+            {% if p.category %}{% for mc in p.category.split(',') %}{% set trimmed = mc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}
+            {% for v in p.parsed_variants %}{% if v.category %}{% for vc in v.category.split(',') %}{% set trimmed = vc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}{% endfor %}
+            
+            <div class="product-item bg-white rounded-xl md:rounded-[24px] border border-gray-100 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md {% if not p.is_visible %}bg-gray-50/50 grayscale-[0.5]{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}" data-categories="{{ group_cats | join(',') | lower }}">
+                <div class="view-mode flex flex-col h-full">
+                    <div class="relative h-32 md:h-44 w-full bg-gray-50 p-2 md:p-3 flex items-center justify-center border-b border-gray-100 group">
+                        <img src="{{ p.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply drop-shadow-sm group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute top-2 left-2 md:top-3 md:left-3 flex flex-col gap-1 md:gap-1.5 items-start pointer-events-none">
+                            <span class="text-[7px] md:text-[8px] font-black text-white bg-slate-900/80 backdrop-blur px-1.5 py-0.5 md:px-2 md:py-1 rounded shadow-sm uppercase tracking-widest">{{ p.store }}</span>
+                            {% if not p.is_visible %}<span class="text-[7px] md:text-[8px] font-black text-white bg-red-500/90 backdrop-blur px-1.5 py-0.5 md:px-2 md:py-1 rounded shadow-sm uppercase tracking-widest"><i class="fa-solid fa-eye-slash"></i> Hidden</span>{% endif %}
+                        </div>
+                    </div>
+                    <div class="p-3 md:p-4 flex-1 flex flex-col">
+                        <h4 class="font-black text-xs md:text-sm text-gray-800 leading-tight mb-1 line-clamp-2 {% if not p.is_visible %}line-through text-gray-400{% endif %}">{{ p.title }}</h4>
+                        <p class="text-[8px] md:text-[10px] font-bold text-gray-400 mb-2 md:mb-3 mt-auto">{{ p.parsed_variants|length }} Variant(s)</p>
+                        <div class="flex justify-between items-center mt-1 border-t border-gray-100 pt-2 md:pt-3">
+                            <span class="text-xs md:text-sm font-black text-[#ff5000] leading-none">$ {{ "%.2f"|format(p.price) }}</span>
+                            <span class="text-[7px] md:text-[9px] font-bold text-gray-300">ID: {{ p.id }}</span>
+                        </div>
+                    </div>
+                    <div class="p-1.5 md:p-2 border-t border-gray-100 bg-gray-50 flex justify-between items-center gap-1 md:gap-1.5">
+                        <form action="/admin/product/toggle/{{ p.id }}" method="POST" class="m-0 flex-1">
+                            <button type="submit" class="w-full h-8 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center transition-colors {% if p.is_visible %}bg-white text-gray-500 hover:text-green-500 border border-gray-200 shadow-sm{% else %}bg-gray-200 text-gray-400{% endif %}"><i class="fa-solid {% if p.is_visible %}fa-eye{% else %}fa-eye-slash{% endif %} text-[10px] md:text-xs"></i></button>
+                        </form>
+                        <button onclick="toggleEdit({{p.id}})" class="flex-1 h-8 md:h-10 bg-white border border-gray-200 rounded-lg md:rounded-xl flex items-center justify-center text-blue-500 hover:bg-blue-50 transition-colors shadow-sm font-bold text-[9px] md:text-[10px] uppercase tracking-wider"><i class="fa-solid fa-pen md:mr-1"></i> Edit</button>
+                        <form action="/admin/product/delete/{{ p.id }}" method="POST" class="m-0 flex-1" onsubmit="return confirm('Delete permanently?')">
+                            <button type="submit" class="w-full h-8 md:h-10 bg-white border border-gray-200 rounded-lg md:rounded-xl flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors shadow-sm"><i class="fa-solid fa-trash-can text-[10px] md:text-xs"></i></button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="edit-mode">
+                    <form action="/admin/product/update/{{p.id}}" method="POST" enctype="multipart/form-data" class="bg-gray-50 p-4 md:p-6 rounded-xl md:rounded-[24px] border-2 border-[#ff5000] shadow-xl relative w-full h-full">
+                        <div class="flex justify-between items-center border-b border-gray-200 pb-3 md:pb-4 mb-4 md:mb-5">
+                            <div><h5 class="text-xs md:text-base font-black text-gray-900 uppercase tracking-widest">Edit</h5></div>
+                            <button type="button" onclick="toggleEdit({{p.id}})" class="text-[8px] md:text-[10px] font-black text-gray-600 bg-white border border-gray-200 px-3 py-2 rounded-lg">Cancel</button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-5">
+                            <div class="space-y-1"><label class="text-[8px] font-black text-gray-500 uppercase">Store</label>
+                                <select name="store" class="input-box text-xs py-2">
+                                    <option value="toy" {% if p.store == 'toy' %}selected{% endif %}>Toy Store</option><option value="lego" {% if p.store == 'lego' %}selected{% endif %}>LEGO Store</option><option value="bracelet" {% if p.store == 'bracelet' %}selected{% endif %}>Bracelet Store</option><option value="custom_bracelet" {% if p.store == 'custom_bracelet' %}selected{% endif %}>Custom Charms</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1"><label class="text-[8px] font-black text-gray-500 uppercase">Categories</label><input type="text" name="category" value="{{p.category}}" class="input-box text-xs py-2"></div>
+                            <div class="space-y-1"><label class="text-[8px] font-black text-gray-500 uppercase">Title</label><input type="text" name="title" value="{{p.title}}" class="input-box py-2 text-xs"></div>
+                        </div>
+                        <div class="space-y-3 pt-4 border-t border-gray-200 mt-4">
+                            {% for v in p.parsed_variants %}
+                            <div class="variant-row flex flex-col sm:flex-row gap-3 items-start bg-white p-3 border border-gray-200 shadow-sm relative">
+                                <div class="flex items-center gap-2"><div class="w-10 h-10 bg-gray-50 border border-gray-100 rounded-lg p-1"><img src="{{v.image}}" class="w-full h-full object-contain"></div><button type="button" onclick="this.closest('.variant-row').remove()" class="p-2 w-8 h-8 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-lg text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></div>
+                                <input type="hidden" name="v_ids[]" value="{{v.id}}"><input type="hidden" name="v_images[]" value="{{v.image}}">
+                                <div class="flex-1 w-full space-y-2"><div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    <div><span class="text-[7px] font-black text-gray-400 uppercase">Name</span><input type="text" name="v_names[]" value="{{v.name}}" class="w-full text-[10px] font-bold border-b border-gray-200 outline-none pb-1"></div>
+                                    <div><span class="text-[7px] font-black text-gray-400 uppercase">USD</span><input type="number" step="any" name="v_prices[]" value="{{v.price}}" class="w-full text-[10px] font-black border-b border-gray-200 outline-none pb-1"></div>
+                                    <div><span class="text-[7px] font-black text-gray-400 uppercase">Stock</span><input type="number" name="v_stocks[]" value="{{v.stock}}" class="w-full text-[10px] font-black border-b border-gray-200 outline-none pb-1"></div>
+                                    <div><span class="text-[7px] font-black text-gray-400 uppercase">Category</span><input type="text" name="v_categories[]" value="{{v.category}}" class="w-full text-[10px] font-bold border-b border-gray-200 outline-none pb-1"></div>
+                                </div></div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-4"><input type="file" name="new_images" multiple class="block w-full text-[9px] bg-white border border-gray-200 p-1 rounded-xl"></div>
+                        <button type="submit" class="w-full btn-taobao py-3.5 mt-4 text-[10px] font-black uppercase">Save Group</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<form id="delete-cat-form" method="POST" class="hidden"></form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleEdit(id) { const item = document.getElementById(`item-${id}`); item.classList.toggle('is-editing'); }
+    function openCatModal() { document.getElementById('cat-modal').classList.remove('hidden'); }
+    function closeCatModal() { document.getElementById('cat-modal').classList.add('hidden'); }
+    function deleteCategory(id) { if(confirm("Delete category?")) { const form = document.getElementById('delete-cat-form'); form.action = `/admin/category/delete/${id}`; form.submit(); } }
+    
+    function filterStore(store) {
+        document.querySelectorAll('.store-flt').forEach(btn => { btn.classList.remove('bg-black', 'text-white'); btn.classList.add('text-gray-400'); });
+        document.getElementById(`flt-${store}`).classList.add('bg-black', 'text-white');
+        document.getElementById(`flt-${store}`).classList.remove('text-gray-400');
+        filterProducts();
+    }
+
+    function filterCategory() { filterProducts(); }
+
+    function filterProducts() {
+        const storeFlt = document.querySelector('.store-flt.bg-black').id.replace('flt-', '');
+        const catFlt = document.getElementById('category-filter').value.toLowerCase();
+        document.querySelectorAll('.product-item').forEach(item => {
+            const mStore = storeFlt === 'All' || item.dataset.store === storeFlt;
+            const mCat = catFlt === 'all' || item.dataset.categories.includes(catFlt);
+            item.style.display = (mStore && mCat) ? 'block' : 'none';
+        });
+    }
+</script>
+{% endblock %}
+
+
+
