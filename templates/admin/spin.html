@@ -1,1 +1,131 @@
-.
+
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+    <section class="lg:col-span-4 space-y-4 md:space-y-6">
+        <div class="bg-gradient-to-br from-[#ff9000] to-[#ff5000] p-4 md:p-6 rounded-2xl md:rounded-[32px] shadow-sm text-white relative overflow-hidden border border-orange-400">
+            <i class="fa-solid fa-wand-magic-sparkles absolute -right-2 -bottom-2 text-7xl text-white/10"></i>
+            <h2 class="font-black text-base md:text-lg mb-1 flex items-center relative z-10"><i class="fa-solid fa-tags text-white mr-2"></i>Smart Auto-Sync</h2>
+            <p class="text-[9px] md:text-[10px] font-bold text-orange-100 uppercase tracking-widest mb-4 relative z-10">Found items tagged with "Lucky Draw"? Link them instantly to the prize pool.</p>
+            <button type="button" onclick="syncLuckyDrawTags(this)" class="w-full bg-white text-[#ff5000] hover:bg-gray-100 py-3 md:py-4 rounded-xl font-black uppercase text-[10px] md:text-[11px] tracking-widest shadow-lg active:scale-95 transition-all relative z-10">
+                <i class="fa-solid fa-rotate mr-1.5"></i> Sync "Lucky Draw" Tag
+            </button>
+        </div>
+        
+        <div class="bg-white p-4 md:p-6 rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 border-t-4 border-t-green-500">
+            <h2 class="font-black text-base md:text-lg mb-1 md:mb-2 flex items-center"><i class="fa-solid fa-money-bill-wave text-green-500 mr-2 text-lg md:text-xl"></i>5x Spin Cash Bonus</h2>
+            <p class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Set pop-up chance (Must total 100%).</p>
+            <form action="/admin/spin/update_rewards" method="POST" class="space-y-3 submit-form">
+                <div class="grid grid-cols-2 sm:grid-cols-2 gap-3">
+                    <div><label class="text-[9px] font-black text-gray-500 uppercase tracking-widest block">0 ៛ (Nothing) %</label><input type="number" step="0.1" name="pct_0" value="{{ reward_config['0'] }}" class="input-box bg-gray-50 font-black py-2"></div>
+                    <div><label class="text-[9px] font-black text-green-600 uppercase tracking-widest block">500 ៛ %</label><input type="number" step="0.1" name="pct_500" value="{{ reward_config['500'] }}" class="input-box bg-green-50 font-black py-2 text-green-700"></div>
+                    <div><label class="text-[9px] font-black text-green-600 uppercase tracking-widest block">1,000 ៛ %</label><input type="number" step="0.1" name="pct_1000" value="{{ reward_config['1000'] }}" class="input-box bg-green-50 font-black py-2 text-green-700"></div>
+                    <div><label class="text-[9px] font-black text-green-600 uppercase tracking-widest block">2,000 ៛ %</label><input type="number" step="0.1" name="pct_2000" value="{{ reward_config['2000'] }}" class="input-box bg-green-50 font-black py-2 text-green-700"></div>
+                    <div><label class="text-[9px] font-black text-green-600 uppercase tracking-widest block">5,000 ៛ %</label><input type="number" step="0.1" name="pct_5000" value="{{ reward_config['5000'] }}" class="input-box bg-green-50 font-black py-2 text-green-700"></div>
+                    <div><label class="text-[9px] font-black text-green-600 uppercase tracking-widest block">10,000 ៛ %</label><input type="number" step="0.1" name="pct_10000" value="{{ reward_config['10000'] }}" class="input-box bg-green-50 font-black py-2 text-green-700"></div>
+                    <div class="col-span-2"><label class="text-[9px] font-black text-green-600 uppercase tracking-widest block">50,000 ៛ (Jackpot) %</label><input type="number" step="0.1" name="pct_50000" value="{{ reward_config['50000'] }}" class="input-box bg-green-50 font-black py-2 text-green-700"></div>
+                </div>
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg transition-all active:scale-95">Save Probabilities</button>
+            </form>
+        </div>
+
+        <!-- Matrix Setup and PIN Generate Forms Here... -->
+        <div class="bg-white p-4 md:p-6 rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 border-t-4 border-t-yellow-400">
+            <h2 class="font-black text-base md:text-lg mb-1 md:mb-2 flex items-center"><i class="fa-solid fa-bolt text-yellow-500 mr-2 text-lg md:text-xl"></i>Mint Play PINs</h2>
+            <form action="/admin/spin/generate_codes" method="POST" class="space-y-3 md:space-y-4">
+                <div class="grid grid-cols-2 gap-2 md:gap-3">
+                    <div><label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Qty</label><input type="number" name="quantity" value="5" min="1" class="input-box bg-gray-50 text-center font-black py-2 md:py-2.5"></div>
+                    <div><label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Value</label>
+                        <select name="value" class="input-box bg-gray-50 cursor-pointer font-black text-indigo-600 text-[10px] md:text-xs py-2 md:py-2.5"><option value="1000">1,000 ៛ (1x)</option><option value="5000">5,000 ៛ (5x)</option></select>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 md:py-4 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg active:scale-95">Generate Batch</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="lg:col-span-8 space-y-4 md:space-y-6">
+        <div class="bg-white rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 p-4 md:p-6 w-full">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-5 gap-3">
+                <div class="flex items-center gap-2">
+                    <h2 class="font-black text-base md:text-lg text-gray-900">Live Engine History</h2>
+                    <span class="bg-red-50 text-red-600 border border-red-200 px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg text-[8px] md:text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 md:gap-2 shadow-sm"><span class="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-red-500 animate-pulse"></span>Feed Active</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto max-h-[300px] overflow-y-auto hide-scrollbar border border-gray-100 rounded-xl md:rounded-2xl w-full relative">
+                <table class="enterprise-table min-w-[500px]">
+                    <thead><tr><th>Time (KH)</th><th>Player ID</th><th>Prize Drawn</th><th>Rarity</th><th class="text-right"><i class="fa-solid fa-trash-can"></i></th></tr></thead>
+                    <tbody id="live-history-tbody" class="text-[11px] md:text-sm font-semibold text-gray-700 divide-y divide-gray-100">
+                        {% for draw in history %}
+                        <tr class="hover:bg-indigo-50/30 transition-colors">
+                            <td class="font-mono text-[9px] text-gray-500">{{ draw.cambodia_time }}</td>
+                            <td><span class="bg-gray-100 border border-gray-200 px-2 py-1 rounded font-mono text-[9px] text-gray-600">{{ draw.player_id }}</span></td>
+                            <td class="font-black text-[10px] md:text-xs">{{ draw.item_name }}</td>
+                            <td><span class="px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest shadow-sm border {% if draw.rarity == 'Legendary' %}bg-yellow-50 text-yellow-600 border-yellow-200{% else %}bg-gray-100 text-gray-600 border-gray-200{% endif %}">{{ draw.rarity }}</span></td>
+                            <td class="text-right"><form action="/admin/spin/history/delete/{{ draw.id }}" method="POST" class="m-0" onsubmit="return confirm('Delete record?')"><button type="submit" class="w-6 h-6 rounded bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 border border-gray-200"><i class="fa-solid fa-xmark text-[10px]"></i></button></form></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 p-4 md:p-6 w-full">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-5 gap-3 md:gap-4">
+                <div><h2 class="font-black text-base md:text-lg">Code Database</h2></div>
+            </div>
+            <div class="overflow-x-auto max-h-[300px] overflow-y-auto hide-scrollbar border border-gray-100 rounded-xl md:rounded-2xl w-full">
+                <table class="enterprise-table min-w-[500px]">
+                    <thead><tr><th>Secure Code</th><th>Value</th><th>Status</th><th>Claimed By</th></tr></thead>
+                    <tbody class="text-[11px] md:text-xs">
+                        {% for code in codes %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="font-mono font-black tracking-widest text-indigo-600">{{ code.code }}</td>
+                            <td class="font-black">{{ code.value }} ៛</td>
+                            <td>{% if code.status == 'Active' %}<span class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">Active</span>{% else %}<span class="bg-gray-100 text-gray-400 border border-gray-200 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">Redeemed</span>{% endif %}</td>
+                            <td class="font-mono text-[9px] text-gray-400">{{ code.redeemed_by if code.redeemed_by else '---' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const allInventoryItems = [ {% for p in global_products %} { id: "{{ p.id }}", category: "{{ p.category|lower if p.category else '' }}", variants: [ {% for v in p.parsed_variants %} { index: {{ loop.index0 }}, category: "{{ v.category|lower if v.category else '' }}" }, {% endfor %} ] }, {% endfor %} ];
+
+    async function syncLuckyDrawTags(btn) {
+        const originalHtml = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Syncing...'; btn.disabled = true;
+        const itemsToSync = [];
+        allInventoryItems.forEach(product => {
+            const pCats = product.category ? product.category.split(',').map(c => c.trim().toLowerCase()) : [];
+            if (product.variants && product.variants.length > 0) {
+                product.variants.forEach(v => {
+                    const vCats = v.category ? v.category.split(',').map(c => c.trim().toLowerCase()) : [];
+                    if (pCats.includes('lucky draw') || vCats.includes('lucky draw')) itemsToSync.push({ id: product.id, variantIndex: v.index });
+                });
+            } else { if (pCats.includes('lucky draw')) itemsToSync.push({ id: product.id, variantIndex: -1 }); }
+        });
+
+        if(itemsToSync.length === 0) { showClientToast("No tags found."); btn.innerHTML = originalHtml; btn.disabled = false; return; }
+
+        let successCount = 0;
+        for (let item of itemsToSync) {
+            try {
+                let formData = new FormData(); formData.append('catalog_items[]', `${item.id}|${item.variantIndex}`); formData.append('rarity', 'Common');
+                await fetch('/admin/spin/add_pool_catalog', { method: 'POST', body: formData });
+                successCount++;
+            } catch(e) {}
+        }
+        btn.innerHTML = `<i class="fa-solid fa-check mr-1.5"></i> Synced ${successCount} Items`; setTimeout(() => { window.location.reload(); }, 1000);
+    }
+</script>
+{% endblock %}
+
+
+
