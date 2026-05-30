@@ -83,72 +83,6 @@
         <span id="client-toast-msg">Success</span>
     </div>
 
-    <!-- Manual Receipt Creation Modal -->
-    <div id="manual-receipt-modal" class="fixed inset-0 z-[5000] flex items-center justify-center p-4 hidden">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeManualReceiptModal()"></div>
-        <div class="bg-white w-full max-w-lg rounded-[24px] relative shadow-2xl flex flex-col overflow-hidden animate-slide-up max-h-[90vh]">
-            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h2 class="font-black text-lg text-gray-900"><i class="fa-solid fa-file-invoice text-blue-500 mr-2"></i>Create Custom Receipt</h2>
-                <button onclick="closeManualReceiptModal()" class="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center hover:bg-red-50 hover:text-red-600 shadow-sm"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            
-            <form action="/admin/order/manual_create" method="POST" enctype="multipart/form-data" class="p-5 overflow-y-auto hide-scrollbar flex-1 submit-form space-y-4">
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Customer Name</label>
-                        <input type="text" name="customer_name" required placeholder="John Doe" class="input-box text-xs">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Phone Number</label>
-                        <input type="text" name="customer_phone" placeholder="012 345 678" class="input-box text-xs">
-                    </div>
-                </div>
-
-                <div class="space-y-1">
-                    <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Address</label>
-                    <input type="text" name="customer_address" placeholder="Delivery address..." class="input-box text-xs">
-                </div>
-
-                <div class="space-y-1">
-                    <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1"><i class="fa-solid fa-image mr-1"></i> Attach Receipt Photo (Optional)</label>
-                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-4 bg-gray-50 text-center hover:bg-gray-100 transition-colors cursor-pointer" onclick="document.getElementById('receipt-photo-input').click()">
-                        <i class="fa-solid fa-cloud-arrow-up text-xl text-gray-400 mb-2"></i>
-                        <p class="text-[10px] font-black text-gray-600 uppercase">Click to Upload Image</p>
-                        <input type="file" name="receipt_photo" id="receipt-photo-input" accept="image/*" class="hidden">
-                    </div>
-                </div>
-
-                <div class="border-t border-gray-100 pt-4 space-y-4">
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Description of purchase (Note)</label>
-                        <textarea name="item_titles[]" rows="3" required placeholder="Example: 2x Custom Bracelets, 1x Lego Set..." class="input-box text-xs resize-none"></textarea>
-                        <input type="hidden" name="item_qtys[]" value="1">
-                    </div>
-                    
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="space-y-1">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Subtotal ($)</label>
-                            <input type="number" id="manual-subtotal" name="item_prices[]" step="any" placeholder="0.00" class="input-box text-xs" required oninput="calcManualTotal()">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Delivery ($)</label>
-                            <input type="number" id="manual-delivery" name="delivery_fee" step="any" placeholder="0.00" value="0.00" class="input-box text-xs" required oninput="calcManualTotal()">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Total ($)</label>
-                            <input type="number" id="manual-total" step="any" placeholder="0.00" class="input-box text-xs bg-gray-50" readonly>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="pt-2">
-                    <button type="submit" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-black uppercase text-[11px] tracking-widest shadow-lg hover:bg-blue-700 active:scale-95 transition-all"><i class="fa-solid fa-check mr-2"></i> Save & Generate Receipt</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <header class="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
         <div class="flex items-center gap-3 md:gap-4">
             <a href="/" class="w-8 h-8 md:w-10 md:h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition-all shadow-inner"><i class="fa-solid fa-store text-xs md:text-base"></i></a>
@@ -158,15 +92,7 @@
             </div>
         </div>
         <div class="flex gap-4 md:gap-5 items-center">
-            <button onclick="switchView('orders')" class="relative text-gray-400 hover:text-black transition-colors">
-                <i class="fa-solid fa-bell text-lg md:text-xl"></i>
-                {% set pending_count = orders|selectattr('status', 'equalto', 'Pending')|list|length %}
-                {% if pending_count > 0 %}
-                <span class="absolute -top-1 -right-1 w-2.5 h-2.5 md:w-3 md:h-3 bg-red-500 rounded-full border-2 border-white animate-pulse shadow-sm"></span>
-                {% endif %}
-            </button>
-            <div class="h-5 md:h-6 w-px bg-gray-200"></div>
-            <a href="/admin/logout" class="text-gray-400 hover:text-red-500 text-[10px] md:text-xs font-black uppercase flex items-center gap-1.5 md:gap-2 transition-colors"><i class="fa-solid fa-power-off text-base md:text-lg"></i> <span class="hidden sm:inline">Logout</span></a>
+            <!-- Emptied as requested (No Bell, No Logout) -->
         </div>
     </header>
 
@@ -180,7 +106,6 @@
             </button>
             <button onclick="switchView('orders')" id="tab-orders" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all relative">
                 <i class="fa-solid fa-receipt mr-1 md:mr-1.5"></i> Orders
-                {% if pending_count > 0 %}<span class="bg-[#ff5000] text-white px-1.5 py-0.5 rounded-full text-[7px] absolute top-1 right-1">{{ pending_count }}</span>{% endif %}
             </button>
             <button onclick="switchView('spin')" id="tab-spin" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all">
                 <i class="fa-solid fa-gamepad mr-1 md:mr-1.5"></i> Minifig Spin
@@ -204,7 +129,7 @@
                 <div class="bg-white rounded-2xl md:rounded-[24px] p-4 md:p-6 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between cursor-pointer hover:border-[#ff5000] hover:shadow-md transition-all group gap-2" onclick="switchView('orders')">
                     <div class="order-2 sm:order-1">
                         <p class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5 md:mb-1 group-hover:text-[#ff5000] transition-colors">Action Required</p>
-                        <h3 class="text-2xl md:text-3xl font-black text-gray-900" id="stat-pending-count">{{ pending_count }}</h3>
+                        <h3 class="text-2xl md:text-3xl font-black text-gray-900" id="stat-pending-count">{{ orders|selectattr('status', 'equalto', 'Pending')|list|length }}</h3>
                         <p class="text-[10px] md:text-xs font-bold text-gray-600 mt-0.5">Pending Orders</p>
                     </div>
                     <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 flex items-center justify-center text-[#ff5000] text-lg md:text-2xl group-hover:scale-110 transition-transform order-1 sm:order-2"><i class="fa-solid fa-clock"></i></div>
@@ -229,7 +154,7 @@
                 </div>
             </div>
 
-            <!-- Financial Overview Section (Cleaned up) -->
+            <!-- Financial Overview Section -->
             <div class="bg-white rounded-[24px] md:rounded-[32px] p-6 md:p-8 shadow-sm border border-gray-200 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-full blur-3xl -z-10 opacity-50 transform translate-x-1/2 -translate-y-1/2"></div>
                 
@@ -512,8 +437,7 @@
                     <p class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 md:mt-1">Process and fulfill requests.</p>
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                    <!-- Create Receipt Button -->
-                    <button onclick="openManualReceiptModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2 active:scale-95"><i class="fa-solid fa-plus text-sm"></i> Create Receipt</button>
+                    <!-- Create Receipt Button REMOVED -->
                 </div>
             </div>
 
@@ -1249,17 +1173,7 @@
         // Initialize financials
         calculateIncome();
 
-        // --- 3. MANUAL RECEIPT MODAL ---
-        function openManualReceiptModal() { document.getElementById('manual-receipt-modal').classList.remove('hidden'); }
-        function closeManualReceiptModal() { document.getElementById('manual-receipt-modal').classList.add('hidden'); }
-        
-        function calcManualTotal() {
-            const sub = parseFloat(document.getElementById('manual-subtotal').value) || 0;
-            const del = parseFloat(document.getElementById('manual-delivery').value) || 0;
-            document.getElementById('manual-total').value = (sub + del).toFixed(2);
-        }
-
-        // --- 4. PDF & IMAGE EXPORT LOGIC ---
+        // --- 3. PDF & IMAGE EXPORT LOGIC ---
         window.jsPDF = window.jspdf.jsPDF; 
 
         function toggleReceiptEdit(orderId) {
@@ -1385,7 +1299,7 @@
         }
 
 
-        // --- 5. BACKGROUND LIVE SYNC LOGIC ---
+        // --- 4. BACKGROUND LIVE SYNC LOGIC ---
         function startLiveSync() {
             setInterval(() => {
                 if (activeTab !== 'dashboard') return;
@@ -1421,7 +1335,7 @@
         startLiveSync();
 
 
-        // --- 6. MINIFIGURE SPIN LOGIC ---
+        // --- 5. MINIFIGURE SPIN LOGIC ---
         const allInventoryItems = [
             {% for p in products %}
             {
@@ -1508,7 +1422,7 @@
         }
 
 
-        // --- 7. LIVE STOCK CENTER LOGIC ---
+        // --- 6. LIVE STOCK CENTER LOGIC ---
         let showOnlyOutOfStock = false;
         let pendingStockChanges = {};
         let matrixDirtyItems = new Set();
@@ -1658,7 +1572,7 @@
         }
 
 
-        // --- 8. PRIZE MATRIX BULK SAVE LOGIC ---
+        // --- 7. PRIZE MATRIX BULK SAVE LOGIC ---
         function markMatrixDirty(el) { 
             matrixDirtyItems.add(el.closest('.matrix-item-container')); 
             document.getElementById('save-matrix-btn').disabled = false; 
@@ -1690,7 +1604,7 @@
             btn.disabled = true;
         }
 
-        // --- 9. CATEGORY AND IMAGE MODAL HELPERS ---
+        // --- 8. CATEGORY AND IMAGE MODAL HELPERS ---
         function openImageViewer(src) { document.getElementById('viewer-img').src = src; document.getElementById('image-viewer-modal').classList.remove('hidden'); document.getElementById('image-viewer-modal').classList.add('flex'); }
         function closeImageViewer() { document.getElementById('image-viewer-modal').classList.add('hidden'); document.getElementById('image-viewer-modal').classList.remove('flex'); }
         
@@ -1714,3 +1628,5 @@
     </script>
 </body>
 </html>
+
+
