@@ -228,6 +228,13 @@ def shop(): return render_template('bracelet.html')
 @app.route('/custom-bracelet')
 def custom_bracelet(): return render_template('custom_bracelet.html')
 
+# !!! FIXED: THIS WAS MISSING IN THE LAST UPDATE !!!
+@app.route('/mystery-box')
+@app.route('/lucky-draw')
+@app.route('/spin')
+def mystery_box(): 
+    return render_template('lucky_draw.html')
+
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
@@ -288,14 +295,12 @@ def admin_inventory():
     unique_cats = db.session.query(Product.category, Product.store).distinct().all()
     for c_name, c_store in unique_cats:
         if c_name:
-            # Handles comma separated tags perfectly
             for sub_cat in c_name.split(','):
                 sub_cat = sub_cat.strip()
                 if sub_cat and sub_cat != "Other" and not Category.query.filter_by(name=sub_cat, store=c_store).first():
                     db.session.add(Category(name=sub_cat, store=c_store, sort_order=999))
     db.session.commit()
     
-    # 2. LOAD INVENTORY
     products = Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
     for p in products: p.parsed_variants = json.loads(p.variants) if p.variants else []
     categories = Category.query.order_by(Category.sort_order).all()
@@ -534,6 +539,41 @@ def get_api(store_name):
     except Exception as e: return jsonify({"error": str(e)}), 500
 
 # --- 7. GAME API & REWARD SYSTEM ---
+
+def get_player():
+    if 'player_id' not in session:
+        new_id = str(random.randint(10000000, 99999999))
+        session['player_id'] = new_id
+        db.session.add(PlayerSession(player_id=new_id, balance=0))
+        db.session.commit()
+    
+    player = PlayerSession.query.filter_by(player_id=session['player_id']).first()
+    if not player:
+        player = PlayerSession(player_id=session['player_id'], balance=0)
+        db.session.add(player)
+        db.session.commit()
+    return player
+
+@app.route('/api/spin/balance', methods=['GET'])
+def get_balance():
+    player = get_player()
+    return jsonify({"balance": player.balance, "player_id": player.player_id})
+
+@app.route('/api/spin/redeem', methods=['POST'])
+def redeem_riel_code():
+    player = get_player()
+    code_input = request.json.get('code', '').strip().upper()
+    code_entry = RedeemCode.query.filter_by(code=code_input).first()
+    
+    if not code_entry: return jsonify({"error": "Invalid Code"}), 400
+    if code_entry.status == "Redeemed": return jsonify({"error": "Code already used"}), 400
+        
+    code_entry.status = "Redeemed"
+    code_entry.redeemed_by = player.player_id
+    player.balance += code_entry.value
+    db.session.commit()
+    return jsonify({"success": True, "new_balance": player.balance, "value": code_entry.value})
+
 @app.route('/api/spin/play', methods=['POST'])
 def execute_spin():
     player = get_player()
