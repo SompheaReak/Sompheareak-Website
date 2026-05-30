@@ -3,12 +3,13 @@
 
 {% block content %}
 <div class="max-w-[1400px] mx-auto">
+    
     <div class="bg-white rounded-2xl md:rounded-[24px] border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
         <div>
             <h2 class="font-black text-lg md:text-xl text-gray-900">Order Management</h2>
             <p class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 md:mt-1">Process and fulfill requests.</p>
         </div>
-        <!-- No Create Receipt Button Here -->
+        <!-- Create Receipt Button Removed -->
     </div>
 
     {% if orders|length == 0 %}
@@ -19,90 +20,157 @@
     </div>
     {% endif %}
 
+    <!-- RECEIPT GRID LAYOUT -->
     <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
     {% for order in orders %}
-    {% set is_completed = (order.status == 'Completed' or order.status == 'completed') %}
-    
-    <div id="receipt-card-{{ order.id }}" class="bg-white rounded-xl border order-data-card shadow-sm p-5 md:p-6 space-y-4 relative transition-all duration-300 {% if is_completed %}border-gray-200 bg-gray-50/50 opacity-80{% else %}border-[#ff5000] ring-1 ring-[#ff5000]/20{% endif %} max-w-sm mx-auto w-full" data-order-id="{{ order.id }}" data-status="{{ order.status }}" data-customer="{{ order.customer_name }}" data-phone="{{ order.customer_phone }}" data-total="{{ order.total_usd }}" data-date="{{ order.timestamp.strftime('%Y-%m-%d') }}">
+        {% set is_completed = (order.status == 'Completed' or order.status == 'completed') %}
         
-        <div class="absolute top-4 right-4 z-10 flex flex-col items-end gap-1">
-            <span class="px-2 py-1 rounded border text-[8px] font-black uppercase tracking-widest shadow-sm {% if is_completed %}bg-green-50 text-green-600 border-green-200{% elif order.status == 'Pending' %}bg-[#ff5000] text-white border-orange-600 animate-pulse{% else %}bg-gray-100 text-gray-600 border-gray-200{% endif %}">{{ order.status }}</span>
-        </div>
-
-        <div class="text-center pb-4 border-b-2 border-dashed border-gray-200 pt-2 relative">
-            <h2 class="font-black text-[15px] uppercase tracking-wide text-gray-900 font-['Moul']">សម្ភារៈ - Somphea Reak</h2>
-            <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Official Receipt</p>
-            <div class="mt-3 inline-flex flex-col items-center justify-center bg-orange-50 border border-orange-100 rounded-lg px-4 py-2 shadow-sm w-full max-w-[220px]">
-                <div class="flex items-center justify-between w-full border-b border-orange-200/50 pb-1 mb-1">
-                    <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Order ID</span>
-                    <span class="text-[10px] text-gray-800 font-mono font-black">#{{ order.id }}</span>
-                </div>
-                <div class="flex items-center justify-between w-full">
-                    <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Date</span>
-                    <span class="text-[9px] text-[#ff5000] font-black uppercase"><i class="fa-regular fa-clock mr-1"></i>{{ order.timestamp.strftime('%d %b %Y') }}</span>
-                </div>
+        <!-- INDIVIDUAL RECEIPT CARD -->
+        <div id="receipt-card-{{ order.id }}" class="bg-white rounded-xl border order-data-card shadow-sm p-5 md:p-6 space-y-4 relative transition-all duration-300 {% if is_completed %}border-gray-200 bg-gray-50/50 opacity-80{% else %}border-[#ff5000] ring-1 ring-[#ff5000]/20{% endif %} max-w-sm mx-auto w-full" data-order-id="{{ order.id }}" data-status="{{ order.status }}" data-customer="{{ order.customer_name }}" data-phone="{{ order.customer_phone }}" data-total="{{ order.total_usd }}" data-date="{{ order.timestamp.strftime('%Y-%m-%d') }}">
+            
+            <!-- Status Badge -->
+            <div class="absolute top-4 right-4 z-10 flex flex-col items-end gap-1">
+                <span class="px-2 py-1 rounded border text-[8px] font-black uppercase tracking-widest shadow-sm {% if is_completed %}bg-green-50 text-green-600 border-green-200{% elif order.status == 'Pending' %}bg-[#ff5000] text-white border-orange-600 animate-pulse{% else %}bg-gray-100 text-gray-600 border-gray-200{% endif %}">{{ order.status }}</span>
             </div>
-        </div>
 
-        <div class="space-y-2 pb-4 border-b-2 border-dashed border-gray-200 text-[11px] text-gray-700">
-            <div class="flex justify-between items-center"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px]">Customer</span> <span class="font-black text-gray-900 editable" contenteditable="false">{{ order.customer_name }}</span></div>
-            <div class="flex justify-between items-center"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px]">Phone</span> <a href="tel:{{ order.customer_phone }}" class="font-black text-blue-600 editable" contenteditable="false">{{ order.customer_phone }}</a></div>
-            <div class="flex justify-between items-start gap-4"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px] shrink-0 mt-0.5">Address</span> <span class="font-black text-right editable" contenteditable="false">{{ order.customer_address }}</span></div>
-        </div>
-
-        <div class="space-y-4 pb-4 border-b-2 border-dashed border-gray-200">
-            <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3 flex justify-between">
-                <span>Description</span><span>Amount</span>
-            </div>
-            {% set subtotal_usd = namespace(value=0) %}
-            {% for item in order.parsed_items %}
-                {% if item.image != "hidden" %}
-                    {% set item_price = item.price | default(0) | float %}
-                    {% set item_total_usd = item_price * item.qty %}
-                    {% set subtotal_usd.value = subtotal_usd.value + item_total_usd %}
-                    
-                    <div class="flex justify-between items-start gap-2">
-                        <div class="flex-1 min-w-0">
-                            <p class="font-black text-[11px] text-gray-900 leading-tight truncate">{{ item.title }} x{{item.qty}}</p>
-                            <p class="text-[9px] text-gray-500 font-medium truncate mt-0.5">{{ item.style }}</p>
-                        </div>
-                        <div class="text-right shrink-0">
-                            <div class="font-black text-[12px] text-gray-900 flex items-center justify-end gap-0.5">$<span class="item-total-usd px-1">{{ "{:,.2f}".format(item_total_usd) }}</span></div>
-                            <div class="font-bold text-[9px] text-gray-400 item-total-khr mt-0.5">{{ "{:,.0f}".format(item_total_usd * 4000) }} ៛</div>
-                        </div>
+            <!-- Receipt Header (Logo & Brand) -->
+            <div class="text-center pb-4 border-b-2 border-dashed border-gray-200 pt-2 relative">
+                <img src="/static/images/logo.jpg" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=ff5000&color=fff'" class="w-14 h-14 rounded-full mx-auto mb-2 object-cover shadow-sm border border-gray-100">
+                <h2 class="font-black text-[15px] uppercase tracking-wide text-gray-900 font-['Moul']">សម្ភារៈ - Somphea Reak</h2>
+                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Official Receipt</p>
+                
+                <div class="mt-3 inline-flex flex-col items-center justify-center bg-orange-50 border border-orange-100 rounded-lg px-4 py-2 shadow-sm w-full max-w-[220px]">
+                    <div class="flex items-center justify-between w-full border-b border-orange-200/50 pb-1 mb-1">
+                        <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Order ID</span>
+                        <span class="text-[10px] text-gray-800 font-mono font-black">#{{ order.id }}</span>
                     </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-
-        {% set delivery_usd = order.total_usd - subtotal_usd.value %}
-        {% if delivery_usd < 0.01 %}{% set delivery_usd = 0 %}{% endif %}
-
-        <div class="space-y-1.5 text-[11px]">
-            <div class="flex justify-between items-center text-gray-600"><span class="font-bold uppercase tracking-widest text-[9px]">Subtotal</span><span class="font-black receipt-subtotal-usd">${{ "{:,.2f}".format(subtotal_usd.value) }}</span></div>
-            <div class="flex justify-between items-center text-gray-600"><span class="font-bold uppercase tracking-widest text-[9px]">Delivery Fee</span><div class="font-black text-[#ea580c]">$<span class="delivery-usd px-1">{{ "{:,.2f}".format(delivery_usd) }}</span></div></div>
-            <div class="flex justify-between items-end border-t-2 border-dashed border-gray-200 pt-3 mt-2"><span class="font-black uppercase tracking-widest text-[11px] text-gray-900 mb-1">Total Due</span>
-                <div class="text-right"><div class="font-black text-xl text-[#ea580c]">$<span class="grand-total-usd">{{ "{:,.2f}".format(order.total_usd) }}</span></div></div>
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Date/Time</span>
+                        <span class="text-[9px] text-[#ff5000] font-black uppercase"><i class="fa-regular fa-clock mr-1"></i>{{ order.timestamp.strftime('%d %b %Y, %I:%M %p') }}</span>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <div class="action-buttons flex gap-2 pt-2 border-t border-gray-100 mt-4">
-            <button type="button" onclick="generateReceiptPDF({{ order.id }})" title="Save Receipt PDF" class="w-10 h-10 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white flex items-center justify-center transition-all border border-red-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-file-pdf text-sm"></i></button>
-            <button type="button" onclick="generateReceiptImage({{ order.id }})" title="Save Receipt Image" class="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl hover:bg-[#ff5000] hover:text-white flex items-center justify-center transition-all border border-orange-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-image text-sm"></i></button>
+            <!-- Customer Info -->
+            <div class="space-y-2 pb-4 border-b-2 border-dashed border-gray-200 text-[11px] text-gray-700">
+                <div class="flex justify-between items-center"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px]">Customer</span> <span class="font-black text-gray-900 editable" contenteditable="false">{{ order.customer_name }}</span></div>
+                <div class="flex justify-between items-center"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px]">Phone</span> <a href="tel:{{ order.customer_phone }}" class="font-black text-blue-600 editable" contenteditable="false">{{ order.customer_phone }}</a></div>
+                <div class="flex justify-between items-start gap-4"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px] shrink-0 mt-0.5">Address</span> <span class="font-black text-right editable" contenteditable="false">{{ order.customer_address }}</span></div>
+            </div>
 
-            {% if is_completed %}
-                <button type="button" disabled class="flex-1 bg-gray-100 text-gray-400 h-10 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-inner cursor-not-allowed flex items-center justify-center border border-gray-200"><i class="fa-solid fa-check-circle mr-1"></i> Completed</button>
-            {% else %}
-                <form action="/admin/order/status/{{ order.id }}/Completed" method="POST" class="flex-1 m-0 h-10" onsubmit="return confirm('Mark as finished? This will deduct stock permanently.')">
-                    <button type="submit" class="w-full h-full bg-[#10b981] text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:bg-[#059669] transition-transform active:scale-95 flex items-center justify-center"><i class="fa-solid fa-box-open mr-1"></i> Fulfill</button>
-                </form>
+            <!-- Items -->
+            <div class="space-y-4 pb-4 border-b-2 border-dashed border-gray-200">
+                <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3 flex justify-between">
+                    <span>Description</span>
+                    <span>Amount</span>
+                </div>
+                
+                {% set subtotal_usd = namespace(value=0) %}
+                {% for item in order.parsed_items %}
+                    {% if item.image != "hidden" %}
+                        {% set item_price = item.price | default(0) | float %}
+                        {% set item_total_usd = item_price * item.qty %}
+                        {% set subtotal_usd.value = subtotal_usd.value + item_total_usd %}
+                        
+                        <div class="flex flex-col gap-2 relative group/item">
+                            {% if "Custom DIY Bracelet" in item.title %}
+                                {% if item.image %}
+                                <div class="w-full flex justify-center py-2 rounded-lg overflow-hidden border border-gray-200 cursor-zoom-in hover:opacity-90 transition-opacity bg-gray-50" onclick="openImageViewer('{{ item.image }}')">
+                                    <img src="{{ item.image }}" class="w-full h-auto max-h-[180px] object-contain">
+                                </div>
+                                {% endif %}
+                                
+                                <div class="flex justify-between items-start gap-2">
+                                    <div class="flex-1">
+                                        <p class="font-black text-[11px] text-gray-900 leading-tight">DIY Bracelet <span class="text-[#ff5000]">x{{ item.qty }}</span></p>
+                                        <div class="text-[9px] text-gray-500 font-medium mt-1 leading-relaxed">
+                                            {% set parts = item.style.split(' | ') %}
+                                            {% for part in parts %}
+                                                <div class="truncate">{{ part }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-black text-[12px] text-gray-900 flex items-center justify-end gap-0.5">$<span class="item-total-usd editable px-1" contenteditable="false" onblur="recalculateReceipt({{ order.id }})">{{ "{:,.2f}".format(item_total_usd) }}</span></div>
+                                        <div class="font-bold text-[9px] text-gray-400 item-total-khr mt-0.5">{{ "{:,.0f}".format(item_total_usd * 4000) }} ៛</div>
+                                    </div>
+                                </div>
+
+                            {% else %}
+                                <div class="flex justify-between items-start gap-2">
+                                    {% if item.image %}
+                                    <div class="w-10 h-10 rounded border border-gray-200 bg-gray-50 shrink-0 cursor-zoom-in" onclick="openImageViewer('{{ item.image }}')">
+                                        <img src="{{ item.image }}" class="w-full h-full object-contain p-0.5">
+                                    </div>
+                                    {% endif %}
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-black text-[11px] text-gray-900 leading-tight truncate editable" contenteditable="false">{{ item.title | default(item.name) }}</p>
+                                        {% if item.style or item.variantName %}
+                                        <p class="text-[9px] text-gray-500 font-medium truncate mt-0.5 editable" contenteditable="false">{{ item.style | default(item.variantName) }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-right shrink-0">
+                                        <div class="font-black text-[12px] text-gray-900 flex items-center justify-end gap-0.5">$<span class="item-total-usd editable px-1" contenteditable="false" onblur="recalculateReceipt({{ order.id }})">{{ "{:,.2f}".format(item_total_usd) }}</span></div>
+                                        <div class="font-bold text-[9px] text-gray-400 item-total-khr mt-0.5">{{ "{:,.0f}".format(item_total_usd * 4000) }} ៛</div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            {% set delivery_usd = order.total_usd - subtotal_usd.value %}
+            {% if delivery_usd < 0.01 %}{% set delivery_usd = 0 %}{% endif %}
+
+            <!-- Totals -->
+            <div class="space-y-1.5 text-[11px]">
+                <div class="flex justify-between items-center text-gray-600">
+                    <span class="font-bold uppercase tracking-widest text-[9px]">Subtotal</span>
+                    <span class="font-black receipt-subtotal-usd">${{ "{:,.2f}".format(subtotal_usd.value) }}</span>
+                </div>
+                <div class="flex justify-between items-center text-gray-600">
+                    <span class="font-bold uppercase tracking-widest text-[9px]">Delivery Fee</span>
+                    <div class="font-black flex items-center justify-end gap-0.5 text-[#ea580c]">$<span class="delivery-usd editable px-1" contenteditable="false" onblur="recalculateReceipt({{ order.id }})">{{ "{:,.2f}".format(delivery_usd) }}</span></div>
+                </div>
+                <div class="flex justify-between items-end border-t-2 border-dashed border-gray-200 pt-3 mt-2">
+                    <span class="font-black uppercase tracking-widest text-[11px] text-gray-900 mb-1">Total Due</span>
+                    <div class="text-right">
+                        <div class="font-black text-xl text-[#ea580c] flex items-center justify-end gap-0.5">$<span class="grand-total-usd">{{ "{:,.2f}".format(order.total_usd) }}</span></div>
+                        <div class="font-bold text-[10px] text-gray-500 mt-0.5"><span class="grand-total-khr">{{ "{:,.0f}".format(order.total_usd * 4000) }}</span> ៛</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Photo Display -->
+            {% if order.receipt_photo %}
+            <div class="mt-4 pt-4 border-t border-gray-100">
+                <span class="font-bold text-gray-400 uppercase tracking-widest text-[9px] mb-2 block"><i class="fa-solid fa-paperclip mr-1"></i> Attached Photo</span>
+                <img src="{{ order.receipt_photo }}" class="w-full h-auto max-h-40 object-cover rounded-lg border border-gray-200 cursor-zoom-in hover:opacity-90 transition-opacity" onclick="openImageViewer('{{ order.receipt_photo }}')">
+            </div>
             {% endif %}
 
-            <form action="/admin/order/delete/{{ order.id }}" method="POST" onsubmit="return confirm('Delete order history permanently?')" class="m-0 h-10 shrink-0">
-                <button type="submit" class="w-10 h-full bg-gray-50 text-gray-400 border border-gray-200 rounded-xl hover:text-red-500 hover:bg-red-50 hover:border-red-200 flex items-center justify-center transition-all shadow-sm"><i class="fa-solid fa-trash-can text-sm"></i></button>
-            </form>
+            <!-- Action Buttons -->
+            <div class="action-buttons flex gap-2 pt-2 border-t border-gray-100 mt-4">
+                <button type="button" onclick="toggleReceiptEdit({{ order.id }})" title="Edit Prices & Text" class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all border border-blue-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-pen text-sm"></i></button>
+                <!-- PDF BUTTON -->
+                <button type="button" onclick="generateReceiptPDF({{ order.id }})" title="Save Receipt PDF" class="w-10 h-10 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white flex items-center justify-center transition-all border border-red-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-file-pdf text-sm"></i></button>
+                <!-- JPG BUTTON -->
+                <button type="button" onclick="generateReceiptImage({{ order.id }})" title="Save Receipt Image" class="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl hover:bg-[#ff5000] hover:text-white flex items-center justify-center transition-all border border-orange-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-image text-sm"></i></button>
+
+                {% if is_completed %}
+                    <button type="button" disabled class="flex-1 bg-gray-100 text-gray-400 h-10 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-inner cursor-not-allowed flex items-center justify-center border border-gray-200"><i class="fa-solid fa-check-circle mr-1"></i> Completed</button>
+                {% else %}
+                    <form action="/admin/order/status/{{ order.id }}/Completed" method="POST" class="flex-1 m-0 h-10" onsubmit="return confirm('Mark as finished? This will deduct stock permanently.')">
+                        <button type="submit" class="w-full h-full bg-[#10b981] text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:bg-[#059669] transition-transform active:scale-95 flex items-center justify-center"><i class="fa-solid fa-box-open mr-1"></i> Fulfill</button>
+                    </form>
+                {% endif %}
+
+                <form action="/admin/order/delete/{{ order.id }}" method="POST" onsubmit="return confirm('WARNING: Delete order history permanently?')" class="m-0 h-10 shrink-0">
+                    <button type="submit" class="w-10 h-full bg-gray-50 text-gray-400 border border-gray-200 rounded-xl hover:text-red-500 hover:bg-red-50 hover:border-red-200 flex items-center justify-center transition-all shadow-sm"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                </form>
+            </div>
         </div>
-    </div>
     {% endfor %}
     </div>
 </div>
@@ -110,29 +178,133 @@
 
 {% block scripts %}
 <script>
-    window.jsPDF = window.jspdf.jsPDF; 
-    function prepareReceiptForCapture(card) { const actionRow = card.querySelector('.action-buttons'); const origDisplay = actionRow.style.display; actionRow.style.display = 'none'; card.style.borderRadius = '0px'; card.style.border = 'none'; card.style.boxShadow = 'none'; card.classList.remove('ring-1', 'border-[#ff5000]'); return { actionRow, origDisplay }; }
-    function restoreReceiptAfterCapture(card, styles) { styles.actionRow.style.display = styles.origDisplay; card.style.borderRadius = '0.75rem'; card.style.border = ''; card.style.boxShadow = ''; }
-    
+    // Make sure html2canvas and jsPDF are loaded globally in base.html
+    if (window.jspdf && window.jspdf.jsPDF) {
+        window.jsPDF = window.jspdf.jsPDF; 
+    }
+
+    function toggleReceiptEdit(orderId) {
+        const card = document.getElementById(`receipt-card-${orderId}`);
+        if (!card) return;
+        
+        const editables = card.querySelectorAll('.editable');
+        const editBtnIcon = card.querySelector('.action-buttons button:first-child i');
+        
+        if (card.classList.contains('is-editing-receipt')) {
+            // SAVE STATE
+            editables.forEach(el => el.contentEditable = "false"); 
+            card.classList.remove('is-editing-receipt'); 
+            editBtnIcon.className = "fa-solid fa-pen text-sm";
+            showClientToast("Receipt Updated Visually");
+        } else { 
+            // EDITING STATE
+            editables.forEach(el => el.contentEditable = "true"); 
+            card.classList.add('is-editing-receipt'); 
+            editBtnIcon.className = "fa-solid fa-save text-sm text-[#ff5000]";
+            if(editables.length > 0) editables[0].focus(); 
+        }
+    }
+
+    function recalculateReceipt(orderId) {
+        const card = document.getElementById(`receipt-card-${orderId}`);
+        if (!card) return;
+
+        let subtotal = 0;
+        const itemTotals = card.querySelectorAll('.item-total-usd');
+        itemTotals.forEach(item => {
+            subtotal += parseFloat(item.innerText) || 0;
+        });
+
+        const delivery = parseFloat(card.querySelector('.delivery-usd').innerText) || 0;
+        const grandTotal = subtotal + delivery;
+
+        card.querySelector('.receipt-subtotal-usd').innerText = "$" + subtotal.toFixed(2);
+        card.querySelector('.grand-total-usd').innerText = grandTotal.toFixed(2);
+        card.querySelector('.grand-total-khr').innerText = (grandTotal * 4000).toLocaleString();
+        
+        card.dataset.total = grandTotal.toFixed(2);
+        
+        // If calculateIncome exists (e.g. from dashboard script loaded globally), update it
+        if(typeof calculateIncome === 'function') calculateIncome();
+    }
+
+    function prepareReceiptForCapture(card) {
+        const actionRow = card.querySelector('.action-buttons');
+        const origDisplay = actionRow.style.display;
+        const origRadius = card.style.borderRadius;
+        const origBorder = card.style.border;
+        const origShadow = card.style.boxShadow;
+        
+        actionRow.style.display = 'none';
+        card.style.borderRadius = '0px';
+        card.style.border = 'none';
+        card.style.boxShadow = 'none';
+        card.classList.remove('ring-1', 'border-[#ff5000]');
+
+        return { actionRow, origDisplay, origRadius, origBorder, origShadow };
+    }
+
+    function restoreReceiptAfterCapture(card, styles) {
+        styles.actionRow.style.display = styles.origDisplay; 
+        card.style.borderRadius = styles.origRadius;
+        card.style.border = styles.origBorder;
+        card.style.boxShadow = styles.origShadow;
+    }
+
     function generateReceiptPDF(orderId) {
-        const receiptEl = document.getElementById(`receipt-card-${orderId}`); const styles = prepareReceiptForCapture(receiptEl); showClientToast("Generating PDF...");
+        const receiptEl = document.getElementById(`receipt-card-${orderId}`);
+        const styles = prepareReceiptForCapture(receiptEl);
+        
+        showClientToast("Generating Sheet-by-Sheet PDF...");
+
         html2canvas(receiptEl, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false }).then(canvas => {
-            const imgData = canvas.toDataURL('image/jpeg', 1.0); const pdf = new jsPDF('p', 'mm', 'a4'); const pdfWidth = pdf.internal.pageSize.getWidth(); const pageHeight = pdf.internal.pageSize.getHeight();
-            const imgHeightPdf = (canvas.height * pdfWidth) / canvas.width; let heightLeft = imgHeightPdf; let position = 0;
-            pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeightPdf); heightLeft -= pageHeight;
-            while (heightLeft > 0) { position -= pageHeight; pdf.addPage(); pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeightPdf); heightLeft -= pageHeight; }
-            pdf.save(`SompheaReak_Receipt_#${orderId}.pdf`); restoreReceiptAfterCapture(receiptEl, styles);
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            
+            const imgWidthPdf = pdfWidth;
+            const imgHeightPdf = (canvas.height * pdfWidth) / canvas.width;
+            
+            let heightLeft = imgHeightPdf;
+            let position = 0;
+
+            pdf.addImage(imgData, 'JPEG', 0, position, imgWidthPdf, imgHeightPdf);
+            heightLeft -= pageHeight;
+
+            while (heightLeft > 0) {
+                position -= pageHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidthPdf, imgHeightPdf);
+                heightLeft -= pageHeight;
+            }
+            
+            pdf.save(`SompheaReak_Receipt_#${orderId}.pdf`);
+            restoreReceiptAfterCapture(receiptEl, styles);
+        }).catch(e => {
+            showClientToast("PDF Generation Failed", true);
+            restoreReceiptAfterCapture(receiptEl, styles);
         });
     }
 
     function generateReceiptImage(orderId) {
-        const receiptEl = document.getElementById(`receipt-card-${orderId}`); const styles = prepareReceiptForCapture(receiptEl); showClientToast("Generating Image...");
+        const receiptEl = document.getElementById(`receipt-card-${orderId}`);
+        const styles = prepareReceiptForCapture(receiptEl);
+        
+        showClientToast("Generating Image...");
+
         html2canvas(receiptEl, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false }).then(canvas => {
-            const link = document.createElement('a'); link.download = `SompheaReak_Receipt_#${orderId}.jpg`; link.href = canvas.toDataURL('image/jpeg', 1.0); link.click(); restoreReceiptAfterCapture(receiptEl, styles);
+            const link = document.createElement('a');
+            link.download = `SompheaReak_Receipt_#${orderId}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 1.0);
+            link.click();
+            
+            restoreReceiptAfterCapture(receiptEl, styles);
+        }).catch(e => {
+            showClientToast("Image Generation Failed", true);
+            restoreReceiptAfterCapture(receiptEl, styles);
         });
     }
 </script>
 {% endblock %}
-
-
-
