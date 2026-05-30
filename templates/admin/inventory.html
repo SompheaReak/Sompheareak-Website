@@ -81,7 +81,7 @@
                 <div class="h-4 md:h-6 w-px bg-gray-200 mx-1 md:mx-2 shrink-0"></div>
                 <select id="category-filter" onchange="filterCategory()" class="px-2 py-1.5 md:px-3 md:py-2 bg-gray-50 border border-gray-200 rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black uppercase outline-none focus:border-[#ff5000] cursor-pointer shadow-sm shrink-0">
                     <option value="All">All Categories</option>
-                    {% for cat in global_categories %}
+                    {% for cat in categories %}
                     <option value="{{cat.name|lower}}">{{cat.name}}</option>
                     {% endfor %}
                 </select>
@@ -94,7 +94,7 @@
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4" id="main-inventory-list">
-            {% for p in global_products %}
+            {% for p in products %}
             
             {% set group_cats = [] %}
             {% if p.category %}{% for mc in p.category.split(',') %}{% set trimmed = mc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}
@@ -177,14 +177,14 @@
                         </div>
                         
                         <div class="space-y-3 md:space-y-4 pt-4 md:pt-5 mt-4 md:mt-5 border-t border-gray-200">
-                            <div class="flex items-center justify-between"><label class="text-[10px] md:text-[11px] font-black text-gray-900 uppercase tracking-widest">Variants</label><span class="text-[7px] md:text-[9px] font-bold text-gray-400">Drag to Reorder</span></div>
+                            <div class="flex items-center justify-between"><label class="text-[10px] md:text-[11px] font-black text-gray-900 uppercase tracking-widest">Variants</label></div>
                             
                             <div id="sortable-variants-{{p.id}}" class="space-y-2 md:space-y-3 max-h-[50vh] overflow-y-auto pr-1 md:pr-2 hide-scrollbar">
                                 {% for v in p.parsed_variants %}
                                 <div class="variant-row flex flex-col sm:flex-row gap-3 md:gap-4 items-start bg-white p-3 md:p-4 rounded-xl md:rounded-2xl border border-gray-200 shadow-sm relative group hover:border-gray-300 transition-colors">
                                     <div class="flex items-center w-full sm:w-auto sm:flex-col justify-between sm:justify-start gap-2 border-b border-gray-100 pb-2 sm:border-none sm:pb-0">
                                         <i class="fa-solid fa-bars text-gray-300 handle p-2 text-sm md:text-base hover:text-black cursor-grab"></i>
-                                        <div class="w-10 h-10 md:w-16 md:h-16 bg-gray-50 border border-gray-100 rounded-lg md:rounded-xl p-1 shadow-inner shrink-0"><img src="{{v.image}}" class="w-full h-full object-contain rounded-md"></div>
+                                        <div class="w-10 h-10 md:w-16 md:h-16 bg-gray-50 border border-gray-100 rounded-lg md:rounded-xl p-1 shadow-inner shrink-0 cursor-pointer" onclick="openImageViewer('{{v.image}}')"><img src="{{v.image}}" class="w-full h-full object-contain rounded-md"></div>
                                         <button type="button" onclick="this.closest('.variant-row').remove()" class="p-2 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-lg md:rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm sm:mt-auto"><i class="fa-solid fa-trash-can text-xs md:text-sm"></i></button>
                                     </div>
 
@@ -215,7 +215,7 @@
 
                         <div class="bg-blue-50/50 p-4 md:p-5 rounded-xl md:rounded-2xl border border-blue-100 flex flex-col md:flex-row md:items-center gap-3 md:gap-5 mt-4 md:mt-5 shadow-inner">
                             <div class="flex-1 w-full">
-                                <label class="text-[9px] md:text-[11px] font-black text-blue-600 uppercase tracking-widest block mb-1.5 md:mb-2"><i class="fa-solid fa-plus-circle mr-1"></i> Add New Styles (Images)</label>
+                                <label class="text-[9px] md:text-[11px] font-black text-blue-600 uppercase tracking-widest block mb-1.5 md:mb-2"><i class="fa-solid fa-plus-circle mr-1"></i> Add Images</label>
                                 <input type="file" name="new_images" multiple class="block w-full text-[9px] md:text-[10px] text-gray-500 file:mr-3 file:py-2 file:px-3 md:file:px-5 file:rounded-lg md:file:rounded-xl file:border-0 file:font-black file:bg-blue-600 file:text-white file:uppercase file:tracking-widest hover:file:bg-blue-700 cursor-pointer transition-colors shadow-sm bg-white border border-gray-200 p-1 rounded-xl">
                             </div>
                         </div>
@@ -243,7 +243,7 @@
 
         <form action="/admin/categories/update" method="POST" enctype="multipart/form-data" class="p-4 md:p-5 flex flex-col overflow-hidden submit-form flex-1">
             <div id="category-sortable" class="overflow-y-auto space-y-2 md:space-y-3 pr-1 md:pr-2 hide-scrollbar flex-1 pb-2 md:pb-4 touch-pan-y">
-                {% for cat in global_categories %}
+                {% for cat in categories %}
                 <div class="cat-modal-item flex gap-3 md:gap-4 items-center bg-white p-2 md:p-3 rounded-xl md:rounded-2xl border border-gray-200 shadow-sm relative group hover:border-blue-300 transition-colors" data-store="{{cat.store}}">
                     <i class="fa-solid fa-grip-vertical text-gray-300 handle px-1.5 md:px-2 text-base md:text-lg hover:text-black transition-colors cursor-grab"></i>
                     <input type="hidden" name="cat_ids[]" value="{{cat.id}}">
@@ -271,7 +271,7 @@
 
 {% block scripts %}
 <script>
-    // ================= 1. UI & MODAL HELPERS =================
+    // ================= 1. UI HELPERS =================
     function toggleEdit(id) { 
         const item = document.getElementById(`item-${id}`); 
         if(item) item.classList.toggle('is-editing'); 
@@ -286,8 +286,46 @@
             form.submit(); 
         } 
     }
+    
+    function openImageViewer(src) { 
+        const modal = document.getElementById('image-viewer-modal');
+        const img = document.getElementById('viewer-img');
+        if(modal && img) { img.src = src; modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    }
+    function closeImageViewer() { 
+        const modal = document.getElementById('image-viewer-modal');
+        if(modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    }
 
-    // ================= 2. FILE UPLOAD & PREVIEW LOGIC =================
+    // ================= 2. FILTERING =================
+    function filterStore(store) {
+        document.querySelectorAll('.store-flt').forEach(btn => { 
+            btn.classList.remove('bg-black', 'text-white'); 
+            btn.classList.add('text-gray-400', 'bg-white'); 
+        });
+        const activeBtn = document.getElementById(`flt-${store}`);
+        if(activeBtn) { 
+            activeBtn.classList.add('bg-black', 'text-white'); 
+            activeBtn.classList.remove('text-gray-400', 'bg-white'); 
+        }
+        filterProducts();
+    }
+
+    function filterCategory() { filterProducts(); }
+
+    function filterProducts() {
+        const activeStoreBtn = document.querySelector('.store-flt.bg-black');
+        const storeFlt = activeStoreBtn ? activeStoreBtn.id.replace('flt-', '') : 'All';
+        const catFlt = document.getElementById('category-filter').value.toLowerCase();
+        
+        document.querySelectorAll('.product-item').forEach(item => {
+            const mStore = storeFlt === 'All' || item.dataset.store === storeFlt;
+            const mCat = catFlt === 'all' || item.dataset.categories.includes(catFlt);
+            item.style.display = (mStore && mCat) ? 'block' : 'none';
+        });
+    }
+
+    // ================= 3. UPLOAD AND VARIANTS =================
     const fileInput = document.getElementById('file-input');
     const variantConfig = document.getElementById('variant-config');
     const variantList = document.getElementById('variant-list');
@@ -295,24 +333,29 @@
     const legoTypeContainer = document.getElementById('lego-type-container');
     const legoTypeSelect = document.getElementById('lego-type-select');
 
-    storeSelect.addEventListener('change', (e) => {
-        if(e.target.value === 'lego') legoTypeContainer.classList.remove('hidden');
-        else legoTypeContainer.classList.add('hidden');
-        renderUploadVariants();
-    });
+    if(storeSelect) {
+        storeSelect.addEventListener('change', (e) => {
+            if(e.target.value === 'lego') legoTypeContainer.classList.remove('hidden');
+            else legoTypeContainer.classList.add('hidden');
+            renderUploadVariants();
+        });
+    }
 
     let uploadedFiles = [];
-    fileInput.addEventListener('change', function(e) {
-        uploadedFiles = Array.from(e.target.files);
-        if(uploadedFiles.length > 0) {
-            variantConfig.classList.remove('hidden');
-            renderUploadVariants();
-        } else {
-            variantConfig.classList.add('hidden');
-        }
-    });
+    if(fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            uploadedFiles = Array.from(e.target.files);
+            if(uploadedFiles.length > 0) { 
+                variantConfig.classList.remove('hidden'); 
+                renderUploadVariants(); 
+            } else { 
+                variantConfig.classList.add('hidden'); 
+            }
+        });
+    }
 
     function renderUploadVariants() {
+        if(!variantList) return;
         variantList.innerHTML = '';
         if(uploadedFiles.length === 0) return;
 
@@ -329,36 +372,167 @@
 
                 const html = `
                     <div class="flex flex-col sm:flex-row gap-3 items-start p-3 rounded-xl border ${bgClass} shadow-sm relative">
-                        <div class="w-12 h-12 md:w-16 md:h-16 bg-white border border-gray-100 rounded-lg p-1 shrink-0">
-                            <img src="${e.target.result}" class="w-full h-full object-contain">
-                        </div>
+                        <div class="w-12 h-12 md:w-16 md:h-16 bg-white border border-gray-100 rounded-lg p-1 shrink-0"><img src="${e.target.result}" class="w-full h-full object-contain"></div>
                         <div class="flex-1 w-full grid grid-cols-2 md:grid-cols-4 gap-2">
-                            <div>
-                                <span class="text-[7px] md:text-[8px] font-black text-gray-400 uppercase">Name</span>
-                                <input type="text" name="variant_names[]" value="${defaultName}" class="w-full text-[10px] md:text-xs font-bold border-b border-gray-300 outline-none pb-1 bg-transparent">
-                            </div>
-                            <div>
-                                <span class="text-[7px] md:text-[8px] font-black text-gray-400 uppercase">Price (USD)</span>
-                                <input type="number" step="any" name="variant_prices[]" value="0.00" class="w-full text-[10px] md:text-xs font-black border-b border-gray-300 outline-none pb-1 bg-transparent" oninput="updatePrice(this, 'USD')">
-                            </div>
-                            <div>
-                                <span class="text-[7px] md:text-[8px] font-black text-gray-400 uppercase">Stock</span>
-                                <input type="number" name="variant_stocks[]" value="${defaultStock}" class="w-full text-[10px] md:text-xs font-black border-b border-gray-300 outline-none pb-1 bg-transparent ${isGallery ? 'text-gray-400' : ''}" ${isGallery ? 'readonly' : ''}>
-                            </div>
-                            <div>
-                                <span class="text-[7px] md:text-[8px] font-black text-gray-400 uppercase">Tags</span>
-                                <input type="text" name="variant_categories[]" value="${defaultCat}" class="w-full text-[10px] md:text-xs font-bold border-b border-gray-300 outline-none pb-1 bg-transparent" ${isGallery ? 'readonly' : ''}>
-                            </div>
+                            <div><span class="text-[7px] md:text-[8px] font-black text-gray-400 uppercase">Name</span><input type="text" name="variant_names[]" value="${defaultName}" class="w-full text-[10px] md:text-xs font-bold border-b border-gray-300 outline-none pb-1 bg-transparent"></div>
+                            <div><span class="text-[7px] md:text-[8px] font-black text-gray-400 uppercase">Price (USD)</span><input type="number" step="any" name="variant_prices[]" value="0.00" class="w-full text-[10px] md:text-xs font-black border-b border-gray-300 outline-none pb-1 bg-transparent" oninput="updatePrice(this, 'USD')"></div>
+                            <div><span class="text-[7px] md:text-[8px] font-black text-gray-400 uppercase">Stock</span><input type="number" name="variant_stocks[]" value="${defaultStock}" class="w-full text-[10px] md:text-xs font-black border-b border-gray-300 outline-none pb-1 bg-transparent ${isGallery ? 'text-gray-400' : ''}" ${isGallery ? 'readonly' : ''}></div>
+                            <div><span class="text-[7px] md:text-[8px] font-black text-gray-400 uppercase">Tags</span><input type="text" name="variant_categories[]" value="${defaultCat}" class="w-full text-[10px] md:text-xs font-bold border-b border-gray-300 outline-none pb-1 bg-transparent" ${isGallery ? 'readonly' : ''}></div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
                 variantList.insertAdjacentHTML('beforeend', html);
             };
             reader.readAsDataURL(file);
         });
     }
 
-    // ================= 3. TAG INPUT LOGIC =================
+    function updatePrice(input, currency) {
+        const row = input.closest('.grid') || input.closest('.price-group');
+        if(!row) return;
+        
+        const usdInput = row.querySelector('.usd-input') || row.querySelector('input[name="variant_prices[]"]') || row.querySelector('input[name="v_prices[]"]');
+        const khrInput = row.querySelector('.khr-input') || row.querySelector('input[step="any"]:not([name])'); 
+        
+        if(!usdInput || !khrInput) return;
+
+        if (currency === 'USD') {
+            const usdVal = parseFloat(usdInput.value) || 0;
+            khrInput.value = Math.round(usdVal * 4000);
+        } else {
+            const khrVal = parseFloat(khrInput.value) || 0;
+            usdInput.value = (khrVal / 4000).toFixed(2);
+        }
+    }
+
+    // ================= 4. LIVE STOCK MATRIX =================
+    let showOnlyOutOfStock = false; 
+    let pendingStockChanges = {};
+    
+    function openStockSummaryModal() { document.getElementById('stock-summary-modal').classList.remove('hidden'); filterLiveStock(); }
+    function closeStockSummaryModal() { document.getElementById('stock-summary-modal').classList.add('hidden'); }
+    
+    function toggleOutOfStock() { 
+        showOnlyOutOfStock = !showOnlyOutOfStock; 
+        const btn = document.getElementById('ls-oos-btn'); 
+        const btnText = document.getElementById('oos-btn-text'); 
+        if (showOnlyOutOfStock) { 
+            btn.classList.add('bg-red-600', 'text-white', 'border-red-700', 'hover:bg-red-700'); 
+            btn.classList.remove('bg-white'); 
+            btnText.innerText = "Clear Empty Filter"; 
+        } else { 
+            btn.classList.remove('bg-red-600', 'text-white', 'border-red-700', 'hover:bg-red-700'); 
+            btn.classList.add('bg-white'); 
+            btnText.innerText = "Filter Out of Stock"; 
+        } 
+        filterLiveStock(); 
+    }
+    
+    function filterLiveStock() { 
+        const searchStr = document.getElementById('ls-search').value.toLowerCase(); 
+        const storeFilter = document.getElementById('ls-store-filter').value; 
+        const catFilter = document.getElementById('ls-cat-filter') ? document.getElementById('ls-cat-filter').value : 'all'; 
+        
+        document.querySelectorAll('.ls-item').forEach(item => { 
+            const name = item.dataset.name || ''; 
+            const store = item.dataset.store || ''; 
+            const stock = parseInt(item.dataset.stock) || 0; 
+            const cats = item.dataset.categories || ''; 
+            
+            const matchesSearch = name.includes(searchStr); 
+            const matchesStore = storeFilter === 'all' || store === storeFilter; 
+            const matchesCat = catFilter === 'all' || cats.includes(catFilter); 
+            const matchesOOS = !showOnlyOutOfStock || stock <= 0; 
+            
+            if (matchesSearch && matchesStore && matchesCat && matchesOOS) { item.style.display = 'flex'; } 
+            else { item.style.display = 'none'; } 
+        }); 
+    }
+    
+    function updateStockBadgeUI(rowElement, newStockVal) { 
+        rowElement.dataset.stock = newStockVal; 
+        const store = rowElement.dataset.store; 
+        let badge = rowElement.querySelector('.stock-badge'); 
+        
+        if(newStockVal <= 0) { 
+            if(store === 'lego') { badge.innerText = 'PRE-ORDER'; badge.style.backgroundColor = '#ff5000'; } 
+            else { badge.innerText = 'EMPTY'; badge.style.backgroundColor = '#dc2626'; } 
+            badge.style.display = 'block'; 
+        } else { 
+            badge.style.display = 'none'; 
+        } 
+        if(showOnlyOutOfStock && newStockVal > 0) filterLiveStock(); 
+    }
+    
+    function queueStockUpdate(productId, variantIndex, change, btnElement) { 
+        const inputEl = document.getElementById(`quick-stock-${productId}-${variantIndex}`); 
+        let currentVal = parseInt(inputEl.value) || 0; 
+        let newStock = currentVal + change; 
+        if (newStock < 0) newStock = 0; 
+        
+        inputEl.value = newStock; 
+        const itemRow = btnElement.closest('.ls-item'); 
+        itemRow.classList.add('bg-orange-50/40', 'border-orange-200'); 
+        inputEl.parentElement.classList.add('border-[#ff5000]', 'ring-1', 'ring-orange-200'); 
+        
+        updateStockBadgeUI(itemRow, newStock); 
+        
+        const key = `${productId}-${variantIndex}`; 
+        pendingStockChanges[key] = { productId, variantIndex, stock: newStock, rowElement: itemRow, inputContainer: inputEl.parentElement }; 
+        document.getElementById('save-stock-btn').disabled = false; 
+    }
+    
+    function queueExactStock(productId, variantIndex, inputElement) { 
+        let newStock = parseInt(inputElement.value) || 0; 
+        if(newStock < 0) inputElement.value = 0; 
+        
+        const itemRow = inputElement.closest('.ls-item'); 
+        const key = `${productId}-${variantIndex}`; 
+        itemRow.classList.add('bg-orange-50/40', 'border-orange-200'); 
+        inputElement.parentElement.classList.add('border-[#ff5000]', 'ring-1', 'ring-orange-200'); 
+        
+        updateStockBadgeUI(itemRow, parseInt(inputElement.value)); 
+        
+        pendingStockChanges[key] = { productId, variantIndex, stock: parseInt(inputElement.value), rowElement: itemRow, inputContainer: inputElement.parentElement }; 
+        document.getElementById('save-stock-btn').disabled = false; 
+    }
+    
+    async function saveAllStockChanges() { 
+        const changes = Object.values(pendingStockChanges); 
+        if(changes.length === 0) return; 
+        
+        const btn = document.getElementById('save-stock-btn'); 
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...'; 
+        btn.disabled = true; 
+        
+        let errCount = 0; 
+        for (let change of changes) { 
+            try { 
+                await fetch('/admin/product/quick_stock', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ product_id: change.productId, variant_index: change.variantIndex, stock: change.stock }) 
+                }); 
+                change.rowElement.classList.remove('bg-orange-50/40', 'border-orange-200'); 
+                change.inputContainer.classList.remove('border-[#ff5000]', 'ring-1', 'ring-orange-200'); 
+            } catch(e) { errCount++; } 
+        } 
+        pendingStockChanges = {}; 
+        
+        if (errCount > 0) { showClientToast(`Saved with ${errCount} errors`, true); } 
+        else { showClientToast("Stock Updated Automatically"); } 
+        
+        btn.innerHTML = '<i class="fa-solid fa-save mr-1.5 md:mr-2"></i> Save Changes'; 
+        btn.disabled = true; 
+    }
+
+    // ================= 5. FORM AND TAG LOGIC =================
+    document.querySelectorAll('form.submit-form').forEach(form => {
+        form.addEventListener('submit', () => {
+            const overlay = document.getElementById('loading-overlay');
+            if(overlay) overlay.style.display = 'flex';
+        });
+    });
+
     function setupTagInput(container) {
         const input = container.querySelector('.tag-input');
         const hiddenInput = container.parentElement.querySelector('.hidden-category-input');
@@ -406,7 +580,7 @@
         }
 
         function updateHiddenInput() {
-            const tags = Array.from(container.querySelectorAll('.tag-badge')).map(b => b.textContent.trim());
+            const tags = Array.from(container.querySelectorAll('.tag-badge')).map(b => b.textContent.replace(' ', '').trim());
             hiddenInput.value = tags.join(', ');
         }
 
@@ -421,60 +595,17 @@
 
     document.querySelectorAll('.tag-container').forEach(setupTagInput);
 
-
-    // ================= 4. DRAG AND DROP (SORTABLE) =================
+    // ================= 6. SORTABLE INITIALIZATION =================
     document.querySelectorAll('[id^="sortable-variants-"]').forEach(el => {
-        new Sortable(el, { handle: '.handle', animation: 150 });
+        if(typeof Sortable !== 'undefined') new Sortable(el, { handle: '.handle', animation: 150 });
     });
-
+    
     const catSortable = document.getElementById('category-sortable');
-    if(catSortable) new Sortable(catSortable, { handle: '.handle', animation: 150 });
-
-
-    // ================= 5. PRODUCT FILTERING =================
-    function filterStore(store) {
-        document.querySelectorAll('.store-flt').forEach(btn => { 
-            btn.classList.remove('bg-black', 'text-white'); 
-            btn.classList.add('text-gray-400', 'bg-white'); 
-        });
-        const activeBtn = document.getElementById(`flt-${store}`);
-        if(activeBtn) {
-            activeBtn.classList.add('bg-black', 'text-white');
-            activeBtn.classList.remove('text-gray-400', 'bg-white');
-        }
-        filterProducts();
+    if(catSortable && typeof Sortable !== 'undefined') {
+        new Sortable(catSortable, { handle: '.handle', animation: 150 });
     }
 
-    function filterCategory() { filterProducts(); }
-
-    function filterProducts() {
-        const activeStoreBtn = document.querySelector('.store-flt.bg-black');
-        const storeFlt = activeStoreBtn ? activeStoreBtn.id.replace('flt-', '') : 'All';
-        const catFlt = document.getElementById('category-filter').value.toLowerCase();
-        
-        document.querySelectorAll('.product-item').forEach(item => {
-            const mStore = storeFlt === 'All' || item.dataset.store === storeFlt;
-            const mCat = catFlt === 'all' || item.dataset.categories.includes(catFlt);
-            item.style.display = (mStore && mCat) ? 'block' : 'none';
-        });
-    }
-
-    // ================= 6. AUTO CALCULATE PRICING =================
-    function updatePrice(input, currency) {
-        const row = input.closest('.grid');
-        const usdInput = row.querySelector('.usd-input');
-        const khrInput = row.querySelector('.khr-input');
-        
-        if (currency === 'USD') {
-            const usdVal = parseFloat(usdInput.value) || 0;
-            khrInput.value = Math.round(usdVal * 4000);
-        } else {
-            const khrVal = parseFloat(khrInput.value) || 0;
-            usdInput.value = (khrVal / 4000).toFixed(2);
-        }
-    }
 </script>
 {% endblock %}
-
 
 
