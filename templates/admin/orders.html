@@ -46,7 +46,10 @@
                     </div>
                     <div class="flex items-center justify-between w-full">
                         <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Date/Time</span>
-                        <span class="text-[9px] text-[#ff5000] font-black uppercase"><i class="fa-regular fa-clock mr-1"></i>{{ order.timestamp.strftime('%d %b %Y, %I:%M %p') }}</span>
+                        <!-- Time display handled securely by Cambodia Time script -->
+                        <span class="text-[9px] text-[#ff5000] font-black uppercase kh-time-display" data-utc="{{ order.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ') }}">
+                            <i class="fa-solid fa-spinner fa-spin mr-1"></i> Syncing...
+                        </span>
                     </div>
                 </div>
             </div>
@@ -183,6 +186,39 @@
         window.jsPDF = window.jspdf.jsPDF; 
     }
 
+    // --- CAMBODIA (UTC+7) TIMELINE SCRIPT ---
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.kh-time-display').forEach(el => {
+            let utcStr = el.getAttribute('data-utc');
+            if (!utcStr) return;
+            
+            // Parse UTC absolute time mathematically
+            let d = new Date(utcStr);
+            // Add exactly 7 hours in milliseconds to force Cambodia offset
+            let khDate = new Date(d.getTime() + (7 * 60 * 60 * 1000));
+            
+            // Extract local components
+            let year = khDate.getUTCFullYear();
+            let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            let month = months[khDate.getUTCMonth()];
+            let dateNum = String(khDate.getUTCDate()).padStart(2, '0');
+            
+            let hours = khDate.getUTCHours();
+            let minutes = String(khDate.getUTCMinutes()).padStart(2, '0');
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // Handle midnight
+            let strHours = String(hours).padStart(2, '0');
+            
+            el.innerHTML = `<i class="fa-regular fa-clock mr-1"></i>${dateNum} ${month} ${year}, ${strHours}:${minutes} ${ampm}`;
+            
+            // Also update the card's data-date so the financial filter uses Cambodia dates
+            let monthNum = String(khDate.getUTCMonth() + 1).padStart(2, '0');
+            let card = el.closest('.order-data-card');
+            if(card) card.setAttribute('data-date', `${year}-${monthNum}-${dateNum}`);
+        });
+    });
+
     function toggleReceiptEdit(orderId) {
         const card = document.getElementById(`receipt-card-${orderId}`);
         if (!card) return;
@@ -224,7 +260,7 @@
         
         card.dataset.total = grandTotal.toFixed(2);
         
-        // If calculateIncome exists (e.g. from dashboard script loaded globally), update it
+        // Update financial dashboard if the function exists
         if(typeof calculateIncome === 'function') calculateIncome();
     }
 
@@ -308,3 +344,6 @@
     }
 </script>
 {% endblock %}
+
+
+
