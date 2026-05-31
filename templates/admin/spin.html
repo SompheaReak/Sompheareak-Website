@@ -14,6 +14,91 @@
                 <i class="fa-solid fa-rotate mr-1.5"></i> Sync "Lucky Draw" Tag
             </button>
         </div>
+
+        <!-- ==================== RESTORED: ADD TO PRIZE POOL ==================== -->
+        <div class="bg-white p-4 md:p-6 rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 border-t-4 border-t-indigo-500">
+            <h2 class="font-black text-base md:text-lg mb-3 flex items-center"><i class="fa-solid fa-link text-indigo-500 mr-2 text-lg md:text-xl"></i>Add to Prize Pool</h2>
+            
+            <div class="flex gap-1 mb-4 bg-gray-100 p-1 rounded-xl">
+                <button type="button" onclick="toggleSpinAddMode('catalog')" id="btn-mode-catalog" class="flex-1 bg-white shadow-sm py-2 rounded-lg text-[9px] font-black uppercase text-indigo-600 transition-all">Link Toy Stock</button>
+                <button type="button" onclick="toggleSpinAddMode('custom')" id="btn-mode-custom" class="flex-1 py-2 rounded-lg text-[9px] font-black uppercase text-gray-500 hover:text-gray-700 transition-all">Custom Prize</button>
+            </div>
+
+            <form id="form-spin-catalog" action="/admin/spin/add_pool_catalog" method="POST" class="space-y-3 md:space-y-4 submit-form">
+                <div>
+                    <div class="flex justify-between items-end ml-1 mb-1">
+                        <label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">1. Select Toys (Multi-Select)</label>
+                        <span id="multi-sel-count" class="text-[8px] md:text-[9px] font-black text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">0 Selected</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 p-2 bg-indigo-50/30 border border-indigo-200 rounded-xl max-h-[220px] overflow-y-auto hide-scrollbar">
+                        {% for p in global_products %}
+                            {% if p.store == 'toy' or p.store == 'lego' %}
+                                {% if p.parsed_variants %}
+                                    {% for v in p.parsed_variants %}
+                                        <label class="cursor-pointer relative group aspect-square">
+                                            <input type="checkbox" name="catalog_items[]" value="{{ p.id }}|{{ loop.index0 }}" class="hidden peer" onchange="updateMultiCount()">
+                                            <img src="{{ v.image }}" class="w-full h-full object-cover rounded-lg border-2 border-transparent peer-checked:border-indigo-600 peer-checked:opacity-100 opacity-60 hover:opacity-100 transition-all bg-white shadow-sm">
+                                            <div class="absolute top-1 right-1 hidden peer-checked:flex items-center justify-center w-4 h-4 text-white bg-indigo-600 rounded-full shadow-sm text-[10px]"><i class="fa-solid fa-check"></i></div>
+                                            <div class="absolute bottom-1 left-1 right-1 hidden peer-checked:block text-[8px] text-center font-black text-white bg-indigo-600/80 rounded backdrop-blur-sm truncate px-1">Stock: {{ v.stock }}</div>
+                                        </label>
+                                    {% endfor %}
+                                {% else %}
+                                    <label class="cursor-pointer relative group aspect-square">
+                                        <input type="checkbox" name="catalog_items[]" value="{{ p.id }}|-1" class="hidden peer" onchange="updateMultiCount()">
+                                        <img src="{{ p.image }}" class="w-full h-full object-cover rounded-lg border-2 border-transparent peer-checked:border-indigo-600 peer-checked:opacity-100 opacity-60 hover:opacity-100 transition-all bg-white shadow-sm">
+                                        <div class="absolute top-1 right-1 hidden peer-checked:flex items-center justify-center w-4 h-4 text-white bg-indigo-600 rounded-full shadow-sm text-[10px]"><i class="fa-solid fa-check"></i></div>
+                                        <div class="absolute bottom-1 left-1 right-1 hidden peer-checked:block text-[8px] text-center font-black text-white bg-indigo-600/80 rounded backdrop-blur-sm truncate px-1">Stock: {{ p.stock|default(0) }}</div>
+                                    </label>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">2. Drop Chance</label>
+                    <select name="rarity" class="input-box bg-gray-50 cursor-pointer font-black text-[10px] md:text-xs py-2 md:py-2.5">
+                        <option value="Common" class="text-gray-500">Common (50%)</option>
+                        <option value="Rare" class="text-blue-500">Rare (30%)</option>
+                        <option value="Epic" class="text-purple-500">Epic (15%)</option>
+                        <option value="Legendary" class="text-yellow-600">Legendary (5%)</option>
+                    </select>
+                </div>
+                <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex gap-2 items-center">
+                    <i class="fa-solid fa-circle-info text-indigo-400 text-sm"></i>
+                    <p class="text-[8px] font-bold text-indigo-800 leading-tight">Stock is managed automatically. When won, it will deduct directly from Toy Store inventory.</p>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 md:py-4 rounded-xl font-black uppercase text-[10px] md:text-[11px] tracking-widest shadow-lg shadow-indigo-500/30 active:scale-95 transition-all mt-2 md:mt-4"><i class="fa-solid fa-link mr-1.5"></i> Link to Engine</button>
+            </form>
+
+            <form id="form-spin-custom" action="/admin/spin/add_pool" method="POST" enctype="multipart/form-data" class="space-y-3 md:space-y-4 submit-form hidden">
+                <div>
+                    <label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Custom Image</label>
+                    <input type="file" name="images" multiple id="custom-image-input" class="block w-full text-[10px] md:text-xs text-gray-500 file:mr-3 file:py-2 md:file:py-3 file:px-3 md:file:px-4 file:rounded-lg md:file:rounded-xl file:border-0 file:text-[9px] md:file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-gray-100 file:text-gray-600 hover:file:bg-gray-200 cursor-pointer border border-gray-200 rounded-lg md:rounded-xl p-1 bg-gray-50">
+                </div>
+                <div>
+                    <label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Prize Name</label>
+                    <input type="text" name="name" placeholder="E.g. $5 Cash Voucher" class="input-box bg-gray-50 py-2 md:py-2.5 text-xs" required>
+                </div>
+                <div class="grid grid-cols-2 gap-2 md:gap-3">
+                    <div>
+                        <label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Drop Chance</label>
+                        <select name="rarity" class="input-box bg-gray-50 cursor-pointer font-black text-[10px] md:text-xs py-2 md:py-2.5">
+                            <option value="Common" class="text-gray-500">Common (50%)</option>
+                            <option value="Rare" class="text-blue-500">Rare (30%)</option>
+                            <option value="Epic" class="text-purple-500">Epic (15%)</option>
+                            <option value="Legendary" class="text-yellow-600">Legendary (5%)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Initial Stock</label>
+                        <input type="number" name="stock" value="1" min="1" class="input-box bg-gray-50 py-2 md:py-2.5 text-xs text-center font-black">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white py-3 md:py-4 rounded-xl font-black uppercase text-[10px] md:text-[11px] tracking-widest shadow-lg active:scale-95 transition-all mt-2 md:mt-4">Inject Custom Prize</button>
+            </form>
+        </div>
         
         <!-- 5x SPIN CASH BONUS SETTINGS -->
         <div class="bg-white p-4 md:p-6 rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 border-t-4 border-t-green-500">
@@ -50,7 +135,7 @@
 
     <section class="lg:col-span-8 space-y-4 md:space-y-6">
         
-        <!-- ==================== RESTORED ACTIVE PRIZE MATRIX ==================== -->
+        <!-- ACTIVE PRIZE MATRIX -->
         <div class="bg-white rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 p-4 md:p-6 w-full">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-5 gap-3 md:gap-4">
                 <div>
@@ -119,14 +204,22 @@
             </div>
         </div>
 
-        <!-- ENGINE HISTORY -->
+        <!-- ENGINE HISTORY WITH SEARCH & IMAGES -->
         <div class="bg-white rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 p-4 md:p-6 w-full">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-5 gap-3">
-                <div class="flex items-center gap-2">
-                    <h2 class="font-black text-base md:text-lg text-gray-900">Live Engine History</h2>
-                    <span class="bg-red-50 text-red-600 border border-red-200 px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg text-[8px] md:text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 md:gap-2 shadow-sm"><span class="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-red-500 animate-pulse"></span>Feed Active</span>
+                <div class="flex flex-col items-start gap-1">
+                    <div class="flex items-center gap-2">
+                        <h2 class="font-black text-base md:text-lg text-gray-900">Live Engine History</h2>
+                        <span class="bg-red-50 text-red-600 border border-red-200 px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg text-[8px] md:text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 md:gap-2 shadow-sm"><span class="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-red-500 animate-pulse"></span>Feed Active</span>
+                    </div>
+                    <!-- SEARCH BAR ADDED HERE -->
+                    <div class="relative w-full sm:w-64 mt-2">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="text" id="history-search" oninput="filterHistory()" placeholder="Search Player ID..." class="input-box pl-9 py-2 text-xs shadow-sm border-gray-200 bg-gray-50">
+                    </div>
                 </div>
-                <div class="flex items-center gap-1.5 md:gap-2 bg-gray-50 p-1 md:p-1.5 rounded-lg md:rounded-xl border border-gray-200 shadow-inner shrink-0 w-full sm:w-auto">
+
+                <div class="flex items-center gap-1.5 md:gap-2 bg-gray-50 p-1 md:p-1.5 rounded-lg md:rounded-xl border border-gray-200 shadow-inner shrink-0 w-full sm:w-auto mt-3 sm:mt-0">
                     <label class="flex items-center gap-1.5 md:gap-2 cursor-pointer px-2 py-1 md:px-3 md:py-1 text-[8px] md:text-[9px] font-black text-gray-500 uppercase tracking-widest hover:text-gray-800 transition-colors flex-1 sm:flex-none justify-center">
                         <input type="checkbox" onchange="toggleAllHistory(this)" class="w-3 h-3 md:w-4 md:h-4 accent-indigo-600 cursor-pointer rounded"> <span class="whitespace-nowrap">Select All</span>
                     </label>
@@ -137,7 +230,8 @@
                     </form>
                 </div>
             </div>
-            <div class="overflow-x-auto max-h-[300px] overflow-y-auto hide-scrollbar border border-gray-100 rounded-xl md:rounded-2xl w-full relative">
+            
+            <div class="overflow-x-auto max-h-[350px] overflow-y-auto hide-scrollbar border border-gray-100 rounded-xl md:rounded-2xl w-full relative">
                 <table class="enterprise-table min-w-[500px]">
                     <thead>
                         <tr>
@@ -151,13 +245,27 @@
                     </thead>
                     <tbody id="live-history-tbody" class="text-[11px] md:text-sm font-semibold text-gray-700 divide-y divide-gray-100">
                         {% for draw in history|default([]) %}
-                        <tr class="hover:bg-indigo-50/30 transition-colors">
+                        <tr class="history-row hover:bg-indigo-50/30 transition-colors">
                             <td class="text-center p-2">
                                 <input type="checkbox" class="history-checkbox w-4 h-4 cursor-pointer accent-indigo-600 rounded" value="{{ draw.id }}">
                             </td>
                             <td class="font-mono text-[9px] text-gray-500">{{ draw.cambodia_time }}</td>
-                            <td><span class="bg-gray-100 border border-gray-200 px-2 py-1 rounded font-mono text-[9px] text-gray-600">{{ draw.player_id }}</span></td>
-                            <td class="font-black text-[10px] md:text-xs">{{ draw.item_name }}</td>
+                            <td class="player-id-cell"><span class="bg-gray-100 border border-gray-200 px-2 py-1 rounded font-mono text-[9px] text-gray-600">{{ draw.player_id }}</span></td>
+                            
+                            <!-- IMAGES ADDED HERE -->
+                            <td>
+                                {% set draw_img = namespace(src='') %}
+                                {% for p in pool if p.name == draw.item_name %}{% set draw_img.src = p.image %}{% endfor %}
+                                <div class="flex items-center gap-2">
+                                    {% if draw_img.src %}
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 p-0.5 shrink-0"><img src="{{ draw_img.src }}" class="w-full h-full object-contain mix-blend-multiply"></div>
+                                    {% else %}
+                                    <div class="w-8 h-8 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-400 shrink-0"><i class="fa-solid fa-gift text-xs"></i></div>
+                                    {% endif %}
+                                    <span class="font-black text-[10px] md:text-xs leading-tight line-clamp-2 max-w-[180px]">{{ draw.item_name }}</span>
+                                </div>
+                            </td>
+                            
                             <td>
                                 <span class="px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest shadow-sm border {% if draw.rarity == 'Legendary' %}bg-yellow-50 text-yellow-600 border-yellow-200{% elif draw.rarity == 'Epic' %}bg-purple-50 text-purple-600 border-purple-200{% elif draw.rarity == 'Rare' %}bg-blue-50 text-blue-600 border-blue-200{% else %}bg-gray-100 text-gray-600 border-gray-200{% endif %}">
                                     {{ draw.rarity }}
@@ -226,7 +334,7 @@
             } else { if (pCats.includes('lucky draw')) itemsToSync.push({ id: product.id, variantIndex: -1 }); }
         });
 
-        if(itemsToSync.length === 0) { showClientToast("No tags found."); btn.innerHTML = originalHtml; btn.disabled = false; return; }
+        if(itemsToSync.length === 0) { alert("No tags found."); btn.innerHTML = originalHtml; btn.disabled = false; return; }
 
         let successCount = 0;
         for (let item of itemsToSync) {
@@ -237,6 +345,47 @@
             } catch(e) {}
         }
         btn.innerHTML = `<i class="fa-solid fa-check mr-1.5"></i> Synced ${successCount} Items`; setTimeout(() => { window.location.reload(); }, 1000);
+    }
+
+    // --- SEARCH BAR LOGIC FOR HISTORY ---
+    function filterHistory() {
+        const term = document.getElementById('history-search').value.toLowerCase();
+        const rows = document.querySelectorAll('.history-row');
+        
+        rows.forEach(row => {
+            const playerId = row.querySelector('.player-id-cell').innerText.toLowerCase();
+            if (playerId.includes(term)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // --- JS FOR ADD POOL TOGGLES ---
+    function toggleSpinAddMode(mode) {
+        const btnCat = document.getElementById('btn-mode-catalog');
+        const btnCust = document.getElementById('btn-mode-custom');
+        const formCat = document.getElementById('form-spin-catalog');
+        const formCust = document.getElementById('form-spin-custom');
+        const inputCustom = document.getElementById('custom-image-input');
+        
+        if(mode === 'catalog') {
+            btnCat.className = "flex-1 bg-white shadow-sm py-2 rounded-lg text-[9px] font-black uppercase text-indigo-600 transition-all";
+            btnCust.className = "flex-1 py-2 rounded-lg text-[9px] font-black uppercase text-gray-500 hover:text-gray-700 transition-all";
+            formCat.classList.remove('hidden'); formCust.classList.add('hidden');
+            if(inputCustom) inputCustom.removeAttribute('required');
+        } else {
+            btnCust.className = "flex-1 bg-white shadow-sm py-2 rounded-lg text-[9px] font-black uppercase text-indigo-600 transition-all";
+            btnCat.className = "flex-1 py-2 rounded-lg text-[9px] font-black uppercase text-gray-500 hover:text-gray-700 transition-all";
+            formCust.classList.remove('hidden'); formCat.classList.add('hidden');
+            if(inputCustom) inputCustom.setAttribute('required', 'required');
+        }
+    }
+    
+    function updateMultiCount() {
+        const count = document.querySelectorAll('input[name="catalog_items[]"]:checked').length;
+        document.getElementById('multi-sel-count').innerText = count + ' Selected';
     }
 
     // --- JS FOR MATRIX UPDATES & BULK DELETE ---
@@ -314,6 +463,4 @@
     }
 </script>
 {% endblock %}
-
-
 
