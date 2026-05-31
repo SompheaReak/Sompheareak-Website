@@ -228,7 +228,7 @@ def shop(): return render_template('bracelet.html')
 @app.route('/custom-bracelet')
 def custom_bracelet(): return render_template('custom_bracelet.html')
 
-# !!! FIXED: THIS WAS MISSING IN THE LAST UPDATE !!!
+# !!! HERE IS THE MISSING ROUTE !!!
 @app.route('/mystery-box')
 @app.route('/lucky-draw')
 @app.route('/spin')
@@ -295,12 +295,14 @@ def admin_inventory():
     unique_cats = db.session.query(Product.category, Product.store).distinct().all()
     for c_name, c_store in unique_cats:
         if c_name:
+            # Handles comma separated tags perfectly
             for sub_cat in c_name.split(','):
                 sub_cat = sub_cat.strip()
                 if sub_cat and sub_cat != "Other" and not Category.query.filter_by(name=sub_cat, store=c_store).first():
                     db.session.add(Category(name=sub_cat, store=c_store, sort_order=999))
     db.session.commit()
     
+    # 2. LOAD INVENTORY
     products = Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
     for p in products: p.parsed_variants = json.loads(p.variants) if p.variants else []
     categories = Category.query.order_by(Category.sort_order).all()
