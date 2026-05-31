@@ -53,7 +53,7 @@
         .btn-white-3d { background: #ffffff; box-shadow: 0 8px 0 0 #e2e8f0, 0 15px 20px rgba(0, 0, 0, 0.05); border: 1px solid #f1f5f9; }
         .btn-white-3d:active { box-shadow: 0 0 0 0 #e2e8f0, 0 5px 10px rgba(0, 0, 0, 0.05); }
 
-        /* Rarity Styles */
+        /* Normal Rarity Badges */
         .rarity-badge-Legendary { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3); }
         .rarity-badge-Epic { background: #f3e8ff; color: #9333ea; border: 1px solid #d8b4fe; }
         .rarity-badge-Rare { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
@@ -61,9 +61,71 @@
 
         .pool-flt.active { background-color: #0f172a; color: white; border-color: #0f172a; }
 
+        /* ==================== 3D SKIN CARD UI STYLES ==================== */
+        .loot-card {
+            position: relative;
+            border-radius: 1.25rem;
+            padding: 4px;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+            transform-style: preserve-3d;
+        }
+        
+        .loot-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
+            transform: skewX(-25deg);
+            animation: cardShimmer 3s infinite;
+            z-index: 50;
+            pointer-events: none;
+        }
+        
+        @keyframes cardShimmer {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+
+        /* Themed Glowing Borders */
+        .card-Legendary { background: linear-gradient(145deg, #fcd34d, #f59e0b, #d97706); box-shadow: 0 0 30px rgba(245, 158, 11, 0.6), inset 0 0 20px rgba(255,255,255,0.5); }
+        .card-Epic { background: linear-gradient(145deg, #d8b4fe, #a855f7, #7e22ce); box-shadow: 0 0 30px rgba(168, 85, 247, 0.6), inset 0 0 20px rgba(255,255,255,0.5); }
+        .card-Rare { background: linear-gradient(145deg, #93c5fd, #3b82f6, #1d4ed8); box-shadow: 0 0 30px rgba(59, 130, 246, 0.6), inset 0 0 20px rgba(255,255,255,0.5); }
+        .card-Common { background: linear-gradient(145deg, #e2e8f0, #94a3b8, #475569); box-shadow: 0 0 20px rgba(148, 163, 184, 0.4); }
+        
+        /* Dark Inner Body of the Card */
+        .card-inner {
+            background: radial-gradient(circle at top, #1e293b, #0f172a);
+            border-radius: 1rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Cinematic Modal Background Rays */
+        .sunburst-bg {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 200vw; height: 200vw;
+            margin-left: -100vw; margin-top: -100vw;
+            background: repeating-conic-gradient(from 0deg, rgba(234, 88, 12, 0.1) 0deg 10deg, transparent 10deg 20deg);
+            animation: spinRays 40s linear infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes spinRays { 100% { transform: rotate(360deg); } }
+
         /* Animations */
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .anim-float { animation: float 3s ease-in-out infinite; }
+        
+        .anim-float-fast { animation: float 2s ease-in-out infinite; }
 
         @keyframes boxShake {
             0%, 100% { transform: rotate(0deg) scale(1); filter: brightness(1); }
@@ -74,12 +136,15 @@
         }
         .anim-shake { animation: boxShake 0.5s ease-in-out infinite; }
 
+        /* Enhanced 3D Pop Reveal */
         @keyframes popReveal {
-            0% { transform: scale(0.3) translateY(50px); opacity: 0; filter: blur(10px); }
-            60% { transform: scale(1.1) translateY(-10px); opacity: 1; filter: blur(0px); }
-            100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0px); }
+            0% { transform: scale(0.2) translateY(100px) rotateY(90deg); opacity: 0; filter: blur(10px); }
+            60% { transform: scale(1.1) translateY(-10px) rotateY(-10deg); opacity: 1; filter: blur(0px); }
+            100% { transform: scale(1) translateY(0) rotateY(0deg); opacity: 1; filter: blur(0px); }
         }
-        .anim-pop { animation: popReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .anim-pop { animation: popReveal 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        
+        #prize-showcase { perspective: 1200px; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col relative overflow-x-hidden">
@@ -111,9 +176,15 @@
         </div>
         
         <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <a href="https://t.me/somphea_reak" target="_blank" class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-blue-50 rounded-full text-blue-500 border border-blue-100 active:scale-90 transition-transform shrink-0">
-                <i class="fa-brands fa-telegram text-sm sm:text-lg"></i>
-            </a>
+            
+            <!-- EXPLICIT & VISIBLE PLAYER ID BADGE -->
+            <div class="bg-indigo-50 border border-indigo-200 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full flex items-center gap-1.5 shadow-sm shrink-0" title="Your Player ID">
+                <div class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-indigo-500 flex items-center justify-center text-white text-[7px] sm:text-[8px] shadow-inner">
+                    <i class="fa-solid fa-fingerprint"></i>
+                </div>
+                <span class="text-[8px] sm:text-[9px] font-bold text-indigo-400 uppercase tracking-widest hidden sm:inline">ID:</span>
+                <span id="player-id-display" class="font-mono font-black text-[10px] sm:text-xs text-indigo-700 tracking-tight">---</span>
+            </div>
 
             <!-- Cart Drawer Icon -->
             <button onclick="openCartDrawer()" class="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0">
@@ -196,20 +267,23 @@
 
     </main>
 
-    <!-- CINEMATIC REVEAL MODAL -->
-    <div id="prize-modal" class="fixed inset-0 bg-white/95 backdrop-blur-md z-[5000] hidden flex-col items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+    <!-- CINEMATIC REVEAL MODAL (DARK SKIN-CARD THEME) -->
+    <div id="prize-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[5000] hidden flex-col items-center justify-center p-4 transition-opacity duration-300 opacity-0 overflow-hidden">
         
-        <div class="absolute top-0 w-full h-[50vh] bg-[radial-gradient(ellipse_at_top,rgba(234,88,12,0.15),transparent_70%)] pointer-events-none"></div>
+        <!-- Rotating Sunburst Background Rays -->
+        <div class="sunburst-bg"></div>
 
-        <h2 id="congrats-text" class="text-3xl font-black text-gray-900 mb-8 text-center uppercase tracking-widest transform -translate-y-4 opacity-0 transition-all duration-500 font-['Moul'] z-10">អបអរសាទរ!</h2>
+        <h2 id="congrats-text" class="text-3xl md:text-5xl font-black text-white mb-2 text-center uppercase tracking-widest transform -translate-y-4 opacity-0 transition-all duration-500 font-['Moul'] z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">អបអរសាទរ!</h2>
+        <p class="text-[10px] font-bold text-orange-400 uppercase tracking-widest mb-8 z-10 transform -translate-y-2 opacity-0 transition-all duration-500 delay-200" id="auto-save-text"><i class="fa-solid fa-circle-check mr-1"></i> Prizes safely auto-saved to cart</p>
         
-        <div id="prize-showcase" class="flex flex-wrap justify-center gap-4 max-w-lg w-full mb-12 z-10">
+        <!-- Container for 3D Skin Cards -->
+        <div id="prize-showcase" class="flex flex-wrap justify-center gap-4 max-w-4xl w-full mb-10 z-10 perspective-[1000px]">
             <!-- Drawn prizes injected here -->
         </div>
 
-        <!-- CLAIM TO CART BUTTON -->
-        <button onclick="claimPrizesToCart()" class="bg-gradient-to-r from-orange-500 to-[#ea580c] text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-orange-500/30 hover:bg-orange-600 active:scale-95 transition-all opacity-0 transform translate-y-4 z-10 border border-orange-400 flex items-center gap-2" style="animation: popReveal 0.5s forwards 1s;">
-            <i class="fa-solid fa-cart-arrow-down text-lg"></i> Claim to Cart
+        <!-- AWESOME CONTINUE BUTTON -->
+        <button onclick="closePrizeModal()" class="bg-white text-slate-900 px-12 py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:bg-gray-200 active:scale-95 transition-all opacity-0 transform translate-y-4 z-10 flex items-center gap-2 mt-4" style="animation: popReveal 0.5s forwards 1.5s;">
+            <i class="fa-solid fa-check text-lg text-green-500"></i> Awesome!
         </button>
     </div>
 
@@ -277,7 +351,6 @@
         let currentFilter = 'All';
 
         let userCart = [];
-        let wonPrizesForCart = [];
 
         document.addEventListener('DOMContentLoaded', () => { 
             initCart();
@@ -292,6 +365,12 @@
                 const data = await res.json();
                 currentBalance = data.balance;
                 document.getElementById('player-balance').innerText = formatRiel(currentBalance);
+                
+                // Show Player ID safely
+                if(data.player_id) {
+                    const idDisplay = document.getElementById('player-id-display');
+                    if(idDisplay) idDisplay.innerText = data.player_id;
+                }
             } catch (err) {}
         }
 
@@ -390,6 +469,31 @@
             } catch (err) { showToast('Network Error. Is backend running?', 'error'); }
         }
 
+        // --- AUTO-CART PROTECTION ---
+        function autoAddPrizesToCart(prizes) {
+            prizes.forEach(prize => {
+                const prizeId = prize.id || prize.name; 
+                const existing = userCart.find(i => i.id === prizeId);
+                if(existing) {
+                    existing.qty += 1;
+                } else {
+                    userCart.push({
+                        id: prizeId,
+                        type: 'reward',
+                        title: prize.name,
+                        style: `Reward (${prize.rarity})`,
+                        price: 0,
+                        image: prize.image,
+                        maxStock: 99,
+                        qty: 1,
+                        selected: true
+                    });
+                }
+            });
+            saveCart();
+            // Toast will show underneath the modal automatically!
+        }
+
         // --- PLAY/SPIN LOGIC ---
         async function playSpin(count) {
             if(isSpinning) return;
@@ -419,7 +523,9 @@
 
                 currentBalance = data.new_balance;
                 document.getElementById('player-balance').innerText = formatRiel(currentBalance);
-                wonPrizesForCart = data.prizes;
+                
+                // AUTOMATICALLY SAVE TO CART BEFORE REVEAL
+                autoAddPrizesToCart(data.prizes);
 
                 setTimeout(() => {
                     boxIcon.classList.remove('anim-shake'); machine.classList.add('anim-float');
@@ -434,11 +540,12 @@
             }
         }
 
-        // --- REVEAL MODAL LOGIC (CASH BONUS) ---
+        // --- REVEAL MODAL LOGIC (SKIN CARD STYLE) ---
         function showPrizes(prizes, extraReward = 0) {
             const modal = document.getElementById('prize-modal');
             const showcase = document.getElementById('prize-showcase');
             const congratsText = document.getElementById('congrats-text');
+            const autoSaveText = document.getElementById('auto-save-text');
             
             showcase.innerHTML = ''; 
             
@@ -449,14 +556,22 @@
 
             if (extraReward > 0) {
                 const bonusHtml = `
-                    <div class="anim-pop opacity-0 bg-gradient-to-b from-green-50 to-green-100 rounded-3xl p-4 border-2 border-green-400 flex flex-col items-center w-[45%] sm:w-40 shadow-xl relative" style="animation-delay: 0s">
-                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-md bg-green-500 text-white border border-green-400 whitespace-nowrap">
-                            <i class="fa-solid fa-gift mr-1"></i> BONUS
+                    <div class="anim-pop opacity-0 loot-card card-Legendary w-[45%] sm:w-48 h-64 sm:h-72 m-2" style="animation-delay: 0s">
+                        <div class="card-inner">
+                            <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.1),transparent_70%)] pointer-events-none"></div>
+                            
+                            <div class="z-20 px-3 py-1 rounded-b-xl text-[10px] font-black uppercase tracking-widest shadow-md bg-green-500 text-white border-x border-b border-white/20 mb-4 -mt-4">
+                                <i class="fa-solid fa-gift mr-1"></i> BONUS
+                            </div>
+                            
+                            <div class="flex-1 w-full flex items-center justify-center relative z-20">
+                                <i class="fa-solid fa-money-bills text-6xl text-green-400 drop-shadow-[0_0_15px_rgba(74,222,128,0.8)] anim-float-fast"></i>
+                            </div>
+                            
+                            <h3 class="z-20 mt-4 text-sm sm:text-base font-black text-center text-green-400 leading-tight bg-black/50 w-full py-2 rounded-lg border border-green-500/30 backdrop-blur-md">
+                                +${extraReward.toLocaleString()} ៛
+                            </h3>
                         </div>
-                        <div class="w-20 h-20 sm:w-24 sm:h-24 mb-3 mt-3 flex items-center justify-center bg-white rounded-2xl border border-green-200 shadow-sm text-green-500">
-                            <i class="fa-solid fa-money-bills text-4xl sm:text-5xl drop-shadow-md"></i>
-                        </div>
-                        <h3 class="text-xs sm:text-sm font-black text-center text-green-700 leading-tight">+${extraReward.toLocaleString()} ៛</h3>
                     </div>
                 `;
                 showcase.innerHTML += bonusHtml;
@@ -467,14 +582,26 @@
                 const delay = (index + delayOffset) * 0.2; 
                 
                 const html = `
-                    <div class="anim-pop opacity-0 bg-white rounded-3xl p-4 border border-gray-100 flex flex-col items-center w-[45%] sm:w-40 shadow-xl relative" style="animation-delay: ${delay}s">
-                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-md rarity-badge-${prize.rarity} whitespace-nowrap border border-white/50">
-                            ${prize.rarity}
+                    <div class="anim-pop opacity-0 loot-card card-${prize.rarity} w-[45%] sm:w-48 h-64 sm:h-72 m-2" style="animation-delay: ${delay}s">
+                        <div class="card-inner">
+                            <!-- Inner glow effect -->
+                            <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.15),transparent_70%)] pointer-events-none"></div>
+                            
+                            <!-- Rarity Banner -->
+                            <div class="z-20 px-3 py-1 rounded-b-xl text-[10px] font-black uppercase tracking-widest shadow-md rarity-badge-${prize.rarity} border-x border-b border-white/20 mb-4 -mt-4">
+                                ${prize.rarity}
+                            </div>
+                            
+                            <!-- Main Image -->
+                            <div class="flex-1 w-full flex items-center justify-center relative z-20 px-2 py-4">
+                                <img src="${prize.image}" class="max-w-full max-h-full object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] anim-float-fast">
+                            </div>
+                            
+                            <!-- Name Plate -->
+                            <h3 class="z-20 mt-4 text-xs sm:text-sm font-black text-center text-white leading-tight bg-black/50 w-full py-2 px-1 rounded-lg border border-white/10 backdrop-blur-md line-clamp-2 min-h-[48px] flex items-center justify-center">
+                                ${prize.name}
+                            </h3>
                         </div>
-                        <div class="w-20 h-20 sm:w-24 sm:h-24 mb-3 mt-3 flex items-center justify-center p-2 bg-gray-50 rounded-2xl border border-gray-100">
-                            <img src="${prize.image}" class="max-w-full max-h-full object-contain drop-shadow-md mix-blend-multiply">
-                        </div>
-                        <h3 class="text-xs sm:text-sm font-black text-center text-gray-900 leading-tight">${prize.name}</h3>
                     </div>
                 `;
                 showcase.innerHTML += html;
@@ -485,15 +612,18 @@
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 congratsText.style.opacity = '1'; congratsText.style.transform = 'translateY(0)';
+                autoSaveText.style.opacity = '1'; autoSaveText.style.transform = 'translateY(0)';
             }, 50);
         }
 
         function closePrizeModal() {
             const modal = document.getElementById('prize-modal');
             const congratsText = document.getElementById('congrats-text');
+            const autoSaveText = document.getElementById('auto-save-text');
             
             modal.classList.add('opacity-0');
             congratsText.style.opacity = '0'; congratsText.style.transform = 'translateY(-10px)';
+            autoSaveText.style.opacity = '0'; autoSaveText.style.transform = 'translateY(-10px)';
             
             setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); isSpinning = false; }, 300);
         }
@@ -513,32 +643,6 @@
         }
 
         function saveCart() { localStorage.setItem('sr_cart', JSON.stringify(userCart)); updateCartBadge(); }
-
-        function claimPrizesToCart() {
-            wonPrizesForCart.forEach(prize => {
-                const prizeId = prize.id || prize.name; 
-                const existing = userCart.find(i => i.id === prizeId);
-                if(existing) {
-                    existing.qty += 1;
-                } else {
-                    userCart.push({
-                        id: prizeId,
-                        type: 'reward',
-                        title: prize.name,
-                        style: `Reward (${prize.rarity})`,
-                        price: 0,
-                        image: prize.image,
-                        maxStock: 99,
-                        qty: 1,
-                        selected: true
-                    });
-                }
-            });
-            wonPrizesForCart = [];
-            saveCart();
-            closePrizeModal();
-            showToast('Rewards Claimed to Cart!', 'success');
-        }
 
         function openCartDrawer() { renderCartUI(); document.getElementById('cart-drawer').classList.remove('translate-y-full'); }
         function closeCartDrawer() { document.getElementById('cart-drawer').classList.add('translate-y-full'); }
