@@ -140,15 +140,14 @@
         width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
     }
 
-    /* Style 2 Aspect Ratio Fix (900 * 1500px -> 9/15) */
+    /* Style 2 layout adjustments to represent full 900*1500px proportions */
     .style-2-item {
         aspect-ratio: 9 / 15;
         position: relative;
-        overflow: hidden;
     }
     
-    /* Global long-press indicator helper styles */
-    .long-press-target {
+    /* Device-agnostic touch gesture setup */
+    .long-press-zoomable {
         user-select: none;
         -webkit-user-select: none;
         -webkit-touch-callout: none;
@@ -185,7 +184,7 @@
               <span class="text-[10px] text-gray-400 mt-2 block">ព័ត៍មានបន្ថែមអាចពិចារណាតាមតារាងខាងក្រោម<br>(ចុចលើរូបភាពដើម្បីមើលពេញ)</span>
           </p>
           
-          <div class="w-full h-32 bg-gray-50 rounded-xl overflow-hidden cursor-pointer border border-gray-200 shadow-sm" onclick="openImageViewer('static/images/size_guide.jpg')">
+          <div class="w-full h-32 bg-gray-50 rounded-xl overflow-hidden cursor-pointer border border-gray-200 shadow-sm animate-pulse" onclick="openImageViewer('static/images/size_guide.jpg')">
               <img src="static/images/size_guide.jpg" onerror="this.src='https://images.unsplash.com/photo-1616401784845-180882ba9ba8?auto=format&fit=crop&q=80&w=600'" class="w-full h-full object-cover hover:scale-105 transition-transform" alt="Size Guide">
           </div>
           
@@ -196,10 +195,11 @@
       </div>
   </div>
 
-  <!-- IMAGE VIEWER MODAL -->
-  <div id="image-viewer-modal" class="fixed inset-0 z-[7000] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+  <!-- IMAGE VIEWER / LONG PRESS ZOOM MODAL -->
+  <div id="image-viewer-modal" class="fixed inset-0 z-[7000] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-md transition-opacity duration-300">
       <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
-      <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl mb-6">
+      <img id="viewer-img" src="" class="max-w-[90vw] max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/10 transform scale-95 transition-transform duration-300">
+      <p class="text-white/60 text-xs font-medium tracking-wide mt-4 font-['Kantumruy_Pro']">ចុចប៊ូតុងខាងលើ ឬចុចផ្ទៃខាងក្រៅដើម្បីបិទវិញ</p>
   </div>
 
   <div id="tutorialModal" class="fixed inset-0 z-[1300] flex items-center justify-center px-4 modal-hidden">
@@ -295,7 +295,7 @@
                  <div class="flex flex-col">
                     <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest font-['Kantumruy_Pro']" data-i18n="header_price">តម្លៃ</span>
                     <div class="flex items-baseline gap-1">
-                        <span id="header-price" class="text-sm font-black text-[#ea580c] leading-none">0</span>
+                        <span id="header-price-khr" class="text-sm font-black text-[#ea580c] leading-none">0</span>
                     </div>
                  </div>
             </div>
@@ -341,31 +341,34 @@
                 <input type="text" id="load-code-input" class="flex-grow bg-white border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono uppercase tracking-widest text-gray-900 focus:border-[#ea580c] focus:ring-1 focus:ring-orange-500 outline-none transition-all placeholder:normal-case placeholder:text-gray-400 font-['Kantumruy_Pro']" placeholder="ដាក់លេខកូដដើម្បីរចនាបន្ត..." data-i18n-placeholder="placeholder_load">
                 <button onclick="loadDesignCode()" class="bg-gray-900 text-white px-4 rounded-lg text-[10px] font-bold uppercase tracking-wide active:scale-95 transition-transform shadow-lg shadow-gray-200 font-['Kantumruy_Pro']" data-i18n="load">ដាក់កូដ</button>
             </div>
-            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-center pt-1 font-['Kantumruy_Pro']" data-i18n="hint_drag">ចុចជាប់លើគ្រាប់ដើម្បីអូសប្តូរទីតាំង • ចុចម្ដងដើម្បីជ្រើសរើស • ចុចជាប់លើរូបថតដើម្បីពង្រីក</p>
+            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-center pt-1 font-['Kantumruy_Pro']" data-i18n="hint_drag">ចុចជាប់លើគ្រាប់ដើម្បីអូសប្តូរទីតាំង • ចុចម្ដងដើម្បីជ្រើសរើស • សង្កត់ឱ្យជាប់លើគ្រាប់ដើម្បីពង្រីករូបភាព</p>
         </div>
     </div>
   </section>
 
-  <!-- CATEGORIES & CHARMS (WITH LAYOUT SWITCH) -->
-  <section class="p-4 pb-48">
-    <div class="flex items-center justify-between mb-4">
+  <!-- STICKY SELECTION SECTION: Styled and configured to be dynamic and sticky as requested -->
+  <section class="sticky top-[324px] z-[80] bg-[#fcfbf9]/95 backdrop-blur-md border-b border-gray-200/50 p-4 shadow-sm">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-2">
             <span class="romdul-icon" style="width:16px; height:16px;"></span>
             <h4 id="collection-title-text" class="text-[12px] text-gray-600 uppercase tracking-[0.1em] font-['Moul']" data-i18n="collection_title">ក្រុមកូឡិកសិន</h4>
         </div>
         
-        <!-- TWO STYLE SWITCHER -->
+        <!-- STICKY TWO STYLE SWITCHER -->
         <div class="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200 shadow-inner">
-            <button onclick="setDisplayStyle(1)" id="btn-style-1" class="px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all">Style 1</button>
-            <button onclick="setDisplayStyle(2)" id="btn-style-2" class="px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all">Style 2</button>
+            <button onclick="setDisplayStyle(1)" id="btn-style-1" class="px-3 py-1.5 rounded-md bg-white shadow-sm text-[10px] font-black text-[#ea580c] transition-all">Style 1</button>
+            <button onclick="setDisplayStyle(2)" id="btn-style-2" class="px-3 py-1.5 rounded-md text-[10px] font-black text-gray-500 hover:text-gray-700 transition-all">Style 2</button>
         </div>
     </div>
-    
+  </section>
+
+  <!-- CATEGORY & CHARM GALLERIES -->
+  <section class="p-4 pb-48 max-w-4xl mx-auto">
     <!-- STYLE 1: CATEGORY GALLERY -->
     <div id="categoryGallery" class="grid grid-cols-6 gap-2"></div>
     
-    <!-- STYLE 2: ALL CHARMS (9:15 RESPONSIVE DISPLAY GRID) -->
-    <div id="allCharmsGallery" class="gap-2" style="display: none; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));"></div>
+    <!-- STYLE 2: ALL CHARMS (PERFECT MOBILE 8 COLS GRID AS REQUESTED) -->
+    <div id="allCharmsGallery" class="gap-1.5" style="display: none; grid-template-columns: repeat(8, minmax(0, 1fr));"></div>
   </section>
 
   <!-- CHARM SELECTOR DRAWER (For Style 1) -->
@@ -396,11 +399,10 @@
             <i class="fa-brands fa-telegram text-2xl"></i>
         </a>
         
-        <button onclick="addRandom()" class="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-2xl text-gray-400 active:scale-90 transition-transform hover:bg-gray-100">
+        <button onclick="addRandom()" class="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-2xl text-gray-400 active:scale-90 transition-transform hover:bg-100">
             <i class="fa-solid fa-shuffle text-lg"></i>
         </button>
         
-        <!-- Modified onclick to intercept size check -->
         <button onclick="checkSizeBeforePackaging()" id="save-design-btn" disabled class="flex-grow bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
             <i class="fa-solid fa-cart-plus text-sm"></i>
             <span data-i18n="checkout_btn">បញ្ចូលទៅកន្ត្រក</span>
@@ -436,14 +438,16 @@
                   </div>
                   <div class="w-full h-px bg-dashed border-t-2 border-dashed border-gray-100"></div>
                   <div class="flex justify-between items-center p-4 bg-white">
-                       <div class="flex flex-col items-center flex-1">
-                           <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" data-i18n="count">ចំនួន</span>
-                           <span id="preview-count" class="text-xl font-black text-gray-900 mt-1">0</span>
-                       </div>
-                       <div class="w-px h-8 bg-gray-100"></div>
-                       <div class="flex flex-col items-center flex-1">
-                           <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" data-i18n="subtotal">តម្លៃសរុប</span>
-                           <span id="preview-price" class="text-xl font-black text-[#ea580c] mt-1">0</span>
+                       <div class="flex justify-between items-center w-full">
+                           <div class="flex flex-col items-center flex-1">
+                               <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" data-i18n="count">ចំនួន</span>
+                               <span id="preview-count" class="text-xl font-black text-gray-900 mt-1">0</span>
+                           </div>
+                           <div class="w-px h-8 bg-gray-100"></div>
+                           <div class="flex flex-col items-center flex-1">
+                               <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" data-i18n="subtotal">តម្លៃសរុប</span>
+                               <span id="preview-price" class="text-xl font-black text-[#ea580c] mt-1">0</span>
+                           </div>
                        </div>
                   </div>
               </div>
@@ -460,7 +464,7 @@
                           <div class="text-center">
                               <p class="text-xs font-black uppercase text-gray-900 font-['Moul']" data-i18n="pkg_premium">ប្រអប់ Premium</p>
                               <p class="text-[9px] text-gray-500 font-medium mt-1 font-['Kantumruy_Pro']" data-i18n="pkg_premium_desc">សម្រាប់អ្នកពិសេស</p>
-                              <p class="text-[10px] text-[#ea580c] font-black mt-1">+2000</p>
+                              <p class="text-[10px] text-[#ea580c] font-black mt-1">2,000</p>
                           </div>
                       </div>
                       <div onclick="saveToCart('Normal Bag', 'static/images/normal_bag.jpg', 0)" class="package-card border-2 border-gray-100 rounded-2xl p-4 flex flex-col items-center gap-3 cursor-pointer transition-all bg-white shadow-sm">
@@ -492,7 +496,7 @@
         </div>
         <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
         <div class="bg-white border-t border-gray-100 p-5 z-10">
-            <!-- NEW ITEMIZED TOTALS -->
+            <!-- ITEMIZED TOTALS -->
             <div class="space-y-2 mb-4">
                 <div class="flex justify-between items-center text-xs font-bold text-gray-500">
                     <span data-i18n="subtotal">Subtotal (តម្លៃទំនិញ)</span>
@@ -564,7 +568,7 @@
             copy: "Copy",
             load: "បញ្ជូន",
             placeholder_load: "Paste Code នៅទីនេះ",
-            hint_drag: "ចុចជាប់លើគ្រាប់ដើម្បីអូសប្តូរទីតាំង • ចុចម្ដងដើម្បីជ្រើសរើស • ចុចជាប់លើរូបថតដើម្បីពង្រីក",
+            hint_drag: "ចុចជាប់លើគ្រាប់ដើម្បីអូសប្តូរទីតាំង • ចុចម្ដងដើម្បីជ្រើសរើស • សង្កត់ឱ្យជាប់លើគ្រាប់ដើម្បីពង្រីករូបភាព",
             collection_title: "ប្រភេទគ្រាប់",
             all_charms: "ត្បូងទាំងអស់",
             select_charm_title: "ជ្រើសរើសគ្រាប់",
@@ -619,7 +623,7 @@
             copy: "Copy",
             load: "Load",
             placeholder_load: "Paste code to load...",
-            hint_drag: "Hold and Drag to reorder • Tap once to select • Long press on images to zoom",
+            hint_drag: "Hold and Drag to reorder • Tap once to select • Long press images to zoom",
             collection_title: "Collections",
             all_charms: "All Charms",
             select_charm_title: "Select Charm",
@@ -687,25 +691,16 @@
     let dragStartIndex = -1;
     let hasMoved = false;
 
-    // --- LONG PRESS GESTURE SETUP ---
-    let longPressTimer = null;
-    function startLongPress(e, imgUrl) {
-        clearLongPress();
-        longPressTimer = setTimeout(() => {
-            openImageViewer(imgUrl);
-            if (navigator.vibrate) {
-                navigator.vibrate(50);
-            }
-        }, 500); // 500ms for long press
-    }
-    function clearLongPress() {
-        if (longPressTimer) {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-        }
-    }
+    // LONG PRESS IMAGE ZOOM DETECTION STATE
+    let longPressTimeout = null;
+    let longPressActive = false;
 
     function t(key) { return translations[currentLang][key] || key; }
+
+    // Utility function to format prices with thousands commas (e.g., 3,000, 4,000)
+    function formatNumber(num) {
+        return Math.round(num).toLocaleString('en-US');
+    }
 
     function toggleLanguage() {
         currentLang = currentLang === 'KH' ? 'EN' : 'KH';
@@ -740,6 +735,31 @@
             badge.classList.remove('hidden');
         } else {
             badge.classList.add('hidden');
+        }
+    }
+
+    // LONG PRESS HANDLERS FOR DEVICE INDEPENDENCE
+    function handleImageTouchStart(e, imgUrl) {
+        longPressActive = false;
+        longPressTimeout = setTimeout(() => {
+            longPressActive = true;
+            if (navigator.vibrate) navigator.vibrate(40); // Subtle vibration feedback
+            openImageViewer(imgUrl);
+        }, 500); // 500ms Threshold for Long Press
+    }
+
+    function handleImageTouchEnd(e) {
+        if (longPressTimeout) {
+            clearTimeout(longPressTimeout);
+            longPressTimeout = null;
+        }
+    }
+
+    function handleImageTouchMove(e) {
+        // Cancel if moving while pressing
+        if (longPressTimeout) {
+            clearTimeout(longPressTimeout);
+            longPressTimeout = null;
         }
     }
 
@@ -825,14 +845,14 @@
         const titleText = document.getElementById('collection-title-text');
 
         if (style === 1) {
-            btn1.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
-            btn2.className = "px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
+            btn1.className = "px-3 py-1.5 rounded-md bg-white shadow-sm text-[10px] font-black text-[#ea580c] transition-all";
+            btn2.className = "px-3 py-1.5 rounded-md text-[10px] font-black text-gray-500 hover:text-gray-700 transition-all";
             catGallery.style.display = 'grid';
             allGallery.style.display = 'none';
             titleText.innerText = t('collection_title');
         } else {
-            btn2.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
-            btn1.className = "px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
+            btn2.className = "px-3 py-1.5 rounded-md bg-white shadow-sm text-[10px] font-black text-[#ea580c] transition-all";
+            btn1.className = "px-3 py-1.5 rounded-md text-[10px] font-black text-gray-500 hover:text-gray-700 transition-all";
             catGallery.style.display = 'none';
             allGallery.style.display = 'grid';
             titleText.innerText = t('all_charms');
@@ -847,39 +867,37 @@
             const charm = allCharms.find(c => c.categories.includes(cat));
             if(!charm || !charm.image) return '';
             return `
-                <div onclick="openDrawer('${cat}')" 
-                     onpointerdown="startLongPress(event, '${charm.image}')"
-                     onpointerup="clearLongPress()"
-                     onpointerleave="clearLongPress()"
-                     onpointercancel="clearLongPress()"
-                     class="flex flex-col gap-1 active:scale-95 transition-transform cursor-pointer group long-press-target">
+                <div onclick="if(!longPressActive) openDrawer('${cat}')" 
+                     onpointerdown="handleImageTouchStart(event, '${charm.image}')"
+                     onpointerup="handleImageTouchEnd(event)"
+                     onpointerleave="handleImageTouchEnd(event)"
+                     onpointercancel="handleImageTouchEnd(event)"
+                     class="flex flex-col gap-1 active:scale-95 transition-transform cursor-pointer group long-press-zoomable">
                     <div class="w-full aspect-square bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden p-1 flex items-center justify-center group-hover:shadow-md transition-shadow relative">
                         <div class="absolute inset-0 bg-gradient-to-tr from-gray-50 to-transparent opacity-50"></div>
-                        <img src="${charm.image}" class="w-full h-full object-contain drop-shadow-sm relative z-10">
+                        <img src="${charm.image}" class="w-full h-full object-contain drop-shadow-sm relative z-10 pointer-events-none">
                     </div>
                     <span class="text-[7px] font-bold text-gray-500 uppercase truncate w-full text-center tracking-wide font-['Kantumruy_Pro']">${cat}</span>
                 </div>`;
         }).join('');
     }
 
-    // STYLE 2 RENDER: Fully rendering images inside the specified tall proportion (aspect-ratio 9:15) with simple numbers
+    // STYLE 2 RENDER: Correct proportions (aspect-ratio: 9/15) with beautiful comma-separated prices
     function renderAllCharmsGallery() {
         const allGallery = document.getElementById('allCharmsGallery');
         allGallery.innerHTML = allCharms.map(c => {
             let isOut = (c.stock !== undefined && c.stock <= 0);
             return `
-                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" 
-                     onpointerdown="startLongPress(event, '${c.image}')"
-                     onpointerup="clearLongPress()"
-                     onpointerleave="clearLongPress()"
-                     onpointercancel="clearLongPress()"
-                     class="relative style-2-item flex flex-col items-center justify-between p-1 bg-white rounded-xl border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-md ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 cursor-pointer overflow-hidden'} long-press-target">
-                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1 py-0.5 rounded-bl shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
-                    <div class="w-full flex-grow flex items-center justify-center p-0.5 overflow-hidden">
-                        <img src="${c.image}" class="max-w-full max-h-full object-contain drop-shadow-sm" style="height: auto; width: 100%;">
-                    </div>
-                    <div class="w-full text-center py-1 mt-auto">
-                        <p class="text-[9px] font-black text-gray-800 tracking-tight leading-none">${Math.round(c.price)}</p>
+                <div onclick="if(!longPressActive && !${isOut}) addCharmById('${c.ui_id}')" 
+                     onpointerdown="handleImageTouchStart(event, '${c.image}')"
+                     onpointerup="handleImageTouchEnd(event)"
+                     onpointerleave="handleImageTouchEnd(event)"
+                     onpointercancel="handleImageTouchEnd(event)"
+                     class="relative style-2-item flex flex-col items-center justify-center p-0.5 bg-white rounded-lg border border-gray-100 shadow-sm transition-shadow hover:shadow-md ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer overflow-hidden'} long-press-zoomable">
+                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[4px] px-0.5 py-0.5 rounded-bl shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
+                    <img src="${c.image}" class="w-full h-full object-contain drop-shadow-sm pointer-events-none mb-[12px]">
+                    <div class="absolute bottom-0 inset-x-0 w-full text-center bg-gray-50/95 py-[2px] border-t border-gray-100">
+                        <p class="text-[6px] font-black text-[#ea580c] truncate px-0.5">${formatNumber(c.price)}</p>
                     </div>
                 </div>`;
         }).join('');
@@ -891,21 +909,43 @@
         grid.innerHTML = allCharms.filter(c => c.categories.includes(cat)).map(c => {
             let isOut = (c.stock !== undefined && c.stock <= 0);
             return `
-                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" 
-                     onpointerdown="startLongPress(event, '${c.image}')"
-                     onpointerup="clearLongPress()"
-                     onpointerleave="clearLongPress()"
-                     onpointercancel="clearLongPress()"
-                     class="relative flex flex-col items-center gap-1 p-1 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer'} long-press-target">
+                <div onclick="if(!longPressActive && !${isOut}) addCharmById('${c.ui_id}')" 
+                     onpointerdown="handleImageTouchStart(event, '${c.image}')"
+                     onpointerup="handleImageTouchEnd(event)"
+                     onpointerleave="handleImageTouchEnd(event)"
+                     onpointercancel="handleImageTouchEnd(event)"
+                     class="relative flex flex-col items-center gap-1 p-1 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer'} long-press-zoomable">
                     ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1.5 py-0.5 rounded shadow-sm z-20 font-black tracking-widest uppercase font-['Kantumruy_Pro']">${t('sold_out')}</div>` : ''}
-                    <img src="${c.image}" class="w-full aspect-square object-contain drop-shadow-sm">
+                    <img src="${c.image}" class="w-full aspect-square object-contain drop-shadow-sm pointer-events-none">
                     <div class="w-full text-center border-t border-gray-50 pt-0.5 mt-0.5">
-                        <p class="text-[8px] font-black text-gray-900">${Math.round(c.price)}</p>
+                        <p class="text-[7px] font-black text-gray-900">${formatNumber(c.price)}</p>
                     </div>
                 </div>`;
         }).join('');
         const drawer = document.getElementById('drawer');
         drawer.style.transform = 'translateY(0%)'; drawer.style.pointerEvents = 'auto'; 
+    }
+
+    // VIEWING & LONG PRESS MODAL UTILITIES
+    function openImageViewer(src) {
+        document.getElementById('viewer-img').src = src;
+        const modal = document.getElementById('image-viewer-modal');
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('viewer-img').classList.remove('scale-95');
+            document.getElementById('viewer-img').classList.add('scale-100');
+        }, 10);
+    }
+    
+    function closeImageViewer() {
+        document.getElementById('viewer-img').classList.remove('scale-100');
+        document.getElementById('viewer-img').classList.add('scale-95');
+        const modal = document.getElementById('image-viewer-modal');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        }, 200);
     }
 
     function closeDrawer() { 
@@ -967,7 +1007,7 @@
         toast.classList.remove('opacity-0', 'scale-90'); setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500);
     }
 
-    // --- ENHANCED DRAG AND DROP REORDERING SYSTEM ---
+    // --- DRAG AND DROP REORDERING SYSTEM ---
     function handlePointerDown(e, uid, index) {
         if (e.target.closest('.remove-btn-anim')) return;
 
@@ -1054,7 +1094,7 @@
 
         let total = 0; selectedCharms.forEach(c => total += c.price);
         document.getElementById('header-count').innerText = selectedCharms.length;
-        document.getElementById('header-price').innerText = Math.round(total);
+        document.getElementById('header-price-khr').innerText = formatNumber(total);
         document.getElementById('share-code-input').value = getDesignCode();
         
         const duplicateBtn = document.getElementById('duplicate-btn');
@@ -1083,11 +1123,11 @@
                      class="bracelet-link-container group ${isSelected ? 'selected' : ''}" 
                      data-uid="${c.uid}">
                     <img src="${c.image}" draggable="false" 
-                         onpointerdown="startLongPress(event, '${c.image}')"
-                         onpointerup="clearLongPress()"
-                         onpointerleave="clearLongPress()"
-                         onpointercancel="clearLongPress()"
-                         class="long-press-target">
+                         onpointerdown="handleImageTouchStart(event, '${c.image}')"
+                         onpointerup="handleImageTouchEnd(event)"
+                         onpointerleave="handleImageTouchEnd(event)"
+                         onpointercancel="handleImageTouchEnd(event)"
+                         class="long-press-zoomable">
                     
                     <button onpointerdown="removeCharm('${c.uid}', event)" onclick="event.stopPropagation()" class="remove-btn-anim w-7 h-7 bg-red-500 text-white rounded-full items-center justify-center text-[12px] shadow-lg z-50 hover:bg-red-600 active:scale-90 transition-transform cursor-pointer">
                         <i class="fa-solid fa-trash-can pointer-events-none"></i>
@@ -1149,7 +1189,6 @@
         if (selectedCharms.length > 0 && selectedCharms.length <= 16) {
             const modal = document.getElementById('sizeWarningModal');
             modal.style.display = 'flex';
-            // Give a tiny delay for the display block to register before removing hidden class to allow animations
             setTimeout(() => {
                 modal.classList.remove('hidden');
             }, 10);
@@ -1161,28 +1200,12 @@
     function closeSizeWarning() {
         const modal = document.getElementById('sizeWarningModal');
         modal.classList.add('hidden');
-        setTimeout(() => { modal.style.display = 'none'; }, 300); // Wait for transition
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
     }
 
     function proceedToPackaging() {
         closeSizeWarning();
         startPackagingFlow();
-    }
-
-    // --- IMAGE VIEWER FOR CART AND SIZE GUIDE ---
-    function openImageViewer(src) {
-        document.getElementById('viewer-img').src = src;
-        document.getElementById('image-viewer-modal').style.display = 'flex';
-        setTimeout(() => {
-            document.getElementById('image-viewer-modal').classList.remove('hidden');
-        }, 10);
-    }
-    
-    function closeImageViewer() {
-        document.getElementById('image-viewer-modal').classList.add('hidden');
-        setTimeout(() => {
-            document.getElementById('image-viewer-modal').style.display = 'none';
-        }, 300);
     }
 
     async function startPackagingFlow() {
@@ -1194,7 +1217,7 @@
             let total = 0; selectedCharms.forEach(c => total += c.price);
             document.getElementById('preview-code').innerText = getDesignCode();
             document.getElementById('preview-count').innerText = selectedCharms.length;
-            document.getElementById('preview-price').innerText = Math.round(total).toString();
+            document.getElementById('preview-price').innerText = formatNumber(total);
 
             const tempDiv = document.createElement('div');
             tempDiv.style.cssText = 'position:fixed;left:-9999px;display:flex;background:#fff;padding:20px;';
@@ -1235,14 +1258,14 @@
     function openCartDrawer() { renderCartUI(); const drawer = document.getElementById('cart-drawer'); drawer.style.transform = 'translateY(0%)'; drawer.style.pointerEvents = 'auto'; }
     function closeCartDrawer() { const drawer = document.getElementById('cart-drawer'); drawer.style.transform = 'translateY(100%)'; drawer.style.pointerEvents = 'none'; }
 
-    // --- NEW CORE DELIVERY LOGIC ---
+    // --- DELIVERY FEE MATH ---
     function calculateDelivery(subtotalKHR) {
         if (subtotalKHR === 0) return 0;
         if (subtotalKHR < 20000) return 8000;
         if (subtotalKHR < 40000) return 6000;
         if (subtotalKHR < 60000) return 4000;
         if (subtotalKHR < 80000) return 2000;
-        return 0; // 80,000+ is Free
+        return 0; // 80,000+ KHR Free
     }
 
     function renderCartUI() {
@@ -1261,11 +1284,10 @@
             if (item.type === 'custom_bracelet') {
                 itemTotal = (item.baseTotal + item.pkgPrice) * item.qty;
             } else {
-                itemTotal = (item.price || 0) * item.qty; // Support shared normal items
+                itemTotal = (item.price || 0) * item.qty;
             }
             if(item.selected) subtotal += itemTotal;
             
-            // Custom bracelet layout
             if (item.type === 'custom_bracelet') {
                 return `
                 <div class="bg-white rounded-2xl border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col overflow-hidden mb-4 shadow-sm">
@@ -1273,7 +1295,7 @@
                         <img src="${item.image}" class="w-full h-full object-contain p-2">
                         <div class="absolute bottom-0 inset-x-0 bg-black/60 px-3 py-1.5 flex justify-between text-white text-[10px] font-bold">
                             <span>${item.charms.length} Charms</span>
-                            <span>${Math.round(itemTotal)}</span>
+                            <span>${formatNumber(itemTotal)}</span>
                         </div>
                     </div>
                     <div class="p-3">
@@ -1295,7 +1317,6 @@
                     </div>
                 </div>`;
             } else {
-                // Standard item layout (for cross-page shared carts)
                 return `
                 <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
                     <label class="flex items-start gap-3 cursor-pointer">
@@ -1313,7 +1334,7 @@
                             <p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">${item.style}</p>
                         </div>
                         <div class="flex justify-between items-end mt-2">
-                            <span class="font-black text-sm text-[#ea580c]">${Math.round(itemTotal)}</span>
+                            <span class="font-black text-sm text-[#ea580c]">${formatNumber(itemTotal)}</span>
                             <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
                                 <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600">-</button>
                                 <span class="font-black text-xs w-2 text-center">${item.qty}</span>
@@ -1329,21 +1350,21 @@
         const delivery = calculateDelivery(subtotal);
         const grandTotalKHR = subtotal + delivery;
 
-        document.getElementById('cart-subtotal').innerText = Math.round(subtotal).toString();
+        document.getElementById('cart-subtotal').innerText = formatNumber(subtotal);
         
         const deliveryEl = document.getElementById('cart-delivery');
         if (delivery === 0 && subtotal > 0) {
-            deliveryEl.innerText = "0";
+            deliveryEl.innerText = t('free') || "FREE";
             deliveryEl.className = "text-green-500 font-black";
         } else if (subtotal > 0) {
-            deliveryEl.innerText = Math.round(delivery).toString();
+            deliveryEl.innerText = formatNumber(delivery);
             deliveryEl.className = "text-[#ea580c] font-black";
         } else {
             deliveryEl.innerText = "0";
             deliveryEl.className = "text-gray-500 font-bold";
         }
 
-        document.getElementById('cart-grand-total-khr').innerText = Math.round(grandTotalKHR).toString();
+        document.getElementById('cart-grand-total-khr').innerText = formatNumber(grandTotalKHR);
     }
 
     function toggleCartItem(id) { const item = userCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveCart(); renderCartUI(); } }
@@ -1362,9 +1383,9 @@
         });
         
         const delivery = calculateDelivery(subtotal);
-        document.getElementById('check-subtotal').innerText = Math.round(subtotal).toString();
-        document.getElementById('check-delivery').innerText = Math.round(delivery).toString();
-        document.getElementById('check-total-khr').innerText = Math.round(subtotal + delivery).toString();
+        document.getElementById('check-subtotal').innerText = formatNumber(subtotal);
+        document.getElementById('check-delivery').innerText = delivery === 0 ? t('free') : formatNumber(delivery);
+        document.getElementById('check-total-khr').innerText = formatNumber(subtotal + delivery);
         
         closeCartDrawer(); document.getElementById('checkout-modal').classList.remove('translate-y-full');
     }
@@ -1412,26 +1433,25 @@
 
         try {
             const res = await fetch('/api/checkout', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ name, phone, address, items: itemsPayload, total: totalUSD }) 
             });
             
-            // Success alert message matching exact user specification
+            // Custom alert as per instructions
             alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");
             
-            // Clear checkout selections
+            // Reset state
             userCart = userCart.filter(i => !i.selected); 
             saveCart(); 
             
-            // Automatically open seller's telegram channel to process order details 
-            window.location.href = 'https://t.me/Somphea_Reak';
+            // Redirect to Telegram
+            window.location.href = "https://t.me/Somphea_Reak";
         } catch (e) { 
-            // Fallback user communication on offline checkout
+            // Fallback connection handler
             alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");
             userCart = userCart.filter(i => !i.selected); 
             saveCart(); 
-            window.location.href = 'https://t.me/Somphea_Reak';
+            window.location.href = "https://t.me/Somphea_Reak";
         }
         btn.innerText = t('confirm_order'); btn.disabled = false;
     }
@@ -1444,9 +1464,13 @@
     function scrollManual(val) { document.getElementById('bracelet-preview').scrollBy({ left: val, behavior: 'smooth' }); }
     function addRandom() { const available = allCharms.filter(c => c.stock > 0); if(available.length > 0) addCharmById(available[Math.floor(Math.random() * available.length)].ui_id); }
 
+    // Close viewer by clicking background out of bounds
+    document.getElementById('image-viewer-modal').addEventListener('click', function(e) {
+        if(e.target === this) closeImageViewer();
+    });
+
     init();
   </script>
 </body>
 </html>
-
 
