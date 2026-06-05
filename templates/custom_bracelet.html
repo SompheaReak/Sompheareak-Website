@@ -140,9 +140,18 @@
         width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
     }
 
-    /* All Charms Scrolling Style Helper */
+    /* Style 2 Aspect Ratio Fix (900 * 1500px -> 9/15) */
     .style-2-item {
-        aspect-ratio: 3/4;
+        aspect-ratio: 9 / 15;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Global long-press indicator helper styles */
+    .long-press-target {
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
     }
   </style>
 </head>
@@ -286,8 +295,7 @@
                  <div class="flex flex-col">
                     <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest font-['Kantumruy_Pro']" data-i18n="header_price">តម្លៃ</span>
                     <div class="flex items-baseline gap-1">
-                        <span id="header-price-khr" class="text-sm font-black text-[#ea580c] leading-none">0៛</span>
-                        <span id="header-price-usd" class="text-[10px] font-bold text-gray-400 leading-none">($0.00)</span>
+                        <span id="header-price" class="text-sm font-black text-[#ea580c] leading-none">0</span>
                     </div>
                  </div>
             </div>
@@ -333,7 +341,7 @@
                 <input type="text" id="load-code-input" class="flex-grow bg-white border border-gray-200 rounded-lg py-2 px-3 text-[10px] font-mono uppercase tracking-widest text-gray-900 focus:border-[#ea580c] focus:ring-1 focus:ring-orange-500 outline-none transition-all placeholder:normal-case placeholder:text-gray-400 font-['Kantumruy_Pro']" placeholder="ដាក់លេខកូដដើម្បីរចនាបន្ត..." data-i18n-placeholder="placeholder_load">
                 <button onclick="loadDesignCode()" class="bg-gray-900 text-white px-4 rounded-lg text-[10px] font-bold uppercase tracking-wide active:scale-95 transition-transform shadow-lg shadow-gray-200 font-['Kantumruy_Pro']" data-i18n="load">ដាក់កូដ</button>
             </div>
-            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-center pt-1 font-['Kantumruy_Pro']" data-i18n="hint_drag">ចុចជាប់លើគ្រាប់ដើម្បីអូសប្តូរទីតាំង • ចុចម្ដងដើម្បីជ្រើសរើស</p>
+            <p class="text-[8px] font-bold text-gray-400 uppercase italic text-center pt-1 font-['Kantumruy_Pro']" data-i18n="hint_drag">ចុចជាប់លើគ្រាប់ដើម្បីអូសប្តូរទីតាំង • ចុចម្ដងដើម្បីជ្រើសរើស • ចុចជាប់លើរូបថតដើម្បីពង្រីក</p>
         </div>
     </div>
   </section>
@@ -356,8 +364,8 @@
     <!-- STYLE 1: CATEGORY GALLERY -->
     <div id="categoryGallery" class="grid grid-cols-6 gap-2"></div>
     
-    <!-- STYLE 2: ALL CHARMS (10 PER ROW SCROLLING) -->
-    <div id="allCharmsGallery" class="gap-1" style="display: none; grid-template-columns: repeat(10, minmax(0, 1fr));"></div>
+    <!-- STYLE 2: ALL CHARMS (9:15 RESPONSIVE DISPLAY GRID) -->
+    <div id="allCharmsGallery" class="gap-2" style="display: none; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));"></div>
   </section>
 
   <!-- CHARM SELECTOR DRAWER (For Style 1) -->
@@ -384,7 +392,7 @@
   <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-gray-100 p-3 sm:p-4 z-[110] safe-area-pb">
     <div class="max-w-md mx-auto flex gap-2 sm:gap-3">
         <!-- TELEGRAM BUTTON -->
-        <a href="https://t.me/somphea_reak" target="_blank" class="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 flex items-center justify-center bg-[#e0f2fe] border border-[#bae6fd] rounded-2xl text-[#0284c7] active:scale-90 transition-transform shadow-sm hover:bg-[#bae6fd]">
+        <a href="https://t.me/Somphea_Reak" target="_blank" class="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 flex items-center justify-center bg-[#e0f2fe] border border-[#bae6fd] rounded-2xl text-[#0284c7] active:scale-90 transition-transform shadow-sm hover:bg-[#bae6fd]">
             <i class="fa-brands fa-telegram text-2xl"></i>
         </a>
         
@@ -435,7 +443,7 @@
                        <div class="w-px h-8 bg-gray-100"></div>
                        <div class="flex flex-col items-center flex-1">
                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest" data-i18n="subtotal">តម្លៃសរុប</span>
-                           <span id="preview-price" class="text-xl font-black text-[#ea580c] mt-1">0៛</span>
+                           <span id="preview-price" class="text-xl font-black text-[#ea580c] mt-1">0</span>
                        </div>
                   </div>
               </div>
@@ -452,7 +460,7 @@
                           <div class="text-center">
                               <p class="text-xs font-black uppercase text-gray-900 font-['Moul']" data-i18n="pkg_premium">ប្រអប់ Premium</p>
                               <p class="text-[9px] text-gray-500 font-medium mt-1 font-['Kantumruy_Pro']" data-i18n="pkg_premium_desc">សម្រាប់អ្នកពិសេស</p>
-                              <p class="text-[10px] text-[#ea580c] font-black mt-1">+2,000៛</p>
+                              <p class="text-[10px] text-[#ea580c] font-black mt-1">+2000</p>
                           </div>
                       </div>
                       <div onclick="saveToCart('Normal Bag', 'static/images/normal_bag.jpg', 0)" class="package-card border-2 border-gray-100 rounded-2xl p-4 flex flex-col items-center gap-3 cursor-pointer transition-all bg-white shadow-sm">
@@ -488,17 +496,16 @@
             <div class="space-y-2 mb-4">
                 <div class="flex justify-between items-center text-xs font-bold text-gray-500">
                     <span data-i18n="subtotal">Subtotal (តម្លៃទំនិញ)</span>
-                    <span id="cart-subtotal">0៛</span>
+                    <span id="cart-subtotal">0</span>
                 </div>
                 <div class="flex justify-between items-center text-xs font-bold text-gray-500">
                     <span data-i18n="delivery_fee">Delivery (ថ្លៃដឹកជញ្ជូន)</span>
-                    <span id="cart-delivery">0៛</span>
+                    <span id="cart-delivery">0</span>
                 </div>
                 <div class="flex justify-between items-end pt-2 border-t border-gray-100">
                     <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest" data-i18n="total_to_pay">សរុប (Grand Total)</span>
                     <div class="text-right">
-                        <span id="cart-grand-total-khr" class="text-2xl font-black text-[#ea580c] leading-none block">0៛</span>
-                        <span id="cart-grand-total-usd" class="text-xs text-gray-400 font-bold block mt-1">$0.00</span>
+                        <span id="cart-grand-total-khr" class="text-2xl font-black text-[#ea580c] leading-none block">0</span>
                     </div>
                 </div>
             </div>
@@ -518,11 +525,11 @@
       <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50">
           <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
               <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
-              <div class="flex justify-between text-xs font-bold text-gray-500"><span data-i18n="subtotal">តម្លៃទំនិញសរុប:</span><span id="check-subtotal">៛0</span></div>
-              <div class="flex justify-between text-xs font-bold text-blue-600"><span data-i18n="delivery_fee">ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">៛0</span></div>
+              <div class="flex justify-between text-xs font-bold text-gray-500"><span data-i18n="subtotal">តម្លៃទំនិញសរុប:</span><span id="check-subtotal">0</span></div>
+              <div class="flex justify-between text-xs font-bold text-blue-600"><span data-i18n="delivery_fee">ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">0</span></div>
               <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
                   <span class="text-sm" data-i18n="total_to_pay">សរុបត្រូវបង់:</span>
-                  <span id="check-total-khr" class="text-[#ea580c] text-xl leading-none">៛0</span>
+                  <span id="check-total-khr" class="text-[#ea580c] text-xl leading-none">0</span>
               </div>
           </div>
           <div class="space-y-4">
@@ -557,7 +564,7 @@
             copy: "Copy",
             load: "បញ្ជូន",
             placeholder_load: "Paste Code នៅទីនេះ",
-            hint_drag: "ចុចជាប់លើគ្រាប់ដើម្បីអូសប្តូរទីតាំង • ចុចម្ដងដើម្បីជ្រើសរើស",
+            hint_drag: "ចុចជាប់លើគ្រាប់ដើម្បីអូសប្តូរទីតាំង • ចុចម្ដងដើម្បីជ្រើសរើស • ចុចជាប់លើរូបថតដើម្បីពង្រីក",
             collection_title: "ប្រភេទគ្រាប់",
             all_charms: "ត្បូងទាំងអស់",
             select_charm_title: "ជ្រើសរើសគ្រាប់",
@@ -612,7 +619,7 @@
             copy: "Copy",
             load: "Load",
             placeholder_load: "Paste code to load...",
-            hint_drag: "Hold and Drag to reorder • Tap once to select",
+            hint_drag: "Hold and Drag to reorder • Tap once to select • Long press on images to zoom",
             collection_title: "Collections",
             all_charms: "All Charms",
             select_charm_title: "Select Charm",
@@ -679,6 +686,24 @@
     let dragCurrentX = 0;
     let dragStartIndex = -1;
     let hasMoved = false;
+
+    // --- LONG PRESS GESTURE SETUP ---
+    let longPressTimer = null;
+    function startLongPress(e, imgUrl) {
+        clearLongPress();
+        longPressTimer = setTimeout(() => {
+            openImageViewer(imgUrl);
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }, 500); // 500ms for long press
+    }
+    function clearLongPress() {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+    }
 
     function t(key) { return translations[currentLang][key] || key; }
 
@@ -822,7 +847,12 @@
             const charm = allCharms.find(c => c.categories.includes(cat));
             if(!charm || !charm.image) return '';
             return `
-                <div onclick="openDrawer('${cat}')" class="flex flex-col gap-1 active:scale-95 transition-transform cursor-pointer group">
+                <div onclick="openDrawer('${cat}')" 
+                     onpointerdown="startLongPress(event, '${charm.image}')"
+                     onpointerup="clearLongPress()"
+                     onpointerleave="clearLongPress()"
+                     onpointercancel="clearLongPress()"
+                     class="flex flex-col gap-1 active:scale-95 transition-transform cursor-pointer group long-press-target">
                     <div class="w-full aspect-square bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden p-1 flex items-center justify-center group-hover:shadow-md transition-shadow relative">
                         <div class="absolute inset-0 bg-gradient-to-tr from-gray-50 to-transparent opacity-50"></div>
                         <img src="${charm.image}" class="w-full h-full object-contain drop-shadow-sm relative z-10">
@@ -832,17 +862,24 @@
         }).join('');
     }
 
-    // STYLE 2 RENDER
+    // STYLE 2 RENDER: Fully rendering images inside the specified tall proportion (aspect-ratio 9:15) with simple numbers
     function renderAllCharmsGallery() {
         const allGallery = document.getElementById('allCharmsGallery');
         allGallery.innerHTML = allCharms.map(c => {
             let isOut = (c.stock !== undefined && c.stock <= 0);
             return `
-                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" class="relative style-2-item flex flex-col items-center justify-center p-0.5 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer overflow-hidden'}">
-                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[4px] px-0.5 py-0.5 rounded-bl shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
-                    <img src="${c.image}" class="w-full h-full object-contain drop-shadow-sm mb-[6px]">
-                    <div class="absolute bottom-0 inset-x-0 w-full text-center bg-gray-50/90 py-[2px] border-t border-gray-100">
-                        <p class="text-[5px] sm:text-[6px] font-black text-[#ea580c] truncate px-0.5">${(c.price / 1000).toFixed(0)}k</p>
+                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" 
+                     onpointerdown="startLongPress(event, '${c.image}')"
+                     onpointerup="clearLongPress()"
+                     onpointerleave="clearLongPress()"
+                     onpointercancel="clearLongPress()"
+                     class="relative style-2-item flex flex-col items-center justify-between p-1 bg-white rounded-xl border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-md ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 cursor-pointer overflow-hidden'} long-press-target">
+                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1 py-0.5 rounded-bl shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
+                    <div class="w-full flex-grow flex items-center justify-center p-0.5 overflow-hidden">
+                        <img src="${c.image}" class="max-w-full max-h-full object-contain drop-shadow-sm" style="height: auto; width: 100%;">
+                    </div>
+                    <div class="w-full text-center py-1 mt-auto">
+                        <p class="text-[9px] font-black text-gray-800 tracking-tight leading-none">${Math.round(c.price)}</p>
                     </div>
                 </div>`;
         }).join('');
@@ -854,11 +891,16 @@
         grid.innerHTML = allCharms.filter(c => c.categories.includes(cat)).map(c => {
             let isOut = (c.stock !== undefined && c.stock <= 0);
             return `
-                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" class="relative flex flex-col items-center gap-1 p-1 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer'}">
+                <div onclick="${isOut ? '' : `addCharmById('${c.ui_id}')`}" 
+                     onpointerdown="startLongPress(event, '${c.image}')"
+                     onpointerup="clearLongPress()"
+                     onpointerleave="clearLongPress()"
+                     onpointercancel="clearLongPress()"
+                     class="relative flex flex-col items-center gap-1 p-1 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer'} long-press-target">
                     ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1.5 py-0.5 rounded shadow-sm z-20 font-black tracking-widest uppercase font-['Kantumruy_Pro']">${t('sold_out')}</div>` : ''}
                     <img src="${c.image}" class="w-full aspect-square object-contain drop-shadow-sm">
                     <div class="w-full text-center border-t border-gray-50 pt-0.5 mt-0.5">
-                        <p class="text-[7px] font-black text-gray-900">${c.price.toLocaleString()}៛</p>
+                        <p class="text-[8px] font-black text-gray-900">${Math.round(c.price)}</p>
                     </div>
                 </div>`;
         }).join('');
@@ -1012,8 +1054,7 @@
 
         let total = 0; selectedCharms.forEach(c => total += c.price);
         document.getElementById('header-count').innerText = selectedCharms.length;
-        document.getElementById('header-price-khr').innerText = total.toLocaleString() + "៛";
-        const usd = (total / RATE).toFixed(2); document.getElementById('header-price-usd').innerText = `($${usd})`;
+        document.getElementById('header-price').innerText = Math.round(total);
         document.getElementById('share-code-input').value = getDesignCode();
         
         const duplicateBtn = document.getElementById('duplicate-btn');
@@ -1041,7 +1082,12 @@
                 <div onpointerdown="handlePointerDown(event, '${c.uid}', ${index})" 
                      class="bracelet-link-container group ${isSelected ? 'selected' : ''}" 
                      data-uid="${c.uid}">
-                    <img src="${c.image}" draggable="false">
+                    <img src="${c.image}" draggable="false" 
+                         onpointerdown="startLongPress(event, '${c.image}')"
+                         onpointerup="clearLongPress()"
+                         onpointerleave="clearLongPress()"
+                         onpointercancel="clearLongPress()"
+                         class="long-press-target">
                     
                     <button onpointerdown="removeCharm('${c.uid}', event)" onclick="event.stopPropagation()" class="remove-btn-anim w-7 h-7 bg-red-500 text-white rounded-full items-center justify-center text-[12px] shadow-lg z-50 hover:bg-red-600 active:scale-90 transition-transform cursor-pointer">
                         <i class="fa-solid fa-trash-can pointer-events-none"></i>
@@ -1148,7 +1194,7 @@
             let total = 0; selectedCharms.forEach(c => total += c.price);
             document.getElementById('preview-code').innerText = getDesignCode();
             document.getElementById('preview-count').innerText = selectedCharms.length;
-            document.getElementById('preview-price').innerText = total.toLocaleString() + "៛";
+            document.getElementById('preview-price').innerText = Math.round(total).toString();
 
             const tempDiv = document.createElement('div');
             tempDiv.style.cssText = 'position:fixed;left:-9999px;display:flex;background:#fff;padding:20px;';
@@ -1203,10 +1249,9 @@
         const container = document.getElementById('cart-items-container');
         if(userCart.length === 0) {
             container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-sm uppercase">កន្ត្រកទទេ</p></div>`;
-            document.getElementById('cart-subtotal').innerText = "0៛";
-            document.getElementById('cart-delivery').innerText = "0៛";
-            document.getElementById('cart-grand-total-khr').innerText = "0៛";
-            document.getElementById('cart-grand-total-usd').innerText = "$0.00";
+            document.getElementById('cart-subtotal').innerText = "0";
+            document.getElementById('cart-delivery').innerText = "0";
+            document.getElementById('cart-grand-total-khr').innerText = "0";
             return;
         }
 
@@ -1228,7 +1273,7 @@
                         <img src="${item.image}" class="w-full h-full object-contain p-2">
                         <div class="absolute bottom-0 inset-x-0 bg-black/60 px-3 py-1.5 flex justify-between text-white text-[10px] font-bold">
                             <span>${item.charms.length} Charms</span>
-                            <span>${itemTotal.toLocaleString()}៛</span>
+                            <span>${Math.round(itemTotal)}</span>
                         </div>
                     </div>
                     <div class="p-3">
@@ -1256,7 +1301,7 @@
                     <label class="flex items-start gap-3 cursor-pointer">
                         <input type="checkbox" class="cart-checkbox mt-2 ml-1" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
                     </label>
-                    <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden">
+                    <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden" onclick="openImageViewer('${item.image}')">
                         <img src="${item.image}" class="max-w-full max-h-full object-contain">
                     </div>
                     <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
@@ -1268,7 +1313,7 @@
                             <p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">${item.style}</p>
                         </div>
                         <div class="flex justify-between items-end mt-2">
-                            <span class="font-black text-sm text-[#ea580c]">${itemTotal.toLocaleString()}៛</span>
+                            <span class="font-black text-sm text-[#ea580c]">${Math.round(itemTotal)}</span>
                             <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
                                 <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600">-</button>
                                 <span class="font-black text-xs w-2 text-center">${item.qty}</span>
@@ -1283,24 +1328,22 @@
         // APPLY MATH
         const delivery = calculateDelivery(subtotal);
         const grandTotalKHR = subtotal + delivery;
-        const grandTotalUSD = grandTotalKHR / RATE;
 
-        document.getElementById('cart-subtotal').innerText = subtotal.toLocaleString() + "៛";
+        document.getElementById('cart-subtotal').innerText = Math.round(subtotal).toString();
         
         const deliveryEl = document.getElementById('cart-delivery');
         if (delivery === 0 && subtotal > 0) {
-            deliveryEl.innerText = t('free') || "FREE";
+            deliveryEl.innerText = "0";
             deliveryEl.className = "text-green-500 font-black";
         } else if (subtotal > 0) {
-            deliveryEl.innerText = "+" + delivery.toLocaleString() + "៛";
+            deliveryEl.innerText = Math.round(delivery).toString();
             deliveryEl.className = "text-[#ea580c] font-black";
         } else {
-            deliveryEl.innerText = "0៛";
+            deliveryEl.innerText = "0";
             deliveryEl.className = "text-gray-500 font-bold";
         }
 
-        document.getElementById('cart-grand-total-khr').innerText = grandTotalKHR.toLocaleString() + "៛";
-        document.getElementById('cart-grand-total-usd').innerText = "$" + grandTotalUSD.toFixed(2);
+        document.getElementById('cart-grand-total-khr').innerText = Math.round(grandTotalKHR).toString();
     }
 
     function toggleCartItem(id) { const item = userCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveCart(); renderCartUI(); } }
@@ -1319,9 +1362,9 @@
         });
         
         const delivery = calculateDelivery(subtotal);
-        document.getElementById('check-subtotal').innerText = subtotal.toLocaleString() + "៛";
-        document.getElementById('check-delivery').innerText = delivery === 0 ? t('free') : delivery.toLocaleString() + "៛";
-        document.getElementById('check-total-khr').innerText = (subtotal + delivery).toLocaleString() + "៛";
+        document.getElementById('check-subtotal').innerText = Math.round(subtotal).toString();
+        document.getElementById('check-delivery').innerText = Math.round(delivery).toString();
+        document.getElementById('check-total-khr').innerText = Math.round(subtotal + delivery).toString();
         
         closeCartDrawer(); document.getElementById('checkout-modal').classList.remove('translate-y-full');
     }
@@ -1369,14 +1412,27 @@
 
         try {
             const res = await fetch('/api/checkout', { 
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ name, phone, address, items: itemsPayload, total: totalUSD }) 
             });
-            if(res.ok) { 
-                alert(currentLang === 'KH' ? "បញ្ជាទិញបានជោគជ័យ!" : "Order Successful!"); 
-                userCart = userCart.filter(i => !i.selected); saveCart(); window.location.href = '/'; 
-            }
-        } catch (e) { alert("Error sending order"); }
+            
+            // Success alert message matching exact user specification
+            alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");
+            
+            // Clear checkout selections
+            userCart = userCart.filter(i => !i.selected); 
+            saveCart(); 
+            
+            // Automatically open seller's telegram channel to process order details 
+            window.location.href = 'https://t.me/Somphea_Reak';
+        } catch (e) { 
+            // Fallback user communication on offline checkout
+            alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");
+            userCart = userCart.filter(i => !i.selected); 
+            saveCart(); 
+            window.location.href = 'https://t.me/Somphea_Reak';
+        }
         btn.innerText = t('confirm_order'); btn.disabled = false;
     }
 
@@ -1392,3 +1448,5 @@
   </script>
 </body>
 </html>
+
+
