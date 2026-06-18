@@ -5,7 +5,10 @@
 <!-- Google Fonts - Plus Jakarta Sans for premium, modern, clean typography -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2 family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<!-- Load Sortable.js CDN to guarantee drag-and-drop variant reordering works perfectly -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 
 <style>
     /* Universal Font Overrides & Anti-Aliasing for Perfect Letter Rendering */
@@ -13,7 +16,7 @@
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        letter-spacing: -0.01em;
+        letter-spacing: -0.015em;
     }
 
     /* Guarantees the Edit Button works perfectly */
@@ -48,7 +51,7 @@
                     <div class="flex flex-col gap-3">
                         <div class="space-y-1">
                             <label class="text-[8px] md:text-[9px] font-extrabold text-[#ff5000] uppercase tracking-widest pl-1">1. Select Store</label>
-                            <select name="store" class="input-box border-2 border-orange-200 bg-white font-bold" id="add-store-select">
+                            <select name="store" class="input-box border-2 border-orange-200 bg-white font-bold text-xs" id="add-store-select">
                                 <option value="toy">Toy Store</option>
                                 <option value="lego">LEGO Store</option>
                                 <option value="bracelet">Bracelet Store</option>
@@ -57,7 +60,7 @@
                         </div>
                         <div class="space-y-1 hidden animate-fadeIn" id="lego-type-container">
                             <label class="text-[8px] md:text-[9px] font-extrabold text-[#ff5000] uppercase tracking-widest pl-1">LEGO Mode</label>
-                            <select id="lego-type-select" class="input-box border-2 border-[#ff5000] bg-orange-50 text-orange-900 font-extrabold shadow-sm" onchange="renderUploadVariants()">
+                            <select id="lego-type-select" class="input-box border-2 border-[#ff5000] bg-orange-50 text-orange-900 font-extrabold shadow-sm text-xs" onchange="renderUploadVariants()">
                                 <option value="minifigures">🧩 Minifigures</option>
                                 <option value="building_sets">📦 Box Sets</option>
                             </select>
@@ -68,14 +71,14 @@
                         <div class="tag-wrapper pt-0.5 h-full">
                             <input type="hidden" name="category" id="main-category-input" class="hidden-category-input" value="">
                             <div class="tag-container border-2 border-orange-200 bg-white h-[calc(100%-16px)] items-start">
-                                <input type="text" list="add-cats" class="tag-input font-semibold placeholder-gray-400" placeholder="e.g. Ninjago..." autocomplete="off">
+                                <input type="text" list="add-cats" class="tag-input font-semibold placeholder-gray-400 text-xs" placeholder="e.g. Ninjago..." autocomplete="off">
                             </div>
                         </div>
                         <datalist id="add-cats"></datalist>
                     </div>
                 </div>
 
-                <!-- Thumbnail Mode Switch & Box -->
+                <!-- Quick Upload Thumbnail Switch & Box -->
                 <div class="bg-gray-50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-gray-200 space-y-3">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
@@ -88,17 +91,24 @@
                         </label>
                     </div>
                     
-                    <!-- Hidden toggle state indicator to send to your backend -->
                     <input type="hidden" name="use_custom_thumbnail" id="use-custom-thumbnail" value="false">
 
-                    <!-- Custom Thumbnail File Upload -->
+                    <!-- Custom Thumbnail File Upload (Only active when ON) -->
                     <div id="thumbnail-upload-container" class="hidden animate-fadeIn">
                         <div onclick="document.getElementById('thumbnail-input').click()" class="border-2 border-dashed border-blue-400 rounded-xl p-4 text-center bg-blue-50/30 hover:bg-blue-50 transition-all group cursor-pointer">
                             <input type="file" name="thumbnail" id="thumbnail-input" accept="image/*" class="hidden" onchange="handleThumbnailSelect(this)">
-                            <i class="fa-solid fa-camera text-xl text-blue-500 mb-1.5 group-hover:scale-110 transition-transform"></i>
+                            <div class="w-10 h-10 bg-white rounded-lg border border-gray-200 flex items-center justify-center mx-auto mb-2 shadow-sm relative overflow-hidden">
+                                <img id="quick-thumbnail-preview-img" src="" class="max-w-full max-h-full object-contain hidden mix-blend-multiply">
+                                <i id="quick-thumbnail-placeholder-icon" class="fa-solid fa-camera text-blue-500 text-lg group-hover:scale-110 transition-transform"></i>
+                            </div>
                             <p class="text-[9px] font-extrabold text-blue-600 uppercase tracking-widest">Select Thumbnail</p>
                             <p class="text-[8px] text-blue-400/80 mt-1 font-semibold" id="thumbnail-count-text">No image selected</p>
                         </div>
+                    </div>
+
+                    <!-- Off State Dynamic Feedback -->
+                    <div id="quick-thumbnail-default-notice" class="text-[9px] text-gray-400 font-semibold italic flex items-center gap-1">
+                        <i class="fa-solid fa-circle-info text-[#ff5000]"></i> Autoselects 1st variant's photo as thumbnail.
                     </div>
                 </div>
 
@@ -120,7 +130,7 @@
                 </div>
 
                 <div class="pt-1">
-                    <input type="text" name="title" placeholder="Product Title (Auto-generated if blank)" class="input-box text-xs bg-gray-50 border-gray-100 text-gray-700 font-medium focus:bg-white">
+                    <input type="text" name="title" placeholder="Product Title (Auto-generated if blank)" class="input-box text-xs bg-gray-50 border-gray-100 text-gray-600 font-medium focus:bg-white">
                 </div>
 
                 <button type="submit" class="w-full btn-taobao py-3.5 md:py-4 mt-2 shadow-xl shadow-orange-100 uppercase text-[10px] md:text-[11px] font-extrabold tracking-widest"><i class="fa-solid fa-upload mr-2"></i> Publish Item</button>
@@ -244,31 +254,30 @@
                                             {% if p.category %}{% for pc in p.category.split(',') %}{% if pc.strip() != "" %}
                                             <span class="tag-badge">{{ pc.strip() }} <i class="fa-solid fa-xmark cursor-pointer ml-1 hover:text-red-500 remove-tag-btn"></i></span>
                                             {% endif %}{% endfor %}{% endif %}
-                                            <input type="text" list="edit-cats-{{p.id}}" class="tag-input" placeholder="Add Tag..." autocomplete="off">
+                                            <input type="text" list="edit-cats-{{p.id}}" class="tag-input text-xs" placeholder="Add Tag..." autocomplete="off">
                                         </div>
                                     </div>
                                     <datalist id="edit-cats-{{p.id}}"></datalist>
                                 </div>
                                 <div class="space-y-1">
                                     <label class="text-[8px] md:text-[10px] font-extrabold text-gray-500 uppercase tracking-widest pl-1">Group Title</label>
-                                    <input type="text" name="title" value="{{p.title}}" class="input-box shadow-sm border-gray-200 py-2 md:py-2.5 text-xs font-semibold text-gray-900" placeholder="Title">
+                                    <input type="text" name="title" value="{{p.title}}" class="input-box shadow-sm border border-gray-200 py-2 md:py-2.5 text-xs font-semibold text-gray-900" placeholder="Title">
                                 </div>
                             </div>
 
-                            <!-- Edit Group Thumbnail Box with Custom Switch -->
+                            <!-- Edit Group Thumbnail Box with Switch -->
                             <div class="bg-white p-3 rounded-xl border border-gray-200 flex flex-col justify-between">
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="text-[9px] md:text-[10px] font-extrabold text-gray-700 uppercase tracking-widest flex items-center gap-1.5">
                                         <i class="fa-solid fa-image-portrait text-[#ff5000]"></i> Custom Thumbnail
                                     </span>
                                     <label class="relative inline-flex items-center cursor-pointer">
-                                        <!-- Checked if product is flagged as using a custom thumbnail -->
                                         <input type="checkbox" name="use_custom_thumbnail" value="true" class="sr-only peer edit-thumbnail-toggle" data-product-id="{{p.id}}" onchange="toggleExistingProductThumbnail('{{p.id}}')" {% if p.use_custom_thumbnail %}checked{% endif %}>
                                         <div class="w-8 h-4.5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-[#ff5000]"></div>
                                     </label>
                                 </div>
 
-                                <!-- Dynamic Upload box -->
+                                <!-- Dynamic Upload box (Only active when ON) -->
                                 <div id="edit-thumbnail-upload-wrapper-{{p.id}}" class="{% if not p.use_custom_thumbnail %}hidden{% endif %} animate-fadeIn">
                                     <div class="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border border-gray-200">
                                         <div class="w-12 h-12 bg-white rounded-lg p-0.5 border border-gray-100 flex items-center justify-center shrink-0">
@@ -280,8 +289,16 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div id="edit-thumbnail-default-notice-{{p.id}}" class="{% if p.use_custom_thumbnail %}hidden{% endif %} text-[9px] text-gray-400 font-medium italic">
-                                    <i class="fa-solid fa-circle-info mr-1"></i> Renders first variant image.
+                                
+                                <!-- Dynamic Auto Thumbnail Display (Syncs with the FIRST variant row photo when OFF) -->
+                                <div id="edit-thumbnail-default-notice-{{p.id}}" class="{% if p.use_custom_thumbnail %}hidden{% endif %} flex items-center gap-3 bg-orange-50/50 p-2 rounded-lg border border-orange-100/80 animate-fadeIn">
+                                    <div class="w-12 h-12 bg-white rounded-lg p-0.5 border border-gray-100 flex items-center justify-center shrink-0 shadow-sm">
+                                        <img id="edit-thumbnail-img-auto-{{p.id}}" src="" class="max-w-full max-h-full object-contain mix-blend-multiply">
+                                    </div>
+                                    <div class="flex-1">
+                                        <span class="text-[8px] font-extrabold text-orange-600 uppercase tracking-widest leading-none block">Auto-Thumbnail</span>
+                                        <p class="text-[9px] text-gray-500 font-medium italic mt-0.5">Using first variant image.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -293,22 +310,25 @@
                                 <span class="text-[7px] md:text-[9px] font-bold text-gray-400"><i class="fa-solid fa-arrows-up-down mr-1"></i> Drag to Reorder</span>
                             </div>
 
-                            <div id="sortable-variants-{{p.id}}" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1 md:pr-2 hide-scrollbar pb-2">
+                            <div id="sortable-variants-{{p.id}}" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1 md:pr-2 hide-scrollbar pb-2 sortable-container">
                                 {% for v in p.parsed_variants %}
-                                <div class="variant-row flex flex-col md:flex-row gap-2 bg-gray-50/50 p-2 md:p-3 rounded-xl border border-gray-200 shadow-sm relative group hover:border-[#ff5000] transition-colors">
+                                <div class="variant-row flex flex-col md:flex-row gap-2 bg-gray-50/50 p-2 md:p-3 rounded-xl border border-gray-200 shadow-sm relative group hover:border-[#ff5000] transition-colors" data-variant-image="{{v.image}}">
                                     
                                     <!-- Mobile Top Row: Image & Actions -->
                                     <div class="flex items-center gap-2 border-b border-gray-200 pb-2 md:border-none md:pb-0 md:w-auto">
-                                        <i class="fa-solid fa-grip-vertical text-gray-300 handle px-1 cursor-grab hover:text-[#ff5000]"></i>
-                                        <div class="w-12 h-12 md:w-14 md:h-14 bg-white border border-gray-200 rounded-lg p-1 shrink-0 cursor-pointer hover:opacity-80 shadow-sm" onclick="openImageViewer('{{v.image}}')">
-                                            <img src="{{v.image}}" class="w-full h-full object-contain mix-blend-multiply">
+                                        <!-- GRAB HANDLE FOR DRAGGING -->
+                                        <div class="handle p-2 cursor-grab text-gray-300 hover:text-[#ff5000] flex items-center justify-center">
+                                            <i class="fa-solid fa-grip-vertical text-base"></i>
+                                        </div>
+                                        <div class="w-12 h-12 md:w-14 md:h-14 bg-white border border-gray-200 rounded-lg p-1 shrink-0 cursor-pointer hover:opacity-80 shadow-sm flex items-center justify-center" onclick="openImageViewer('{{v.image}}')">
+                                            <img src="{{v.image}}" class="max-w-full max-h-full object-contain mix-blend-multiply variant-image-preview">
                                         </div>
                                         <!-- Mobile Delete -->
-                                        <button type="button" onclick="this.closest('.variant-row').remove()" class="md:hidden ml-auto w-8 h-8 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 shadow-sm"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                        <button type="button" onclick="removeVariantRow(this, '{{p.id}}')" class="md:hidden ml-auto w-8 h-8 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 shadow-sm"><i class="fa-solid fa-trash-can text-sm"></i></button>
                                     </div>
 
                                     <input type="hidden" name="v_ids[]" value="{{v.id}}">
-                                    <input type="hidden" name="v_images[]" value="{{v.image}}">
+                                    <input type="hidden" name="v_images[]" value="{{v.image}}" class="variant-image-hidden">
                                     
                                     <!-- Inputs Matrix -->
                                     <div class="flex-1 w-full grid grid-cols-2 md:grid-cols-5 gap-2 price-sync-group items-start">
@@ -343,7 +363,7 @@
                                     </div>
 
                                     <!-- Desktop Delete -->
-                                    <button type="button" onclick="this.closest('.variant-row').remove()" class="hidden md:flex w-9 h-9 shrink-0 items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 shadow-sm"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                    <button type="button" onclick="removeVariantRow(this, '{{p.id}}')" class="hidden md:flex w-9 h-9 shrink-0 items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 shadow-sm"><i class="fa-solid fa-trash-can text-sm"></i></button>
                                 </div>
                                 {% endfor %}
                             </div>
@@ -352,7 +372,7 @@
                         <!-- Add Images Button -->
                         <div class="bg-blue-50/50 p-4 md:p-5 rounded-xl md:rounded-2xl border border-blue-100 flex flex-col md:flex-row md:items-center gap-3 md:gap-5 mt-4 md:mt-5 shadow-inner">
                             <div class="flex-1 w-full">
-                                <label class="text-[9px] md:text-[11px] font-extrabold text-blue-600 uppercase tracking-widest block mb-1.5 md:mb-2"><i class="fa-solid fa-plus-circle mr-1"></i> Add New Images to this Product</label>
+                                <label class="text-[9px] md:text-[11px] font-extrabold text-blue-600 uppercase tracking-widest block mb-1.5 md:mb-2"><i class="fa-solid fa-plus-circle mr-1"></i> Add New Variants / Photos to this Product</label>
                                 <input type="file" name="new_images" multiple class="block w-full text-[9px] md:text-[10px] text-gray-500 file:mr-3 file:py-2 file:px-3 md:file:px-5 file:rounded-lg md:file:rounded-xl file:border-0 file:font-extrabold file:bg-blue-600 file:text-white file:uppercase file:tracking-widest hover:file:bg-blue-700 cursor-pointer transition-colors shadow-sm bg-white border border-gray-200 p-1 rounded-xl">
                             </div>
                         </div>
@@ -448,12 +468,14 @@
 
 {% block scripts %}
 <script>
-    // ================= 1. UI HELPERS =================
+    // ================= 1. UI HELPERS & EDIT MODE ACTIONS =================
     function toggleEdit(id) { 
         const item = document.getElementById(`item-${id}`); 
         if(item) {
             item.classList.toggle('is-editing'); 
             if (item.classList.contains('is-editing')) {
+                // Instantly sync preview thumbnail to display image of the first variant if Custom Thumbnail is off
+                syncFirstVariantThumbnail(id);
                 setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
             }
             updateGlobalSaveBar();
@@ -480,8 +502,37 @@
         if(modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
     }
 
+    // Dynamic Auto-Thumbnail image syncing
+    function syncFirstVariantThumbnail(productId) {
+        const toggle = document.querySelector(`.edit-thumbnail-toggle[data-product-id="${productId}"]`);
+        if (!toggle || toggle.checked) return; // Skip if Custom Thumbnail is ON
+
+        const editForm = document.querySelector(`form[data-product-id="${productId}"]`);
+        if (!editForm) return;
+
+        // Get the image source from the first variant row element
+        const firstVariantRow = editForm.querySelector('.variant-row');
+        const autoThumbnailImg = document.getElementById(`edit-thumbnail-img-auto-${productId}`);
+
+        if (firstVariantRow && autoThumbnailImg) {
+            const imgEl = firstVariantRow.querySelector('.variant-image-preview');
+            if (imgEl && imgEl.src) {
+                autoThumbnailImg.src = imgEl.src;
+            }
+        }
+    }
+
+    // Safely remove a variant row and update the auto thumbnail display dynamically
+    function removeVariantRow(button, productId) {
+        const row = button.closest('.variant-row');
+        if (row) {
+            row.remove();
+            syncFirstVariantThumbnail(productId);
+            updateGlobalSaveBar();
+        }
+    }
+
     // ================= 2. FILTERING & CONTEXT-SENSITIVE CATEGORIES =================
-    // Map existing category references and stores dynamically parsed on page seed
     const allSystemCats = [
         {% for cat in global_categories %}
         { name: `{{ cat.name|replace('"', '\\"')|replace("'", "\\'") }}`, store: `{{ cat.store }}` },
@@ -515,8 +566,6 @@
         
         // Contextually update category options in the dropdown filter
         updateCategoryFilterDropdown(store);
-        
-        // Perform active product visual card filtering
         filterProducts();
     }
 
@@ -527,11 +576,8 @@
         if (!select) return;
 
         const previouslySelected = select.value.toLowerCase();
-        
-        // Reset contents back to root template "All Categories"
         select.innerHTML = '<option value="All">All Categories</option>';
 
-        // Gather system categories targeting this active store choice
         const validStoreCats = allSystemCats.filter(c => store === 'All' || c.store === store);
         const uniqueNames = [...new Set(validStoreCats.map(c => c.name))].filter(name => name.trim() !== "");
 
@@ -559,36 +605,54 @@
     }
 
     // ================= 3. THUMBNAIL TOGGLE SYSTEM =================
-    // Quick Upload Thumbnail toggles
+    // Quick Upload Thumbnail toggle
     function toggleThumbnailUpload() {
         const toggle = document.getElementById('thumbnail-toggle');
         const container = document.getElementById('thumbnail-upload-container');
         const hiddenState = document.getElementById('use-custom-thumbnail');
+        const defaultNotice = document.getElementById('quick-thumbnail-default-notice');
         const thumbnailInput = document.getElementById('thumbnail-input');
 
         if (toggle.checked) {
             container.classList.remove('hidden');
+            defaultNotice.classList.add('hidden');
             hiddenState.value = "true";
             thumbnailInput.required = true;
         } else {
             container.classList.add('hidden');
+            defaultNotice.classList.remove('hidden');
             hiddenState.value = "false";
             thumbnailInput.required = false;
-            thumbnailInput.value = ""; // clear selected file
+            thumbnailInput.value = ""; // Clear selected file
             document.getElementById('thumbnail-count-text').innerText = "No image selected";
+            document.getElementById('quick-thumbnail-preview-img').classList.add('hidden');
+            document.getElementById('quick-thumbnail-placeholder-icon').classList.remove('hidden');
         }
     }
 
     function handleThumbnailSelect(input) {
         const textEl = document.getElementById('thumbnail-count-text');
+        const previewImg = document.getElementById('quick-thumbnail-preview-img');
+        const placeholderIcon = document.getElementById('quick-thumbnail-placeholder-icon');
+
         if (input.files && input.files[0]) {
             textEl.innerText = `Selected: ${input.files[0].name}`;
             textEl.classList.remove('text-blue-400/80');
             textEl.classList.add('text-emerald-500');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewImg.classList.remove('hidden');
+                placeholderIcon.classList.add('hidden');
+            }
+            reader.readAsDataURL(input.files[0]);
         } else {
             textEl.innerText = "No image selected";
             textEl.classList.remove('text-emerald-500');
             textEl.classList.add('text-blue-400/80');
+            previewImg.classList.add('hidden');
+            placeholderIcon.classList.remove('hidden');
         }
     }
 
@@ -604,6 +668,7 @@
         } else {
             uploadWrapper.classList.add('hidden');
             defaultNotice.classList.remove('hidden');
+            syncFirstVariantThumbnail(productId); // Display 1st variant automatically
         }
         updateGlobalSaveBar();
     }
@@ -668,7 +733,7 @@
             
             const formData = new FormData(form);
 
-            // If the thumbnail toggle is off, append a clean false flag to notify backend
+            // Set use_custom_thumbnail state
             const toggle = form.querySelector('.edit-thumbnail-toggle');
             if (toggle && !toggle.checked) {
                 formData.set('use_custom_thumbnail', 'false');
@@ -695,7 +760,6 @@
             } catch (error) {
                 console.error(`Error saving product ${pId}:`, error);
                 statusText.innerHTML = `<span class="text-red-500 font-extrabold">Error saving product ${pId}. Retrying remainder...</span>`;
-                // Wait briefly so the user can read the error message
                 await new Promise(resolve => setTimeout(resolve, 1500));
             }
         }
@@ -728,8 +792,8 @@
         });
     }
 
+    // Dynamic initializations
     document.addEventListener("DOMContentLoaded", () => {
-        // Initial build of the category list dynamically
         updateCategoryFilterDropdown('All');
 
         if(storeSelect) updateCatList(storeSelect, 'add-cats');
@@ -739,7 +803,29 @@
                 updateCatList(this, this.dataset.target);
             });
         });
+
+        // Safe Initialization of Sortable Drag-and-Drop elements
+        initializeSortableVariants();
     });
+
+    function initializeSortableVariants() {
+        if (typeof Sortable !== 'undefined') {
+            document.querySelectorAll('.sortable-container').forEach(el => {
+                new Sortable(el, { 
+                    handle: '.handle', 
+                    animation: 180,
+                    ghostClass: 'bg-orange-50',
+                    onEnd: function(evt) {
+                        // Extract product id from parent container
+                        const pId = el.id.replace('sortable-variants-', '');
+                        // Automatically sync thumbnail to match first variant if custom toggle is off
+                        syncFirstVariantThumbnail(pId);
+                        updateGlobalSaveBar();
+                    }
+                });
+            });
+        }
+    }
 
     if(storeSelect) {
         storeSelect.addEventListener('change', (e) => {
@@ -936,11 +1022,7 @@
     // Initialize tags on initial page load
     document.querySelectorAll('.tag-container').forEach(setupTagInput);
 
-    // ================= 7. SORTABLE INITIALIZATION =================
-    document.querySelectorAll('[id^="sortable-variants-"]').forEach(el => {
-        if(typeof Sortable !== 'undefined') new Sortable(el, { handle: '.handle', animation: 150 });
-    });
-    
+    // Dynamic Category List Reordering
     const catSortable = document.getElementById('category-sortable');
     if(catSortable && typeof Sortable !== 'undefined') {
         new Sortable(catSortable, { handle: '.handle', animation: 150 });
