@@ -83,12 +83,12 @@
     .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease-in-out; z-index: 0; }
     .slide.active { opacity: 1; z-index: 10; }
 
-    .nav-indicator-container { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 5px; margin-bottom: 8px; transition: opacity 0.3s ease; }
+    .nav-indicator-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px; margin-bottom: 8px; transition: opacity 0.3s ease; }
     .nav-arrow {
       width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
       background: white; border: 1px solid #e2e8f0; border-radius: 6px; color: #64748b; font-size: 10px; transition: all 0.2s;
     }
-    #scroll-track { height: 4px; background: #f1f5f9; border-radius: 10px; width: 80px; position: relative; overflow: hidden; }
+    #scroll-track { height: 4px; background: #f1f5f9; border-radius: 10px; width: 60px; position: relative; overflow: hidden; }
     #scroll-thumb { position: absolute; height: 100%; width: 30%; background: #ea580c; border-radius: 10px; left: 0; transition: left 0.1s linear; }
 
     .package-card:active { transform: scale(0.98); background-color: #fff7ed; border-color: #ea580c; }
@@ -132,31 +132,6 @@
   <div id="loadingOverlay" style="display: none;" class="fixed inset-0 z-[4000] bg-black/90 backdrop-blur-md hidden flex-col items-center justify-center text-white">
       <div class="w-12 h-12 border-4 border-[#ea580c] border-t-transparent rounded-full animate-spin mb-4"></div>
       <p id="loadingText" class="text-xs font-black uppercase tracking-[0.3em] font-['Moul']">កំពុងរៀបចំ...</p>
-  </div>
-
-  <!-- SIZE WARNING MODAL -->
-  <div id="sizeWarningModal" style="display: none;" class="fixed inset-0 z-[6000] bg-black/60 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-      <div class="bg-white w-full max-w-sm rounded-2xl p-6 relative shadow-2xl flex flex-col gap-4 text-center transform transition-transform animate-[pop_0.3s_ease-out]">
-          <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-[#ea580c] text-3xl mx-auto mb-2">
-              <i class="fa-solid fa-ruler"></i>
-          </div>
-          <h3 class="text-lg font-black text-[#ea580c] font-['Moul']" data-i18n="size_warning_title">ខ្សែដៃរបស់អ្នកមានទំហំតូច</h3>
-          <p class="text-sm font-bold text-gray-600 leading-relaxed font-['Kantumruy_Pro']" data-i18n="size_warning_desc">
-              យើងណែនាំឱ្យអ្នករើស៖<br>
-              <span class="text-[#ea580c] text-base font-black block mt-1">17-18 គ្រាប់ (ប្រុស)</span>
-              <span class="text-[#ea580c] text-base font-black block">16-17 គ្រាប់ (ស្រី)</span>
-              <span class="text-[10px] text-gray-400 mt-2 block">ព័ត៍មានបន្ថែមអាចពិចារណាតាមតារាងខាងក្រោម<br>(ចុចលើរូបភាពដើម្បីមើលពេញ)</span>
-          </p>
-          
-          <div class="w-full h-32 bg-gray-50 rounded-xl overflow-hidden cursor-pointer border border-gray-200 shadow-sm animate-pulse" onclick="openImageViewer('static/images/size_guide.jpg')">
-              <img src="static/images/size_guide.jpg" onerror="this.src='https://images.unsplash.com/photo-1616401784845-180882ba9ba8?auto=format&fit=crop&q=80&w=600'" class="w-full h-full object-cover hover:scale-105 transition-transform" alt="Size Guide">
-          </div>
-          
-          <div class="flex gap-2 mt-2">
-              <button onclick="closeSizeWarning()" class="flex-1 bg-gray-100 text-gray-600 font-black py-3.5 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-transform font-['Kantumruy_Pro']" data-i18n="btn_back">ថយក្រោយ</button>
-              <button onclick="proceedToPackaging()" class="flex-1 bg-[#ea580c] text-white font-black py-3.5 rounded-xl uppercase text-[10px] tracking-widest shadow-lg shadow-orange-500/30 active:scale-95 transition-transform font-['Kantumruy_Pro']" data-i18n="btn_continue">បន្ត</button>
-          </div>
-      </div>
   </div>
 
   <!-- IMAGE VIEWER MODAL -->
@@ -285,12 +260,23 @@
             </div>
         </div>
 
+        <!-- NAV BAR WITH INTEGRATED STYLE SWITCHER AND DELETE DESIGN BUTTON -->
         <div class="nav-indicator-container">
             <button onclick="scrollManual(-60)" class="nav-arrow"><i class="fa-solid fa-chevron-left"></i></button>
             <div id="scroll-track">
                 <div id="scroll-thumb"></div>
             </div>
             <button onclick="scrollManual(60)" class="nav-arrow"><i class="fa-solid fa-chevron-right"></i></button>
+            
+            <div class="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200 shadow-inner ml-2">
+                <button onclick="setDisplayStyle(2)" id="btn-style-2" class="px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all">Style 2</button>
+                <button onclick="setDisplayStyle(1)" id="btn-style-1" class="px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all">Style 1</button>
+            </div>
+
+            <button onclick="clearBracelet()" class="bg-red-50 text-red-500 border border-red-200 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all active:scale-95 flex items-center gap-1 font-['Kantumruy_Pro'] hover:bg-red-100 ml-1">
+                <i class="fa-solid fa-trash-can"></i>
+                <span data-i18n="delete_design">លុបការរចនា</span>
+            </button>
         </div>
 
         <div class="px-4 space-y-2">
@@ -312,16 +298,11 @@
   </section>
 
   <!-- SELECTION BAR SWITCHER -->
-  <section class="sticky top-[324px] z-[80] bg-[#fcfbf9]/95 backdrop-blur-md border-b border-gray-200/50 p-4 shadow-sm">
+  <section class="sticky top-[324px] z-[80] bg-[#fcfbf9]/95 backdrop-blur-md border-b border-gray-200/50 p-3 shadow-sm">
     <div class="max-w-4xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-2">
             <span class="romdul-icon" style="width:16px; height:16px;"></span>
             <h4 id="collection-title-text" class="text-[12px] text-gray-600 uppercase tracking-[0.1em] font-['Moul']" data-i18n="collection_title">ក្រុមកូឡិកសិន</h4>
-        </div>
-        
-        <div class="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200 shadow-inner">
-            <button onclick="setDisplayStyle(1)" id="btn-style-1" class="px-3 py-1.5 rounded-md bg-white shadow-sm text-[10px] font-black text-[#ea580c] transition-all">Style 1</button>
-            <button onclick="setDisplayStyle(2)" id="btn-style-2" class="px-3 py-1.5 rounded-md text-[10px] font-black text-gray-500 hover:text-gray-700 transition-all">Style 2</button>
         </div>
     </div>
   </section>
@@ -363,7 +344,7 @@
             <i class="fa-solid fa-shuffle text-lg"></i>
         </button>
         
-        <button onclick="checkSizeBeforePackaging()" id="save-design-btn" disabled class="flex-grow bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
+        <button onclick="startPackagingFlow()" id="save-design-btn" disabled class="flex-grow bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 active:scale-95 transition-all disabled:opacity-20 disabled:shadow-none text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
             <i class="fa-solid fa-cart-plus text-sm"></i>
             <span data-i18n="checkout_btn">បញ្ចូលទៅកន្ត្រក</span>
         </button>
@@ -517,7 +498,7 @@
             slide2_title: "មានលក់នៅ<br><span class=\"text-blue-400\">ប្រទេសកម្ពុជា</span>",
             slide3_tag: "សេវារហ័ស",
             slide3_title: "ដឹកជញ្ជូន<br><span class=\"text-green-400\">គ្រប់ខេត្តក្រុង</span>",
-            header_charms: "ចំនួនគ្រាប់", header_price: "តម្លៃ", reset: "ជម្រះ", duplicate: "ចម្លង", delete: "លុប",
+            header_charms: "ចំនួនគ្រាប់", header_price: "តម្លៃ", reset: "ជម្រះ", duplicate: "ចម្លង", delete: "លុប", delete_design: "លុបការរចនា",
             start_design: "ចាប់ផ្តើមរចនា", copy: "Copy", load: "ដាក់កូដ",
             placeholder_load: "ដាក់លេខកូដដើម្បីរចនាបន្ត...",
             hint_drag: "ចុចជាប់លើគ្រាប់ដើម្បីអូសប្តូរទីតាំង • ចុចម្ដងដើម្បីជ្រើសរើស • សង្កត់ឱ្យជាប់លើគ្រាប់ដើម្បីពង្រីករូបភាព",
@@ -530,10 +511,7 @@
             pkg_normal: "ថង់ធម្មតា", pkg_normal_desc: "វេចខ្ចប់ស្តង់ដារ", free: "ឥតគិតថ្លៃ", continue_checkout: "បន្តទៅការដឹកជញ្ជូន",
             sold_out: "អស់ស្តុក", delivery_details: "ព័ត៌មានដឹកជញ្ជូន", delivery_fee: "ថ្លៃដឹកជញ្ជូន:", total_to_pay: "សរុបត្រូវបង់:",
             contact_info: "ព័ត៌មានទំនាក់ទំនង", shipping_dest: "ទីតាំងដឹកជញ្ជូន", confirm_order: "បញ្ជាក់ការកម្ម៉ង់",
-            name_ph: "ឈ្មោះរបស់អ្នក", phone_ph: "លេខទូរស័ព្ទ (ឧ. 012345678)", address_ph: "អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ",
-            size_warning_title: "ខ្សែដៃរបស់អ្នកមានទំហំតូច",
-            size_warning_desc: "យើងណែនាំឱ្យអ្នករើស៖<br><span class=\"text-[#ea580c] text-base font-black block mt-1\">17-18 គ្រាប់ (ប្រុស)</span><span class=\"text-[#ea580c] text-base font-black block\">16-17 គ្រាប់ (ស្រី)</span><span class=\"text-[10px] text-gray-400 mt-2 block\">ព័ត៍មានបន្ថែមអាចពិចារណាតាមតារាងខាងក្រោម<br>(ចុចលើរូបភាពដើម្បីមើលពេញ)</span>",
-            btn_back: "ថយក្រោយ", btn_continue: "បន្ត"
+            name_ph: "ឈ្មោះរបស់អ្នក", phone_ph: "លេខទូរស័ព្ទ (ឧ. 012345678)", address_ph: "អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ"
         },
         EN: {
             brand_name: "Somphea Reak",
@@ -543,7 +521,7 @@
             slide2_title: "Available in<br><span class=\"text-blue-400\">Cambodia</span>",
             slide3_tag: "Fast Service",
             slide3_title: "Nationwide<br><span class=\"text-green-400\">Shipping</span>",
-            header_charms: "Charms", header_price: "Price", reset: "Reset", duplicate: "Duplicate", delete: "Delete",
+            header_charms: "Charms", header_price: "Price", reset: "Reset", duplicate: "Duplicate", delete: "Delete", delete_design: "Delete Design",
             start_design: "Start Designing", copy: "Copy", load: "Load",
             placeholder_load: "Paste code to load...",
             hint_drag: "Hold and Drag to reorder • Tap once to select • Long press images to zoom",
@@ -556,10 +534,7 @@
             pkg_normal: "Normal Bag", pkg_normal_desc: "Standard Packaging", free: "Free", continue_checkout: "Continue to Delivery",
             sold_out: "Sold Out", delivery_details: "Delivery Details", delivery_fee: "Delivery Fee:", total_to_pay: "Total to Pay:",
             contact_info: "Contact Info", shipping_dest: "Shipping Destination", confirm_order: "Confirm Order",
-            name_ph: "Your Name", phone_ph: "Phone Number (e.g. 012345678)", address_ph: "Full Delivery Address",
-            size_warning_title: "Your Bracelet Is Small",
-            size_warning_desc: "We recommend:<br><span class=\"text-[#ea580c] text-base font-black block mt-1\">17-18 Charms (Men)</span><span class=\"text-[#ea580c] text-base font-black block\">16-17 Charms (Women)</span><span class=\"text-[10px] text-gray-400 mt-2 block\">See guide below for more details<br>(Tap image to expand)</span>",
-            btn_back: "Go Back", btn_continue: "Continue"
+            name_ph: "Your Name", phone_ph: "Phone Number (e.g. 012345678)", address_ph: "Full Delivery Address"
         }
     };
 
@@ -744,13 +719,13 @@
         const titleText = document.getElementById('collection-title-text');
 
         if (style === 1) {
-            btn1.className = "px-3 py-1.5 rounded-md bg-white shadow-sm text-[10px] font-black text-[#ea580c] transition-all";
-            btn2.className = "px-3 py-1.5 rounded-md text-[10px] font-black text-gray-500 hover:text-gray-700 transition-all";
+            btn1.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
+            btn2.className = "px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
             catGallery.style.display = 'grid'; allGallery.style.display = 'none';
             titleText.innerText = t('collection_title');
         } else {
-            btn2.className = "px-3 py-1.5 rounded-md bg-white shadow-sm text-[10px] font-black text-[#ea580c] transition-all";
-            btn1.className = "px-3 py-1.5 rounded-md text-[10px] font-black text-gray-500 hover:text-gray-700 transition-all";
+            btn2.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
+            btn1.className = "px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
             catGallery.style.display = 'none'; allGallery.style.display = 'grid';
             titleText.innerText = t('all_charms');
             if(!allGallery.innerHTML) renderAllCharmsGallery();
@@ -1039,27 +1014,6 @@
             updateUI(); 
             showToast(t('cleared'), 'text-red-400', 'fa-trash');
         }
-    }
-
-    function checkSizeBeforePackaging() {
-        if (selectedCharms.length > 0 && selectedCharms.length <= 16) {
-            const modal = document.getElementById('sizeWarningModal');
-            modal.style.display = 'flex';
-            setTimeout(() => modal.classList.remove('hidden'), 10);
-        } else {
-            proceedToPackaging();
-        }
-    }
-
-    function closeSizeWarning() {
-        const modal = document.getElementById('sizeWarningModal');
-        modal.classList.add('hidden');
-        setTimeout(() => modal.style.display = 'none', 300);
-    }
-
-    function proceedToPackaging() {
-        closeSizeWarning();
-        startPackagingFlow();
     }
 
     async function startPackagingFlow() {
