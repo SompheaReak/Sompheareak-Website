@@ -1,4 +1,3 @@
-
 import os
 import json
 import time
@@ -228,7 +227,6 @@ def shop(): return render_template('bracelet.html')
 @app.route('/custom-bracelet')
 def custom_bracelet(): return render_template('custom_bracelet.html')
 
-# !!! HERE IS THE MISSING ROUTE !!!
 @app.route('/mystery-box')
 @app.route('/lucky-draw')
 @app.route('/spin')
@@ -291,18 +289,15 @@ def admin_dashboard():
 @app.route('/admin/inventory')
 @login_required
 def admin_inventory():
-    # 1. SMART AUTO-SYNC CATEGORIES
     unique_cats = db.session.query(Product.category, Product.store).distinct().all()
     for c_name, c_store in unique_cats:
         if c_name:
-            # Handles comma separated tags perfectly
             for sub_cat in c_name.split(','):
                 sub_cat = sub_cat.strip()
                 if sub_cat and sub_cat != "Other" and not Category.query.filter_by(name=sub_cat, store=c_store).first():
                     db.session.add(Category(name=sub_cat, store=c_store, sort_order=999))
     db.session.commit()
     
-    # 2. LOAD INVENTORY
     products = Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
     for p in products: p.parsed_variants = json.loads(p.variants) if p.variants else []
     categories = Category.query.order_by(Category.sort_order).all()
@@ -391,6 +386,19 @@ def delete_order(id):
     if order:
         db.session.delete(order)
         db.session.commit()
+    return redirect(url_for('admin_orders'))
+
+# --- BULK DELETE ORDERS ROUTE ---
+@app.route('/admin/order/bulk_delete', methods=['POST'])
+@login_required
+def bulk_delete_orders():
+    raw_ids = request.form.get('order_ids', '')
+    if raw_ids:
+        ids_to_delete = [int(x) for x in raw_ids.split(',') if x.isdigit()]
+        if ids_to_delete:
+            Order.query.filter(Order.id.in_(ids_to_delete)).delete(synchronize_session=False)
+            db.session.commit()
+            flash(f'Successfully deleted {len(ids_to_delete)} orders.', 'success')
     return redirect(url_for('admin_orders'))
 
 @app.route('/admin/categories/update', methods=['POST'])
@@ -610,14 +618,13 @@ def execute_spin():
 
     player.balance -= cost 
 
-    # --- 5X EXTRA REWARD LOGIC ---
     extra_reward_amount = 0
     if count == 5:
         cfg = get_reward_config()
         amounts = [0, 500, 1000, 2000, 5000, 10000, 50000]
         try:
             weights = [float(cfg.get(str(a), 0)) for a in amounts]
-            if sum(weights) <= 0: weights = [100, 0, 0, 0, 0, 0, 0] # Fallback
+            if sum(weights) <= 0: weights = [100, 0, 0, 0, 0, 0, 0]
             extra_reward_amount = random.choices(amounts, weights=weights, k=1)[0]
             if extra_reward_amount > 0:
                 player.balance += extra_reward_amount
@@ -775,6 +782,4 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
-
 
