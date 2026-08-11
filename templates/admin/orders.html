@@ -1,15 +1,35 @@
-
 {% extends "admin/base.html" %}
 
 {% block content %}
-<div class="max-w-[1400px] mx-auto">
+<div class="max-w-[1400px] mx-auto space-y-5">
     
-    <div class="bg-white rounded-2xl md:rounded-[24px] border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
+    <!-- HEADER BAR WITH BULK DELETE CONTROLS -->
+    <div class="bg-white rounded-2xl md:rounded-[24px] border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
             <h2 class="font-black text-lg md:text-xl text-gray-900">Order Management</h2>
-            <p class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 md:mt-1">Process and fulfill requests.</p>
+            <p class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 md:mt-1">
+                Total Orders: <span class="text-[#ff5000] font-black">{{ orders|length }}</span>
+            </p>
         </div>
-        <!-- Create Receipt Button Removed -->
+
+        {% if orders|length > 0 %}
+        <!-- Bulk Operations Bar -->
+        <div class="flex items-center gap-2 w-full sm:w-auto bg-gray-50 p-2 rounded-xl border border-gray-200 shadow-inner">
+            <label class="flex items-center gap-2 cursor-pointer px-3 py-1.5 text-[9px] md:text-[10px] font-black text-gray-700 uppercase tracking-widest hover:text-black transition-colors">
+                <input type="checkbox" id="select-all-orders" onchange="toggleAllOrders(this)" class="w-4 h-4 accent-[#ff5000] cursor-pointer rounded">
+                <span class="whitespace-nowrap">Select All</span>
+            </label>
+            
+            <div class="w-px h-5 bg-gray-300"></div>
+
+            <form id="bulk-delete-orders-form" action="/admin/order/bulk_delete" method="POST" class="m-0 flex-1 sm:flex-none">
+                <input type="hidden" name="order_ids" id="bulk-order-ids">
+                <button type="button" onclick="submitBulkOrderDelete()" id="bulk-delete-btn" class="w-full text-[9px] md:text-[10px] px-4 py-2 bg-red-600 text-white rounded-lg font-black hover:bg-red-700 transition-all uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="selected-count">0</span>)
+                </button>
+            </form>
+        </div>
+        {% endif %}
     </div>
 
     {% if orders|length == 0 %}
@@ -26,15 +46,21 @@
         {% set is_completed = (order.status == 'Completed' or order.status == 'completed') %}
         
         <!-- INDIVIDUAL RECEIPT CARD -->
-        <div id="receipt-card-{{ order.id }}" class="bg-white rounded-xl border order-data-card shadow-sm p-5 md:p-6 space-y-4 relative transition-all duration-300 {% if is_completed %}border-gray-200 bg-gray-50/50 opacity-80{% else %}border-[#ff5000] ring-1 ring-[#ff5000]/20{% endif %} max-w-sm mx-auto w-full" data-order-id="{{ order.id }}" data-status="{{ order.status }}" data-customer="{{ order.customer_name }}" data-phone="{{ order.customer_phone }}" data-total="{{ order.total_usd }}" data-date="{{ order.timestamp.strftime('%Y-%m-%d') }}">
+        <div id="receipt-card-{{ order.id }}" class="bg-white rounded-xl border order-data-card shadow-sm p-5 md:p-6 space-y-4 relative transition-all duration-300 {% if is_completed %}border-gray-200 bg-gray-50/50 opacity-80{% else %}border-[#ff5000] ring-1 ring-[#ff5000]/20{% endif %} max-w-sm mx-auto w-full group" data-order-id="{{ order.id }}" data-status="{{ order.status }}" data-customer="{{ order.customer_name }}" data-phone="{{ order.customer_phone }}" data-total="{{ order.total_usd }}" data-date="{{ order.timestamp.strftime('%Y-%m-%d') }}">
             
-            <!-- Status Badge -->
+            <!-- BULK SELECTION CHECKBOX (Top Left) -->
+            <div class="absolute top-4 left-4 z-20 flex items-center gap-2">
+                <input type="checkbox" class="order-checkbox w-5 h-5 accent-[#ff5000] cursor-pointer rounded shadow-sm" value="{{ order.id }}" onchange="updateSelectedCount()">
+                <span class="text-[8px] font-mono font-black text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">#{{ order.id }}</span>
+            </div>
+
+            <!-- Status Badge (Top Right) -->
             <div class="absolute top-4 right-4 z-10 flex flex-col items-end gap-1">
                 <span class="px-2 py-1 rounded border text-[8px] font-black uppercase tracking-widest shadow-sm {% if is_completed %}bg-green-50 text-green-600 border-green-200{% elif order.status == 'Pending' %}bg-[#ff5000] text-white border-orange-600 animate-pulse{% else %}bg-gray-100 text-gray-600 border-gray-200{% endif %}">{{ order.status }}</span>
             </div>
 
             <!-- Receipt Header (Logo & Brand) -->
-            <div class="text-center pb-4 border-b-2 border-dashed border-gray-200 pt-2 relative">
+            <div class="text-center pb-4 border-b-2 border-dashed border-gray-200 pt-6 relative">
                 <img src="/static/images/logo.jpg" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=ff5000&color=fff'" class="w-14 h-14 rounded-full mx-auto mb-2 object-cover shadow-sm border border-gray-100">
                 <h2 class="font-black text-[15px] uppercase tracking-wide text-gray-900 font-['Moul']">សម្ភារៈ - Somphea Reak</h2>
                 <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Official Receipt</p>
@@ -46,7 +72,6 @@
                     </div>
                     <div class="flex items-center justify-between w-full">
                         <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Date/Time</span>
-                        <!-- Time display handled securely by Cambodia Time script -->
                         <span class="text-[9px] text-[#ff5000] font-black uppercase kh-time-display" data-utc="{{ order.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ') }}">
                             <i class="fa-solid fa-spinner fa-spin mr-1"></i> Syncing...
                         </span>
@@ -156,9 +181,7 @@
             <!-- Action Buttons -->
             <div class="action-buttons flex gap-2 pt-2 border-t border-gray-100 mt-4">
                 <button type="button" onclick="toggleReceiptEdit({{ order.id }})" title="Edit Prices & Text" class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all border border-blue-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-pen text-sm"></i></button>
-                <!-- PDF BUTTON -->
                 <button type="button" onclick="generateReceiptPDF({{ order.id }})" title="Save Receipt PDF" class="w-10 h-10 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white flex items-center justify-center transition-all border border-red-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-file-pdf text-sm"></i></button>
-                <!-- JPG BUTTON -->
                 <button type="button" onclick="generateReceiptImage({{ order.id }})" title="Save Receipt Image" class="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl hover:bg-[#ff5000] hover:text-white flex items-center justify-center transition-all border border-orange-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-image text-sm"></i></button>
 
                 {% if is_completed %}
@@ -181,9 +204,41 @@
 
 {% block scripts %}
 <script>
-    // Make sure html2canvas and jsPDF are loaded globally in base.html
     if (window.jspdf && window.jspdf.jsPDF) {
         window.jsPDF = window.jspdf.jsPDF; 
+    }
+
+    // --- BULK DELETE JARS / FUNCTIONS ---
+    function toggleAllOrders(masterCheckbox) {
+        document.querySelectorAll('.order-checkbox').forEach(cb => {
+            cb.checked = masterCheckbox.checked;
+        });
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        const selectedCount = document.querySelectorAll('.order-checkbox:checked').length;
+        document.getElementById('selected-count').innerText = selectedCount;
+        
+        // Update master checkbox state visually
+        const totalCheckboxes = document.querySelectorAll('.order-checkbox').length;
+        const masterCb = document.getElementById('select-all-orders');
+        if (masterCb) {
+            masterCb.checked = (selectedCount > 0 && selectedCount === totalCheckboxes);
+        }
+    }
+
+    function submitBulkOrderDelete() {
+        const selectedIds = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(cb => cb.value);
+        if (selectedIds.length === 0) {
+            alert('Please select at least one order to delete.');
+            return;
+        }
+
+        if (confirm(`ARE YOU SURE?\n\nYou are about to permanently delete ${selectedIds.length} order(s).\nThis action cannot be undone.`)) {
+            document.getElementById('bulk-order-ids').value = selectedIds.join(',');
+            document.getElementById('bulk-delete-orders-form').submit();
+        }
     }
 
     // --- CAMBODIA (UTC+7) TIMELINE SCRIPT ---
@@ -192,12 +247,9 @@
             let utcStr = el.getAttribute('data-utc');
             if (!utcStr) return;
             
-            // Parse UTC absolute time mathematically
             let d = new Date(utcStr);
-            // Add exactly 7 hours in milliseconds to force Cambodia offset
             let khDate = new Date(d.getTime() + (7 * 60 * 60 * 1000));
             
-            // Extract local components
             let year = khDate.getUTCFullYear();
             let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             let month = months[khDate.getUTCMonth()];
@@ -207,12 +259,11 @@
             let minutes = String(khDate.getUTCMinutes()).padStart(2, '0');
             let ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
-            hours = hours ? hours : 12; // Handle midnight
+            hours = hours ? hours : 12;
             let strHours = String(hours).padStart(2, '0');
             
             el.innerHTML = `<i class="fa-regular fa-clock mr-1"></i>${dateNum} ${month} ${year}, ${strHours}:${minutes} ${ampm}`;
             
-            // Also update the card's data-date so the financial filter uses Cambodia dates
             let monthNum = String(khDate.getUTCMonth() + 1).padStart(2, '0');
             let card = el.closest('.order-data-card');
             if(card) card.setAttribute('data-date', `${year}-${monthNum}-${dateNum}`);
@@ -227,13 +278,11 @@
         const editBtnIcon = card.querySelector('.action-buttons button:first-child i');
         
         if (card.classList.contains('is-editing-receipt')) {
-            // SAVE STATE
             editables.forEach(el => el.contentEditable = "false"); 
             card.classList.remove('is-editing-receipt'); 
             editBtnIcon.className = "fa-solid fa-pen text-sm";
             showClientToast("Receipt Updated Visually");
         } else { 
-            // EDITING STATE
             editables.forEach(el => el.contentEditable = "true"); 
             card.classList.add('is-editing-receipt'); 
             editBtnIcon.className = "fa-solid fa-save text-sm text-[#ff5000]";
@@ -260,7 +309,6 @@
         
         card.dataset.total = grandTotal.toFixed(2);
         
-        // Update financial dashboard if the function exists
         if(typeof calculateIncome === 'function') calculateIncome();
     }
 
@@ -344,6 +392,4 @@
     }
 </script>
 {% endblock %}
-
-
 
