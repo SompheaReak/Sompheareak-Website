@@ -83,12 +83,12 @@
     .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease-in-out; z-index: 0; }
     .slide.active { opacity: 1; z-index: 10; }
 
-    .nav-indicator-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px; margin-bottom: 8px; transition: opacity 0.2s ease; }
+    .nav-indicator-container { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 5px; margin-bottom: 8px; transition: opacity 0.2s ease; }
     .nav-arrow {
       width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
       background: white; border: 1px solid #e2e8f0; border-radius: 6px; color: #64748b; font-size: 10px; transition: all 0.2s;
     }
-    #scroll-track { height: 4px; background: #f1f5f9; border-radius: 10px; width: 60px; position: relative; overflow: hidden; }
+    #scroll-track { height: 4px; background: #f1f5f9; border-radius: 10px; width: 50px; position: relative; overflow: hidden; }
     #scroll-thumb { position: absolute; height: 100%; width: 30%; background: #ea580c; border-radius: 10px; left: 0; transition: left 0.1s linear; }
 
     .package-card:active { transform: scale(0.98); background-color: #fff7ed; border-color: #ea580c; }
@@ -260,15 +260,21 @@
             </div>
         </div>
 
-        <!-- NAV BAR (< BAR > + DELETE DESIGN BUTTON) -->
-        <div id="nav-indicator-bar" class="nav-indicator-container">
+        <!-- NAV BAR (< BAR > + STYLE SWITCHER BOX + DELETE DESIGN BUTTON) -->
+        <div id="nav-indicator-bar" class="nav-indicator-container opacity-0 pointer-events-none">
             <button onclick="scrollManual(-60)" class="nav-arrow"><i class="fa-solid fa-chevron-left"></i></button>
             <div id="scroll-track">
                 <div id="scroll-thumb"></div>
             </div>
             <button onclick="scrollManual(60)" class="nav-arrow"><i class="fa-solid fa-chevron-right"></i></button>
 
-            <button onclick="clearBracelet()" class="bg-red-50 text-red-500 border border-red-200 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all active:scale-95 flex items-center gap-1 font-['Kantumruy_Pro'] hover:bg-red-100 ml-2">
+            <!-- Style options box located directly near Delete Design button -->
+            <div class="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200 shadow-inner ml-1">
+                <button onclick="setDisplayStyle(2)" id="btn-style-2" class="px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all">Style 2</button>
+                <button onclick="setDisplayStyle(1)" id="btn-style-1" class="px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all">Style 1</button>
+            </div>
+
+            <button onclick="clearBracelet()" class="bg-red-50 text-red-500 border border-red-200 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all active:scale-95 flex items-center gap-1 font-['Kantumruy_Pro'] hover:bg-red-100 ml-1">
                 <i class="fa-solid fa-trash-can"></i>
                 <span data-i18n="delete_design">លុបការរចនា</span>
             </button>
@@ -292,25 +298,20 @@
     </div>
   </section>
 
-  <!-- ALWAYS-VISIBLE GALLERY SELECTION BAR WITH STYLE SWITCHER -->
+  <!-- GALLERY HEADER -->
   <section class="sticky top-[324px] z-[80] bg-[#fcfbf9]/95 backdrop-blur-md border-b border-gray-200/50 p-3 shadow-sm">
     <div class="max-w-4xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-2">
             <span class="romdul-icon" style="width:16px; height:16px;"></span>
-            <h4 id="collection-title-text" class="text-[12px] text-gray-600 uppercase tracking-[0.1em] font-['Moul']" data-i18n="collection_title">ក្រុមកូឡិកសិន</h4>
-        </div>
-
-        <div class="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200 shadow-inner">
-            <button onclick="setDisplayStyle(2)" id="btn-style-2" class="px-3 py-1.5 rounded-md text-[10px] font-black text-gray-500 hover:text-gray-700 transition-all">Style 2</button>
-            <button onclick="setDisplayStyle(1)" id="btn-style-1" class="px-3 py-1.5 rounded-md bg-white shadow-sm text-[10px] font-black text-[#ea580c] transition-all">Style 1</button>
+            <h4 id="collection-title-text" class="text-[12px] text-gray-600 uppercase tracking-[0.1em] font-['Moul']" data-i18n="all_charms">ត្បូងទាំងអស់</h4>
         </div>
     </div>
   </section>
 
   <!-- CATEGORY & CHARM GALLERIES -->
   <section class="p-4 pb-48 max-w-4xl mx-auto">
-    <div id="categoryGallery" class="grid grid-cols-6 gap-2"></div>
-    <div id="allCharmsGallery" class="gap-1.5" style="display: none; grid-template-columns: repeat(8, minmax(0, 1fr));"></div>
+    <div id="categoryGallery" class="gap-2" style="display: none; grid-template-columns: repeat(6, minmax(0, 1fr));"></div>
+    <div id="allCharmsGallery" class="grid gap-1.5" style="grid-template-columns: repeat(8, minmax(0, 1fr));"></div>
   </section>
 
   <!-- CHARM SELECTOR DRAWER (Style 1) -->
@@ -540,7 +541,7 @@
 
     let currentLang = localStorage.getItem('app_lang') || 'KH';
     const RATE = 4000;
-    let currentStyle = 1;
+    let currentStyle = 2; // Selected Style 2 automatically by default
 
     let allCharms = [], selectedCharms = [], selectedCharmUids = [], userCart = [];
 
@@ -604,7 +605,7 @@
         });
 
         renderCategories();
-        if (currentStyle === 2) renderAllCharmsGallery();
+        renderAllCharmsGallery();
         setDisplayStyle(currentStyle);
         updateUI(); 
     }
@@ -719,13 +720,13 @@
         const titleText = document.getElementById('collection-title-text');
 
         if (style === 1) {
-            btn1.className = "px-3 py-1.5 rounded-md bg-white shadow-sm text-[10px] font-black text-[#ea580c] transition-all";
-            btn2.className = "px-3 py-1.5 rounded-md text-[10px] font-black text-gray-500 hover:text-gray-700 transition-all";
+            btn1.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
+            btn2.className = "px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
             catGallery.style.display = 'grid'; allGallery.style.display = 'none';
             titleText.innerText = t('collection_title');
         } else {
-            btn2.className = "px-3 py-1.5 rounded-md bg-white shadow-sm text-[10px] font-black text-[#ea580c] transition-all";
-            btn1.className = "px-3 py-1.5 rounded-md text-[10px] font-black text-gray-500 hover:text-gray-700 transition-all";
+            btn2.className = "px-2.5 py-1 rounded-md bg-white shadow-sm text-[9px] font-black text-[#ea580c] transition-all";
+            btn1.className = "px-2.5 py-1 rounded-md text-[9px] font-black text-gray-500 hover:text-gray-700 transition-all";
             catGallery.style.display = 'none'; allGallery.style.display = 'grid';
             titleText.innerText = t('all_charms');
             if(!allGallery.innerHTML) renderAllCharmsGallery();
