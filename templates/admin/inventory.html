@@ -80,15 +80,15 @@
                     <div class="space-y-1">
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
                             <span class="w-4 h-4 rounded-full bg-[#ff5000] text-white text-[8px] flex items-center justify-center font-bold">1</span>
-                            Storefront
+                            Show in Stores (Multi-Select)
                         </label>
-                        <select name="store" class="input-field w-full cursor-pointer bg-white" id="add-store-select">
-                            <option value="toy">Toy Store</option>
-                            <option value="lego">LEGO Store</option>
-                            <option value="minifigure">Minifigure Store</option>
-                            <option value="bracelet">Bracelet Store</option>
-                            <option value="custom_bracelet">Custom Charms</option>
-                        </select>
+                        <div class="grid grid-cols-2 sm:grid-cols-2 gap-2 bg-white p-2.5 rounded-xl border border-slate-200">
+                            <label class="flex items-center gap-2 text-[11px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="toy" class="accent-[#ff5000] add-store-checkbox" checked> Toy Store</label>
+                            <label class="flex items-center gap-2 text-[11px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="minifigure" class="accent-[#ff5000] add-store-checkbox"> Minifigure</label>
+                            <label class="flex items-center gap-2 text-[11px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="lego" class="accent-[#ff5000] add-store-checkbox" id="add-lego-checkbox"> LEGO</label>
+                            <label class="flex items-center gap-2 text-[11px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="bracelet" class="accent-[#ff5000] add-store-checkbox"> Bracelet</label>
+                            <label class="flex items-center gap-2 text-[11px] font-extrabold cursor-pointer col-span-2"><input type="checkbox" name="stores[]" value="custom_bracelet" class="accent-[#ff5000] add-store-checkbox"> Custom Charms</label>
+                        </div>
                     </div>
 
                     <div class="space-y-1 hidden animate-fadeIn" id="lego-type-container">
@@ -158,16 +158,43 @@
                     <p class="text-[9px] font-semibold text-slate-400 mt-0.5" id="file-count-text">Select photos to create variants</p>
                 </div>
                 
-                <!-- 4. Variant Settings List -->
+                <!-- 4. Variant Settings List & Magic Batch Tool -->
                 <div id="variant-config" class="hidden space-y-2.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/60">
                     <span class="text-[10px] font-black text-slate-700 uppercase tracking-wider block">4. Configure Variants</span>
+                    
+                    <!-- MAGIC BATCH SETUP -->
+                    <div class="bg-blue-50/50 p-2.5 rounded-xl border border-blue-100 flex flex-col sm:flex-row gap-2 justify-between items-center mt-2 mb-2">
+                        <span class="text-[9px] font-black text-blue-600 uppercase tracking-wider whitespace-nowrap"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Magic Batch</span>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <div class="flex items-center bg-white rounded-lg border border-blue-200 overflow-hidden flex-1 sm:flex-none">
+                                <span class="px-2 text-[10px] font-bold text-slate-400 bg-slate-50 border-r border-blue-200">$</span>
+                                <input type="number" step="any" id="batch-price-input" placeholder="Price" class="w-16 p-1.5 text-xs font-black outline-none text-center">
+                                <button type="button" onclick="applyBatchPrice()" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 text-[9px] font-black uppercase transition-colors">Apply</button>
+                            </div>
+                            <div class="flex items-center bg-white rounded-lg border border-blue-200 overflow-hidden flex-1 sm:flex-none">
+                                <span class="px-2 text-[10px] font-bold text-slate-400 bg-slate-50 border-r border-blue-200">Qty</span>
+                                <input type="number" id="batch-stock-input" placeholder="1" class="w-14 p-1.5 text-xs font-black outline-none text-center">
+                                <button type="button" onclick="applyBatchStock()" class="bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1.5 text-[9px] font-black uppercase transition-colors">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="variant-list" class="space-y-2.5 max-h-[40vh] overflow-y-auto pr-1 hide-scrollbar"></div>
                 </div>
 
-                <!-- Group Title -->
-                <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider pl-1">Product Title</label>
-                    <input type="text" name="title" placeholder="E.g. Spiderman Minifigure (Optional)" class="input-field w-full">
+                <!-- Group Title & Discount -->
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="col-span-2 space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider pl-1">Product Title</label>
+                        <input type="text" name="title" placeholder="E.g. Spiderman (Optional)" class="input-field w-full">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider pl-1">Discount</label>
+                        <div class="relative">
+                            <input type="number" step="any" name="discount_percent" placeholder="0" class="input-field w-full font-black text-[#ff5000] text-center pr-6">
+                            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">%</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Submit Button -->
@@ -242,7 +269,10 @@
                         
                         <!-- Badges Overlay -->
                         <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start pointer-events-none">
-                            <span class="text-[8px] font-black text-white bg-slate-900/85 backdrop-blur px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm">{{ p.store }}</span>
+                            <span class="text-[7px] font-black text-white bg-slate-900/85 backdrop-blur px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm max-w-[80px] truncate">{{ p.store }}</span>
+                            {% if p.discount_percent and p.discount_percent > 0 %}
+                                <span class="text-[8px] font-black text-white bg-red-600 backdrop-blur px-1.5 py-0.5 rounded shadow-sm">SALE -{{p.discount_percent|int}}%</span>
+                            {% endif %}
                             {% if not p.is_visible %}
                                 <span class="text-[8px] font-black text-white bg-red-500/90 backdrop-blur px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm"><i class="fa-solid fa-eye-slash mr-0.5"></i> Hidden</span>
                             {% endif %}
@@ -308,21 +338,23 @@
                         <!-- Basic Details Grid -->
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
                             <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                
                                 <div class="space-y-1">
-                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Storefront</label>
-                                    <select name="store" class="input-field w-full edit-store-select font-bold" data-target="edit-cats-{{p.id}}">
-                                        <option value="toy" {% if p.store == 'toy' %}selected{% endif %}>Toy Store</option>
-                                        <option value="lego" {% if p.store == 'lego' %}selected{% endif %}>LEGO Store</option>
-                                        <option value="minifigure" {% if p.store == 'minifigure' %}selected{% endif %}>Minifigure Store</option>
-                                        <option value="bracelet" {% if p.store == 'bracelet' %}selected{% endif %}>Bracelet Store</option>
-                                        <option value="custom_bracelet" {% if p.store == 'custom_bracelet' %}selected{% endif %}>Custom Charms</option>
-                                    </select>
+                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Stores</label>
+                                    <div class="grid grid-cols-2 gap-1.5 bg-white p-2 rounded-xl border border-slate-200 mt-1">
+                                        <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="toy" class="accent-[#ff5000]" {% if 'toy' in (p.store or '') %}checked{% endif %}> Toy</label>
+                                        <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="lego" class="accent-[#ff5000]" {% if 'lego' in (p.store or '') %}checked{% endif %}> LEGO</label>
+                                        <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="minifigure" class="accent-[#ff5000]" {% if 'minifigure' in (p.store or '') %}checked{% endif %}> Minifig</label>
+                                        <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="bracelet" class="accent-[#ff5000]" {% if 'bracelet' in (p.store or '') %}checked{% endif %}> Bracelet</label>
+                                        <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer col-span-2"><input type="checkbox" name="stores[]" value="custom_bracelet" class="accent-[#ff5000]" {% if 'custom_bracelet' in (p.store or '') %}checked{% endif %}> Custom Charms</label>
+                                    </div>
                                 </div>
+
                                 <div class="space-y-1">
                                     <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Categories</label>
                                     <div class="tag-wrapper">
                                         <input type="hidden" name="category" class="hidden-category-input" value="{{p.category}}">
-                                        <div class="tag-container bg-white border border-slate-200 rounded-xl p-1.5 min-h-[38px] flex flex-wrap items-center gap-1 shadow-sm">
+                                        <div class="tag-container bg-white border border-slate-200 rounded-xl p-1.5 min-h-[38px] flex flex-wrap items-center gap-1 shadow-sm h-full content-start">
                                             {% if p.category %}{% for pc in p.category.split(',') %}{% if pc.strip() != "" %}
                                             <span class="tag-badge bg-slate-100 border border-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">{{ pc.strip() }} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-500 remove-tag-btn"></i></span>
                                             {% endif %}{% endfor %}{% endif %}
@@ -331,9 +363,19 @@
                                     </div>
                                     <datalist id="edit-cats-{{p.id}}"></datalist>
                                 </div>
-                                <div class="space-y-1">
-                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Title</label>
-                                    <input type="text" name="title" value="{{p.title}}" class="input-field w-full font-bold text-slate-900" placeholder="Title">
+                                
+                                <div class="col-span-1 grid grid-cols-1 gap-2">
+                                    <div class="space-y-1">
+                                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Title</label>
+                                        <input type="text" name="title" value="{{p.title}}" class="input-field w-full font-bold text-slate-900" placeholder="Title">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Discount</label>
+                                        <div class="relative">
+                                            <input type="number" step="any" name="discount_percent" value="{{p.discount_percent|default(0)}}" class="input-field w-full font-black text-[#ff5000] text-center pr-6" placeholder="%">
+                                            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">%</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -635,7 +677,7 @@
         const previouslySelected = select.value.toLowerCase();
         select.innerHTML = '<option value="All">All Categories</option>';
 
-        const validStoreCats = allSystemCats.filter(c => store === 'All' || c.store === store);
+        const validStoreCats = allSystemCats.filter(c => store === 'All' || c.store.includes(store));
         const uniqueNames = [...new Set(validStoreCats.map(c => c.name))].filter(name => name.trim() !== "");
 
         uniqueNames.sort().forEach(name => {
@@ -658,7 +700,7 @@
         let visibleCount = 0;
 
         document.querySelectorAll('.product-item').forEach(item => {
-            const mStore = storeFlt === 'All' || item.dataset.store === storeFlt;
+            const mStore = storeFlt === 'All' || (item.dataset.store || '').split(',').includes(storeFlt);
             const mCat = catFlt === 'all' || item.dataset.categories.includes(catFlt);
             
             const title = item.dataset.title || '';
@@ -821,21 +863,43 @@
         setTimeout(() => { window.location.reload(); }, 1200);
     }
 
-    // ================= 5. UPLOAD & VARIANTS SYSTEM =================
+    // ================= 5. MAGIC BATCH TOOLS (Apply to All) =================
+    function applyBatchPrice() {
+        const val = document.getElementById('batch-price-input').value;
+        if(val === '') return;
+        document.querySelectorAll('#variant-list .usd-input').forEach(input => {
+            input.value = val;
+            calcPrice(input, 'USD');
+        });
+    }
+
+    function applyBatchStock() {
+        const val = document.getElementById('batch-stock-input').value;
+        if(val === '') return;
+        document.querySelectorAll('#variant-list input[name="variant_stocks[]"]').forEach(input => {
+            input.value = val;
+        });
+    }
+
+    // ================= 6. UPLOAD & VARIANTS SYSTEM =================
     const fileInput = document.getElementById('file-input');
     const variantConfig = document.getElementById('variant-config');
     const variantList = document.getElementById('variant-list');
-    const storeSelect = document.getElementById('add-store-select');
+    
+    // Store Multi-Select checkboxes for Quick Upload
+    const addStoreCheckboxes = document.querySelectorAll('.add-store-checkbox');
     const legoTypeContainer = document.getElementById('lego-type-container');
     const legoTypeSelect = document.getElementById('lego-type-select');
 
-    function updateCatList(selectEl, datalistId) {
-        const dl = document.getElementById(datalistId); 
+    function updateAddCatList() {
+        const dl = document.getElementById('add-cats'); 
         if(!dl) return; 
         dl.innerHTML = '';
-        const store = selectEl.value; 
-        const validCats = allSystemCats.filter(c => c.store === store && c.name !== '');
+        
+        const checkedStores = Array.from(document.querySelectorAll('.add-store-checkbox:checked')).map(cb => cb.value);
+        const validCats = allSystemCats.filter(c => checkedStores.includes(c.store) && c.name !== '');
         const unique = [...new Set(validCats.map(c => c.name))];
+        
         unique.forEach(name => { 
             const opt = document.createElement('option'); 
             opt.value = name; 
@@ -845,11 +909,16 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         updateCategoryFilterDropdown('All');
+        updateAddCatList();
 
-        if(storeSelect) updateCatList(storeSelect, 'add-cats');
-        document.querySelectorAll('.edit-store-select').forEach(sel => { 
-            updateCatList(sel, sel.dataset.target); 
-            sel.addEventListener('change', function() { updateCatList(this, this.dataset.target); });
+        addStoreCheckboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                const legoChecked = document.getElementById('add-lego-checkbox').checked;
+                if(legoChecked) legoTypeContainer.classList.remove('hidden');
+                else legoTypeContainer.classList.add('hidden');
+                updateAddCatList();
+                renderUploadVariants();
+            });
         });
 
         initializeSortableVariants();
@@ -870,15 +939,6 @@
                 });
             });
         }
-    }
-
-    if(storeSelect) {
-        storeSelect.addEventListener('change', (e) => {
-            updateCatList(storeSelect, 'add-cats');
-            if(e.target.value === 'lego') legoTypeContainer.classList.remove('hidden');
-            else legoTypeContainer.classList.add('hidden');
-            renderUploadVariants();
-        });
     }
 
     let uploadedFiles = [];
@@ -917,7 +977,7 @@
         variantList.innerHTML = '';
         if(uploadedFiles.length === 0) return;
 
-        const isLegoSet = storeSelect.value === 'lego' && legoTypeSelect.value === 'building_sets';
+        const isLegoSet = document.getElementById('add-lego-checkbox').checked && legoTypeSelect.value === 'building_sets';
         const defaultTagString = document.getElementById('main-category-input').value.trim();
 
         uploadedFiles.forEach((file, index) => {
@@ -978,7 +1038,7 @@
         variantList.querySelectorAll('.tag-container').forEach(setupTagInput);
     }
 
-    // ================= 6. FORM & TAG LOGIC =================
+    // ================= 7. FORM & TAG LOGIC =================
     document.querySelectorAll('form.submit-form').forEach(form => {
         form.addEventListener('submit', () => {
             const overlay = document.getElementById('loading-overlay');
@@ -1063,4 +1123,5 @@
     }
 </script>
 {% endblock %}
+
 
