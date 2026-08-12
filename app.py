@@ -227,7 +227,6 @@ def shop(): return render_template('bracelet.html')
 @app.route('/custom-bracelet')
 def custom_bracelet(): return render_template('custom_bracelet.html')
 
-# NEW STORE ROUTE: Minifigure Storefront
 @app.route('/minifigure')
 def minifigure_store(): 
     return render_template('minifigure.html')
@@ -547,7 +546,7 @@ def get_api(store_name):
         products = Product.query.filter_by(store=store_name, is_visible=True).order_by(Product.sort_order.asc(), Product.id.desc()).all()
         categories = Category.query.filter_by(store=store_name).order_by(Category.sort_order.asc()).all()
         return jsonify({
-            "products": [{"id": p.id, "title": p.title, "price": p.price, "stock": p.stock, "category": p.category, "thumbnail": p.image, "variants": json.loads(p.variants)} for p in products],
+            "products": [{"id": p.id, "title": p.title, "price": p.price, "stock": p.stock, "category": p.category, "thumbnail": p.image, "variants": json.loads(p.variants) if p.variants else []} for p in products],
             "categories": [{"name": c.name, "image": c.image} for c in categories]
         })
     except Exception as e: return jsonify({"error": str(e)}), 500
