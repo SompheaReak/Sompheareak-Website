@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Somphea Reak - Minifigure Universe</title>
+  <title>Somphea Reak - Minifigure Store</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -36,20 +36,18 @@
         width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
     }
 
-    #cart-drawer, #product-modal, #checkout-modal { transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
-    .sticky-shadow { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025); }
+    #cart-drawer, #checkout-modal { transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
     
-    /* Search Bar Input Styling */
     .search-input {
         background: #f8fafc;
         border: 1.5px solid #e2e8f0;
-        border-radius: 16px;
+        border-radius: 14px;
         transition: all 0.2s ease;
     }
     .search-input:focus {
         background: #ffffff;
         border-color: #ea580c;
-        box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1);
+        box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
     }
   </style>
 </head>
@@ -58,177 +56,100 @@
   <div class="pka-chan-bg"></div>
 
   <!-- TOAST NOTIFICATION -->
-  <div id="toast" style="pointer-events: none;" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[4000] bg-black/90 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl opacity-0 transition-all duration-200 scale-90">
-    <i id="toast-icon" class="fa-solid fa-circle-check text-green-400"></i>
-    <span id="toast-text" class="text-xs font-bold uppercase tracking-widest font-['Kantumruy_Pro']">Added to Cart</span>
+  <div id="toast" style="pointer-events: none;" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[4000] bg-black/90 text-white px-5 py-2.5 rounded-full flex items-center gap-2.5 shadow-2xl opacity-0 transition-all duration-200 scale-90">
+    <i id="toast-icon" class="fa-solid fa-circle-check text-green-400 text-sm"></i>
+    <span id="toast-text" class="text-[11px] font-bold uppercase tracking-widest font-['Kantumruy_Pro']">Added to Cart</span>
   </div>
 
   <!-- LOADING OVERLAY -->
   <div id="loadingOverlay" style="display: none;" class="fixed inset-0 z-[5000] bg-black/90 backdrop-blur-md hidden flex-col items-center justify-center text-white">
-      <div class="w-12 h-12 border-4 border-[#ea580c] border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p class="text-xs font-black uppercase tracking-[0.3em] font-['Moul']">កំពុងរៀបចំ...</p>
+      <div class="w-10 h-10 border-4 border-[#ea580c] border-t-transparent rounded-full animate-spin mb-3"></div>
+      <p class="text-[10px] font-black uppercase tracking-[0.3em] font-['Moul']">កំពុងរៀបចំ...</p>
   </div>
 
-  <!-- IMAGE VIEWER MODAL -->
+  <!-- IMAGE LIGHTBOX VIEWER -->
   <div id="image-viewer-modal" class="fixed inset-0 z-[6000] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-      <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
-      <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl mb-6">
+      <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-red-500 transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+      <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl">
   </div>
 
-  <!-- 🌟 UNIFIED HEADER 🌟 -->
-  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 sm:px-4 py-2.5 flex items-center justify-between shadow-sm">
-    <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0">
-        <i class="fa-solid fa-arrow-left"></i>
+  <!-- 🌟 HEADER 🌟 -->
+  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 py-2.5 flex items-center justify-between shadow-sm">
+    <a href="/" class="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0">
+        <i class="fa-solid fa-arrow-left text-xs"></i>
     </a>
     
-    <div class="flex items-center justify-center flex-1 px-2 gap-2.5 min-w-0">
-        <img src="/static/images/logo.png" onerror="this.src='/static/images/logo.jpg'" class="w-10 h-10 sm:w-11 sm:h-11 object-contain drop-shadow-sm shrink-0" alt="Logo">
-        
+    <div class="flex items-center justify-center flex-1 px-2 gap-2 min-w-0">
+        <img src="/static/images/logo.png" onerror="this.src='/static/images/logo.jpg'" class="w-9 h-9 object-contain drop-shadow-sm shrink-0" alt="Logo">
         <div class="flex flex-col justify-center text-left">
-            <h1 class="text-[14px] sm:text-base font-black text-gray-900 leading-normal tracking-tight font-['Moul'] pb-0.5">
-                សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs sm:text-sm whitespace-nowrap">- Somphea Reak</span>
+            <h1 class="text-[13px] sm:text-base font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5">
+                សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs whitespace-nowrap">- Somphea Reak</span>
             </h1>
-            <p class="text-[9px] font-extrabold text-[#ea580c] uppercase tracking-widest leading-none">Minifigure Vault</p>
+            <p class="text-[8px] font-extrabold text-[#ea580c] uppercase tracking-widest leading-none">Minifigure Vault</p>
         </div>
     </div>
     
-    <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0">
-        <i class="fa-solid fa-cart-shopping text-sm"></i>
-        <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden">0</span>
+    <button onclick="openCartDrawer()" class="relative w-9 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0">
+        <i class="fa-solid fa-cart-shopping text-xs"></i>
+        <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden">0</span>
     </button>
   </header>
 
-  <!-- 🔍 LIVE SEARCH & DENSITY TOGGLE HEADER -->
-  <section class="bg-white border-b border-gray-100 sticky top-[61px] z-[95] px-3 py-2.5 space-y-2 shadow-sm">
-      <div class="max-w-5xl mx-auto flex items-center gap-2">
-          <!-- Real-Time Search Bar -->
+  <!-- 🔍 LIVE SEARCH & CATEGORY PILLS -->
+  <section class="bg-white border-b border-gray-100 sticky top-[57px] z-[95] px-2.5 py-2 space-y-2 shadow-sm">
+      <div class="max-w-6xl mx-auto flex items-center gap-2">
           <div class="relative flex-1">
-              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-              <input type="text" id="minifig-search" oninput="handleSearchInput()" placeholder="Search 300+ Minifigures..." class="search-input w-full pl-9 pr-8 py-2 text-xs font-bold outline-none text-gray-900 placeholder-gray-400">
-              <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+              <input type="text" id="minifig-search" oninput="handleSearchInput()" placeholder="Search 300+ figures..." class="search-input w-full pl-8 pr-7 py-1.5 text-[11px] font-bold outline-none text-gray-900 placeholder-gray-400">
+              <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
                   <i class="fa-solid fa-circle-xmark text-xs"></i>
               </button>
           </div>
-
-          <!-- Density Switcher (2 Col vs 3 Col) -->
-          <button onclick="toggleGridDensity()" id="grid-toggle-btn" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-2xl text-[10px] font-black uppercase text-gray-700 flex items-center gap-1.5 shrink-0 transition-colors" title="Toggle 2 or 3 Grid Columns">
-              <i class="fa-solid fa-table-cells-large text-xs"></i>
-              <span id="grid-toggle-text" class="hidden sm:inline">Compact View</span>
-          </button>
       </div>
 
-      <!-- CATEGORY PILL FILTERS -->
-      <div class="max-w-5xl mx-auto">
-          <div id="category-filters" class="flex overflow-x-auto gap-1.5 scrollbar-hide pt-1">
-              <button class="px-3.5 py-1.5 rounded-full bg-gray-900 text-white text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap shadow-sm">All (0)</button>
+      <div class="max-w-6xl mx-auto">
+          <div id="category-filters" class="flex overflow-x-auto gap-1 scrollbar-hide">
+              <button class="px-3 py-1 rounded-full bg-gray-900 text-white text-[9px] font-extrabold uppercase tracking-wider whitespace-nowrap shadow-sm">All (0)</button>
           </div>
       </div>
   </section>
 
-  <!-- CATALOG STATS & RESULTS COUNTER -->
-  <div class="max-w-5xl mx-auto px-4 pt-3 flex justify-between items-center text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">
+  <!-- CATALOG STATS COUNTER -->
+  <div class="max-w-6xl mx-auto px-3 pt-2.5 flex justify-between items-center text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">
       <span id="results-count">Showing 0 Minifigures</span>
-      <span class="text-green-600 flex items-center gap-1"><i class="fa-solid fa-[#10b981] fa-circle text-[6px] animate-pulse"></i> Live Stock</span>
+      <span class="text-emerald-600 flex items-center gap-1"><i class="fa-solid fa-circle text-[5px] animate-pulse"></i> In Stock</span>
   </div>
 
-  <!-- PRODUCT GRID CONTAINER -->
-  <main class="p-3 sm:p-4 max-w-5xl mx-auto">
-      <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 transition-all">
-          <!-- Dynamic Minifigures -->
+  <!-- 4 PRODUCTS PER ROW GRID -->
+  <main class="p-2 sm:p-3 max-w-6xl mx-auto">
+      <div id="product-grid" class="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-6 gap-1.5 sm:gap-2.5">
+          <!-- Minifigures loaded dynamically -->
       </div>
   </main>
-
-  <!-- PRODUCT DETAIL MODAL -->
-  <div id="product-modal" class="fixed inset-0 z-[1000] flex flex-col justify-end translate-y-full">
-      <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeProductModal()"></div>
-      <div class="relative w-full h-[92vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
-          
-          <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-[30] absolute top-0 left-0 right-0 shadow-sm">
-              <h2 class="text-base font-black text-gray-900 font-['Moul'] truncate pr-4" id="modal-title">Minifigure</h2>
-              <button onclick="closeProductModal()" class="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark"></i></button>
-          </div>
-          
-          <div class="flex-1 overflow-y-auto pt-14 pb-6 scrollbar-hide relative bg-gray-50" id="modal-body">
-              
-              <!-- IMAGE CAROUSEL -->
-              <div class="sticky top-0 z-20 bg-white border-b border-gray-100 sticky-shadow">
-                  <div id="modal-image-carousel" class="w-full h-[35vh] flex overflow-x-auto snap-x snap-mandatory scrollbar-hide relative" onscroll="handleCarouselScroll()">
-                      <!-- Injected via JS -->
-                  </div>
-                  <div class="absolute bottom-3 left-4 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl shadow-md border border-gray-100 flex flex-col pointer-events-none">
-                      <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-0.5">Price</span>
-                      <span id="modal-price" class="text-xl font-black text-[#ea580c] leading-none">0៛</span>
-                  </div>
-              </div>
-
-              <!-- Content Area -->
-              <div class="px-5 space-y-6 mt-5 relative z-10">
-                  
-                  <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                      <div>
-                          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Stock Status</p>
-                          <span id="modal-stock" class="text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block">In Stock</span>
-                      </div>
-                      <div class="text-right">
-                          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Authenticity</p>
-                          <span class="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 inline-block"><i class="fa-solid fa-award"></i> Collector Grade</span>
-                      </div>
-                  </div>
-
-                  <div id="variant-section" class="hidden bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                      <p class="text-[10px] font-black text-gray-800 uppercase tracking-widest mb-3 font-['Kantumruy_Pro']">ជ្រើសរើសប្រភេទ (Select Minifigure Variant)</p>
-                      <div id="variant-grid" class="grid grid-cols-4 gap-2.5"></div>
-                  </div>
-
-                  <!-- RECOMMENDATIONS -->
-                  <div class="pt-2">
-                      <div class="flex items-center gap-2 mb-4">
-                          <div class="h-px bg-gray-200 flex-1"></div>
-                          <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">You Might Also Like</h3>
-                          <div class="h-px bg-gray-200 flex-1"></div>
-                      </div>
-                      <div id="recommendations-grid" class="grid grid-cols-2 gap-3 pb-4"></div>
-                  </div>
-              </div>
-          </div>
-
-          <!-- Modal Footer -->
-          <div class="bg-white border-t border-gray-100 p-4 z-[30] flex gap-3 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
-              <div class="flex items-center gap-3 bg-gray-50 rounded-2xl p-1 border border-gray-100">
-                  <button onclick="updateModalQty(-1)" class="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm text-gray-600 active:scale-95"><i class="fa-solid fa-minus"></i></button>
-                  <span id="modal-qty" class="font-black text-base w-6 text-center">1</span>
-                  <button onclick="updateModalQty(1)" class="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-sm text-gray-600 active:scale-95"><i class="fa-solid fa-plus"></i></button>
-              </div>
-              <button onclick="addToCartFromModal()" class="flex-1 bg-[#ea580c] text-white font-black rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
-                  <i class="fa-solid fa-cart-plus"></i> បញ្ចូលទៅកន្ត្រក
-              </button>
-          </div>
-      </div>
-  </div>
 
   <!-- CART DRAWER -->
   <div id="cart-drawer" class="fixed inset-0 z-[2000] flex flex-col justify-end translate-y-full">
     <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeCartDrawer()"></div>
     <div class="relative w-full h-[85vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
         
-        <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10">
+        <div class="bg-white px-5 py-3.5 flex items-center justify-between border-b border-gray-100 z-10">
             <div>
-                <h2 class="text-xl font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2>
-                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Your Shopping Cart</p>
+                <h2 class="text-lg font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2>
+                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Your Shopping Cart</p>
             </div>
-            <button onclick="closeCartDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all">
-                <i class="fa-solid fa-xmark text-lg"></i>
+            <button onclick="closeCartDrawer()" class="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all">
+                <i class="fa-solid fa-xmark text-base"></i>
             </button>
         </div>
 
-        <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+        <div id="cart-items-container" class="flex-1 overflow-y-auto p-3.5 space-y-3"></div>
 
-        <div class="bg-white border-t border-gray-100 p-5 z-10">
-            <div class="flex justify-between items-end mb-4">
-                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Total)</span>
-                <span id="cart-grand-total" class="text-2xl font-black text-[#ea580c] leading-none">0៛</span>
+        <div class="bg-white border-t border-gray-100 p-4 z-10">
+            <div class="flex justify-between items-end mb-3">
+                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">សរុប (Total)</span>
+                <span id="cart-grand-total" class="text-xl font-black text-[#ea580c] leading-none">0៛</span>
             </div>
-            <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
+            <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-3.5 rounded-xl shadow-lg uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
                 <i class="fa-solid fa-truck-fast"></i> បន្តទៅការដឹកជញ្ជូន
             </button>
         </div>
@@ -237,34 +158,34 @@
 
   <!-- CHECKOUT MODAL -->
   <div id="checkout-modal" class="fixed inset-0 z-[3000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
-      <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm md:max-w-md md:mx-auto md:w-full">
-          <h2 class="text-xl font-black font-['Moul']">ព័ត៌មានដឹកជញ្ជូន</h2>
-          <button onclick="closeCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+      <div class="px-4 py-3.5 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm md:max-w-md md:mx-auto md:w-full">
+          <h2 class="text-lg font-black font-['Moul']">ព័ត៌មានដឹកជញ្ជូន</h2>
+          <button onclick="closeCheckout()" class="w-9 h-9 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-base"></i></button>
       </div>
       
-      <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50 md:max-w-md md:mx-auto md:w-full md:border-x md:border-gray-100">
-          <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
+      <div class="flex-1 overflow-y-auto p-5 pb-32 bg-gray-50 md:max-w-md md:mx-auto md:w-full md:border-x md:border-gray-100">
+          <div class="bg-white rounded-2xl p-4 border border-gray-100 space-y-2.5 mb-5 relative overflow-hidden shadow-sm">
               <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
               <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប:</span><span id="check-subtotal">៛0</span></div>
               <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">៛0</span></div>
-              <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
-                  <span class="text-sm">សរុបត្រូវបង់:</span>
-                  <span id="check-total-khr" class="text-[#ea580c] text-xl leading-none">៛0</span>
+              <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-2.5 mt-2">
+                  <span class="text-xs">សរុបត្រូវបង់:</span>
+                  <span id="check-total-khr" class="text-[#ea580c] text-lg leading-none">៛0</span>
               </div>
           </div>
 
-          <div class="space-y-4">
-              <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង</label>
-              <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក">
-              <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (ឧ. 012345678)">
+          <div class="space-y-3">
+              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">ព័ត៌មានទំនាក់ទំនង</label>
+              <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-xl p-3.5 font-bold text-xs outline-none focus:border-[#ea580c] transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក">
+              <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-xl p-3.5 font-bold text-xs outline-none focus:border-[#ea580c] transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (ឧ. 012345678)">
               
-              <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន</label>
-              <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ"></textarea>
+              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mt-3">ទីតាំងដឹកជញ្ជូន</label>
+              <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-xl p-3.5 font-bold text-xs outline-none focus:border-[#ea580c] transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ"></textarea>
           </div>
       </div>
 
-      <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:max-w-md md:left-1/2 md:-translate-x-1/2 md:border-x">
-          <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-[#ea580c] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
+      <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-4 pb-6 md:max-w-md md:left-1/2 md:-translate-x-1/2 md:border-x">
+          <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-[#ea580c] text-white font-black py-3.5 rounded-xl shadow-lg uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
       </div>
   </div>
 
@@ -272,15 +193,9 @@
     const RATE = 4000;
     let allProducts = [];
     let userCart = [];
-    let currentModalProduct = null;
-    let currentVariantIndex = 0;
-    let modalQty = 1;
-    let isProgrammaticScroll = false;
-    let scrollTimeout;
     
     let activeCategory = 'All';
     let activeSearchTerm = '';
-    let isCompactGrid = false;
 
     try {
         const savedCart = localStorage.getItem('sr_cart');
@@ -326,8 +241,8 @@
         const container = document.getElementById('category-filters');
         container.innerHTML = Object.keys(catCounts).map(c => {
             const isSelected = c === activeCategory;
-            return `<button onclick="setCategoryFilter('${c}', this)" class="filter-btn px-3.5 py-1.5 rounded-full ${isSelected ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all shadow-sm">
-                ${c} <span class="opacity-60 text-[9px]">(${catCounts[c]})</span>
+            return `<button onclick="setCategoryFilter('${c}', this)" class="filter-btn px-2.5 py-1 rounded-full ${isSelected ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} text-[9px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all">
+                ${c} <span class="opacity-60 text-[8px]">(${catCounts[c]})</span>
             </button>`;
         }).join('');
     }
@@ -361,20 +276,6 @@
         applyFilters();
     }
 
-    function toggleGridDensity() {
-        isCompactGrid = !isCompactGrid;
-        const grid = document.getElementById('product-grid');
-        const toggleBtnText = document.getElementById('grid-toggle-text');
-        
-        if (isCompactGrid) {
-            grid.className = "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 transition-all";
-            toggleBtnText.innerText = "Standard View";
-        } else {
-            grid.className = "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 transition-all";
-            toggleBtnText.innerText = "Compact View";
-        }
-    }
-
     function applyFilters() {
         let filtered = allProducts.filter(p => {
             const matchesCat = activeCategory === 'All' || (p.category && p.category.includes(activeCategory));
@@ -388,6 +289,7 @@
         renderProductsGrid(filtered);
     }
 
+    /* Renders 4 Minifigures Per Row */
     function renderProductsGrid(products) {
         const grid = document.getElementById('product-grid');
         
@@ -405,42 +307,35 @@
             const price = variants.length > 0 ? (variants[0].price * RATE) : (p.price * RATE);
             const stock = variants.length > 0 ? variants[0].stock : p.stock;
             const image = p.image || p.thumbnail;
-            
-            const isLowStock = stock > 0 && stock <= 2;
             const isSoldOut = stock <= 0;
 
             return `
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col relative group hover:shadow-xl hover:border-gray-200 transition-all ${isSoldOut ? 'opacity-60' : ''}">
+            <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col relative group ${isSoldOut ? 'opacity-50' : ''}">
                 
-                <!-- Card Image -->
-                <div onclick="openProductModal(${p.id})" class="aspect-[4/5] bg-gray-50 relative overflow-hidden flex items-center justify-center p-2 cursor-pointer">
-                    
-                    ${isSoldOut ? `<div class="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center z-10"><span class="bg-red-600 text-white text-[8px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest shadow-md">SOLD OUT</span></div>` : ''}
-                    ${isLowStock ? `<div class="absolute top-2 left-2 z-10 bg-amber-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shadow-md flex items-center gap-1"><i class="fa-solid fa-fire"></i> ONLY ${stock}</div>` : ''}
-
-                    <img src="${image}" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500">
+                <!-- Card Image Box with Lightbox Viewer trigger -->
+                <div class="aspect-square bg-gray-50 relative overflow-hidden flex items-center justify-center p-1 cursor-pointer" onclick="openImageViewer('${image}')">
+                    ${isSoldOut ? `<div class="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center z-10"><span class="bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest">SOLD OUT</span></div>` : ''}
+                    <img src="${image}" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
                 </div>
 
-                <!-- Card Details -->
-                <div class="p-2.5 flex flex-col flex-grow bg-white">
-                    <h3 onclick="openProductModal(${p.id})" class="font-black text-[11px] sm:text-xs text-gray-900 line-clamp-2 mb-1 font-['Plus_Jakarta_Sans'] leading-tight cursor-pointer hover:text-[#ea580c] transition-colors">${p.title}</h3>
-                    
-                    <div class="mt-auto flex items-center justify-between pt-1.5 border-t border-gray-50">
-                        <span class="font-black text-xs sm:text-sm text-[#ea580c] leading-none">${price.toLocaleString()}៛</span>
-                        
-                        <!-- 1-TAP QUICK ADD BUTTON -->
-                        <button onclick="quickAddToCart(${p.id}, event)" ${isSoldOut ? 'disabled' : ''} class="w-7 h-7 rounded-xl ${isSoldOut ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-gray-900 text-white hover:bg-[#ea580c] active:scale-90'} transition-all flex items-center justify-center shadow-sm shrink-0" title="Quick Add 1 to Cart">
-                            <i class="fa-solid fa-plus text-[10px]"></i>
-                        </button>
+                <!-- Card Details & Direct Add Button -->
+                <div class="p-1.5 flex flex-col flex-grow bg-white justify-between">
+                    <div>
+                        <h3 class="font-extrabold text-[10px] text-gray-900 line-clamp-1 leading-tight font-['Plus_Jakarta_Sans']" title="${p.title}">${p.title}</h3>
+                        <span class="font-black text-[11px] text-[#ea580c] block mt-0.5">${price.toLocaleString()}៛</span>
                     </div>
+
+                    <!-- DIRECT 1-TAP ADD TO CART BUTTON -->
+                    <button onclick="addToCartSingleItem(${p.id})" ${isSoldOut ? 'disabled' : ''} class="w-full mt-1.5 py-1 bg-gray-900 text-white hover:bg-[#ea580c] ${isSoldOut ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'active:scale-95'} rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center justify-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-plus text-[8px]"></i> Add
+                    </button>
                 </div>
             </div>`;
         }).join('');
     }
 
-    // --- 1-TAP QUICK ADD FUNCTION ---
-    function quickAddToCart(productId, event) {
-        event.stopPropagation();
+    /* DIRECT SINGLE ITEM ADD TO CART */
+    function addToCartSingleItem(productId) {
         const product = allProducts.find(p => p.id === productId);
         if(!product) return;
 
@@ -457,7 +352,7 @@
             price = parseFloat(v.price) * RATE;
             image = v.image || product.thumbnail;
             stock = parseInt(v.stock);
-            styleName = v.name || "Style 1";
+            styleName = v.name || "Standard";
         } else {
             dbId = `${product.id}-0`;
             price = parseFloat(product.price) * RATE;
@@ -480,201 +375,11 @@
         
         saveCart(); updateCartBadge();
         
-        // Show Toast Feedback
+        // Trigger Toast
         const toast = document.getElementById('toast');
         document.getElementById('toast-text').innerText = "Added to Cart";
         toast.classList.remove('opacity-0', 'scale-90'); 
         setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1200);
-    }
-
-    function openProductModal(id) {
-        currentModalProduct = allProducts.find(p => p.id === id);
-        if(!currentModalProduct) return;
-        
-        document.getElementById('modal-title').innerText = currentModalProduct.title;
-        currentVariantIndex = 0; modalQty = 1;
-        document.getElementById('modal-qty').innerText = modalQty;
-        document.getElementById('modal-body').scrollTop = 0;
-        
-        let variants = currentModalProduct.parsed_variants || [];
-        if(variants.length === 0 && currentModalProduct.variants) {
-             try { variants = typeof currentModalProduct.variants === 'string' ? JSON.parse(currentModalProduct.variants) : currentModalProduct.variants; } catch(e){}
-        }
-        
-        const carousel = document.getElementById('modal-image-carousel');
-        const varSection = document.getElementById('variant-section');
-        const varGrid = document.getElementById('variant-grid');
-        
-        if(variants.length > 0) {
-            carousel.innerHTML = variants.map(v => `
-                <div class="min-w-full h-full snap-center relative cursor-pointer" onclick="openImageViewer('${v.image || currentModalProduct.thumbnail}')">
-                    <img src="${v.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain p-2">
-                    <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-sm"></i></div>
-                </div>
-            `).join('');
-
-            varSection.classList.remove('hidden');
-            varGrid.innerHTML = variants.map((v, i) => `
-                <div onclick="selectVariant(${i})" class="variant-btn w-full aspect-[4/5] bg-gray-50 rounded-xl border-2 ${i === 0 ? 'border-[#ea580c]' : 'border-gray-100 hover:border-gray-300'} overflow-hidden cursor-pointer p-1 transition-colors relative">
-                    ${i === 0 ? '<div class="absolute top-1 right-1 w-2 h-2 bg-[#ea580c] rounded-full border border-white"></div>' : ''}
-                    <img src="${v.image || currentModalProduct.thumbnail}" class="w-full h-full object-cover rounded-lg">
-                </div>
-            `).join('');
-            
-            updatePriceAndStock(variants[0].price, variants[0].stock);
-        } else {
-            varSection.classList.add('hidden');
-            carousel.innerHTML = `
-                <div class="min-w-full h-full snap-center relative cursor-pointer" onclick="openImageViewer('${currentModalProduct.image || currentModalProduct.thumbnail}')">
-                    <img src="${currentModalProduct.image || currentModalProduct.thumbnail}" class="w-full h-full object-contain p-2">
-                    <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-sm"></i></div>
-                </div>
-            `;
-            updatePriceAndStock(currentModalProduct.price, currentModalProduct.stock);
-        }
-        
-        isProgrammaticScroll = true;
-        carousel.scrollLeft = 0;
-        setTimeout(() => isProgrammaticScroll = false, 50);
-
-        renderRecommendations(id);
-
-        const modal = document.getElementById('product-modal');
-        modal.classList.remove('translate-y-full');
-    }
-
-    function handleCarouselScroll() {
-        if(isProgrammaticScroll) return;
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-            const carousel = document.getElementById('modal-image-carousel');
-            const index = Math.round(carousel.scrollLeft / carousel.clientWidth);
-            if (index !== currentVariantIndex && index >= 0) {
-                updateVariantUIOnly(index);
-            }
-        }, 50);
-    }
-
-    function selectVariant(idx) {
-        updateVariantUIOnly(idx);
-        isProgrammaticScroll = true;
-        const carousel = document.getElementById('modal-image-carousel');
-        carousel.scrollTo({ left: carousel.clientWidth * idx, behavior: 'smooth' });
-        setTimeout(() => { isProgrammaticScroll = false; }, 400);
-    }
-
-    function updateVariantUIOnly(idx) {
-        currentVariantIndex = idx;
-        document.querySelectorAll('.variant-btn').forEach((btn, i) => {
-            if(i === idx) {
-                btn.classList.add('border-[#ea580c]');
-                btn.classList.remove('border-gray-100', 'hover:border-gray-300');
-                if(!btn.querySelector('.bg-\\[\\#ea580c\\]')) btn.innerHTML += '<div class="absolute top-1 right-1 w-2 h-2 bg-[#ea580c] rounded-full border border-white"></div>';
-            } else {
-                btn.classList.remove('border-[#ea580c]');
-                btn.classList.add('border-gray-100', 'hover:border-gray-300');
-                const dot = btn.querySelector('.bg-\\[\\#ea580c\\]');
-                if(dot) dot.remove();
-            }
-        });
-        
-        let variants = currentModalProduct.parsed_variants || [];
-        if(variants.length === 0 && currentModalProduct.variants) {
-             try { variants = typeof currentModalProduct.variants === 'string' ? JSON.parse(currentModalProduct.variants) : currentModalProduct.variants; } catch(e){}
-        }
-        if (variants.length > 0 && variants[idx]) {
-            updatePriceAndStock(variants[idx].price, variants[idx].stock);
-        }
-    }
-
-    function updatePriceAndStock(price, stock) {
-        document.getElementById('modal-price').innerText = (parseFloat(price) * RATE).toLocaleString() + '៛';
-        const stockEl = document.getElementById('modal-stock');
-        if(parseInt(stock) > 0) {
-            stockEl.innerText = "In Stock"; stockEl.className = "text-xs font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 inline-block";
-        } else {
-            stockEl.innerText = "Sold Out"; stockEl.className = "text-xs font-black text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 inline-block";
-        }
-    }
-
-    function renderRecommendations(excludeId) {
-        const available = allProducts.filter(p => p.id !== excludeId);
-        const shuffled = available.sort(() => 0.5 - Math.random());
-
-        const grid = document.getElementById('recommendations-grid');
-        grid.innerHTML = shuffled.map(p => {
-            const price = p.parsed_variants && p.parsed_variants.length > 0 ? (p.parsed_variants[0].price * RATE) : (p.price * RATE);
-            const image = p.image || p.thumbnail;
-            return `
-            <div onclick="swapToRecommendation(${p.id})" class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-all hover:border-[#ea580c]">
-                <div class="aspect-[4/5] bg-gray-50 relative p-2">
-                    <img src="${image}" class="w-full h-full object-contain mix-blend-multiply">
-                </div>
-                <div class="p-2 flex flex-col flex-grow bg-white">
-                    <h3 class="font-bold text-[10px] text-gray-700 line-clamp-1 mb-1 font-['Plus_Jakarta_Sans'] leading-tight">${p.title}</h3>
-                    <span class="font-black text-xs text-[#ea580c] mt-auto">${price.toLocaleString()}៛</span>
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    function swapToRecommendation(newId) {
-        document.getElementById('modal-body').scrollTo({ top: 0, behavior: 'smooth' });
-        setTimeout(() => { openProductModal(newId); }, 100);
-    }
-
-    function updateModalQty(delta) {
-        modalQty += delta;
-        if(modalQty < 1) modalQty = 1;
-        if(modalQty > 10) modalQty = 10;
-        document.getElementById('modal-qty').innerText = modalQty;
-    }
-
-    function closeProductModal() { document.getElementById('product-modal').classList.add('translate-y-full'); }
-
-    function addToCartFromModal() {
-        if(!currentModalProduct) return;
-        
-        let variants = currentModalProduct.parsed_variants || [];
-        if(variants.length === 0 && currentModalProduct.variants) {
-             try { variants = typeof currentModalProduct.variants === 'string' ? JSON.parse(currentModalProduct.variants) : currentModalProduct.variants; } catch(e){}
-        }
-
-        let dbId, price, image, stock, styleName;
-
-        if(variants.length > 0) {
-            const v = variants[currentVariantIndex];
-            dbId = `${currentModalProduct.id}-${currentVariantIndex}`;
-            price = parseFloat(v.price) * RATE;
-            image = v.image || currentModalProduct.thumbnail;
-            stock = parseInt(v.stock);
-            styleName = v.name || `Style ${currentVariantIndex + 1}`;
-        } else {
-            dbId = `${currentModalProduct.id}-0`;
-            price = parseFloat(currentModalProduct.price) * RATE;
-            image = currentModalProduct.image || currentModalProduct.thumbnail;
-            stock = parseInt(currentModalProduct.stock);
-            styleName = "Standard";
-        }
-
-        if(stock <= 0) return alert("Sorry, this item is sold out!");
-
-        const existing = userCart.find(i => i.id === dbId);
-        if(existing) { existing.qty += modalQty; } 
-        else {
-            userCart.push({
-                id: dbId, type: 'standard', title: currentModalProduct.title,
-                style: styleName, price: price, image: image, maxStock: stock,
-                qty: modalQty, selected: true
-            });
-        }
-        
-        saveCart(); updateCartBadge();
-        
-        const toast = document.getElementById('toast');
-        document.getElementById('toast-text').innerText = "Added to Cart";
-        toast.classList.remove('opacity-0', 'scale-90'); 
-        setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500);
     }
 
     function openCartDrawer() { renderCartUI(); document.getElementById('cart-drawer').classList.remove('translate-y-full'); }
@@ -697,32 +402,19 @@
                 if(item.selected) grandTotal += itemTotal;
                 
                 return `
-                <div class="bg-white rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col relative transition-all overflow-hidden mb-4">
-                    <div class="w-full h-36 bg-gray-50 border-b border-gray-100 relative cursor-pointer group" onclick="openImageViewer('${item.image}')">
+                <div class="bg-white rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col relative transition-all overflow-hidden mb-3">
+                    <div class="w-full h-32 bg-gray-50 border-b border-gray-100 relative cursor-pointer group" onclick="openImageViewer('${item.image}')">
                         <img src="${item.image}" class="w-full h-full object-contain p-2">
-                        <div class="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 flex justify-between items-center text-white">
-                            <span class="text-[10px] font-bold tracking-widest uppercase font-['Kantumruy_Pro']"><i class="fa-solid fa-gem text-orange-400 mr-1"></i> ${item.charms.length} Charms</span>
-                            <span class="text-sm font-black text-orange-400">${itemTotal.toLocaleString()}៛</span>
-                        </div>
                     </div>
                     <div class="p-3">
-                        <div class="flex justify-between items-start mb-2">
-                            <label class="flex items-start gap-3 cursor-pointer flex-1">
+                        <div class="flex justify-between items-start mb-1">
+                            <label class="flex items-start gap-2.5 cursor-pointer flex-1">
                                 <input type="checkbox" class="cart-checkbox mt-0.5" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
                                 <div>
-                                    <h4 class="font-black text-sm text-gray-900 leading-tight">Custom Bracelet #${customIndex++}</h4>
-                                    <p class="text-[10px] font-bold text-gray-500 mt-1 uppercase tracking-widest flex items-center">Code: <span class="font-mono text-gray-800 ml-1">${item.code.substring(0,8)}</span></p>
+                                    <h4 class="font-black text-xs text-gray-900 leading-tight">Custom Bracelet #${customIndex++}</h4>
                                 </div>
                             </label>
-                            <button type="button" onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-2 -mt-1 -mr-1"><i class="fa-solid fa-trash-can text-lg"></i></button>
-                        </div>
-                        <div class="flex justify-between items-center mt-3">
-                            <button onclick="window.location.href='/custom-bracelet'" class="text-[10px] bg-blue-50 text-blue-600 px-3 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors font-black uppercase tracking-widest shadow-sm active:scale-95"><i class="fa-solid fa-pen-ruler mr-1"></i> Edit Design</button>
-                            <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-1 border border-gray-100">
-                                <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                                <span class="font-black text-xs w-4 text-center">${item.qty}</span>
-                                <button onclick="updateCartQty('${item.id}', 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[10px]"></i></button>
-                            </div>
+                            <button type="button" onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-1 -mt-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
                         </div>
                     </div>
                 </div>`;
@@ -731,27 +423,26 @@
                 if(item.selected) grandTotal += itemTotal;
 
                 return `
-                <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
-                    <label class="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" class="cart-checkbox mt-2 ml-1" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
+                <div class="bg-white p-2.5 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-3">
+                    <label class="flex items-start gap-2 cursor-pointer">
+                        <input type="checkbox" class="cart-checkbox mt-2 ml-0.5" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
                     </label>
-                    <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden cursor-pointer" onclick="openImageViewer('${item.image}')">
+                    <div class="w-16 h-20 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden cursor-pointer" onclick="openImageViewer('${item.image}')">
                         <img src="${item.image}" class="max-w-full max-h-full object-contain">
                     </div>
-                    <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
+                    <div class="flex-1 flex flex-col justify-between py-0.5 min-w-0">
                         <div>
                             <div class="flex justify-between items-start">
                                 <h4 class="font-black text-xs text-gray-900 leading-tight truncate pr-2">${item.title}</h4>
-                                <button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 -mt-1 -mr-1 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                <button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-1"><i class="fa-solid fa-trash-can text-xs"></i></button>
                             </div>
-                            <p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">${item.style}</p>
                         </div>
-                        <div class="flex justify-between items-end mt-2">
-                            <span class="font-black text-sm text-[#ea580c]">${itemTotal.toLocaleString()}៛</span>
-                            <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
-                                <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                        <div class="flex justify-between items-end mt-1.5">
+                            <span class="font-black text-xs text-[#ea580c]">${itemTotal.toLocaleString()}៛</span>
+                            <div class="flex items-center gap-2 bg-gray-50 rounded-lg p-0.5 border border-gray-100">
+                                <button onclick="updateCartQty('${item.id}', -1)" class="w-5 h-5 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[9px]"></i></button>
                                 <span class="font-black text-xs w-2 text-center">${item.qty}</span>
-                                <button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                <button onclick="updateCartQty('${item.id}', 1)" class="w-5 h-5 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[9px]"></i></button>
                             </div>
                         </div>
                     </div>
