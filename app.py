@@ -227,6 +227,11 @@ def shop(): return render_template('bracelet.html')
 @app.route('/custom-bracelet')
 def custom_bracelet(): return render_template('custom_bracelet.html')
 
+# NEW STORE ROUTE: Minifigure Storefront
+@app.route('/minifigure')
+def minifigure_store(): 
+    return render_template('minifigure.html')
+
 @app.route('/mystery-box')
 @app.route('/lucky-draw')
 @app.route('/spin')
@@ -388,7 +393,6 @@ def delete_order(id):
         db.session.commit()
     return redirect(url_for('admin_orders'))
 
-# --- BULK DELETE ORDERS ROUTE ---
 @app.route('/admin/order/bulk_delete', methods=['POST'])
 @login_required
 def bulk_delete_orders():
