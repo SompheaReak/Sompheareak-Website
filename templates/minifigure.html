@@ -242,31 +242,46 @@
                 try { variants = typeof product.variants === 'string' ? JSON.parse(product.variants) : product.variants; } catch(e){}
             }
 
+            // MAGIC DISCOUNT MATH
+            let discountPercent = parseFloat(product.discount_percent) || 0;
+
             if (variants && variants.length > 0) {
                 variants.forEach((v, vIdx) => {
                     let figureName = v.name && v.name !== `Style ${vIdx + 1}` ? `${v.name}` : product.title;
                     if (!v.name || v.name.startsWith('Style ')) figureName = product.title ? `${product.title} #${vIdx + 1}` : `Minifigure #${product.id}-${vIdx + 1}`;
 
                     let figureCategory = v.category || product.category || 'General';
+                    
+                    let basePrice = (parseFloat(v.price) || parseFloat(product.price) || 0) * RATE;
+                    let finalPrice = basePrice;
+                    if(discountPercent > 0) { finalPrice = basePrice - (basePrice * discountPercent / 100); }
 
                     unpackedFigures.push({
                         cartId: `${product.id}-${vIdx}`,
                         productId: product.id,
                         variantIndex: vIdx,
                         title: figureName,
-                        price: (parseFloat(v.price) || parseFloat(product.price) || 0) * RATE,
+                        originalPrice: basePrice,
+                        price: finalPrice,
+                        discountPercent: discountPercent,
                         stock: parseInt(v.stock) || 0,
                         image: v.image || product.thumbnail || product.image,
                         category: figureCategory
                     });
                 });
             } else {
+                let basePrice = (parseFloat(product.price) || 0) * RATE;
+                let finalPrice = basePrice;
+                if(discountPercent > 0) { finalPrice = basePrice - (basePrice * discountPercent / 100); }
+
                 unpackedFigures.push({
                     cartId: `${product.id}-0`,
                     productId: product.id,
                     variantIndex: 0,
                     title: product.title || `Minifigure #${product.id}`,
-                    price: (parseFloat(product.price) || 0) * RATE,
+                    originalPrice: basePrice,
+                    price: finalPrice,
+                    discountPercent: discountPercent,
                     stock: parseInt(product.stock) || 0,
                     image: product.image || product.thumbnail,
                     category: product.category || 'General'
@@ -348,10 +363,26 @@
 
         grid.innerHTML = figures.map((fig) => {
             const isSoldOut = fig.stock <= 0;
+            
+            // RENDERING PRICE & DISCOUNT BADGE
+            let badgeHtml = '';
+            let priceHtml = '';
+            
+            if(fig.discountPercent > 0) {
+                badgeHtml = `<div class="absolute top-1 left-1 z-10 bg-red-600 text-white text-[8px] font-black px-1 py-0.5 rounded shadow-sm leading-none">SALE -${Math.round(fig.discountPercent)}%</div>`;
+                priceHtml = `
+                    <div class="flex flex-col">
+                        <span class="text-[9px] font-bold text-gray-400 line-through leading-none mb-0.5">${fig.originalPrice.toLocaleString()}៛</span>
+                        <span class="font-black text-[11px] text-red-600 leading-none">${fig.price.toLocaleString()}៛</span>
+                    </div>
+                `;
+            } else {
+                priceHtml = `<span class="font-black text-[11px] text-[#ea580c] block mt-0.5">${fig.price.toLocaleString()}៛</span>`;
+            }
 
             return `
             <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col relative group ${isSoldOut ? 'opacity-50' : ''}">
-                
+                ${badgeHtml}
                 <!-- Single Figure Image (Click triggers lightbox viewer) -->
                 <div class="aspect-square bg-gray-50 relative overflow-hidden flex items-center justify-center p-1 cursor-pointer" onclick="openImageViewer('${fig.image}')">
                     ${isSoldOut ? `<div class="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center z-10"><span class="bg-red-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest">SOLD OUT</span></div>` : ''}
@@ -361,8 +392,8 @@
                 <!-- Single Figure Box Details & Add Button -->
                 <div class="p-1.5 flex flex-col flex-grow bg-white justify-between">
                     <div>
-                        <h3 class="font-extrabold text-[10px] text-gray-900 line-clamp-1 leading-tight font-['Plus_Jakarta_Sans']" title="${fig.title}">${fig.title}</h3>
-                        <span class="font-black text-[11px] text-[#ea580c] block mt-0.5">${fig.price.toLocaleString()}៛</span>
+                        <h3 class="font-extrabold text-[10px] text-gray-900 line-clamp-1 leading-tight font-['Plus_Jakarta_Sans'] mb-1" title="${fig.title}">${fig.title}</h3>
+                        ${priceHtml}
                     </div>
 
                     <!-- DIRECT 1-TAP ADD BUTTON -->
@@ -389,7 +420,7 @@
                 type: 'standard',
                 title: figure.title,
                 style: 'Single Figure',
-                price: figure.price,
+                price: figure.price, // Uses the discounted final price calculated above!
                 image: figure.image,
                 maxStock: figure.stock,
                 qty: 1,
@@ -556,4 +587,5 @@
   </script>
 </body>
 </html>
+
 
