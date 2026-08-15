@@ -439,9 +439,17 @@
                                     <input type="hidden" name="v_images[]" value="{{v.image}}" class="variant-image-hidden">
                                     
                                     <!-- Variant Inputs Grid -->
-                                    <div class="flex-1 w-full grid grid-cols-2 md:grid-cols-5 gap-2 price-sync-group items-center">
+                                    <div class="flex-1 w-full grid grid-cols-2 md:grid-cols-6 gap-2 price-sync-group items-center">
                                         <div class="col-span-2 md:col-span-1">
                                             <input type="text" name="v_names[]" value="{{v.name}}" placeholder="Variant Name" class="input-field w-full text-xs font-bold">
+                                        </div>
+                                        
+                                        <!-- NEW: Type Selector (Option vs View Only) -->
+                                        <div>
+                                            <select name="v_types[]" class="input-field w-full text-[10px] font-black uppercase text-slate-700">
+                                                <option value="option" {% if v.type != 'view' %}selected{% endif %}>🔹 Option</option>
+                                                <option value="view" {% if v.type == 'view' %}selected{% endif %}>👁️ View Only</option>
+                                            </select>
                                         </div>
                                         
                                         <div class="relative">
@@ -986,6 +994,9 @@
             let defaultName = isGallery ? `Gallery ${index}` : `Variant ${index + 1}`;
             let defaultStock = isGallery ? '0' : '1';
             let defaultCat = isGallery ? 'Gallery' : (defaultTagString || '');
+            
+            // NEW: Default Type Setter for bulk upload
+            let defaultType = isGallery ? 'view' : 'option';
 
             let tagBadgesHtml = '';
             if(defaultCat) {
@@ -1006,9 +1017,16 @@
                         <button type="button" onclick="this.closest('.variant-row').remove()" class="md:hidden ml-auto w-7 h-7 flex items-center justify-center bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash-can text-xs"></i></button>
                     </div>
                     
-                    <div class="flex-1 w-full grid grid-cols-2 md:grid-cols-5 gap-2 price-sync-group items-center">
+                    <!-- NEW: md:grid-cols-6 with variant_types[] dropdown -->
+                    <div class="flex-1 w-full grid grid-cols-2 md:grid-cols-6 gap-2 price-sync-group items-center">
                         <div class="col-span-2 md:col-span-1">
                             <input type="text" name="variant_names[]" value="${defaultName}" placeholder="Name" class="input-field w-full text-xs font-bold">
+                        </div>
+                        <div>
+                            <select name="variant_types[]" class="input-field w-full text-[10px] font-black uppercase text-slate-700">
+                                <option value="option" ${defaultType === 'option' ? 'selected' : ''}>🔹 Option</option>
+                                <option value="view" ${defaultType === 'view' ? 'selected' : ''}>👁️ View Only</option>
+                            </select>
                         </div>
                         <div class="relative">
                             <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
