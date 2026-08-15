@@ -153,7 +153,7 @@
         </div>
     </div>
 
-    <!-- 🌟 FULL SCREEN PRODUCT MODAL (TAOBAO STYLE) 🌟 -->
+    <!-- 🌟 FULL SCREEN PRODUCT MODAL (TAOBAO STYLE WITH DETAIL & REVIEW SWIPE CAROUSEL) 🌟 -->
     <div id="product-modal" class="fixed inset-0 z-[1000] flex flex-col bg-white translate-y-full transition-transform duration-300 shadow-2xl">
         
         <!-- Header (Sticky Top) -->
@@ -176,10 +176,14 @@
         <!-- Scrollable Body -->
         <div id="modal-scroll-body" class="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 flex flex-col md:max-w-xl md:mx-auto md:w-full md:border-x md:border-gray-100">
             
-            <!-- Main Image Carousel inside the modal -->
-            <div class="w-full h-[35vh] min-h-[220px] max-h-[350px] bg-white relative border-b border-gray-100 group shrink-0">
+            <!-- SWIPEABLE IMAGE CAROUSEL (Thumbnail + Detail/Review Photos) -->
+            <div class="w-full h-[40vh] min-h-[250px] max-h-[380px] bg-white relative border-b border-gray-100 group shrink-0">
                 <div id="modal-image-carousel" class="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-hide" onscroll="handleModalCarouselScroll()">
-                    <!-- Images injected here -->
+                    <!-- Carousel items injected here -->
+                </div>
+                <!-- Image Pagination Indicator Badge -->
+                <div class="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider z-10" id="carousel-indicator">
+                    1 / 1
                 </div>
                 <button onclick="openFullscreenViewer()" class="absolute bottom-3 right-3 bg-white/80 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm backdrop-blur-sm z-10 active:scale-90"><i class="fa-solid fa-expand text-xs"></i></button>
             </div>
@@ -191,8 +195,9 @@
                 <div class="px-4 pt-4 pb-2 relative">
                     <div class="flex justify-between items-start">
                         <div>
-                            <!-- Modal Price Area -->
-                            <div class="text-[#ea580c] font-black text-2xl leading-none mb-1.5" id="sheet-price">0៛</div>
+                            <!-- Modal Price Area: USD First, KHR Secondary -->
+                            <div class="text-[#ea580c] font-black text-2xl leading-none mb-1" id="sheet-price">$0.00</div>
+                            <div class="text-xs text-gray-400 font-extrabold mb-1" id="sheet-price-khr">0៛</div>
                             <div class="text-[10px] text-gray-400 font-bold mb-2">Est. Price: <span id="sheet-est-price">--</span></div>
                         </div>
                         <!-- Stock Label Display -->
@@ -264,17 +269,17 @@
                 <div class="space-y-2 mb-4">
                     <div class="flex justify-between items-center text-xs font-bold text-gray-500">
                         <span>Subtotal (តម្លៃទំនិញ)</span>
-                        <span id="cart-subtotal">0៛</span>
+                        <span id="cart-subtotal">$0.00</span>
                     </div>
                     <div class="flex justify-between items-center text-xs font-bold text-gray-500">
                         <span>Delivery (ថ្លៃដឹកជញ្ជូន)</span>
-                        <span id="cart-delivery">0៛</span>
+                        <span id="cart-delivery">$0.00</span>
                     </div>
                     <div class="flex justify-between items-end pt-2 border-t border-gray-100">
                         <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Grand Total)</span>
                         <div class="text-right">
-                            <span id="cart-grand-total-khr" class="text-2xl font-black text-[#ea580c] leading-none block">0៛</span>
-                            <span id="cart-grand-total-usd" class="text-xs text-gray-400 font-bold block mt-1">$0.00</span>
+                            <span id="cart-grand-total-usd" class="text-2xl font-black text-[#ea580c] leading-none block">$0.00</span>
+                            <span id="cart-grand-total-khr" class="text-xs text-gray-400 font-bold block mt-1">0៛</span>
                         </div>
                     </div>
                 </div>
@@ -294,11 +299,11 @@
         <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50 md:max-w-md md:mx-auto md:w-full md:border-x md:border-gray-100">
             <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
                 <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
-                <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប:</span><span id="check-subtotal">៛0</span></div>
-                <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">៛0</span></div>
+                <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប:</span><span id="check-subtotal">$0.00</span></div>
+                <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">$0.00</span></div>
                 <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
                     <span class="text-sm">សរុបត្រូវបង់:</span>
-                    <span id="check-total-khr" class="text-[#ea580c] text-xl leading-none">៛0</span>
+                    <span id="check-total-usd" class="text-[#ea580c] text-xl leading-none">$0.00</span>
                 </div>
             </div>
             <div class="space-y-4">
@@ -333,12 +338,13 @@
             if (savedCart) userCart = JSON.parse(savedCart);
         } catch(e) {}
 
-        function calculateDelivery(subtotalKHR) {
-            if (subtotalKHR === 0) return 0;
-            if (subtotalKHR < 20000) return 8000;
-            if (subtotalKHR < 40000) return 6000;
-            if (subtotalKHR < 60000) return 4000;
-            if (subtotalKHR < 80000) return 2000;
+        function calculateDelivery(subtotalUSD) {
+            if (subtotalUSD === 0) return 0;
+            // Delivery thresholds based on USD equivalent (approx $5, $10, $15, $20)
+            if (subtotalUSD < 5) return 2.00;
+            if (subtotalUSD < 10) return 1.50;
+            if (subtotalUSD < 15) return 1.00;
+            if (subtotalUSD < 20) return 0.50;
             return 0; 
         }
 
@@ -364,14 +370,11 @@
             document.getElementById('loadingOverlay').style.display = 'flex';
             try {
                 const res = await fetch('/api/products/toy');
-                if(!res.ok) throw new Error("API not accessible. Falling back to mock data.");
+                if(!res.ok) throw new Error("API not accessible.");
                 const data = await res.json();
-                
-                // Only show items explicitly marked visible
                 allProducts = data.products.filter(p => p.is_visible !== false && p.is_visible !== 0);
-                
             } catch (e) {
-                console.warn("Using mock data for preview.", e);
+                console.warn("Using mock data.", e);
             } finally {
                 document.getElementById('loadingOverlay').style.display = 'none';
             }
@@ -380,7 +383,6 @@
             updateCartBadge();
         }
 
-        // --- SMART SEARCH & CATEGORY LOGIC ---
         document.getElementById('searchInput').addEventListener('input', (e) => {
             currentSearchQuery = e.target.value;
             const clearBtn = document.getElementById('clearSearchBtn');
@@ -464,12 +466,11 @@
         }
 
         // =====================================
-        // MAGIC MATH IN THE MAIN PRODUCT GRID
+        // RENDER PRODUCTS GRID WITH USD FIRST
         // =====================================
         function renderProducts() {
             let filtered = allProducts;
 
-            // 1. Category Filtering
             if (activeCategory !== 'All') {
                 const targetCatLower = activeCategory.toLowerCase();
                 filtered = filtered.filter(p => {
@@ -489,7 +490,6 @@
                 });
             }
 
-            // 2. Search filtering
             if (currentSearchQuery.trim() !== '') {
                 const q = currentSearchQuery.toLowerCase().trim();
                 filtered = filtered.reduce((acc, p) => {
@@ -530,7 +530,6 @@
                             <i class="fa-solid fa-magnifying-glass-minus text-3xl text-gray-400"></i>
                         </div>
                         <h3 class="text-sm font-black text-gray-800 uppercase tracking-widest font-['Moul']">រកមិនឃើញទំនិញទេ</h3>
-                        <p class="text-[11px] text-gray-500 mt-2 font-bold uppercase tracking-wider">Try a different search or category</p>
                     </div>`;
                 return;
             }
@@ -542,28 +541,33 @@
                 }
                 
                 const vIndex = p.matchedVariantIndex || 0;
-                const image = p.displayImage;
+                // THUMBNAIL RULE: 1st image/variant image is thumbnail
+                let image = p.displayImage || (variants.length > 0 ? variants[0].image : p.image);
                 const isHot = index % 5 === 0;
 
-                // GRID DISCOUNT CALCULATIONS
                 let discountPercent = parseFloat(p.discount_percent) || 0;
-                let basePrice = variants.length > 0 ? (variants[vIndex].price * RATE) : (p.price * RATE);
-                let finalPrice = basePrice;
+                let basePriceUSD = variants.length > 0 ? parseFloat(variants[vIndex].price) : parseFloat(p.price);
+                let finalPriceUSD = basePriceUSD;
                 let badgeHtml = isHot ? `<div class="absolute top-2 left-2 z-10 bg-red-500 text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-md animate-pulse">HOT</div>` : '';
                 let priceHtml = '';
 
                 if (discountPercent > 0) {
-                    finalPrice = basePrice - (basePrice * discountPercent / 100);
-                    // Override HOT badge with SALE badge
+                    finalPriceUSD = basePriceUSD - (basePriceUSD * discountPercent / 100);
                     badgeHtml = `<div class="absolute top-2 left-2 z-10 bg-red-600 text-white text-[8px] font-black px-2 py-1 rounded-md shadow-md leading-none">SALE -${Math.round(discountPercent)}%</div>`;
                     priceHtml = `
                         <div class="flex flex-col">
-                            <span class="text-[9px] font-bold text-gray-400 line-through leading-none mb-0.5">${basePrice.toLocaleString()}៛</span>
-                            <span class="font-black text-[13px] text-red-600 leading-none">${finalPrice.toLocaleString()}៛</span>
+                            <span class="text-[9px] font-bold text-gray-400 line-through leading-none mb-0.5">$${basePriceUSD.toFixed(2)}</span>
+                            <span class="font-black text-[13px] text-red-600 leading-none">$${finalPriceUSD.toFixed(2)}</span>
+                            <span class="text-[8px] font-bold text-gray-400 mt-0.5">${Math.round(finalPriceUSD * RATE).toLocaleString()}៛</span>
                         </div>
                     `;
                 } else {
-                    priceHtml = `<span class="font-black text-sm text-[#ea580c] block mt-0.5">${finalPrice.toLocaleString()}៛</span>`;
+                    priceHtml = `
+                        <div class="flex flex-col">
+                            <span class="font-black text-sm text-[#ea580c] leading-tight">$${finalPriceUSD.toFixed(2)}</span>
+                            <span class="text-[8px] font-bold text-gray-400">${Math.round(finalPriceUSD * RATE).toLocaleString()}៛</span>
+                        </div>
+                    `;
                 }
 
                 return `
@@ -571,7 +575,6 @@
                     <div class="aspect-[4/5] bg-gray-50 relative overflow-hidden flex items-center justify-center p-2">
                         ${badgeHtml}
                         <img src="${image}" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     </div>
                     <div class="p-3 flex flex-col flex-grow bg-white relative z-10">
                         <h3 class="font-black text-xs text-gray-900 line-clamp-2 mb-1 font-['Plus_Jakarta_Sans'] leading-tight group-hover:text-[#ea580c] transition-colors">${p.title}</h3>
@@ -584,7 +587,9 @@
             }).join('');
         }
 
-        // --- FULL SCREEN PRODUCT MODAL (TAOBAO STYLE) ---
+        // =====================================
+        // FULL SCREEN PRODUCT MODAL WITH REVIEW CAROUSEL
+        // =====================================
         function openProductModal(id, initialVariantIndex = 0) {
             currentModalProduct = allProducts.find(p => p.id === id);
             if(!currentModalProduct) return;
@@ -608,14 +613,25 @@
             }
             currentModalProduct._activeVariants = variants;
 
+            // COLLECT ALL IMAGES FOR THE SWIPEABLE REVIEW/DETAIL CAROUSEL
+            let allImages = [];
+            variants.forEach(v => { if (v.image && !allImages.includes(v.image)) allImages.push(v.image); });
+            if (currentModalProduct.image && !allImages.includes(currentModalProduct.image)) allImages.unshift(currentModalProduct.image);
+            if (currentModalProduct.thumbnail && !allImages.includes(currentModalProduct.thumbnail)) allImages.unshift(currentModalProduct.thumbnail);
+            if (allImages.length === 0) allImages.push('https://via.placeholder.com/400');
+            currentModalProduct._allDetailImages = allImages;
+
             const carousel = document.getElementById('modal-image-carousel');
-            carousel.innerHTML = variants.map((v) => {
-                const img = v.image || currentModalProduct.image || currentModalProduct.thumbnail;
-                return `
-                <div class="min-w-full h-full snap-center flex items-center justify-center p-3">
-                    <img src="${img}" class="max-w-full max-h-full object-contain mix-blend-multiply">
-                </div>`;
-            }).join('');
+            carousel.innerHTML = allImages.map((imgUrl, idx) => `
+                <div class="min-w-full h-full snap-center flex items-center justify-center p-3 relative">
+                    <img src="${imgUrl}" class="max-w-full max-h-full object-contain mix-blend-multiply">
+                    ${idx === 0 ? '<span class="absolute top-3 left-3 bg-black/60 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Thumbnail</span>' : `<span class="absolute top-3 left-3 bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Detail / Review #${idx}</span>`}
+                </div>
+            `).join('');
+
+            // Indicator badge
+            const indicator = document.getElementById('carousel-indicator');
+            if(indicator) indicator.innerText = `1 / ${allImages.length}`;
 
             const grid = document.getElementById('variant-grid');
             grid.innerHTML = variants.map((v, i) => {
@@ -654,12 +670,16 @@
         }
 
         function handleModalCarouselScroll() {
+            const carousel = document.getElementById('modal-image-carousel');
+            if(!carousel) return;
+            const index = Math.round(carousel.scrollLeft / carousel.clientWidth);
+            const total = currentModalProduct._allDetailImages.length;
+            const indicator = document.getElementById('carousel-indicator');
+            if(indicator) indicator.innerText = `${index + 1} / ${total}`;
+
             if (isModalImageScrolling) return; 
             clearTimeout(modalScrollTimeout);
             modalScrollTimeout = setTimeout(() => {
-                const carousel = document.getElementById('modal-image-carousel');
-                if(!carousel) return;
-                const index = Math.round(carousel.scrollLeft / carousel.clientWidth);
                 if (index !== currentVariantIndex && index >= 0 && index < currentModalProduct._activeVariants.length) {
                     updateVariantUIOnly(index, false);
                 }
@@ -669,42 +689,45 @@
         function selectVariant(idx) { updateVariantUIOnly(idx, true); }
 
         // =====================================
-        // MAGIC MATH IN THE TAOBAO MODAL
+        // MAGIC MATH WITH USD FIRST IN MODAL
         // =====================================
         function updateVariantUIOnly(idx, scrollImage = false) {
             currentVariantIndex = idx;
             const variants = currentModalProduct._activeVariants;
             const v = variants[idx];
             
-            // MODAL DISCOUNT CALCULATIONS
             let discountPercent = parseFloat(currentModalProduct.discount_percent) || 0;
-            const basePriceVal = parseFloat(v.price || currentModalProduct.price);
-            let finalPriceVal = basePriceVal;
+            const basePriceUSD = parseFloat(v.price || currentModalProduct.price);
+            let finalPriceUSD = basePriceUSD;
             
             if (discountPercent > 0) {
-                finalPriceVal = basePriceVal - (basePriceVal * discountPercent / 100);
+                finalPriceUSD = basePriceUSD - (basePriceUSD * discountPercent / 100);
             }
 
-            const priceStr = (finalPriceVal * RATE).toLocaleString() + '៛';
-            const estPrice = (finalPriceVal * RATE * 0.95).toLocaleString() + '៛';
+            const priceUSDStr = `$${finalPriceUSD.toFixed(2)}`;
+            const priceKHRStr = `${Math.round(finalPriceUSD * RATE).toLocaleString()}៛`;
+            const estPrice = `$${(finalPriceUSD * 0.95).toFixed(2)}`;
             const name = v.name || `Style ${idx + 1}`;
             
-            // Render the big price on the modal
             if (discountPercent > 0) {
                 document.getElementById('sheet-price').innerHTML = `
                     <div class="flex items-center gap-2">
-                        <span class="text-red-600">${priceStr}</span>
+                        <span class="text-red-600">${priceUSDStr}</span>
                         <span class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded shadow-sm align-middle leading-none">SALE -${Math.round(discountPercent)}%</span>
                     </div>
-                    <div class="text-xs text-gray-400 line-through mt-1.5">${(basePriceVal * RATE).toLocaleString()}៛</div>
+                `;
+                document.getElementById('sheet-price-khr').innerHTML = `
+                    <span class="text-gray-400 line-through mr-2">$${basePriceUSD.toFixed(2)}</span>
+                    <span class="text-gray-500 font-bold">${priceKHRStr}</span>
                 `;
             } else {
-                document.getElementById('sheet-price').innerHTML = `<span class="text-[#ea580c]">${priceStr}</span>`;
+                document.getElementById('sheet-price').innerHTML = `<span class="text-[#ea580c]">${priceUSDStr}</span>`;
+                document.getElementById('sheet-price-khr').innerText = priceKHRStr;
             }
 
             document.getElementById('sheet-est-price').innerText = estPrice;
             document.getElementById('bottom-variant-name').innerText = name;
-            document.getElementById('bottom-price-stock').innerText = priceStr;
+            document.getElementById('bottom-price-stock').innerText = priceUSDStr;
 
             const variantStock = v.stock !== undefined && v.stock !== null ? parseInt(v.stock) : 
                                 (currentModalProduct.stock !== undefined && currentModalProduct.stock !== null ? parseInt(currentModalProduct.stock) : 1);
@@ -730,7 +753,7 @@
                 stockLabel.innerHTML = `Out of Stock`;
             }
             
-            if (scrollImage) {
+            if (scrollImage && variants.length > 1) {
                 isModalImageScrolling = true;
                 const carousel = document.getElementById('modal-image-carousel');
                 if (carousel) {
@@ -758,7 +781,7 @@
         }
 
         // =====================================
-        // MAGIC MATH IN RECOMMENDATIONS
+        // RECOMMENDATIONS WITH USD FIRST
         // =====================================
         function renderRecommendations(excludeId) {
             const available = allProducts.filter(p => p.id !== excludeId);
@@ -772,14 +795,9 @@
                 }
                 
                 let discountPercent = parseFloat(p.discount_percent) || 0;
-                let basePrice = variants.length > 0 ? (variants[0].price * RATE) : (p.price * RATE);
-                let finalPrice = basePrice;
-                let badgeHtml = '';
-                
-                if (discountPercent > 0) {
-                    finalPrice = basePrice - (basePrice * discountPercent / 100);
-                    badgeHtml = `<div class="absolute top-1 right-1 z-10 bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm leading-none">-${Math.round(discountPercent)}%</div>`;
-                }
+                let basePriceUSD = variants.length > 0 ? parseFloat(variants[0].price) : parseFloat(p.price);
+                let finalPriceUSD = discountPercent > 0 ? basePriceUSD - (basePriceUSD * discountPercent / 100) : basePriceUSD;
+                let badgeHtml = discountPercent > 0 ? `<div class="absolute top-1 right-1 z-10 bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm leading-none">-${Math.round(discountPercent)}%</div>` : '';
 
                 const image = p.image || p.thumbnail;
                 return `
@@ -790,7 +808,7 @@
                     </div>
                     <div class="p-3 flex flex-col flex-grow bg-white">
                         <h3 class="font-bold text-[11px] text-gray-800 line-clamp-2 mb-1.5 font-['Plus_Jakarta_Sans'] leading-tight group-hover:text-[#ea580c] transition-colors">${p.title}</h3>
-                        <span class="font-black text-sm text-[#ea580c] mt-auto">${finalPrice.toLocaleString()}៛</span>
+                        <span class="font-black text-sm text-[#ea580c] mt-auto">$${finalPriceUSD.toFixed(2)}</span>
                     </div>
                 </div>`;
             }).join('');
@@ -809,7 +827,7 @@
         }
 
         // =====================================
-        // MAGIC MATH FOR ADDING TO CART
+        // ADD TO CART WITH THUMBNAIL & USD
         // =====================================
         function addToCartFromModal() {
             if(!currentModalProduct) return;
@@ -820,18 +838,12 @@
             const hasTrueVariants = (currentModalProduct.parsed_variants && currentModalProduct.parsed_variants.length > 0) || (currentModalProduct.variants && currentModalProduct.variants.length > 0);
             const dbId = hasTrueVariants ? `${currentModalProduct.id}-${currentVariantIndex}` : `${currentModalProduct.id}-0`;
             
-            // Calculate actual cart price based on discount
             let discountPercent = parseFloat(currentModalProduct.discount_percent) || 0;
             let basePriceUSD = parseFloat(v.price || currentModalProduct.price);
-            let finalPriceUSD = basePriceUSD;
+            let finalPriceUSD = discountPercent > 0 ? basePriceUSD - (basePriceUSD * discountPercent / 100) : basePriceUSD;
             
-            if (discountPercent > 0) {
-                finalPriceUSD = basePriceUSD - (basePriceUSD * discountPercent / 100);
-            }
-            
-            const price = finalPriceUSD * RATE; // Store discounted price
-            
-            const image = v.image || currentModalProduct.image || currentModalProduct.thumbnail;
+            // THUMBNAIL RULE: Cart uses 1st main image / variant thumbnail image
+            const thumbnailImage = v.image || currentModalProduct.image || currentModalProduct.thumbnail;
             const stock = parseInt(v.stock !== undefined ? v.stock : currentModalProduct.stock);
             const styleName = v.name || (hasTrueVariants ? `Style ${currentVariantIndex + 1}` : "Standard");
 
@@ -843,7 +855,7 @@
             } else {
                 userCart.push({
                     id: dbId, type: 'standard', title: currentModalProduct.title,
-                    style: styleName, price: price, image: image, maxStock: stock,
+                    style: styleName, price: finalPriceUSD, image: thumbnailImage, maxStock: stock,
                     qty: modalQty, selected: true
                 });
             }
@@ -859,9 +871,7 @@
         // --- IMAGE VIEWER (FULL SCREEN) LOGIC ---
         function openFullscreenViewer() {
             if(!currentModalProduct) return;
-            const variants = currentModalProduct._activeVariants;
-            const v = variants[currentVariantIndex];
-            const src = v.image || currentModalProduct.image || currentModalProduct.thumbnail;
+            const src = currentModalProduct._allDetailImages ? currentModalProduct._allDetailImages[0] : (currentModalProduct.image || currentModalProduct.thumbnail);
             if (src) openImageViewer(src);
         }
 
@@ -880,7 +890,7 @@
             document.getElementById('image-viewer-modal').classList.remove('flex'); 
         }
 
-        // --- CART AND CHECKOUT LOGIC ---
+        // --- CART AND CHECKOUT LOGIC WITH USD FIRST ---
         function openCartDrawer() { renderCartUI(); document.getElementById('cart-drawer').classList.remove('translate-y-full'); }
         function closeCartDrawer() { document.getElementById('cart-drawer').classList.add('translate-y-full'); }
 
@@ -889,54 +899,39 @@
             
             if(userCart.length === 0) {
                 container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-sm uppercase tracking-widest mt-2">កន្ត្រកទទេ</p></div>`;
-                document.getElementById('cart-subtotal').innerText = "0៛";
-                document.getElementById('cart-delivery').innerText = "0៛";
-                document.getElementById('cart-grand-total-khr').innerText = "0៛";
+                document.getElementById('cart-subtotal').innerText = "$0.00";
+                document.getElementById('cart-delivery').innerText = "$0.00";
                 document.getElementById('cart-grand-total-usd').innerText = "$0.00";
+                document.getElementById('cart-grand-total-khr').innerText = "0៛";
                 return;
             }
 
-            let subtotal = 0; let customIndex = 1;
+            let subtotalUSD = 0; let customIndex = 1;
 
             container.innerHTML = userCart.map((item) => {
-                let itemTotal = 0;
+                let itemTotalUSD = 0;
                 if(item.type === 'custom_bracelet') {
-                    itemTotal = (item.baseTotal + item.pkgPrice) * item.qty;
-                    if(item.selected) subtotal += itemTotal;
+                    itemTotalUSD = ((item.baseTotal + item.pkgPrice) / RATE) * item.qty;
+                    if(item.selected) subtotalUSD += itemTotalUSD;
                     
                     return `
                     <div class="bg-white rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col relative transition-all overflow-hidden mb-4">
                         <div class="w-full h-36 bg-gray-50 border-b border-gray-100 relative cursor-pointer group" onclick="openImageViewer('${item.image}')">
                             <img src="${item.image}" class="w-full h-full object-contain p-2">
-                            <div class="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 flex justify-between items-center text-white">
-                                <span class="text-[10px] font-bold tracking-widest uppercase font-['Kantumruy_Pro']"><i class="fa-solid fa-gem text-orange-400 mr-1"></i> ${item.charms.length} Charms</span>
-                                <span class="text-sm font-black text-orange-400">${itemTotal.toLocaleString()}៛</span>
-                            </div>
                         </div>
                         <div class="p-3">
                             <div class="flex justify-between items-start mb-2">
                                 <label class="flex items-start gap-3 cursor-pointer flex-1">
                                     <input type="checkbox" class="cart-checkbox mt-0.5" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
-                                    <div>
-                                        <h4 class="font-black text-sm text-gray-900 leading-tight">Custom Bracelet #${customIndex++}</h4>
-                                    </div>
+                                    <div><h4 class="font-black text-sm text-gray-900 leading-tight">Custom Bracelet #${customIndex++}</h4></div>
                                 </label>
-                                <button type="button" onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-2 -mt-1 -mr-1"><i class="fa-solid fa-trash-can text-lg"></i></button>
-                            </div>
-                            <div class="flex justify-between items-center mt-3">
-                                <div class="flex items-center gap-2">
-                                    <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-1 border border-gray-100">
-                                        <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                                        <span class="font-black text-xs w-4 text-center">${item.qty}</span>
-                                        <button onclick="updateCartQty('${item.id}', 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[10px]"></i></button>
-                                    </div>
-                                </div>
+                                <button type="button" onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-2"><i class="fa-solid fa-trash-can text-lg"></i></button>
                             </div>
                         </div>
                     </div>`;
                 } else {
-                    itemTotal = (item.price || 0) * item.qty;
-                    if(item.selected) subtotal += itemTotal;
+                    itemTotalUSD = (item.price || 0) * item.qty;
+                    if(item.selected) subtotalUSD += itemTotalUSD;
 
                     return `
                     <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
@@ -945,7 +940,6 @@
                         </label>
                         <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden cursor-pointer" onclick="openImageViewer('${item.image}')">
                             <img src="${item.image}" class="max-w-full max-h-full object-contain">
-                            <div class="absolute top-1 right-1 bg-white/80 backdrop-blur-sm rounded-full w-5 h-5 flex flex-col items-center justify-center text-gray-800 shadow-sm"><i class="fa-solid fa-expand text-[9px]"></i></div>
                         </div>
                         <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
                             <div>
@@ -956,7 +950,10 @@
                                 <p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">${item.style}</p>
                             </div>
                             <div class="flex justify-between items-end mt-2">
-                                <span class="font-black text-sm text-[#ea580c]">${itemTotal.toLocaleString()}៛</span>
+                                <div>
+                                    <span class="font-black text-sm text-[#ea580c] block">$${itemTotalUSD.toFixed(2)}</span>
+                                    <span class="text-[9px] text-gray-400 font-bold">${Math.round(itemTotalUSD * RATE).toLocaleString()}៛</span>
+                                </div>
                                 <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
                                     <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
                                     <span class="font-black text-xs w-2 text-center">${item.qty}</span>
@@ -968,26 +965,25 @@
                 }
             }).join('');
             
-            const delivery = calculateDelivery(subtotal);
-            const grandTotalKHR = subtotal + delivery;
-            const grandTotalUSD = grandTotalKHR / RATE;
+            const deliveryUSD = calculateDelivery(subtotalUSD);
+            const grandTotalUSD = subtotalUSD + deliveryUSD;
 
-            document.getElementById('cart-subtotal').innerText = subtotal.toLocaleString() + "៛";
+            document.getElementById('cart-subtotal').innerText = `$${subtotalUSD.toFixed(2)}`;
             
             const deliveryEl = document.getElementById('cart-delivery');
-            if (delivery === 0 && subtotal > 0) {
+            if (deliveryUSD === 0 && subtotalUSD > 0) {
                 deliveryEl.innerText = "FREE";
                 deliveryEl.className = "text-green-500 font-black";
-            } else if (subtotal > 0) {
-                deliveryEl.innerText = "+" + delivery.toLocaleString() + "៛";
+            } else if (subtotalUSD > 0) {
+                deliveryEl.innerText = `+$${deliveryUSD.toFixed(2)}`;
                 deliveryEl.className = "text-[#ea580c] font-black";
             } else {
-                deliveryEl.innerText = "0៛";
+                deliveryEl.innerText = "$0.00";
                 deliveryEl.className = "text-gray-500 font-bold";
             }
 
-            document.getElementById('cart-grand-total-khr').innerText = grandTotalKHR.toLocaleString() + "៛";
-            document.getElementById('cart-grand-total-usd').innerText = "$" + grandTotalUSD.toFixed(2);
+            document.getElementById('cart-grand-total-usd').innerText = `$${grandTotalUSD.toFixed(2)}`;
+            document.getElementById('cart-grand-total-khr').innerText = `${Math.round(grandTotalUSD * RATE).toLocaleString()}៛`;
         }
 
         function toggleCartItem(id) { const item = userCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveCart(); renderCartUI(); } }
@@ -999,16 +995,16 @@
             const selectedItems = userCart.filter(i => i.selected);
             if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយដើម្បីបន្ត!");
 
-            let subtotal = 0;
+            let subtotalUSD = 0;
             selectedItems.forEach(item => {
-                if(item.type === 'custom_bracelet') subtotal += ((item.baseTotal + item.pkgPrice) * item.qty);
-                else subtotal += (item.price * item.qty);
+                if(item.type === 'custom_bracelet') subtotalUSD += (((item.baseTotal + item.pkgPrice) / RATE) * item.qty);
+                else subtotalUSD += (item.price * item.qty);
             });
             
-            const delivery = calculateDelivery(subtotal);
-            document.getElementById('check-subtotal').innerText = subtotal.toLocaleString() + "៛";
-            document.getElementById('check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ" : delivery.toLocaleString() + "៛";
-            document.getElementById('check-total-khr').innerText = (subtotal + delivery).toLocaleString() + "៛";
+            const deliveryUSD = calculateDelivery(subtotalUSD);
+            document.getElementById('check-subtotal').innerText = `$${subtotalUSD.toFixed(2)}`;
+            document.getElementById('check-delivery').innerText = deliveryUSD === 0 ? "ឥតគិតថ្លៃ" : `$${deliveryUSD.toFixed(2)}`;
+            document.getElementById('check-total-usd').innerText = `$${(subtotalUSD + deliveryUSD).toFixed(2)}`;
 
             closeCartDrawer();
             document.getElementById('checkout-modal').classList.remove('translate-y-full');
@@ -1020,19 +1016,23 @@
             const selectedItems = userCart.filter(i => i.selected);
             if(selectedItems.length === 0) return;
 
-            const name = document.getElementById('cust-name').value.trim(); const phone = document.getElementById('cust-phone').value.trim(); const address = document.getElementById('cust-address').value.trim();
-            if(!name || !phone || !address) return alert("សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់!"); if(phone.length < 8) return alert("លេខទូរស័ព្ទមិនត្រឹមត្រូវ!");
+            const name = document.getElementById('cust-name').value.trim(); 
+            const phone = document.getElementById('cust-phone').value.trim(); 
+            const address = document.getElementById('cust-address').value.trim();
+            if(!name || !phone || !address) return alert("សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់!"); 
+            if(phone.length < 8) return alert("លេខទូរស័ព្ទមិនត្រឹមត្រូវ!");
 
             const btn = document.getElementById('confirm-btn'); btn.innerText = "កំពុងបញ្ជូន..."; btn.disabled = true;
 
-            let subtotal = 0; const orderItemsPayload = []; 
+            let subtotalUSD = 0; const orderItemsPayload = []; 
 
-            selectedItems.forEach((cartItem, bIdx) => {
-                subtotal += (cartItem.price * cartItem.qty);
-                orderItemsPayload.push({ cartId: cartItem.id, title: cartItem.title, style: cartItem.style, price: cartItem.price / RATE, qty: cartItem.qty, image: cartItem.image, maxStock: cartItem.maxStock });
+            selectedItems.forEach((cartItem) => {
+                subtotalUSD += (cartItem.price * cartItem.qty);
+                orderItemsPayload.push({ cartId: cartItem.id, title: cartItem.title, style: cartItem.style, price: cartItem.price, qty: cartItem.qty, image: cartItem.image, maxStock: cartItem.maxStock });
             });
 
-            const delivery = calculateDelivery(subtotal); const totalUSD = (subtotal + delivery) / RATE;
+            const deliveryUSD = calculateDelivery(subtotalUSD); 
+            const totalUSD = subtotalUSD + deliveryUSD;
 
             try {
                 const res = await fetch('/api/checkout', { 
@@ -1055,3 +1055,4 @@
     </script>
 </body>
 </html>
+
