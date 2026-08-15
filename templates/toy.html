@@ -290,7 +290,7 @@
         </div>
     </div>
 
-    <!-- CHECKOUT / DELIVERY MODAL -->
+    <!-- CHECKOUT / DELIVERY MODAL WITH REDEEM CODE -->
     <div id="checkout-modal" class="fixed inset-0 z-[3000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
         <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm md:max-w-md md:mx-auto md:w-full">
             <h2 class="text-xl font-black font-['Moul']">ព័ត៌មានដឹកជញ្ជូន</h2>
@@ -301,11 +301,23 @@
                 <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
                 <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប:</span><span id="check-subtotal">$0.00</span></div>
                 <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">$0.00</span></div>
+                <div id="check-discount-row" class="flex justify-between text-xs font-black text-emerald-600 hidden"><span>បញ្ចុះតម្លៃ (Coupon):</span><span id="check-discount">-$0.00</span></div>
                 <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
                     <span class="text-sm">សរុបត្រូវបង់:</span>
                     <span id="check-total-usd" class="text-[#ea580c] text-xl leading-none">$0.00</span>
                 </div>
             </div>
+
+            <!-- Redeem Code Input Box -->
+            <div class="bg-white rounded-2xl p-4 border border-gray-100 mb-6 shadow-sm">
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2"><i class="fa-solid fa-ticket text-orange-500 mr-1"></i> មានកូដបញ្ចុះតម្លៃ?</label>
+                <div class="flex gap-2">
+                    <input type="text" id="coupon-input" placeholder="បញ្ចូលកូដ (ឧ. VIP10)" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-xs uppercase outline-none focus:border-[#ea580c]">
+                    <button type="button" onclick="applyCoupon()" class="bg-gray-900 hover:bg-black text-white font-black px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all">ដាក់ស្នើ</button>
+                </div>
+                <p id="coupon-feedback" class="text-[11px] font-bold mt-2 hidden"></p>
+            </div>
+
             <div class="space-y-4">
                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង</label>
                 <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក">
@@ -329,6 +341,9 @@
         let isModalImageScrolling = false;
         let modalScrollTimeout;
         
+        // Active Coupon State
+        let appliedCoupon = null; // e.g. { code: 'VIP10', type: 'percent', value: 10 }
+
         // Search & Smart Filter State
         let activeCategory = 'All';
         let currentSearchQuery = '';
@@ -340,7 +355,6 @@
 
         function calculateDelivery(subtotalUSD) {
             if (subtotalUSD === 0) return 0;
-            // Delivery thresholds based on USD equivalent (approx $5, $10, $15, $20)
             if (subtotalUSD < 5) return 2.00;
             if (subtotalUSD < 10) return 1.50;
             if (subtotalUSD < 15) return 1.00;
@@ -966,7 +980,13 @@
             }).join('');
             
             const deliveryUSD = calculateDelivery(subtotalUSD);
-            const grandTotalUSD = subtotalUSD + deliveryUSD;
+            let grandTotalUSD = subtotalUSD + deliveryUSD;
+
+            if(appliedCoupon) {
+                if(appliedCoupon.type === 'percent') grandTotalUSD -= (subtotalUSD * (appliedCoupon.value / 100));
+                else if(appliedCoupon.type === 'fixed') grandTotalUSD -= appliedCoupon.value;
+                if(grandTotalUSD < 0) grandTotalUSD = 0;
+            }
 
             document.getElementById('cart-subtotal').innerText = `$${subtotalUSD.toFixed(2)}`;
             
@@ -991,21 +1011,64 @@
         function removeCartItem(id) { if(confirm("លុបចេញពីកន្ត្រក?")) { userCart = userCart.filter(i => i.id !== id); saveCart(); renderCartUI(); updateCartBadge(); } }
         function saveCart() { localStorage.setItem('sr_cart', JSON.stringify(userCart)); }
 
+        // --- REDEEM CODE / COUPON LOGIC ---
+        function applyCoupon() {
+            const codeInput = document.getElementById('coupon-input').value.trim().toUpperCase();
+            const feedback = document.getElementById('coupon-feedback');
+            
+            const mockDatabaseCoupons = {
+                'VIP10': { type: 'percent', value: 10 },
+                'FREESHIP': { type: 'fixed', value: 2.00 },
+                'TOY5': { type: 'fixed', value: 5.00 }
+            };
+
+            if(mockDatabaseCoupons[codeInput]) {
+                appliedCoupon = { code: codeInput, ...mockDatabaseCoupons[codeInput] };
+                feedback.innerText = `✓ Code "${codeInput}" applied successfully!`;
+                feedback.className = "text-[11px] font-bold text-emerald-600 mt-2 block";
+                feedback.classList.remove('hidden');
+                updateCheckoutSummary();
+            } else {
+                appliedCoupon = null;
+                feedback.innerText = "✗ Invalid or expired promo code.";
+                feedback.className = "text-[11px] font-bold text-red-500 mt-2 block";
+                feedback.classList.remove('hidden');
+                updateCheckoutSummary();
+            }
+        }
+
+        function updateCheckoutSummary() {
+            const selected = userCart.filter(i => i.selected);
+            let sub = selected.reduce((acc, cur) => acc + (cur.price * cur.qty), 0);
+            let delivery = calculateDelivery(sub);
+            let discountAmt = 0;
+
+            if(appliedCoupon) {
+                if(appliedCoupon.type === 'percent') discountAmt = sub * (appliedCoupon.value / 100);
+                else if(appliedCoupon.type === 'fixed') discountAmt = appliedCoupon.value;
+            }
+
+            let total = (sub + delivery) - discountAmt;
+            if(total < 0) total = 0;
+
+            document.getElementById('check-subtotal').innerText = `$${sub.toFixed(2)}`;
+            document.getElementById('check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ" : `$${delivery.toFixed(2)}`;
+            
+            const discRow = document.getElementById('check-discount-row');
+            if(appliedCoupon && discountAmt > 0) {
+                discRow.classList.remove('hidden');
+                document.getElementById('check-discount').innerText = `-$${discountAmt.toFixed(2)}`;
+            } else {
+                discRow.classList.add('hidden');
+            }
+
+            document.getElementById('check-total-usd').innerText = `$${total.toFixed(2)}`;
+        }
+
         function openCheckout() {
             const selectedItems = userCart.filter(i => i.selected);
             if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយដើម្បីបន្ត!");
-
-            let subtotalUSD = 0;
-            selectedItems.forEach(item => {
-                if(item.type === 'custom_bracelet') subtotalUSD += (((item.baseTotal + item.pkgPrice) / RATE) * item.qty);
-                else subtotalUSD += (item.price * item.qty);
-            });
-            
-            const deliveryUSD = calculateDelivery(subtotalUSD);
-            document.getElementById('check-subtotal').innerText = `$${subtotalUSD.toFixed(2)}`;
-            document.getElementById('check-delivery').innerText = deliveryUSD === 0 ? "ឥតគិតថ្លៃ" : `$${deliveryUSD.toFixed(2)}`;
-            document.getElementById('check-total-usd').innerText = `$${(subtotalUSD + deliveryUSD).toFixed(2)}`;
-
+            updateCheckoutSummary();
             closeCartDrawer();
             document.getElementById('checkout-modal').classList.remove('translate-y-full');
         }
@@ -1031,14 +1094,16 @@
                 orderItemsPayload.push({ cartId: cartItem.id, title: cartItem.title, style: cartItem.style, price: cartItem.price, qty: cartItem.qty, image: cartItem.image, maxStock: cartItem.maxStock });
             });
 
-            const deliveryUSD = calculateDelivery(subtotalUSD); 
-            const totalUSD = subtotalUSD + deliveryUSD;
+            let deliveryUSD = calculateDelivery(subtotalUSD); 
+            let discountAmt = appliedCoupon ? (appliedCoupon.type === 'percent' ? subtotalUSD * (appliedCoupon.value / 100) : appliedCoupon.value) : 0;
+            let totalUSD = (subtotalUSD + deliveryUSD) - discountAmt;
+            if(totalUSD < 0) totalUSD = 0;
 
             try {
                 const res = await fetch('/api/checkout', { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD }) 
+                    body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD, coupon: appliedCoupon ? appliedCoupon.code : null }) 
                 });
                 
                 if(res.ok) { 
