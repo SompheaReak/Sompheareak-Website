@@ -1,320 +1,402 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Somphea Reak | My Bag</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;600;700&display=swap');
-        body { font-family: 'Plus Jakarta Sans', 'Noto Sans Khmer', sans-serif; background-color: #f2f2f2; -webkit-tap-highlight-color: transparent; user-select: none; }
-        .glass-nav { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border-top: 1px solid rgba(0,0,0,0.05); }
-        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-        .screenshot-frame { font-family: 'Noto Sans Khmer', sans-serif; background: #fff; width: 400px; padding: 30px; box-sizing: border-box; border-radius: 0; position: fixed; left: -9999px; top: 0; }
-    </style>
-</head>
-<body class="pb-32">
+<style>
+    /* Premium Checkbox for Cart Items */
+    .universal-cart-checkbox { 
+        appearance: none; width: 24px; height: 24px; border: 2.5px solid #cbd5e1; border-radius: 50%; 
+        outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+        background: white; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .universal-cart-checkbox:checked { background-color: #ea580c; border-color: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3); }
+    .universal-cart-checkbox:checked::after { 
+        content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
+        width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
+    }
+</style>
 
-    <!-- HEADER (Return to Home) -->
-    <header class="sticky top-0 z-50 glass-nav px-4 py-3 flex items-center justify-between shadow-sm h-[72px]">
-        <a href="index.html" class="w-10 h-10 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center active:scale-90 transition-transform shadow-sm border border-gray-200">
-            <i class="fa-solid fa-house"></i>
-        </a>
-        <h1 class="font-black text-xl tracking-tighter text-gray-900 leading-none">MY BAG</h1>
-        <div class="w-10 h-10"></div> <!-- Spacer to keep title centered -->
-    </header>
-
-    <main class="p-4" id="main-content">
-        <!-- ORDER SUMMARY -->
-        <div class="mb-6">
-            <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 pl-1">Order Summary</h2>
-            <div id="checkout-items" class="space-y-3"></div>
-        </div>
-
-        <!-- DELIVERY FORM -->
-        <div id="delivery-form" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-4 mb-4 hidden">
-            <h3 class="text-sm font-black text-gray-800 flex items-center gap-2">
-                <i class="fa-solid fa-truck-fast text-orange-500"></i> Delivery Details
-            </h3>
-            <div class="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200 focus-within:border-black transition-all" id="field-name">
-                <input type="text" id="cust-name" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 placeholder-gray-400" placeholder="Full Name *">
-            </div>
-            <div class="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200 focus-within:border-black transition-all" id="field-phone">
-                <input type="tel" id="cust-phone" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 placeholder-gray-400" placeholder="Phone Number *">
-            </div>
-            <div class="bg-gray-50 rounded-xl px-4 py-3 border border-gray-200 focus-within:border-black transition-all">
-                <textarea id="cust-address" class="w-full bg-transparent border-none p-0 text-sm font-bold text-gray-800 focus:ring-0 h-16 resize-none placeholder-gray-400" placeholder="Delivery Address / Location..."></textarea>
-            </div>
-        </div>
-    </main>
-
-    <!-- INVOICE SUCCESS SCREEN (Hidden until generated) -->
-    <section class="p-4 hidden flex-col items-center" id="result-section">
-        <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-3xl mb-3 shadow-sm">
-            <i class="fa-solid fa-check"></i>
-        </div>
-        <h2 class="font-black text-xl text-gray-900 mb-1">Invoice Ready!</h2>
-        <p class="text-xs text-gray-500 mb-6 font-bold">Please review your invoice below.</p>
+<!-- ==================== UNIFIED CART DRAWER ==================== -->
+<div id="universal-cart-drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[8000] flex flex-col justify-end transition-transform duration-300">
+    <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeUniversalCart()"></div>
+    <div class="relative w-full h-[85vh] bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
         
-        <div class="w-full border rounded-2xl overflow-hidden shadow-xl mb-4">
-            <img id="generated-invoice-img" src="" class="w-full h-auto">
+        <!-- Header -->
+        <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10">
+            <div>
+                <h2 class="text-xl font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2>
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Your Shopping Cart</p>
+            </div>
+            <button onclick="closeUniversalCart()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
         </div>
-    </section>
+        
+        <!-- Dynamic Items Container -->
+        <div id="universal-cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+        
+        <!-- Footer / Checkout Summary -->
+        <div class="bg-white border-t border-gray-100 p-5 z-10">
+            <div class="space-y-2 mb-4">
+                <div class="flex justify-between items-center text-xs font-bold text-gray-500">
+                    <span>Subtotal (តម្លៃទំនិញ)</span>
+                    <span id="uni-cart-subtotal">0៛</span>
+                </div>
+                <div class="flex justify-between items-center text-xs font-bold text-gray-500">
+                    <span>Delivery (ថ្លៃដឹកជញ្ជូន)</span>
+                    <span id="uni-cart-delivery">0៛</span>
+                </div>
+                <div class="flex justify-between items-end pt-2 border-t border-gray-100">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Grand Total)</span>
+                    <div class="text-right">
+                        <span id="uni-cart-grand-total-khr" class="text-2xl font-black text-[#ea580c] leading-none block">0៛</span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="openUniversalCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
+                <i class="fa-solid fa-truck-fast"></i> <span>បន្តទៅការដឹកជញ្ជូន (Checkout)</span>
+            </button>
+        </div>
+    </div>
+</div>
 
-    <!-- BOTTOM ACTION BAR -->
-    <div class="fixed bottom-0 left-0 right-0 glass-nav px-5 py-4 z-40 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)]" id="bottom-bar">
-        <div class="flex justify-between items-end mb-3">
-            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Total Amount</span>
-            <div class="text-right">
-                <div class="text-2xl font-black text-orange-500 leading-none mb-1" id="cart-total-riel">0៛</div>
-                <div class="text-xs text-gray-500 font-bold" id="cart-total-usd">$0.00</div>
+<!-- ==================== UNIFIED CHECKOUT MODAL ==================== -->
+<div id="universal-checkout-modal" class="fixed inset-0 z-[9000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
+    <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
+        <h2 class="text-xl font-black font-['Moul']">ព័ត៌មានដឹកជញ្ជូន</h2>
+        <button onclick="closeUniversalCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+    </div>
+    
+    <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50">
+        <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
+            <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
+            <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប (Subtotal):</span><span id="uni-check-subtotal">0៛</span></div>
+            <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន (Delivery):</span><span id="uni-check-delivery">0៛</span></div>
+            <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
+                <span class="text-sm">សរុបត្រូវបង់ (Total):</span>
+                <span id="uni-check-total-khr" class="text-[#ea580c] text-xl leading-none">0៛</span>
             </div>
         </div>
-        <button onclick="processCheckout()" id="action-btn" class="w-full bg-black text-white font-bold py-4 rounded-xl shadow-xl active:scale-95 transition-transform flex items-center justify-center gap-2">
-            <span>Continue to Delivery</span>
-            <i class="fa-solid fa-arrow-right"></i>
-        </button>
-    </div>
-
-    <!-- LOADING SPINNER -->
-    <div id="loadingOverlay" class="fixed inset-0 z-[110] bg-black/60 hidden items-center justify-center backdrop-blur-sm">
-        <div class="bg-white p-6 rounded-3xl shadow-2xl flex flex-col items-center gap-4">
-            <i class="fa-solid fa-spinner fa-spin text-4xl text-black"></i>
-            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Generating Invoice...</span>
+        
+        <div class="space-y-4">
+            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង (Contact Info)</label>
+            <input type="text" id="uni-cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Full Name)">
+            <input type="tel" id="uni-cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone Number)">
+            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន (Address)</label>
+            <textarea id="uni-cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ..."></textarea>
         </div>
     </div>
+    
+    <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:pb-5">
+        <button onclick="processUniversalFinalOrder()" id="uni-confirm-btn" class="w-full bg-[#ea580c] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
+    </div>
+</div>
 
-    <script>
-        const EXCHANGE_RATE = 4000;
-        const TELEGRAM_USERNAME = "Somphea_Reak"; 
-        let cart = [];
-        let currentState = 'cart'; // 'cart' -> 'delivery' -> 'invoice'
+<script>
+    const UNIVERSAL_CART_RATE = 4000;
+    let globalStoreCart = [];
 
-        function formatCurrency(usd) {
-            return { riel: `${Math.round(usd * EXCHANGE_RATE).toLocaleString()}៛`, usd: `$${usd.toFixed(2)}` };
-        }
-
-        function init() {
-            const savedCart = localStorage.getItem('somphea_global_cart');
-            if(savedCart) { try { cart = JSON.parse(savedCart); } catch(e) { cart = []; } }
-            renderCart();
-        }
-
-        function saveCart() {
-            localStorage.setItem('somphea_global_cart', JSON.stringify(cart));
-            renderCart();
-        }
-
-        function updateQty(idx, delta) {
-            cart[idx].qty += delta;
-            if (cart[idx].qty <= 0) cart[idx].qty = 1;
-            saveCart();
-        }
-
-        function removeItem(idx) {
-            cart.splice(idx, 1);
-            saveCart();
-        }
-
-        function renderCart() {
-            if(cart.length === 0) {
-                document.getElementById('main-content').innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-20 text-center">
-                        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4"><i class="fa-solid fa-basket-shopping text-4xl text-gray-300"></i></div>
-                        <h2 class="text-xl font-black text-gray-800 mb-2">Your Bag is Empty</h2>
-                        <p class="text-sm font-bold text-gray-400 mb-8">Go back to the studio and add some products.</p>
-                        <div class="flex gap-3">
-                            <a href="toy.html" class="px-6 py-3 bg-gray-900 text-white text-sm font-bold rounded-full shadow-md"><i class="fa-solid fa-robot mr-2"></i>Toys</a>
-                            <a href="bracelet.html" class="px-6 py-3 bg-[#90D730] text-white text-sm font-bold rounded-full shadow-md"><i class="fa-regular fa-gem mr-2"></i>Jewelry</a>
-                        </div>
-                    </div>`;
-                document.getElementById('bottom-bar').classList.add('hidden');
-                return;
+    // --- 1. INITIALIZE CART & MERGE OLD CARTS ---
+    function initGlobalCart() {
+        try {
+            // Check for previous custom_bracelet cart (sr_cart) and migrate it seamlessly
+            let oldBraceletCart = JSON.parse(localStorage.getItem('sr_cart') || '[]');
+            let mainCart = JSON.parse(localStorage.getItem('universal_store_cart') || '[]');
+            
+            if (oldBraceletCart.length > 0) {
+                mainCart = [...mainCart, ...oldBraceletCart];
+                localStorage.removeItem('sr_cart'); // Migration complete!
             }
+            
+            globalStoreCart = mainCart;
+        } catch(e) {
+            globalStoreCart = [];
+        }
+    }
+    
+    // --- 2. EXPOSED GLOBAL FUNCTIONS ---
+    window.updateCartBadge = function() {
+        const count = globalStoreCart.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
+        document.querySelectorAll('.cart-badge-count, #cart-badge').forEach(badge => {
+            if (count > 0) {
+                badge.innerText = count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        });
+    };
 
-            document.getElementById('bottom-bar').classList.remove('hidden');
+    window.addToGlobalCart = function(item) {
+        // Standard items grouping
+        let existing;
+        if (item.type !== 'custom_bracelet') {
+            existing = globalStoreCart.find(i => i.variantId === item.variantId && i.type !== 'custom_bracelet');
+        }
+        
+        if (existing) {
+            existing.qty += (item.qty || 1);
+        } else {
+            if (!item.id) item.id = 'cart_' + Date.now() + Math.random().toString(36).substr(2, 5);
+            if (item.selected === undefined) item.selected = true;
+            if (!item.qty) item.qty = 1;
+            globalStoreCart.push(item);
+        }
+        
+        saveGlobalCart();
+        window.updateCartBadge();
+    };
 
-            document.getElementById('checkout-items').innerHTML = cart.map((item, idx) => {
-                const total = formatCurrency(item.price * item.qty);
-                if (currentState === 'cart') {
-                    // Editable view
-                    return `
-                    <div class="flex gap-3 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm items-center">
-                        <img src="${item.image}" class="w-20 h-20 rounded-xl object-cover flex-shrink-0 border border-gray-50">
-                        <div class="flex-1 min-w-0">
-                            <div class="text-sm font-bold text-gray-800 line-clamp-1 mb-1">${item.title}</div>
-                            <div class="text-[10px] text-gray-500 bg-gray-50 inline-block px-2 py-0.5 rounded font-bold border border-gray-100">${item.variantName}</div>
-                            <div class="flex justify-between items-end mt-2">
-                                <div class="font-black text-gray-900 text-sm">${total.riel}</div>
-                                <div class="flex items-center bg-gray-100 rounded-lg p-0.5">
-                                    <button onclick="updateQty(${idx}, -1)" class="w-7 h-7 bg-white rounded shadow-sm text-gray-600 font-bold active:scale-90">-</button>
-                                    <span class="w-8 text-center font-bold text-xs">${item.qty}</span>
-                                    <button onclick="updateQty(${idx}, 1)" class="w-7 h-7 bg-white rounded shadow-sm text-gray-600 font-bold active:scale-90">+</button>
-                                </div>
+    window.openCart = window.openCartDrawer = function() {
+        renderUniversalCartUI();
+        const drawer = document.getElementById('universal-cart-drawer');
+        if(drawer) {
+            drawer.style.transform = 'translateY(0%)';
+            drawer.style.pointerEvents = 'auto';
+        }
+    };
+
+    window.closeUniversalCart = window.closeCartDrawer = function() {
+        const drawer = document.getElementById('universal-cart-drawer');
+        if(drawer) {
+            drawer.style.transform = 'translateY(100%)';
+            drawer.style.pointerEvents = 'none';
+        }
+    };
+
+    function saveGlobalCart() {
+        localStorage.setItem('universal_store_cart', JSON.stringify(globalStoreCart));
+        window.updateCartBadge();
+    }
+
+    function calculateUniversalDelivery(subtotalKHR) {
+        if (subtotalKHR === 0) return 0;
+        if (subtotalKHR < 20000) return 8000;
+        if (subtotalKHR < 40000) return 6000;
+        if (subtotalKHR < 60000) return 4000;
+        if (subtotalKHR < 80000) return 2000;
+        return 0;
+    }
+
+    // --- 3. RENDER THE CART UI (Mixed Products) ---
+    function renderUniversalCartUI() {
+        const container = document.getElementById('universal-cart-items-container');
+        if (!container) return;
+
+        if(globalStoreCart.length === 0) {
+            container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3 text-gray-300"></i><p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-gray-500">កន្ត្រកទទេ (Empty)</p></div>`;
+            document.getElementById('uni-cart-subtotal').innerText = "0៛";
+            document.getElementById('uni-cart-delivery').innerText = "0៛";
+            document.getElementById('uni-cart-grand-total-khr').innerText = "0៛";
+            return;
+        }
+
+        let subtotalKHR = 0;
+        let customIndex = 1;
+
+        container.innerHTML = globalStoreCart.map((item) => {
+            let itemTotalKHR = 0;
+            if (item.type === 'custom_bracelet') {
+                itemTotalKHR = (item.baseTotal + item.pkgPrice) * item.qty;
+            } else {
+                itemTotalKHR = Math.round(parseFloat(item.price) * UNIVERSAL_CART_RATE) * item.qty;
+            }
+            
+            if(item.selected) subtotalKHR += itemTotalKHR;
+            
+            // Custom Bracelet Template
+            if (item.type === 'custom_bracelet') {
+                return `
+                <div class="bg-white rounded-2xl border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col overflow-hidden mb-4 shadow-sm transition-all">
+                    <div class="w-full h-32 bg-gray-50 relative cursor-pointer" onclick="if(typeof openImageViewer === 'function') openImageViewer('${item.image}')">
+                        <img src="${item.image}" class="w-full h-full object-contain p-2 mix-blend-multiply">
+                        <div class="absolute bottom-0 inset-x-0 bg-black/60 px-3 py-1.5 flex justify-between text-white text-[10px] font-bold">
+                            <span>${item.charms.length} Charms</span><span>${Math.round(itemTotalKHR).toLocaleString()}៛</span>
+                        </div>
+                    </div>
+                    <div class="p-3">
+                        <div class="flex justify-between items-center">
+                            <label class="flex items-center gap-3">
+                                <input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')">
+                                <span class="font-black text-sm text-gray-800">Custom Bracelet #${customIndex++}</span>
+                            </label>
+                            <button onclick="removeUniCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-1"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                        <div class="flex justify-between items-center mt-3">
+                            <span class="text-[9px] font-bold bg-orange-50 text-orange-600 px-2 py-1 rounded border border-orange-100">${item.pkgName}</span>
+                            <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-1 border border-gray-100">
+                                <button onclick="updateUniCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-xs font-bold text-gray-600 hover:text-[#ea580c]">-</button>
+                                <span class="font-black text-xs w-3 text-center">${item.qty}</span>
+                                <button onclick="updateUniCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-xs font-bold text-gray-600 hover:text-[#ea580c]">+</button>
                             </div>
                         </div>
-                        <button onclick="removeItem(${idx})" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 bg-gray-50 rounded-full active:scale-90"><i class="fa-solid fa-trash-can text-xs"></i></button>
-                    </div>`;
-                } else {
-                    // Static summary view for delivery step
-                    return `
-                    <div class="flex gap-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm items-center">
-                        <img src="${item.image}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-50">
-                        <div class="flex-1 min-w-0">
-                            <div class="text-xs font-bold text-gray-800 line-clamp-1">${item.title}</div>
-                            <div class="text-[10px] text-gray-400 font-bold">${item.variantName}</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-[10px] text-gray-400 font-bold mb-0.5">Qty: ${item.qty}</div>
-                            <div class="text-xs font-black text-gray-900">${total.riel}</div>
-                        </div>
-                    </div>`;
-                }
-            }).join('');
-
-            // Totals
-            const totalUsd = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-            const totals = formatCurrency(totalUsd);
-            document.getElementById('cart-total-riel').innerText = totals.riel;
-            document.getElementById('cart-total-usd').innerText = totals.usd;
-        }
-
-        function processCheckout() {
-            if (currentState === 'cart') {
-                currentState = 'delivery';
-                renderCart(); // changes to static summary
-                document.getElementById('delivery-form').classList.remove('hidden');
-                
-                const btn = document.getElementById('action-btn');
-                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>Generate Official Invoice</span>`;
-                window.scrollTo({top: 0, behavior: 'smooth'});
-            } else if (currentState === 'delivery') {
-                generateInvoice();
-            }
-        }
-
-        async function generateInvoice() {
-            const name = document.getElementById('cust-name').value.trim();
-            const phone = document.getElementById('cust-phone').value.trim();
-            const address = document.getElementById('cust-address').value.trim();
-            
-            let isValid = true;
-            if(!name) { document.getElementById('field-name').classList.add('border-red-500', 'shake'); isValid = false; } 
-            else { document.getElementById('field-name').classList.remove('border-red-500', 'shake'); }
-            
-            if(!phone) { document.getElementById('field-phone').classList.add('border-red-500', 'shake'); isValid = false; } 
-            else { document.getElementById('field-phone').classList.remove('border-red-500', 'shake'); }
-
-            if(!isValid) { setTimeout(() => document.querySelectorAll('.shake').forEach(el => el.classList.remove('shake')), 500); return; }
-
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-            document.getElementById('loadingOverlay').classList.add('flex');
-
-            const totalUsd = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-            const totalPrice = formatCurrency(totalUsd);
-
-            const tempDiv = document.createElement('div');
-            tempDiv.className = 'screenshot-frame'; 
-            
-            let html = `
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <h1 style="color: #111827; font-weight: 900; font-size: 26px; margin-bottom: 4px; letter-spacing: -1px; text-transform: uppercase;">Somphea Reak</h1>
-                    <p style="color: #9ca3af; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; font-weight: 700;">Official Order Invoice</p>
-                </div>
-                
-                <div style="background: #f9fafb; border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid #f3f4f6;">
-                    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;"><span style="color: #6b7280; font-weight: 600;">Date</span><span style="font-weight: 800; color: #111827;">${new Date().toLocaleDateString()}</span></div>
-                    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;"><span style="color: #6b7280; font-weight: 600;">Customer</span><span style="font-weight: 800; color: #111827;">${name}</span></div>
-                    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;"><span style="color: #6b7280; font-weight: 600;">Phone</span><span style="font-weight: 800; color: #111827;">${phone}</span></div>
-                    ${address ? `<div style="font-size: 10px; color: #6b7280; margin-top: 8px; border-top: 1px dashed #e5e7eb; padding-top: 8px; font-weight: 600;">${address}</div>` : ''}
-                </div>
-
-                <div style="margin-bottom: 20px;">
-                    <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
-                        <thead>
-                            <tr style="border-bottom: 1px solid #e5e7eb;">
-                                <th style="text-align: left; padding-bottom: 8px; color: #9ca3af; font-weight: 800; text-transform: uppercase; font-size: 9px;">Item</th>
-                                <th style="text-align: center; padding-bottom: 8px; color: #9ca3af; font-weight: 800; text-transform: uppercase; font-size: 9px;">Qty</th>
-                                <th style="text-align: right; padding-bottom: 8px; color: #9ca3af; font-weight: 800; text-transform: uppercase; font-size: 9px;">Price</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
-            cart.forEach(item => {
-                html += `
-                    <tr style="border-bottom: 1px solid #f9fafb;">
-                        <td style="padding: 10px 0; display: flex; align-items: center; gap: 8px;">
-                            <img src="${item.image}" style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover; flex-shrink: 0; border: 1px solid #e5e7eb;">
-                            <div>
-                                <div style="font-weight: 800; color: #111827; max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</div>
-                                <div style="font-size: 9px; color: #6b7280; font-weight: 600;">${item.variantName}</div>
+                    </div>
+                </div>`;
+            } else {
+                // Standard Item Template (Toys/LEGO)
+                return `
+                <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
+                    <label class="flex items-start gap-3 cursor-pointer mt-1">
+                        <input type="checkbox" class="universal-cart-checkbox ml-1" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')">
+                    </label>
+                    <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden cursor-pointer" onclick="if(typeof openImageViewer === 'function') openImageViewer('${item.image}')">
+                        <img src="${item.image}" class="max-w-full max-h-full object-contain mix-blend-multiply">
+                    </div>
+                    <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
+                        <div>
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-black text-xs text-gray-900 leading-tight truncate pr-2">${item.name || item.title}</h4>
+                                <button onclick="removeUniCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 -mt-1 -mr-1 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
                             </div>
-                        </td>
-                        <td style="text-align: center; vertical-align: middle; color: #4b5563; font-weight: 700;">${item.qty}</td>
-                        <td style="text-align: right; vertical-align: middle; font-weight: 800; color: #111827;">$${(item.price * item.qty).toFixed(2)}</td>
-                    </tr>
-                `;
+                            <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-widest">$${parseFloat(item.price).toFixed(2)} USD</p>
+                        </div>
+                        <div class="flex justify-between items-end mt-2">
+                            <span class="font-black text-sm text-[#ea580c]">${Math.round(itemTotalKHR).toLocaleString()}៛</span>
+                            <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
+                                <button onclick="updateUniCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 font-bold hover:text-[#ea580c]">-</button>
+                                <span class="font-black text-xs w-3 text-center">${item.qty}</span>
+                                <button onclick="updateUniCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 font-bold hover:text-[#ea580c]">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+        }).join('');
+        
+        const delivery = calculateUniversalDelivery(subtotalKHR);
+        document.getElementById('uni-cart-subtotal').innerText = Math.round(subtotalKHR).toLocaleString() + "៛";
+        
+        const deliveryEl = document.getElementById('uni-cart-delivery');
+        if (delivery === 0 && subtotalKHR > 0) {
+            deliveryEl.innerText = "ឥតគិតថ្លៃ (Free)"; deliveryEl.className = "text-emerald-500 font-black";
+        } else if (subtotalKHR > 0) {
+            deliveryEl.innerText = Math.round(delivery).toLocaleString() + "៛"; deliveryEl.className = "text-[#ea580c] font-black";
+        } else {
+            deliveryEl.innerText = "0៛"; deliveryEl.className = "text-gray-500 font-bold";
+        }
+
+        document.getElementById('uni-cart-grand-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
+    }
+
+    // --- 4. CART INTERACTIONS ---
+    function toggleUniCartItem(id) { 
+        const item = globalStoreCart.find(i => i.id === id); 
+        if(item) { item.selected = !item.selected; saveGlobalCart(); renderUniversalCartUI(); } 
+    }
+    
+    function updateUniCartQty(id, delta) { 
+        const item = globalStoreCart.find(i => i.id === id); 
+        if(item) { 
+            item.qty = Math.max(1, Math.min(20, item.qty + delta)); 
+            saveGlobalCart(); renderUniversalCartUI(); 
+        } 
+    }
+    
+    function removeUniCartItem(id) { 
+        if(confirm("លុបចេញពីកន្ត្រក? (Remove item?)")) { 
+            globalStoreCart = globalStoreCart.filter(i => i.id !== id); 
+            saveGlobalCart(); renderUniversalCartUI(); 
+        } 
+    }
+
+    // --- 5. CHECKOUT MODAL LOGIC ---
+    function openUniversalCheckout() {
+        const selectedItems = globalStoreCart.filter(i => i.selected);
+        if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយ! (Select an item first!)");
+        
+        let subtotalKHR = 0; 
+        selectedItems.forEach(i => {
+            if (i.type === 'custom_bracelet') {
+                subtotalKHR += (i.baseTotal + i.pkgPrice) * i.qty;
+            } else {
+                subtotalKHR += Math.round(parseFloat(i.price) * UNIVERSAL_CART_RATE) * i.qty;
+            }
+        });
+        
+        const delivery = calculateUniversalDelivery(subtotalKHR);
+        document.getElementById('uni-check-subtotal').innerText = Math.round(subtotalKHR).toLocaleString() + "៛";
+        document.getElementById('uni-check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ" : Math.round(delivery).toLocaleString() + "៛";
+        document.getElementById('uni-check-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
+        
+        closeUniversalCart(); 
+        document.getElementById('universal-checkout-modal').classList.remove('translate-y-full');
+    }
+    
+    function closeUniversalCheckout() { 
+        document.getElementById('universal-checkout-modal').classList.add('translate-y-full'); 
+    }
+
+    async function processUniversalFinalOrder() {
+        const selectedItems = globalStoreCart.filter(i => i.selected);
+        const name = document.getElementById('uni-cust-name').value.trim();
+        const phone = document.getElementById('uni-cust-phone').value.trim();
+        const address = document.getElementById('uni-cust-address').value.trim();
+        
+        if(!name || !phone || !address) return alert("សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់! (Please fill all info!)");
+        if(phone.length < 8) return alert("លេខទូរស័ព្ទមិនត្រឹមត្រូវ! (Invalid phone number!)");
+
+        const btn = document.getElementById('uni-confirm-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> កំពុងបញ្ជូន...`; 
+        btn.disabled = true;
+
+        let subtotalKHR = 0; 
+        const itemsPayload = [], charmCounts = {};
+        
+        selectedItems.forEach((i, bIdx) => {
+            if (i.type === 'custom_bracelet') {
+                const itemPriceKHR = i.baseTotal + i.pkgPrice;
+                subtotalKHR += itemPriceKHR * i.qty;
+                itemsPayload.push({
+                    cartId: "custom-" + Date.now() + "-" + bIdx,
+                    title: "Custom DIY Bracelet",
+                    style: `Code: ${i.code} | Charms: ${i.charms.length} | Pkg: ${i.pkgName}`,
+                    price: itemPriceKHR / UNIVERSAL_CART_RATE, qty: i.qty, image: i.image, maxStock: 99
+                });
+                i.charms.forEach(c => { 
+                    const dbId = c.db_id || "0-0";
+                    charmCounts[dbId] = (charmCounts[dbId] || 0) + (1 * i.qty); 
+                });
+            } else {
+                subtotalKHR += Math.round(parseFloat(i.price) * UNIVERSAL_CART_RATE) * i.qty;
+                itemsPayload.push({
+                    cartId: i.variantId || i.id, title: i.name || i.title, style: i.style || "Standard Option", 
+                    price: parseFloat(i.price), qty: i.qty, image: i.image, maxStock: i.stock || 99
+                });
+            }
+        });
+        
+        // Push hidden stock-deduction rows for DIY charms
+        for (const [id, count] of Object.entries(charmCounts)) { 
+            itemsPayload.push({ cartId: id, title: "DIY-Part", style: "Hidden stock component", price: 0, qty: count, image: "hidden", maxStock: 99 }); 
+        }
+
+        const delivery = calculateUniversalDelivery(subtotalKHR);
+        const totalUSD = (subtotalKHR + delivery) / UNIVERSAL_CART_RATE;
+
+        try {
+            const res = await fetch('/api/checkout', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ name, phone, address, items: itemsPayload, total: totalUSD }) 
             });
-
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-
-                <div style="border-top: 2px dashed #e5e7eb; padding-top: 15px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;"><span style="font-weight: 800; color: #6b7280; font-size: 11px; text-transform: uppercase;">Total USD</span><span style="font-weight: 900; color: #111827; font-size: 16px;">${totalPrice.usd}</span></div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-weight: 800; color: #6b7280; font-size: 11px; text-transform: uppercase;">Total Riel</span><span style="font-weight: 900; color: #ff5000; font-size: 20px;">${totalPrice.riel}</span></div>
-                </div>
-            `;
             
-            tempDiv.innerHTML = html; document.body.appendChild(tempDiv);
-
-            await Promise.all(Array.from(tempDiv.querySelectorAll('img')).map(img => { img.crossOrigin = "anonymous"; if(img.complete) return Promise.resolve(); return new Promise(r => { img.onload = img.onerror = r; }); }));
-
-            try {
-                const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 3, backgroundColor: "#ffffff" });
-                document.getElementById('generated-invoice-img').src = canvas.toDataURL("image/png");
-                
-                document.getElementById('main-content').classList.add('hidden');
-                document.getElementById('result-section').classList.remove('hidden');
-                document.getElementById('result-section').classList.add('flex');
-                
-                const btn = document.getElementById('action-btn');
-                btn.innerHTML = `<i class="fa-brands fa-telegram text-xl"></i><span>Send to Telegram</span>`;
-                btn.className = "w-full bg-[#0088cc] text-white font-bold py-4 rounded-xl shadow-xl active:scale-95 transition-transform flex items-center justify-center gap-2";
-                btn.onclick = () => openTelegramWithText(name, phone, address);
-                window.scrollTo({top: 0, behavior: 'smooth'});
-            } catch(err) {
-                alert("Generation failed. Please try again.");
-            } finally {
-                document.body.removeChild(tempDiv);
-                document.getElementById('loadingOverlay').classList.remove('flex');
-                document.getElementById('loadingOverlay').classList.add('hidden');
+            if (res.ok) {
+                alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");
+                globalStoreCart = globalStoreCart.filter(i => !i.selected); 
+                saveGlobalCart(); 
+                window.location.href = "https://t.me/Somphea_Reak";
+            } else {
+                const errData = await res.json();
+                alert("Error: " + (errData.message || "Could not process order."));
+                btn.innerHTML = originalText; btn.disabled = false;
             }
+        } catch (e) { 
+            // Fallback just in case
+            alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");
+            globalStoreCart = globalStoreCart.filter(i => !i.selected); 
+            saveGlobalCart(); 
+            window.location.href = "https://t.me/Somphea_Reak";
         }
+    }
 
-        function openTelegramWithText(name, phone, address) {
-            let msg = `🧾 *NEW ORDER INVOICE*\n👤 ${name}\n📞 ${phone}\n`;
-            if(address) msg += `📍 ${address}\n`;
-            msg += `\n*I have generated the invoice image. Sending it next!*`;
-            localStorage.removeItem('somphea_global_cart'); // Clear cart after sending!
-            window.open(`https://t.me/${TELEGRAM_USERNAME}?text=${encodeURIComponent(msg)}`, '_blank');
-            setTimeout(() => window.location.href = 'index.html', 1000); // Redirect home
-        }
-
-        init();
-    </script>
-</body>
-</html>
+    initGlobalCart();
+</script>
 
 
