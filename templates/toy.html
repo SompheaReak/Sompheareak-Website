@@ -23,21 +23,8 @@
         }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .cart-checkbox { 
-            appearance: none; width: 24px; height: 24px; border: 2.5px solid #cbd5e1; border-radius: 50%; 
-            outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-            background: white; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .cart-checkbox:checked { 
-            background-color: #ea580c; border-color: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
-        }
-        .cart-checkbox:checked::after { 
-            content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
-            width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
-        }
 
-        #cart-drawer, #checkout-modal, #category-modal { transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
+        #category-modal { transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
         
         .sticky-shadow { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025); }
         
@@ -70,9 +57,9 @@
             <button onclick="closeImageViewer()" class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
-            <button onclick="closeImageViewer(); openCartDrawer();" class="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors">
+            <button onclick="closeImageViewer(); openCart();" class="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors">
                 <i class="fa-solid fa-cart-shopping text-lg"></i>
-                <span id="viewer-cart-badge" class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden">0</span>
+                <span class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden cart-badge-count">0</span>
             </button>
         </div>
         <img id="viewer-img" src="" class="w-full h-full object-contain relative z-10">
@@ -94,9 +81,9 @@
             </div>
         </div>
         
-        <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:bg-gray-50">
+        <button onclick="openCart()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:bg-gray-50">
             <i class="fa-solid fa-cart-shopping"></i>
-            <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden">0</span>
+            <span class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden cart-badge-count">0</span>
         </button>
     </header>
 
@@ -163,9 +150,9 @@
             </button>
             <div class="text-[16px] font-black text-gray-900 truncate flex-1 text-center font-['Moul'] px-2" id="modal-header-title">ទំនិញ</div>
             <div class="flex items-center gap-2 shrink-0">
-                <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-full text-gray-800 hover:bg-gray-100 transition-colors">
+                <button onclick="openCart()" class="relative w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-full text-gray-800 hover:bg-gray-100 transition-colors">
                     <i class="fa-solid fa-cart-shopping text-md"></i>
-                    <span id="modal-cart-badge" class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden">0</span>
+                    <span class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden cart-badge-count">0</span>
                 </button>
                 <button onclick="closeProductModal()" class="w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-full text-gray-800 hover:bg-red-50 hover:text-red-500 transition-colors">
                     <i class="fa-solid fa-xmark text-lg"></i>
@@ -251,134 +238,21 @@
         </div>
     </div>
 
-    <!-- UNIFIED CART DRAWER -->
-    <div id="cart-drawer" class="fixed inset-0 z-[2000] flex flex-col justify-end translate-y-full">
-        <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeCartDrawer()"></div>
-        <div class="relative w-full h-[85vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
-            <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10">
-                <div>
-                    <h2 class="text-xl font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2>
-                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Your Shopping Cart</p>
-                </div>
-                <button onclick="closeCartDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
-            <div class="bg-white border-t border-gray-100 p-5 z-10">
-                <div class="space-y-2 mb-4">
-                    <div class="flex justify-between items-center text-xs font-bold text-gray-500">
-                        <span>Subtotal (តម្លៃទំនិញ)</span>
-                        <span id="cart-subtotal">$0.00</span>
-                    </div>
-                    <div class="flex justify-between items-center text-xs font-bold text-gray-500">
-                        <span>Delivery (ថ្លៃដឹកជញ្ជូន)</span>
-                        <span id="cart-delivery">$0.00</span>
-                    </div>
-                    <div class="flex justify-between items-end pt-2 border-t border-gray-100">
-                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Grand Total)</span>
-                        <div class="text-right">
-                            <span id="cart-grand-total-usd" class="text-2xl font-black text-[#ea580c] leading-none block">$0.00</span>
-                            <span id="cart-grand-total-khr" class="text-xs text-gray-400 font-bold block mt-1">0៛</span>
-                        </div>
-                    </div>
-                </div>
-                <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
-                    <i class="fa-solid fa-truck-fast"></i> បន្តទៅការដឹកជញ្ជូន
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- CHECKOUT / DELIVERY MODAL WITH REDEEM CODE -->
-    <div id="checkout-modal" class="fixed inset-0 z-[3000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
-        <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm md:max-w-md md:mx-auto md:w-full">
-            <h2 class="text-xl font-black font-['Moul']">ព័ត៌មានដឹកជញ្ជូន</h2>
-            <button onclick="closeCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
-        </div>
-        <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50 md:max-w-md md:mx-auto md:w-full md:border-x md:border-gray-100">
-            <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
-                <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
-                <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប:</span><span id="check-subtotal">$0.00</span></div>
-                <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">$0.00</span></div>
-                <div id="check-discount-row" class="flex justify-between text-xs font-black text-emerald-600 hidden"><span>បញ្ចុះតម្លៃ (Coupon):</span><span id="check-discount">-$0.00</span></div>
-                <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
-                    <span class="text-sm">សរុបត្រូវបង់:</span>
-                    <span id="check-total-usd" class="text-[#ea580c] text-xl leading-none">$0.00</span>
-                </div>
-            </div>
-
-            <!-- Redeem Code Input Box -->
-            <div class="bg-white rounded-2xl p-4 border border-gray-100 mb-6 shadow-sm">
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2"><i class="fa-solid fa-ticket text-orange-500 mr-1"></i> មានកូដបញ្ចុះតម្លៃ?</label>
-                <div class="flex gap-2">
-                    <input type="text" id="coupon-input" placeholder="បញ្ចូលកូដ (ឧ. VIP10)" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 font-bold text-xs uppercase outline-none focus:border-[#ea580c]">
-                    <button type="button" onclick="applyCoupon()" class="bg-gray-900 hover:bg-black text-white font-black px-4 py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all">ដាក់ស្នើ</button>
-                </div>
-                <p id="coupon-feedback" class="text-[11px] font-bold mt-2 hidden"></p>
-            </div>
-
-            <div class="space-y-4">
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង</label>
-                <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក">
-                <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (ឧ. 012345678)">
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន</label>
-                <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ"></textarea>
-            </div>
-        </div>
-        <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:max-w-md md:left-1/2 md:-translate-x-1/2 md:border-x">
-            <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-[#ea580c] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
-        </div>
-    </div>
+    <!-- Inject the Independent Cart Component -->
+    {% include 'components/cart.html' %}
 
     <script>
         const RATE = 4000;
         let allProducts = [];
-        let userCart = [];
         let currentModalProduct = null;
         let currentVariantIndex = 0;
         let modalQty = 1;
         let isModalImageScrolling = false;
         let modalScrollTimeout;
-        
-        // Active Coupon State
-        let appliedCoupon = null; // e.g. { code: 'VIP10', type: 'percent', value: 10 }
 
         // Search & Smart Filter State
         let activeCategory = 'All';
         let currentSearchQuery = '';
-
-        try {
-            const savedCart = localStorage.getItem('sr_cart');
-            if (savedCart) userCart = JSON.parse(savedCart);
-        } catch(e) {}
-
-        function calculateDelivery(subtotalUSD) {
-            if (subtotalUSD === 0) return 0;
-            if (subtotalUSD < 5) return 2.00;
-            if (subtotalUSD < 10) return 1.50;
-            if (subtotalUSD < 15) return 1.00;
-            if (subtotalUSD < 20) return 0.50;
-            return 0; 
-        }
-
-        function updateCartBadge() {
-            const badges = [
-                document.getElementById('cart-badge'),
-                document.getElementById('viewer-cart-badge'),
-                document.getElementById('modal-cart-badge')
-            ];
-            badges.forEach(badge => {
-                if(badge) {
-                    if(userCart.length > 0) {
-                        badge.innerText = userCart.length; 
-                        badge.classList.remove('hidden');
-                    } else {
-                        badge.classList.add('hidden');
-                    }
-                }
-            });
-        }
 
         async function fetchProducts() {
             document.getElementById('loadingOverlay').style.display = 'flex';
@@ -394,7 +268,7 @@
             }
             renderCategoryFilters();
             renderProducts();
-            updateCartBadge();
+            if (typeof updateCartBadge === 'function') updateCartBadge();
         }
 
         document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -479,9 +353,6 @@
             ).join('');
         }
 
-        // =====================================
-        // RENDER PRODUCTS GRID WITH USD FIRST
-        // =====================================
         function renderProducts() {
             let filtered = allProducts;
 
@@ -555,7 +426,6 @@
                 }
                 
                 const vIndex = p.matchedVariantIndex || 0;
-                // THUMBNAIL RULE: 1st image/variant image is thumbnail
                 let image = p.displayImage || (variants.length > 0 ? variants[0].image : p.image);
                 const isHot = index % 5 === 0;
 
@@ -602,7 +472,7 @@
         }
 
         // =====================================
-        // FULL SCREEN PRODUCT MODAL WITH REVIEW CAROUSEL
+        // FULL SCREEN PRODUCT MODAL
         // =====================================
         function openProductModal(id, initialVariantIndex = 0) {
             currentModalProduct = allProducts.find(p => p.id === id);
@@ -627,7 +497,6 @@
             }
             currentModalProduct._activeVariants = variants;
 
-            // COLLECT ALL IMAGES FOR THE SWIPEABLE REVIEW/DETAIL CAROUSEL
             let allImages = [];
             variants.forEach(v => { if (v.image && !allImages.includes(v.image)) allImages.push(v.image); });
             if (currentModalProduct.image && !allImages.includes(currentModalProduct.image)) allImages.unshift(currentModalProduct.image);
@@ -643,7 +512,6 @@
                 </div>
             `).join('');
 
-            // Indicator badge
             const indicator = document.getElementById('carousel-indicator');
             if(indicator) indicator.innerText = `1 / ${allImages.length}`;
 
@@ -702,9 +570,6 @@
 
         function selectVariant(idx) { updateVariantUIOnly(idx, true); }
 
-        // =====================================
-        // MAGIC MATH WITH USD FIRST IN MODAL
-        // =====================================
         function updateVariantUIOnly(idx, scrollImage = false) {
             currentVariantIndex = idx;
             const variants = currentModalProduct._activeVariants;
@@ -794,9 +659,6 @@
             });
         }
 
-        // =====================================
-        // RECOMMENDATIONS WITH USD FIRST
-        // =====================================
         function renderRecommendations(excludeId) {
             const available = allProducts.filter(p => p.id !== excludeId);
             const shuffled = available.sort(() => 0.5 - Math.random());
@@ -841,7 +703,7 @@
         }
 
         // =====================================
-        // ADD TO CART WITH THUMBNAIL & USD
+        // INTEGRATED GLOBAL CART LOGIC
         // =====================================
         function addToCartFromModal() {
             if(!currentModalProduct) return;
@@ -856,30 +718,33 @@
             let basePriceUSD = parseFloat(v.price || currentModalProduct.price);
             let finalPriceUSD = discountPercent > 0 ? basePriceUSD - (basePriceUSD * discountPercent / 100) : basePriceUSD;
             
-            // THUMBNAIL RULE: Cart uses 1st main image / variant thumbnail image
             const thumbnailImage = v.image || currentModalProduct.image || currentModalProduct.thumbnail;
             const stock = parseInt(v.stock !== undefined ? v.stock : currentModalProduct.stock);
             const styleName = v.name || (hasTrueVariants ? `Style ${currentVariantIndex + 1}` : "Standard");
 
             if(!isNaN(stock) && stock <= 0) return alert("Sorry, this exact variant is out of stock!");
 
-            const existing = userCart.find(i => i.id === dbId);
-            if(existing) { 
-                existing.qty += modalQty; 
-            } else {
-                userCart.push({
-                    id: dbId, type: 'standard', title: currentModalProduct.title,
-                    style: styleName, price: finalPriceUSD, image: thumbnailImage, maxStock: stock,
-                    qty: modalQty, selected: true
+            // Send data to the unified cart.html function!
+            // We pass a loop of the quantity they selected
+            for(let i=0; i < modalQty; i++) {
+                window.addToGlobalCart({
+                    productId: currentModalProduct.id,
+                    variantId: dbId, 
+                    name: `${currentModalProduct.title} - ${styleName}`,
+                    price: finalPriceUSD,
+                    image: thumbnailImage,
+                    stock: isNaN(stock) ? 99 : stock,
+                    type: 'option',
+                    mainVariantId: `${currentModalProduct.id}-0` 
                 });
             }
-            
-            saveCart(); updateCartBadge(); 
             
             const toast = document.getElementById('toast');
             document.getElementById('toast-text').innerText = "Added to Cart";
             toast.classList.remove('opacity-0', 'scale-90'); 
             setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1500);
+            
+            closeProductModal();
         }
 
         // --- IMAGE VIEWER (FULL SCREEN) LOGIC ---
@@ -904,220 +769,9 @@
             document.getElementById('image-viewer-modal').classList.remove('flex'); 
         }
 
-        // --- CART AND CHECKOUT LOGIC WITH USD FIRST ---
-        function openCartDrawer() { renderCartUI(); document.getElementById('cart-drawer').classList.remove('translate-y-full'); }
-        function closeCartDrawer() { document.getElementById('cart-drawer').classList.add('translate-y-full'); }
-
-        function renderCartUI() {
-            const container = document.getElementById('cart-items-container');
-            
-            if(userCart.length === 0) {
-                container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-sm uppercase tracking-widest mt-2">កន្ត្រកទទេ</p></div>`;
-                document.getElementById('cart-subtotal').innerText = "$0.00";
-                document.getElementById('cart-delivery').innerText = "$0.00";
-                document.getElementById('cart-grand-total-usd').innerText = "$0.00";
-                document.getElementById('cart-grand-total-khr').innerText = "0៛";
-                return;
-            }
-
-            let subtotalUSD = 0; let customIndex = 1;
-
-            container.innerHTML = userCart.map((item) => {
-                let itemTotalUSD = 0;
-                if(item.type === 'custom_bracelet') {
-                    itemTotalUSD = ((item.baseTotal + item.pkgPrice) / RATE) * item.qty;
-                    if(item.selected) subtotalUSD += itemTotalUSD;
-                    
-                    return `
-                    <div class="bg-white rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col relative transition-all overflow-hidden mb-4">
-                        <div class="w-full h-36 bg-gray-50 border-b border-gray-100 relative cursor-pointer group" onclick="openImageViewer('${item.image}')">
-                            <img src="${item.image}" class="w-full h-full object-contain p-2">
-                        </div>
-                        <div class="p-3">
-                            <div class="flex justify-between items-start mb-2">
-                                <label class="flex items-start gap-3 cursor-pointer flex-1">
-                                    <input type="checkbox" class="cart-checkbox mt-0.5" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
-                                    <div><h4 class="font-black text-sm text-gray-900 leading-tight">Custom Bracelet #${customIndex++}</h4></div>
-                                </label>
-                                <button type="button" onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-2"><i class="fa-solid fa-trash-can text-lg"></i></button>
-                            </div>
-                        </div>
-                    </div>`;
-                } else {
-                    itemTotalUSD = (item.price || 0) * item.qty;
-                    if(item.selected) subtotalUSD += itemTotalUSD;
-
-                    return `
-                    <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
-                        <label class="flex items-start gap-3 cursor-pointer">
-                            <input type="checkbox" class="cart-checkbox mt-2 ml-1" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
-                        </label>
-                        <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden cursor-pointer" onclick="openImageViewer('${item.image}')">
-                            <img src="${item.image}" class="max-w-full max-h-full object-contain">
-                        </div>
-                        <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
-                            <div>
-                                <div class="flex justify-between items-start">
-                                    <h4 class="font-black text-xs text-gray-900 leading-tight truncate pr-2">${item.title}</h4>
-                                    <button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 -mt-1 -mr-1 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
-                                </div>
-                                <p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">${item.style}</p>
-                            </div>
-                            <div class="flex justify-between items-end mt-2">
-                                <div>
-                                    <span class="font-black text-sm text-[#ea580c] block">$${itemTotalUSD.toFixed(2)}</span>
-                                    <span class="text-[9px] text-gray-400 font-bold">${Math.round(itemTotalUSD * RATE).toLocaleString()}៛</span>
-                                </div>
-                                <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
-                                    <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                                    <span class="font-black text-xs w-2 text-center">${item.qty}</span>
-                                    <button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[10px]"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                }
-            }).join('');
-            
-            const deliveryUSD = calculateDelivery(subtotalUSD);
-            let grandTotalUSD = subtotalUSD + deliveryUSD;
-
-            if(appliedCoupon) {
-                if(appliedCoupon.type === 'percent') grandTotalUSD -= (subtotalUSD * (appliedCoupon.value / 100));
-                else if(appliedCoupon.type === 'fixed') grandTotalUSD -= appliedCoupon.value;
-                if(grandTotalUSD < 0) grandTotalUSD = 0;
-            }
-
-            document.getElementById('cart-subtotal').innerText = `$${subtotalUSD.toFixed(2)}`;
-            
-            const deliveryEl = document.getElementById('cart-delivery');
-            if (deliveryUSD === 0 && subtotalUSD > 0) {
-                deliveryEl.innerText = "FREE";
-                deliveryEl.className = "text-green-500 font-black";
-            } else if (subtotalUSD > 0) {
-                deliveryEl.innerText = `+$${deliveryUSD.toFixed(2)}`;
-                deliveryEl.className = "text-[#ea580c] font-black";
-            } else {
-                deliveryEl.innerText = "$0.00";
-                deliveryEl.className = "text-gray-500 font-bold";
-            }
-
-            document.getElementById('cart-grand-total-usd').innerText = `$${grandTotalUSD.toFixed(2)}`;
-            document.getElementById('cart-grand-total-khr').innerText = `${Math.round(grandTotalUSD * RATE).toLocaleString()}៛`;
-        }
-
-        function toggleCartItem(id) { const item = userCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveCart(); renderCartUI(); } }
-        function updateCartQty(id, delta) { const item = userCart.find(i => i.id === id); if(item) { item.qty += delta; if(item.qty < 1) item.qty = 1; if(item.qty > 10) item.qty = 10; saveCart(); renderCartUI(); } }
-        function removeCartItem(id) { if(confirm("លុបចេញពីកន្ត្រក?")) { userCart = userCart.filter(i => i.id !== id); saveCart(); renderCartUI(); updateCartBadge(); } }
-        function saveCart() { localStorage.setItem('sr_cart', JSON.stringify(userCart)); }
-
-        // --- REDEEM CODE / COUPON LOGIC ---
-        function applyCoupon() {
-            const codeInput = document.getElementById('coupon-input').value.trim().toUpperCase();
-            const feedback = document.getElementById('coupon-feedback');
-            
-            const mockDatabaseCoupons = {
-                'VIP10': { type: 'percent', value: 10 },
-                'FREESHIP': { type: 'fixed', value: 2.00 },
-                'TOY5': { type: 'fixed', value: 5.00 }
-            };
-
-            if(mockDatabaseCoupons[codeInput]) {
-                appliedCoupon = { code: codeInput, ...mockDatabaseCoupons[codeInput] };
-                feedback.innerText = `✓ Code "${codeInput}" applied successfully!`;
-                feedback.className = "text-[11px] font-bold text-emerald-600 mt-2 block";
-                feedback.classList.remove('hidden');
-                updateCheckoutSummary();
-            } else {
-                appliedCoupon = null;
-                feedback.innerText = "✗ Invalid or expired promo code.";
-                feedback.className = "text-[11px] font-bold text-red-500 mt-2 block";
-                feedback.classList.remove('hidden');
-                updateCheckoutSummary();
-            }
-        }
-
-        function updateCheckoutSummary() {
-            const selected = userCart.filter(i => i.selected);
-            let sub = selected.reduce((acc, cur) => acc + (cur.price * cur.qty), 0);
-            let delivery = calculateDelivery(sub);
-            let discountAmt = 0;
-
-            if(appliedCoupon) {
-                if(appliedCoupon.type === 'percent') discountAmt = sub * (appliedCoupon.value / 100);
-                else if(appliedCoupon.type === 'fixed') discountAmt = appliedCoupon.value;
-            }
-
-            let total = (sub + delivery) - discountAmt;
-            if(total < 0) total = 0;
-
-            document.getElementById('check-subtotal').innerText = `$${sub.toFixed(2)}`;
-            document.getElementById('check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ" : `$${delivery.toFixed(2)}`;
-            
-            const discRow = document.getElementById('check-discount-row');
-            if(appliedCoupon && discountAmt > 0) {
-                discRow.classList.remove('hidden');
-                document.getElementById('check-discount').innerText = `-$${discountAmt.toFixed(2)}`;
-            } else {
-                discRow.classList.add('hidden');
-            }
-
-            document.getElementById('check-total-usd').innerText = `$${total.toFixed(2)}`;
-        }
-
-        function openCheckout() {
-            const selectedItems = userCart.filter(i => i.selected);
-            if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយដើម្បីបន្ត!");
-            updateCheckoutSummary();
-            closeCartDrawer();
-            document.getElementById('checkout-modal').classList.remove('translate-y-full');
-        }
-
-        function closeCheckout() { document.getElementById('checkout-modal').classList.add('translate-y-full'); }
-
-        async function processFinalOrder() {
-            const selectedItems = userCart.filter(i => i.selected);
-            if(selectedItems.length === 0) return;
-
-            const name = document.getElementById('cust-name').value.trim(); 
-            const phone = document.getElementById('cust-phone').value.trim(); 
-            const address = document.getElementById('cust-address').value.trim();
-            if(!name || !phone || !address) return alert("សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់!"); 
-            if(phone.length < 8) return alert("លេខទូរស័ព្ទមិនត្រឹមត្រូវ!");
-
-            const btn = document.getElementById('confirm-btn'); btn.innerText = "កំពុងបញ្ជូន..."; btn.disabled = true;
-
-            let subtotalUSD = 0; const orderItemsPayload = []; 
-
-            selectedItems.forEach((cartItem) => {
-                subtotalUSD += (cartItem.price * cartItem.qty);
-                orderItemsPayload.push({ cartId: cartItem.id, title: cartItem.title, style: cartItem.style, price: cartItem.price, qty: cartItem.qty, image: cartItem.image, maxStock: cartItem.maxStock });
-            });
-
-            let deliveryUSD = calculateDelivery(subtotalUSD); 
-            let discountAmt = appliedCoupon ? (appliedCoupon.type === 'percent' ? subtotalUSD * (appliedCoupon.value / 100) : appliedCoupon.value) : 0;
-            let totalUSD = (subtotalUSD + deliveryUSD) - discountAmt;
-            if(totalUSD < 0) totalUSD = 0;
-
-            try {
-                const res = await fetch('/api/checkout', { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD, coupon: appliedCoupon ? appliedCoupon.code : null }) 
-                });
-                
-                if(res.ok) { 
-                    alert("Order Successful! We will contact you on Telegram soon."); 
-                    userCart = userCart.filter(i => !i.selected); 
-                    saveCart(); 
-                    window.location.reload(); 
-                }
-            } catch (e) { alert("Error sending order"); }
-            btn.innerText = "បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)"; btn.disabled = false;
-        }
-
         fetchProducts();
     </script>
 </body>
 </html>
+
 
