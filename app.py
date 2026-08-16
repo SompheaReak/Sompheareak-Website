@@ -71,6 +71,9 @@ class Product(db.Model):
     sort_order = db.Column(db.Integer, default=0)
     is_visible = db.Column(db.Boolean, default=True)
     discount_percent = db.Column(db.Float, default=0.0) 
+    # --- NEW FIELDS FOR GALLERY & THUMBNAIL ---
+    use_custom_thumbnail = db.Column(db.Boolean, default=False)
+    detail_images = db.Column(db.Text, nullable=True)
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -383,7 +386,6 @@ def place_order():
     except Exception as e:
         return f"Error: {str(e)}", 400
 
-# (Legacy API Checkout left for backwards compatibility if old scripts call it)
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
     data = request.json
@@ -645,6 +647,10 @@ def delete_product(id):
         db.session.commit()
     return redirect(url_for('admin_inventory'))
 
+
+# =======================================================
+# THE FULLY UPDATED PRODUCT HANDLERS (Thumbnails, Details & Discounts)
+# =======================================================
 @app.route('/admin/product/update/<int:id>', methods=['POST'])
 @login_required
 def update_product(id):
@@ -652,19 +658,25 @@ def update_product(id):
     p.title = request.form.get('title')
     p.category = request.form.get('category')
     
-    # Handle multi-store saving
     stores = request.form.getlist('stores[]')
     p.store = ",".join(stores) if stores else "toy"
-    
-    # Handle discount percentage
     p.discount_percent = float(request.form.get('discount_percent', 0.0) or 0.0)
     
+    # --- NEW: Custom Thumbnail Override ---
+    use_custom_thumb_val = request.form.get('use_custom_thumbnail')
+    p.use_custom_thumbnail = True if use_custom_thumb_val == 'true' else False
+    
+    thumb_file = request.files.get('thumbnail')
+    if p.use_custom_thumbnail and thumb_file and thumb_file.filename != '':
+        p.image = optimize_and_upload(thumb_file)['secure_url']
+
     v_ids = request.form.getlist('v_ids[]')
     v_images = request.form.getlist('v_images[]')
     v_names = request.form.getlist('v_names[]')
     v_prices = request.form.getlist('v_prices[]')
     v_stocks = request.form.getlist('v_stocks[]')
     v_cats = request.form.getlist('v_categories[]')
+    v_discounts = request.form.getlist('v_discounts[]') # Grabs variant % discounts
     
     updated_variants = []
     total_stock = 0
@@ -672,7 +684,9 @@ def update_product(id):
         stock = int(v_stocks[i])
         updated_variants.append({
             "id": int(v_ids[i]), "image": v_images[i], "name": v_names[i],
-            "price": float(v_prices[i]), "stock": stock, "category": v_cats[i] if i < len(v_cats) else p.category
+            "price": float(v_prices[i]), "stock": stock, 
+            "category": v_cats[i] if i < len(v_cats) else p.category,
+            "discount_percent": float(v_discounts[i]) if i < len(v_discounts) else 0.0 # Stores Variant Discount
         })
         total_stock += stock
         _sync_product_to_pool(p.id, int(v_ids[i]), stock)
@@ -687,16 +701,31 @@ def update_product(id):
                     last_id += 1
                     updated_variants.append({
                         "id": last_id, "name": f"New Style {last_id}", "price": updated_variants[0]['price'] if updated_variants else 0, 
-                        "stock": 1, "image": res['secure_url'], "category": p.category 
+                        "stock": 1, "image": res['secure_url'], "category": p.category, "discount_percent": 0.0
                     })
                     total_stock += 1
-        p.variants = json.dumps(updated_variants)
-        p.stock = total_stock
-        if updated_variants:
-            p.image = updated_variants[0]['image']
-            p.price = updated_variants[0]['price']
-        db.session.commit()
     except: pass
+    
+    # --- NEW: Detail Images (View Only Gallery) ---
+    new_detail_files = request.files.getlist('new_detail_images')
+    detail_urls = json.loads(p.detail_images) if getattr(p, 'detail_images', None) else []
+    try:
+        if new_detail_files and new_detail_files[0].filename != '':
+            for df in new_detail_files:
+                if df and df.filename != '':
+                    detail_urls.append(optimize_and_upload(df)['secure_url'])
+    except: pass
+    p.detail_images = json.dumps(detail_urls)
+
+    p.variants = json.dumps(updated_variants)
+    p.stock = total_stock
+    
+    if updated_variants:
+        if not p.use_custom_thumbnail:
+            p.image = updated_variants[0]['image']
+        p.price = updated_variants[0]['price']
+        
+    db.session.commit()
     return redirect(url_for('admin_inventory'))
 
 @app.route('/admin/product/add', methods=['POST'])
@@ -705,48 +734,82 @@ def add_product():
     title = request.form.get('title')
     category = request.form.get('category')
     
-    # Handle multi-store uploading
     stores = request.form.getlist('stores[]')
     store_str = ",".join(stores) if stores else "toy"
-    
-    # Handle discount percentage
     discount_percent = float(request.form.get('discount_percent', 0.0) or 0.0)
+    
+    # --- NEW: Custom Thumbnail Logic ---
+    use_custom_thumb = request.form.get('use_custom_thumbnail') == 'true'
+    thumb_file = request.files.get('thumbnail')
+    thumbnail_url = ""
+    if use_custom_thumb and thumb_file and thumb_file.filename != '':
+        thumbnail_url = optimize_and_upload(thumb_file)['secure_url']
     
     v_names = request.form.getlist('variant_names[]')
     v_prices = request.form.getlist('variant_prices[]')
     v_stocks = request.form.getlist('variant_stocks[]')
     v_categories = request.form.getlist('variant_categories[]')
-    files = request.files.getlist('images')
+    v_discounts = request.form.getlist('variant_discounts[]') # Variant Discounts
     
+    files = request.files.getlist('images')
     uploaded_urls = []
     try:
         for f in files:
             if f and f.filename != '': uploaded_urls.append(optimize_and_upload(f)['secure_url'])
-        if uploaded_urls:
-            vars_json = []
-            total_stock = 0
-            for i, url in enumerate(uploaded_urls):
-                price = float(v_prices[i]) if i < len(v_prices) else 0
-                stock = int(v_stocks[i]) if i < len(v_stocks) else 0
-                cat_str = v_categories[i] if i < len(v_categories) else category
-                vars_json.append({"id": i, "name": v_names[i] if i < len(v_names) else f"Style {i+1}", "price": price, "stock": stock, "image": url, "category": cat_str})
-                total_stock += stock
-            new_p = Product(title=title, price=vars_json[0]['price'], stock=total_stock, image=uploaded_urls[0], category=category, store=store_str, discount_percent=discount_percent, variants=json.dumps(vars_json), sort_order=-1, is_visible=True)
-            db.session.add(new_p)
-            db.session.commit()
     except: pass
+    
+    # --- NEW: Detail Images (View Only Gallery) ---
+    detail_files = request.files.getlist('detail_images')
+    detail_urls = []
+    try:
+        for df in detail_files:
+            if df and df.filename != '': detail_urls.append(optimize_and_upload(df)['secure_url'])
+    except: pass
+
+    if uploaded_urls:
+        vars_json = []
+        total_stock = 0
+        for i, url in enumerate(uploaded_urls):
+            price = float(v_prices[i]) if i < len(v_prices) else 0
+            stock = int(v_stocks[i]) if i < len(v_stocks) else 0
+            cat_str = v_categories[i] if i < len(v_categories) else category
+            v_disc = float(v_discounts[i]) if i < len(v_discounts) else 0.0
+            
+            vars_json.append({
+                "id": i, "name": v_names[i] if i < len(v_names) else f"Style {i+1}", 
+                "price": price, "stock": stock, "image": url, "category": cat_str, "discount_percent": v_disc
+            })
+            total_stock += stock
+            
+        if not use_custom_thumb or not thumbnail_url:
+            thumbnail_url = uploaded_urls[0]
+            
+        new_p = Product(
+            title=title, price=vars_json[0]['price'], stock=total_stock, 
+            image=thumbnail_url, category=category, store=store_str, 
+            discount_percent=discount_percent, variants=json.dumps(vars_json), 
+            sort_order=-1, is_visible=True,
+            use_custom_thumbnail=use_custom_thumb,
+            detail_images=json.dumps(detail_urls)
+        )
+        db.session.add(new_p)
+        db.session.commit()
     return redirect(url_for('admin_inventory'))
 
 @app.route('/api/products/<store_name>')
 def get_api(store_name):
     try:
         all_prods = Product.query.filter_by(is_visible=True).order_by(Product.sort_order.asc(), Product.id.desc()).all()
-        # Parse stores and include if requested store is in the list
         products = [p for p in all_prods if store_name in (p.store or '').split(',')]
-        
         categories = Category.query.order_by(Category.sort_order.asc()).all()
         return jsonify({
-            "products": [{"id": p.id, "title": p.title, "price": p.price, "stock": p.stock, "category": p.category, "thumbnail": p.image, "discount_percent": getattr(p, 'discount_percent', 0.0), "variants": json.loads(p.variants) if p.variants else []} for p in products],
+            "products": [{
+                "id": p.id, "title": p.title, "price": p.price, "stock": p.stock, "category": p.category, 
+                "thumbnail": p.image, "discount_percent": getattr(p, 'discount_percent', 0.0), 
+                "use_custom_thumbnail": getattr(p, 'use_custom_thumbnail', False),
+                "detail_images": json.loads(p.detail_images) if getattr(p, 'detail_images', None) else [],
+                "variants": json.loads(p.variants) if p.variants else []
+            } for p in products],
             "categories": [{"name": c.name, "image": c.image} for c in categories]
         })
     except Exception as e: return jsonify({"error": str(e)}), 500
@@ -978,10 +1041,17 @@ def request_entity_too_large(error): return redirect(request.referrer)
 
 with app.app_context():
     db.create_all()
-    # Add new columns gracefully if they don't exist
+    # Safely inject missing columns to prevent crashes
     try: db.session.execute(text('ALTER TABLE "order" ADD COLUMN promo_code_used VARCHAR(50)')); db.session.commit()
     except: db.session.rollback()
+    
     try: db.session.execute(text('ALTER TABLE product ADD COLUMN discount_percent FLOAT DEFAULT 0.0')); db.session.commit()
+    except: db.session.rollback()
+    
+    try: db.session.execute(text('ALTER TABLE product ADD COLUMN use_custom_thumbnail BOOLEAN DEFAULT 0')); db.session.commit()
+    except: db.session.rollback()
+    
+    try: db.session.execute(text('ALTER TABLE product ADD COLUMN detail_images TEXT')); db.session.commit()
     except: db.session.rollback()
 
 if __name__ == "__main__":
