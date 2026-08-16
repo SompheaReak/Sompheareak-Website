@@ -29,6 +29,14 @@ def optimize_and_upload(file):
         file, format="webp", quality="auto", width=900, height=900, crop="limit"
     )
 
+def parse_json_list(val):
+    if not val: return []
+    try:
+        res = json.loads(val)
+        return res if isinstance(res, list) else []
+    except:
+        return []
+
 # --- 2. PERMANENT DATABASE CONFIG ---
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///fallback.db')
 if db_url.startswith("postgres://"):
@@ -36,10 +44,7 @@ if db_url.startswith("postgres://"):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    "pool_pre_ping": True, "pool_recycle": 300, "pool_timeout": 30      
-}
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = { "pool_pre_ping": True, "pool_recycle": 300, "pool_timeout": 30 }
 
 db = SQLAlchemy(app)
 
@@ -71,7 +76,6 @@ class Product(db.Model):
     sort_order = db.Column(db.Integer, default=0)
     is_visible = db.Column(db.Boolean, default=True)
     discount_percent = db.Column(db.Float, default=0.0) 
-    # --- NEW FIELDS FOR GALLERY & THUMBNAIL ---
     use_custom_thumbnail = db.Column(db.Boolean, default=False)
     detail_images = db.Column(db.Text, nullable=True)
 
@@ -91,10 +95,9 @@ class Order(db.Model):
     total_usd = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="Pending")
     stock_deducted = db.Column(db.Boolean, default=False)
-    promo_code_used = db.Column(db.String(50), nullable=True) # Tracks which code was used
+    promo_code_used = db.Column(db.String(50), nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-# NEW: Storefront Redeem Codes Model
 class PromoCode(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(50), unique=True, nullable=False)
@@ -106,13 +109,12 @@ class PromoCode(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-# --- 4. SPINNER GAME MODELS ---
 class PlayerSession(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     player_id = db.Column(db.String(8), unique=True, nullable=False) 
     balance = db.Column(db.Integer, default=0)
 
-class RedeemCode(db.Model): # Note: This is for Spin Riel Codes
+class RedeemCode(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(8), unique=True, nullable=False)
     value = db.Column(db.Integer, nullable=False)  
@@ -143,20 +145,16 @@ class DrawHistory(db.Model):
         kh_time = self.timestamp_utc + timedelta(hours=7)
         return kh_time.strftime('%d-%b-%Y %I:%M %p')
 
-# --- 5x SPIN CASH REWARD CONFIG ---
 REWARD_CONFIG_FILE = 'spin_rewards.json'
 
 def get_reward_config():
     if os.path.exists(REWARD_CONFIG_FILE):
-        with open(REWARD_CONFIG_FILE, 'r') as f:
-            return json.load(f)
+        with open(REWARD_CONFIG_FILE, 'r') as f: return json.load(f)
     return {"0": 50.0, "500": 20.0, "1000": 15.0, "2000": 10.0, "5000": 3.0, "10000": 1.5, "50000": 0.5}
 
 def save_reward_config(data):
-    with open(REWARD_CONFIG_FILE, 'w') as f:
-        json.dump(data, f)
+    with open(REWARD_CONFIG_FILE, 'w') as f: json.dump(data, f)
 
-# --- SYNC HELPER FUNCTIONS ---
 def _sync_product_to_pool(product_id, variant_index, new_stock):
     linked_prize = MinifigurePool.query.filter_by(linked_product_id=product_id, linked_variant_index=variant_index).first()
     if linked_prize: linked_prize.stock = new_stock
@@ -169,7 +167,6 @@ def _sync_product_to_pool(product_id, variant_index, new_stock):
                     variants = json.loads(product.variants)
                     if 0 <= variant_index < len(variants): target_image = variants[variant_index].get('image', target_image)
                 except: pass
-            
             prize = MinifigurePool.query.filter_by(image=target_image).first()
             if prize:
                 prize.stock = new_stock
@@ -213,7 +210,6 @@ def _sync_pool_to_product(pool_item):
                 pool_item.linked_variant_index = -1
                 break
 
-# --- GLOBAL ADMIN CONTEXT ---
 @app.context_processor
 def inject_global_data():
     if request.path.startswith('/admin') and session.get('admin'):
@@ -222,12 +218,7 @@ def inject_global_data():
         categories = Category.query.order_by(Category.sort_order).all()
         promo_codes = PromoCode.query.order_by(PromoCode.timestamp.desc()).all()
         pending_count = Order.query.filter_by(status='Pending').count()
-        return dict(
-            global_products=products,
-            global_categories=categories,
-            global_redeem_codes=promo_codes,
-            pending_count=pending_count
-        )
+        return dict(global_products=products, global_categories=categories, global_redeem_codes=promo_codes, pending_count=pending_count)
     return dict()
 
 # --- 5. PUBLIC & STORE ROUTES ---
@@ -248,56 +239,33 @@ def minifigure_store(): return render_template('minifigure.html')
 @app.route('/spin')
 def mystery_box(): return render_template('lucky_draw.html')
 
-# ========================================================
-# NEW FULL CHECKOUT FLOW (Handles cart.html form submission)
-# ========================================================
 @app.route('/checkout', methods=['POST'])
 def checkout_page():
     cart_data_raw = request.form.get('cart_data', '[]')
     redeem_code = request.form.get('applied_redeem_code', '').strip().upper()
-    
     try: cart_items = json.loads(cart_data_raw)
     except: cart_items = []
-        
-    if not cart_items:
-        return redirect(url_for('index'))
-        
+    if not cart_items: return redirect(url_for('index'))
     subtotal = sum(float(item.get('price', 0)) * int(item.get('qty', 1)) for item in cart_items)
     discount_amount = 0
-    
     if redeem_code:
         promo = PromoCode.query.filter_by(code=redeem_code, is_active=True).first()
         if promo and (promo.max_uses == 0 or promo.current_uses < promo.max_uses):
             if subtotal >= promo.min_order_value:
-                if promo.discount_type == 'percent':
-                    discount_amount = subtotal * (promo.discount_value / 100.0)
-                elif promo.discount_type == 'flat':
-                    discount_amount = promo.discount_value
-
+                if promo.discount_type == 'percent': discount_amount = subtotal * (promo.discount_value / 100.0)
+                elif promo.discount_type == 'flat': discount_amount = promo.discount_value
     final_total = max(0, subtotal - discount_amount)
-    
     checkout_html = """
     <!DOCTYPE html>
     <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Secure Checkout</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet">
-    </head>
+    <head><title>Secure Checkout</title><script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet"></head>
     <body class="bg-slate-50 text-slate-800 p-4 md:p-10 font-['Plus_Jakarta_Sans']">
         <div class="max-w-2xl mx-auto bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100">
             <h1 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-2"><svg class="w-6 h-6 text-[#ff5000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> Secure Checkout</h1>
-            
             <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 space-y-1">
-                <div class="flex justify-between items-center text-sm font-bold text-slate-500">
-                    <span>Subtotal</span><span>${{ "%.2f"|format(subtotal) }}</span>
-                </div>
+                <div class="flex justify-between items-center text-sm font-bold text-slate-500"><span>Subtotal</span><span>${{ "%.2f"|format(subtotal) }}</span></div>
                 {% if discount_amount > 0 %}
-                <div class="flex justify-between items-center text-sm font-bold text-emerald-500">
-                    <span>Discount Code ({{ redeem_code }})</span><span>-${{ "%.2f"|format(discount_amount) }}</span>
-                </div>
+                <div class="flex justify-between items-center text-sm font-bold text-emerald-500"><span>Discount Code ({{ redeem_code }})</span><span>-${{ "%.2f"|format(discount_amount) }}</span></div>
                 {% endif %}
                 <div class="flex justify-between items-end mt-2 border-t border-slate-200 pt-3">
                     <span class="text-xs font-black uppercase text-slate-900 tracking-wider">Total</span>
@@ -307,25 +275,13 @@ def checkout_page():
                     </div>
                 </div>
             </div>
-            
             <form action="/place_order" method="POST" class="space-y-4">
                 <input type="hidden" name="cart_data" value="{{ cart_data_raw }}">
                 <input type="hidden" name="promo_code_used" value="{{ redeem_code if discount_amount > 0 else '' }}">
                 <input type="hidden" name="final_total" value="{{ final_total }}">
-                
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider pl-1 block mb-1">Full Name</label>
-                    <input type="text" name="name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#ff5000] focus:ring-2 focus:ring-orange-500/10">
-                </div>
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider pl-1 block mb-1">Phone Number</label>
-                    <input type="tel" name="phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#ff5000] focus:ring-2 focus:ring-orange-500/10">
-                </div>
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider pl-1 block mb-1">Delivery Address</label>
-                    <textarea name="address" rows="3" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#ff5000] focus:ring-2 focus:ring-orange-500/10"></textarea>
-                </div>
-                
+                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-wider pl-1 block mb-1">Full Name</label><input type="text" name="name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#ff5000] focus:ring-2 focus:ring-orange-500/10"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-wider pl-1 block mb-1">Phone Number</label><input type="tel" name="phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#ff5000] focus:ring-2 focus:ring-orange-500/10"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-wider pl-1 block mb-1">Delivery Address</label><textarea name="address" rows="3" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#ff5000] focus:ring-2 focus:ring-orange-500/10"></textarea></div>
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="history.back()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all">Cancel</button>
                     <button type="submit" class="w-2/3 bg-[#ff5000] hover:bg-orange-600 text-white py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg shadow-orange-500/20 transition-all">Confirm Order</button>
@@ -341,7 +297,6 @@ def checkout_page():
 def place_order():
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip and ',' in client_ip: client_ip = client_ip.split(',')[0].strip()
-        
     current_time = time.time()
     if client_ip in spam_tracker:
         last_time, count = spam_tracker[client_ip]
@@ -351,40 +306,27 @@ def place_order():
         else: spam_tracker[client_ip] = (current_time, 1)
     else: spam_tracker[client_ip] = (current_time, 1)
 
-    name = request.form.get('name')
-    phone = request.form.get('phone')
-    address = request.form.get('address')
-    cart_data = request.form.get('cart_data')
-    promo_code = request.form.get('promo_code_used')
-    final_total = float(request.form.get('final_total', 0))
-    
     try:
         new_order = Order(
-            customer_name=name, customer_phone=phone, customer_address=address,
-            items_json=cart_data, total_usd=final_total, status="Pending",
-            promo_code_used=promo_code
+            customer_name=request.form.get('name'), customer_phone=request.form.get('phone'), customer_address=request.form.get('address'),
+            items_json=request.form.get('cart_data'), total_usd=float(request.form.get('final_total', 0)), status="Pending",
+            promo_code_used=request.form.get('promo_code_used')
         )
         db.session.add(new_order)
         db.session.commit()
-        
         success_html = """
-        <!DOCTYPE html>
-        <html lang="en">
-        <head><title>Success</title><script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet"></head>
+        <!DOCTYPE html><html lang="en"><head><title>Success</title><script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet"></head>
         <body class="bg-slate-50 flex items-center justify-center min-h-screen text-center p-4 font-['Plus_Jakarta_Sans']">
             <div class="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
                 <div class="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>
                 <h1 class="text-2xl font-black text-slate-900 mb-2">Order Confirmed!</h1>
                 <p class="text-sm font-bold text-slate-500 mb-8">We have received your order #{{ order_id }}. We will contact you shortly.</p>
                 <a href="/" class="block w-full bg-[#ff5000] text-white px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg shadow-orange-500/20">Return to Homepage</a>
-            </div>
-            <script>localStorage.removeItem('universal_store_cart');</script>
-        </body>
-        </html>
+            </div><script>localStorage.removeItem('universal_store_cart');</script>
+        </body></html>
         """
         return render_template_string(success_html, order_id=new_order.id)
-    except Exception as e:
-        return f"Error: {str(e)}", 400
+    except Exception as e: return f"Error: {str(e)}", 400
 
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
@@ -397,10 +339,9 @@ def checkout():
         db.session.add(new_order)
         db.session.commit()
         return jsonify({'status': 'success', 'order_id': new_order.id})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 400
+    except Exception as e: return jsonify({'status': 'error', 'message': str(e)}), 400
 
-# --- MULTI-PAGE ADMIN ROUTES ---
+# --- ADMIN ROUTES ---
 @app.route('/admin/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -417,15 +358,13 @@ def logout():
 
 @app.route('/admin/panel')
 @login_required
-def admin_panel():
-    return redirect(url_for('admin_dashboard'))
+def admin_panel(): return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
     orders = Order.query.all()
-    pending_count = sum(1 for o in orders if o.status == 'Pending')
-    return render_template('admin/dashboard.html', orders=orders, pending_count=pending_count)
+    return render_template('admin/dashboard.html', orders=orders, pending_count=sum(1 for o in orders if o.status == 'Pending'))
 
 @app.route('/admin/inventory')
 @login_required
@@ -438,12 +377,7 @@ def admin_inventory():
                 if sub_cat and sub_cat != "Other" and not Category.query.filter_by(name=sub_cat).first():
                     db.session.add(Category(name=sub_cat, store="toy", sort_order=999))
     db.session.commit()
-    
-    products = Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
-    for p in products: p.parsed_variants = json.loads(p.variants) if p.variants else []
-    categories = Category.query.order_by(Category.sort_order).all()
-    
-    return render_template('admin/inventory.html', products=products, categories=categories)
+    return render_template('admin/inventory.html', products=Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all(), categories=Category.query.order_by(Category.sort_order).all())
 
 @app.route('/admin/orders')
 @login_required
@@ -455,34 +389,19 @@ def admin_orders():
 @app.route('/admin/spin')
 @login_required
 def admin_spin():
-    codes = RedeemCode.query.order_by(RedeemCode.timestamp.desc()).all()
-    pool = MinifigurePool.query.order_by(MinifigurePool.sort_order.asc(), MinifigurePool.id.desc()).all()
-    history = DrawHistory.query.order_by(DrawHistory.timestamp_utc.desc()).limit(100).all()
-    reward_config = get_reward_config()
-    return render_template('admin/spin.html', codes=codes, pool=pool, history=history, reward_config=reward_config)
+    return render_template('admin/spin.html', codes=RedeemCode.query.order_by(RedeemCode.timestamp.desc()).all(), pool=MinifigurePool.query.order_by(MinifigurePool.sort_order.asc(), MinifigurePool.id.desc()).all(), history=DrawHistory.query.order_by(DrawHistory.timestamp_utc.desc()).limit(100).all(), reward_config=get_reward_config())
 
-# ==========================================
-# NEW ADMIN REDEEM ROUTES (For Promo Codes)
-# ==========================================
 @app.route('/admin/redeem')
 @login_required
-def admin_redeem():
-    return render_template('admin/redeem.html')
+def admin_redeem(): return render_template('admin/redeem.html')
 
 @app.route('/admin/redeem/add', methods=['POST'])
 @login_required
 def add_promo_code():
     code = request.form.get('code', '').strip().upper()
-    discount_type = request.form.get('discount_type')
-    discount_value = float(request.form.get('discount_value', 0))
-    min_order_value = float(request.form.get('min_order_value', 0))
-    max_uses = int(request.form.get('max_uses', 0))
-    
-    if PromoCode.query.filter_by(code=code).first():
-        flash('Code already exists!', 'error')
+    if PromoCode.query.filter_by(code=code).first(): flash('Code already exists!', 'error')
     else:
-        new_code = PromoCode(code=code, discount_type=discount_type, discount_value=discount_value, min_order_value=min_order_value, max_uses=max_uses)
-        db.session.add(new_code)
+        db.session.add(PromoCode(code=code, discount_type=request.form.get('discount_type'), discount_value=float(request.form.get('discount_value', 0)), min_order_value=float(request.form.get('min_order_value', 0)), max_uses=int(request.form.get('max_uses', 0))))
         db.session.commit()
     return redirect(url_for('admin_redeem'))
 
@@ -490,22 +409,15 @@ def add_promo_code():
 @login_required
 def toggle_promo_code(id):
     code = PromoCode.query.get(id)
-    if code:
-        code.is_active = not code.is_active
-        db.session.commit()
+    if code: code.is_active = not code.is_active; db.session.commit()
     return redirect(url_for('admin_redeem'))
 
 @app.route('/admin/redeem/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_promo_code(id):
     code = PromoCode.query.get(id)
-    if code:
-        db.session.delete(code)
-        db.session.commit()
+    if code: db.session.delete(code); db.session.commit()
     return redirect(url_for('admin_redeem'))
-
-
-# --- ADMIN API & FORM ACTIONS ---
 
 @app.route('/admin/product/quick_stock', methods=['POST'])
 @login_required
@@ -537,46 +449,35 @@ def update_order_status(id, status):
     if order:
         if status == 'Completed' and not order.stock_deducted:
             try:
-                items = json.loads(order.items_json)
-                for item in items:
-                    # Look for variantId which comes from the new cart.html
+                for item in json.loads(order.items_json):
                     parts = str(item.get('variantId', item.get('cartId', ''))).split('-')
                     if len(parts) >= 2:
-                        p_id = int(parts[0])
-                        v_idx = int(parts[1])
-                        qty_bought = int(item.get('qty', 1))
+                        p_id, v_idx, qty = int(parts[0]), int(parts[1]), int(item.get('qty', 1))
                         product = Product.query.get(p_id)
                         if product:
                             if product.variants and v_idx != -1:
                                 variants = json.loads(product.variants)
                                 if 0 <= v_idx < len(variants):
-                                    variants[v_idx]['stock'] = max(0, variants[v_idx]['stock'] - qty_bought)
+                                    variants[v_idx]['stock'] = max(0, int(variants[v_idx].get('stock', 0)) - qty)
                                     product.variants = json.dumps(variants)
-                                    product.stock = sum(v.get('stock', 0) for v in variants)
+                                    product.stock = sum(int(v.get('stock', 0)) for v in variants)
                                     _sync_product_to_pool(p_id, v_idx, variants[v_idx]['stock'])
-                            else:
-                                product.stock = max(0, product.stock - qty_bought)
+                            else: 
+                                product.stock = max(0, product.stock - qty)
                                 _sync_product_to_pool(p_id, -1, product.stock)
             except: pass
-            
-            # --- INCREASE PROMO CODE CURRENT USAGE ON CONFIRMATION ---
             if order.promo_code_used:
                 promo = PromoCode.query.filter_by(code=order.promo_code_used).first()
                 if promo: promo.current_uses += 1
-
             order.stock_deducted = True
-
-        order.status = status
-        db.session.commit()
+        order.status = status; db.session.commit()
     return redirect(url_for('admin_orders'))
 
 @app.route('/admin/order/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_order(id):
     order = Order.query.get(id)
-    if order:
-        db.session.delete(order)
-        db.session.commit()
+    if order: db.session.delete(order); db.session.commit()
     return redirect(url_for('admin_orders'))
 
 @app.route('/admin/order/bulk_delete', methods=['POST'])
@@ -585,10 +486,7 @@ def bulk_delete_orders():
     raw_ids = request.form.get('order_ids', '')
     if raw_ids:
         ids_to_delete = [int(x) for x in raw_ids.split(',') if x.isdigit()]
-        if ids_to_delete:
-            Order.query.filter(Order.id.in_(ids_to_delete)).delete(synchronize_session=False)
-            db.session.commit()
-            flash(f'Successfully deleted {len(ids_to_delete)} orders.', 'success')
+        if ids_to_delete: Order.query.filter(Order.id.in_(ids_to_delete)).delete(synchronize_session=False); db.session.commit()
     return redirect(url_for('admin_orders'))
 
 @app.route('/admin/categories/update', methods=['POST'])
@@ -600,11 +498,9 @@ def update_categories():
         for i, cid in enumerate(cat_ids):
             cat = Category.query.get(int(cid))
             if cat:
-                cat.name = cat_names[i]
-                cat.sort_order = i
+                cat.name = cat_names[i]; cat.sort_order = i
                 file = request.files.get(f'cat_image_{cid}')
-                if file and file.filename != '':
-                    cat.image = optimize_and_upload(file)['secure_url']
+                if file and file.filename != '': cat.image = optimize_and_upload(file)['secure_url']
         db.session.commit()
     except: pass
     return redirect(url_for('admin_inventory'))
@@ -616,8 +512,7 @@ def delete_category(id):
     if c:
         products = Product.query.filter_by(category=c.name).all()
         for p in products: p.category = "Other"
-        db.session.delete(c)
-        db.session.commit()
+        db.session.delete(c); db.session.commit()
     return redirect(url_for('admin_inventory'))
 
 @app.route('/admin/product/reorder', methods=['POST'])
@@ -633,23 +528,18 @@ def reorder_products():
 @login_required
 def toggle_product(id):
     p = Product.query.get(id)
-    if p:
-        p.is_visible = not p.is_visible
-        db.session.commit()
+    if p: p.is_visible = not p.is_visible; db.session.commit()
     return redirect(url_for('admin_inventory'))
 
 @app.route('/admin/product/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_product(id):
     p = Product.query.get(id)
-    if p:
-        db.session.delete(p)
-        db.session.commit()
+    if p: db.session.delete(p); db.session.commit()
     return redirect(url_for('admin_inventory'))
 
-
 # =======================================================
-# THE FULLY UPDATED PRODUCT HANDLERS (Thumbnails, Details & Discounts)
+# THE FULLY UPDATED PRODUCT HANDLERS (Thumbnails & Disc)
 # =======================================================
 @app.route('/admin/product/update/<int:id>', methods=['POST'])
 @login_required
@@ -657,18 +547,21 @@ def update_product(id):
     p = Product.query.get_or_404(id)
     p.title = request.form.get('title')
     p.category = request.form.get('category')
-    
     stores = request.form.getlist('stores[]')
     p.store = ",".join(stores) if stores else "toy"
     p.discount_percent = float(request.form.get('discount_percent', 0.0) or 0.0)
     
-    # --- NEW: Custom Thumbnail Override ---
     use_custom_thumb_val = request.form.get('use_custom_thumbnail')
-    p.use_custom_thumbnail = True if use_custom_thumb_val == 'true' else False
+    p.use_custom_thumbnail = True if str(use_custom_thumb_val).lower() == 'true' else False
     
     thumb_file = request.files.get('thumbnail')
     if p.use_custom_thumbnail and thumb_file and thumb_file.filename != '':
-        p.image = optimize_and_upload(thumb_file)['secure_url']
+        try:
+            upload_res = optimize_and_upload(thumb_file)
+            if upload_res and 'secure_url' in upload_res:
+                p.image = upload_res['secure_url']
+        except Exception as e:
+            print(f"Error uploading thumbnail: {e}")
 
     v_ids = request.form.getlist('v_ids[]')
     v_images = request.form.getlist('v_images[]')
@@ -676,7 +569,7 @@ def update_product(id):
     v_prices = request.form.getlist('v_prices[]')
     v_stocks = request.form.getlist('v_stocks[]')
     v_cats = request.form.getlist('v_categories[]')
-    v_discounts = request.form.getlist('v_discounts[]') # Grabs variant % discounts
+    v_discounts = request.form.getlist('v_discounts[]') 
     
     updated_variants = []
     total_stock = 0
@@ -686,17 +579,17 @@ def update_product(id):
             "id": int(v_ids[i]), "image": v_images[i], "name": v_names[i],
             "price": float(v_prices[i]), "stock": stock, 
             "category": v_cats[i] if i < len(v_cats) else p.category,
-            "discount_percent": float(v_discounts[i]) if i < len(v_discounts) else 0.0 # Stores Variant Discount
+            "discount_percent": float(v_discounts[i]) if i < len(v_discounts) else 0.0 
         })
         total_stock += stock
         _sync_product_to_pool(p.id, int(v_ids[i]), stock)
 
     new_files = request.files.getlist('new_images')
-    try:
-        if new_files and new_files[0].filename != '':
-            last_id = max([v['id'] for v in updated_variants]) if updated_variants else 0
-            for f in new_files:
-                if f and f.filename != '':
+    if new_files and new_files[0].filename != '':
+        last_id = max([v['id'] for v in updated_variants]) if updated_variants else 0
+        for f in new_files:
+            if f and f.filename != '':
+                try:
                     res = optimize_and_upload(f)
                     last_id += 1
                     updated_variants.append({
@@ -704,27 +597,29 @@ def update_product(id):
                         "stock": 1, "image": res['secure_url'], "category": p.category, "discount_percent": 0.0
                     })
                     total_stock += 1
-    except: pass
+                except: pass
     
-    # --- NEW: Detail Images (View Only Gallery) ---
+    # Detail (View Only) Images Logic 
+    detail_urls = parse_json_list(getattr(p, 'detail_images', '[]'))
     new_detail_files = request.files.getlist('new_detail_images')
-    detail_urls = json.loads(p.detail_images) if getattr(p, 'detail_images', None) else []
-    try:
-        if new_detail_files and new_detail_files[0].filename != '':
-            for df in new_detail_files:
-                if df and df.filename != '':
-                    detail_urls.append(optimize_and_upload(df)['secure_url'])
-    except: pass
+    if new_detail_files and new_detail_files[0].filename != '':
+        for df in new_detail_files:
+            if df and df.filename != '':
+                try:
+                    upload_result = optimize_and_upload(df)
+                    if upload_result and 'secure_url' in upload_result:
+                        detail_urls.append(upload_result['secure_url'])
+                except Exception as e:
+                    print(f"Error uploading detail image: {e}")
+                    pass
     p.detail_images = json.dumps(detail_urls)
 
     p.variants = json.dumps(updated_variants)
     p.stock = total_stock
-    
     if updated_variants:
         if not p.use_custom_thumbnail:
             p.image = updated_variants[0]['image']
         p.price = updated_variants[0]['price']
-        
     db.session.commit()
     return redirect(url_for('admin_inventory'))
 
@@ -733,38 +628,40 @@ def update_product(id):
 def add_product():
     title = request.form.get('title')
     category = request.form.get('category')
-    
     stores = request.form.getlist('stores[]')
     store_str = ",".join(stores) if stores else "toy"
     discount_percent = float(request.form.get('discount_percent', 0.0) or 0.0)
     
-    # --- NEW: Custom Thumbnail Logic ---
-    use_custom_thumb = request.form.get('use_custom_thumbnail') == 'true'
+    use_custom_thumb = str(request.form.get('use_custom_thumbnail')).lower() == 'true'
     thumb_file = request.files.get('thumbnail')
     thumbnail_url = ""
     if use_custom_thumb and thumb_file and thumb_file.filename != '':
-        thumbnail_url = optimize_and_upload(thumb_file)['secure_url']
+        try:
+            res = optimize_and_upload(thumb_file)
+            if res and 'secure_url' in res:
+                thumbnail_url = res['secure_url']
+        except: pass
     
     v_names = request.form.getlist('variant_names[]')
     v_prices = request.form.getlist('variant_prices[]')
     v_stocks = request.form.getlist('variant_stocks[]')
     v_categories = request.form.getlist('variant_categories[]')
-    v_discounts = request.form.getlist('variant_discounts[]') # Variant Discounts
+    v_discounts = request.form.getlist('variant_discounts[]')
     
     files = request.files.getlist('images')
     uploaded_urls = []
-    try:
-        for f in files:
-            if f and f.filename != '': uploaded_urls.append(optimize_and_upload(f)['secure_url'])
-    except: pass
+    for f in files:
+        if f and f.filename != '': 
+            try: uploaded_urls.append(optimize_and_upload(f)['secure_url'])
+            except: pass
     
-    # --- NEW: Detail Images (View Only Gallery) ---
     detail_files = request.files.getlist('detail_images')
     detail_urls = []
-    try:
+    if detail_files and detail_files[0].filename != '':
         for df in detail_files:
-            if df and df.filename != '': detail_urls.append(optimize_and_upload(df)['secure_url'])
-    except: pass
+            if df and df.filename != '': 
+                try: detail_urls.append(optimize_and_upload(df)['secure_url'])
+                except: pass
 
     if uploaded_urls:
         vars_json = []
@@ -774,7 +671,6 @@ def add_product():
             stock = int(v_stocks[i]) if i < len(v_stocks) else 0
             cat_str = v_categories[i] if i < len(v_categories) else category
             v_disc = float(v_discounts[i]) if i < len(v_discounts) else 0.0
-            
             vars_json.append({
                 "id": i, "name": v_names[i] if i < len(v_names) else f"Style {i+1}", 
                 "price": price, "stock": stock, "image": url, "category": cat_str, "discount_percent": v_disc
@@ -807,33 +703,12 @@ def get_api(store_name):
                 "id": p.id, "title": p.title, "price": p.price, "stock": p.stock, "category": p.category, 
                 "thumbnail": p.image, "discount_percent": getattr(p, 'discount_percent', 0.0), 
                 "use_custom_thumbnail": getattr(p, 'use_custom_thumbnail', False),
-                "detail_images": json.loads(p.detail_images) if getattr(p, 'detail_images', None) else [],
-                "variants": json.loads(p.variants) if p.variants else []
+                "detail_images": parse_json_list(getattr(p, 'detail_images', '[]')),
+                "variants": parse_json_list(p.variants)
             } for p in products],
             "categories": [{"name": c.name, "image": c.image} for c in categories]
         })
     except Exception as e: return jsonify({"error": str(e)}), 500
-
-# --- 7. GAME API & REWARD SYSTEM ---
-
-def get_player():
-    if 'player_id' not in session:
-        new_id = str(random.randint(10000000, 99999999))
-        session['player_id'] = new_id
-        db.session.add(PlayerSession(player_id=new_id, balance=0))
-        db.session.commit()
-    
-    player = PlayerSession.query.filter_by(player_id=session['player_id']).first()
-    if not player:
-        player = PlayerSession(player_id=session['player_id'], balance=0)
-        db.session.add(player)
-        db.session.commit()
-    return player
-
-@app.route('/api/spin/balance', methods=['GET'])
-def get_balance():
-    player = get_player()
-    return jsonify({"balance": player.balance, "player_id": player.player_id})
 
 @app.route('/api/spin/redeem', methods=['POST'])
 def redeem_riel_code():
@@ -905,19 +780,10 @@ def get_live_pool():
     return jsonify({"pool": [{"id": i.id, "name": i.name, "image": i.image, "rarity": i.rarity, "stock": i.stock} for i in items]})
 
 # --- 8. SPINNER ADMIN ROUTES ---
-
 @app.route('/admin/spin/update_rewards', methods=['POST'])
 @login_required
 def update_spin_rewards():
-    data = {
-        "0": float(request.form.get("pct_0", 50)),
-        "500": float(request.form.get("pct_500", 20)),
-        "1000": float(request.form.get("pct_1000", 15)),
-        "2000": float(request.form.get("pct_2000", 10)),
-        "5000": float(request.form.get("pct_5000", 3)),
-        "10000": float(request.form.get("pct_10000", 1.5)),
-        "50000": float(request.form.get("pct_50000", 0.5)),
-    }
+    data = { "0": float(request.form.get("pct_0", 50)), "500": float(request.form.get("pct_500", 20)), "1000": float(request.form.get("pct_1000", 15)), "2000": float(request.form.get("pct_2000", 10)), "5000": float(request.form.get("pct_5000", 3)), "10000": float(request.form.get("pct_10000", 1.5)), "50000": float(request.form.get("pct_50000", 0.5)) }
     save_reward_config(data)
     flash('5x Spin Probabilities updated!', 'success')
     return redirect(url_for('admin_spin'))
@@ -1041,16 +907,13 @@ def request_entity_too_large(error): return redirect(request.referrer)
 
 with app.app_context():
     db.create_all()
-    # Safely inject missing columns to prevent crashes
+    # Add new columns gracefully
     try: db.session.execute(text('ALTER TABLE "order" ADD COLUMN promo_code_used VARCHAR(50)')); db.session.commit()
     except: db.session.rollback()
-    
     try: db.session.execute(text('ALTER TABLE product ADD COLUMN discount_percent FLOAT DEFAULT 0.0')); db.session.commit()
     except: db.session.rollback()
-    
     try: db.session.execute(text('ALTER TABLE product ADD COLUMN use_custom_thumbnail BOOLEAN DEFAULT 0')); db.session.commit()
     except: db.session.rollback()
-    
     try: db.session.execute(text('ALTER TABLE product ADD COLUMN detail_images TEXT')); db.session.commit()
     except: db.session.rollback()
 
