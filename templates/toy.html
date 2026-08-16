@@ -277,8 +277,7 @@
             let cats = new Set(['All']);
             allProducts.forEach(p => {
                 if(p.category) p.category.split(',').forEach(c => { const trimmed = c.trim(); if (trimmed) cats.add(trimmed); });
-                let variants = p.parsed_variants || [];
-                if(variants.length === 0 && p.variants) try { variants = typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants; } catch(e){}
+                let variants = p.variants || [];
                 variants.forEach(v => {
                     if(v.category) v.category.split(',').forEach(c => { const trimmed = c.trim(); if (trimmed) cats.add(trimmed); });
                 });
@@ -310,28 +309,43 @@
                 const targetCatLower = activeCategory.toLowerCase();
                 filtered = filtered.filter(p => {
                     if (p.category && p.category.split(',').map(c => c.trim().toLowerCase()).includes(targetCatLower)) return true;
-                    let variants = p.parsed_variants || [];
-                    if(variants.length === 0 && p.variants) try { variants = typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants; } catch(e){}
-                    return variants.some(v => v.category && v.category.split(',').map(c => c.trim().toLowerCase()).includes(targetCatLower));
+                    return p.variants.some(v => v.category && v.category.split(',').map(c => c.trim().toLowerCase()).includes(targetCatLower));
                 });
             }
 
+            // CRITICAL FIX: Custom Thumbnail logic properly prioritized.
+            filtered = filtered.map(p => {
+                let displayImage = p.thumbnail;
+                let matchedVariantIndex = 0;
+                let variants = p.variants || [];
+                
+                if (currentSearchQuery.trim() !== '') {
+                    const q = currentSearchQuery.toLowerCase().trim();
+                    const vIndex = variants.findIndex(v => v.name && v.name.toLowerCase().includes(q));
+                    if (vIndex !== -1) { 
+                        matchedVariantIndex = vIndex; 
+                        displayImage = variants[vIndex].image || displayImage; 
+                    } else if (p.use_custom_thumbnail) {
+                        displayImage = p.thumbnail;
+                    } else if (variants.length > 0) {
+                        displayImage = variants[0].image || p.thumbnail;
+                    }
+                } else {
+                    if (p.use_custom_thumbnail) {
+                        displayImage = p.thumbnail;
+                    } else if (variants.length > 0) {
+                        displayImage = variants[0].image || p.thumbnail;
+                    }
+                }
+                return { ...p, displayImage, matchedVariantIndex };
+            });
+
             if (currentSearchQuery.trim() !== '') {
                 const q = currentSearchQuery.toLowerCase().trim();
-                filtered = filtered.reduce((acc, p) => {
-                    let variants = p.parsed_variants || [];
-                    if(variants.length === 0 && p.variants) try { variants = typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants; } catch(e){}
-                    let matchedVariantIndex = 0; let displayImage = p.image || p.thumbnail; let isMatch = false;
-
-                    const vIndex = variants.findIndex(v => v.name && v.name.toLowerCase().includes(q));
-                    if (vIndex !== -1) { isMatch = true; matchedVariantIndex = vIndex; displayImage = variants[vIndex].image || displayImage; } 
-                    else if ((p.title && p.title.toLowerCase().includes(q)) || (p.category && p.category.toLowerCase().includes(q))) { isMatch = true; }
-
-                    if (isMatch) acc.push({ ...p, displayImage, matchedVariantIndex });
-                    return acc;
-                }, []);
-            } else {
-                filtered = filtered.map(p => ({ ...p, displayImage: p.image || p.thumbnail, matchedVariantIndex: 0 }));
+                filtered = filtered.filter(p => {
+                    const titleMatch = (p.title && p.title.toLowerCase().includes(q)) || (p.category && p.category.toLowerCase().includes(q));
+                    return titleMatch || p.matchedVariantIndex > 0 || (p.variants && p.variants[0] && p.variants[0].name && p.variants[0].name.toLowerCase().includes(q));
+                });
             }
 
             const grid = document.getElementById('product-grid');
@@ -345,13 +359,10 @@
             }
             
             grid.innerHTML = filtered.map((p, index) => {
-                let variants = p.parsed_variants || [];
-                if(variants.length === 0 && p.variants) try { variants = typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants; } catch(e){}
-                
+                let variants = p.variants || [];
                 const vIndex = p.matchedVariantIndex || 0;
-                let image = p.displayImage || (variants.length > 0 ? variants[0].image : p.image);
+                let image = p.displayImage;
                 
-                // CRUCIAL CALCULATION: Does this variant have its own % discount?
                 let vDiscount = variants.length > 0 ? parseFloat(variants[vIndex].discount_percent) || 0 : 0;
                 let mDiscount = parseFloat(p.discount_percent) || 0;
                 let finalDiscountPercent = vDiscount > 0 ? vDiscount : mDiscount; 
@@ -412,22 +423,28 @@
             modalQty = 1;
             document.getElementById('modal-qty').innerText = modalQty;
             
-            let variants = currentModalProduct.parsed_variants || [];
-            if(variants.length === 0 && currentModalProduct.variants) try { variants = typeof currentModalProduct.variants === 'string' ? JSON.parse(currentModalProduct.variants) : currentModalProduct.variants; } catch(e){}
-            if(!variants || variants.length === 0) variants = [{ name: "Standard", price: currentModalProduct.price, stock: currentModalProduct.stock, image: currentModalProduct.image || currentModalProduct.thumbnail }];
+            let variants = currentModalProduct.variants || [];
+            if(!variants || variants.length === 0) variants = [{ name: "Standard", price: currentModalProduct.price, stock: currentModalProduct.stock, image: currentModalProduct.thumbnail }];
             currentModalProduct._activeVariants = variants;
 
             let allImages = [];
             // 1. Add Thumbnail if Custom Toggle is On
-            if (currentModalProduct.use_custom_thumbnail && currentModalProduct.image) allImages.push(currentModalProduct.image);
+            if (currentModalProduct.use_custom_thumbnail && currentModalProduct.thumbnail) {
+                allImages.push(currentModalProduct.thumbnail);
+            }
             
             // 2. Add Variant Photos
-            variants.forEach(v => { if (v.image && !allImages.includes(v.image)) allImages.push(v.image); });
+            variants.forEach(v => { 
+                if (v.image && !allImages.includes(v.image)) allImages.push(v.image); 
+            });
             
             // 3. Add View-Only Detail Images (Gallery)
             if (currentModalProduct.detail_images && Array.isArray(currentModalProduct.detail_images)) {
-                currentModalProduct.detail_images.forEach(img => { if (!allImages.includes(img)) allImages.push(img); });
+                currentModalProduct.detail_images.forEach(img => { 
+                    if (img && !allImages.includes(img)) allImages.push(img); 
+                });
             }
+            
             if (allImages.length === 0) allImages.push('https://via.placeholder.com/400');
             currentModalProduct._allDetailImages = allImages;
 
@@ -435,7 +452,7 @@
             carousel.innerHTML = allImages.map((imgUrl, idx) => `
                 <div class="min-w-full h-full snap-center flex items-center justify-center p-3 relative">
                     <img src="${imgUrl}" class="max-w-full max-h-full object-contain mix-blend-multiply">
-                    ${idx === 0 ? '<span class="absolute top-3 left-3 bg-black/60 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow-sm">Preview</span>' : `<span class="absolute top-3 left-3 bg-blue-600/90 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow-sm">Gallery Image #${idx}</span>`}
+                    ${idx === 0 ? '<span class="absolute top-3 left-3 bg-black/60 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow-sm">Preview</span>' : `<span class="absolute top-3 left-3 bg-blue-600/90 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow-sm">Gallery Photo #${idx}</span>`}
                 </div>
             `).join('');
 
@@ -444,7 +461,7 @@
 
             const grid = document.getElementById('variant-grid');
             grid.innerHTML = variants.map((v, i) => {
-                const img = v.image || currentModalProduct.image || currentModalProduct.thumbnail;
+                const img = v.image || currentModalProduct.thumbnail;
                 const name = v.name || `Style ${i + 1}`;
                 return `
                 <div onclick="selectVariant(${i})" id="var-btn-${i}" class="variant-btn w-full flex flex-col items-center p-1 border-2 rounded-[10px] cursor-pointer transition-all bg-white border-gray-100 hover:border-gray-300 relative group shadow-sm">
@@ -479,6 +496,7 @@
             if (isModalImageScrolling) return; 
             clearTimeout(modalScrollTimeout);
             modalScrollTimeout = setTimeout(() => {
+                // If they scroll to an index that aligns with a variant, select it
                 if (index !== currentVariantIndex && index >= 0 && index < currentModalProduct._activeVariants.length) {
                     updateVariantUIOnly(index, false);
                 }
@@ -541,12 +559,17 @@
                 stockLabel.innerHTML = `Out of Stock`;
             }
             
+            // Only scroll the image if requested, AND if there isn't a custom thumbnail pushing index 0.
             if (scrollImage && variants.length > 1) {
                 isModalImageScrolling = true;
                 const carousel = document.getElementById('modal-image-carousel');
                 if (carousel) {
-                    carousel.scrollTo({ left: carousel.clientWidth * idx, behavior: 'smooth' });
-                    setTimeout(() => carousel.scrollTo({ left: carousel.clientWidth * idx, behavior: 'auto' }), 50); 
+                    let targetScrollIndex = idx;
+                    if (currentModalProduct.use_custom_thumbnail && currentModalProduct.thumbnail) {
+                        targetScrollIndex = idx + 1; // offset by 1 because thumbnail is at index 0
+                    }
+                    carousel.scrollTo({ left: carousel.clientWidth * targetScrollIndex, behavior: 'smooth' });
+                    setTimeout(() => carousel.scrollTo({ left: carousel.clientWidth * targetScrollIndex, behavior: 'auto' }), 50); 
                 }
                 setTimeout(() => { isModalImageScrolling = false; }, 400); 
             }
@@ -572,9 +595,7 @@
             const grid = document.getElementById('recommendations-grid');
             
             grid.innerHTML = shuffled.slice(0, 4).map(p => {
-                let variants = p.parsed_variants || [];
-                if(variants.length === 0 && p.variants) try { variants = typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants; } catch(e){}
-                
+                let variants = p.variants || [];
                 let vDiscount = variants.length > 0 ? parseFloat(variants[0].discount_percent) || 0 : 0;
                 let mDiscount = parseFloat(p.discount_percent) || 0;
                 let finalDiscountPercent = vDiscount > 0 ? vDiscount : mDiscount; 
@@ -583,7 +604,7 @@
                 let finalPriceUSD = finalDiscountPercent > 0 ? basePriceUSD - (basePriceUSD * finalDiscountPercent / 100) : basePriceUSD;
                 let badgeHtml = finalDiscountPercent > 0 ? `<div class="absolute top-1 right-1 z-10 bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm leading-none">-${Math.round(finalDiscountPercent)}%</div>` : '';
 
-                const image = p.image || p.thumbnail;
+                const image = p.use_custom_thumbnail ? p.thumbnail : (variants.length > 0 ? variants[0].image : p.thumbnail);
                 return `
                 <div onclick="swapToRecommendation(${p.id})" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-all hover:border-[#ea580c] group relative">
                     ${badgeHtml}
@@ -610,7 +631,7 @@
         function addToCartFromModal() {
             if(!currentModalProduct) return;
             const variants = currentModalProduct._activeVariants; const v = variants[currentVariantIndex];
-            const hasTrueVariants = (currentModalProduct.parsed_variants && currentModalProduct.parsed_variants.length > 0) || (currentModalProduct.variants && currentModalProduct.variants.length > 0);
+            const hasTrueVariants = (currentModalProduct.variants && currentModalProduct.variants.length > 0);
             const dbId = hasTrueVariants ? `${currentModalProduct.id}-${currentVariantIndex}` : `${currentModalProduct.id}-0`;
             
             let vDiscount = parseFloat(v.discount_percent) || 0;
@@ -620,7 +641,7 @@
             let basePriceUSD = parseFloat(v.price || currentModalProduct.price);
             let finalPriceUSD = finalDiscountPercent > 0 ? basePriceUSD - (basePriceUSD * finalDiscountPercent / 100) : basePriceUSD;
             
-            const thumbnailImage = v.image || currentModalProduct.image || currentModalProduct.thumbnail;
+            const thumbnailImage = v.image || currentModalProduct.thumbnail;
             const stock = parseInt(v.stock !== undefined ? v.stock : currentModalProduct.stock);
             const styleName = v.name || (hasTrueVariants ? `Style ${currentVariantIndex + 1}` : "Standard");
 
@@ -643,7 +664,7 @@
 
         function openFullscreenViewer() {
             if(!currentModalProduct) return;
-            const src = currentModalProduct._allDetailImages ? currentModalProduct._allDetailImages[0] : (currentModalProduct.image || currentModalProduct.thumbnail);
+            const src = currentModalProduct._allDetailImages ? currentModalProduct._allDetailImages[0] : currentModalProduct.thumbnail;
             if (src) openImageViewer(src);
         }
 
