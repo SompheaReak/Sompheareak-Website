@@ -29,14 +29,6 @@ def optimize_and_upload(file):
         file, format="webp", quality="auto", width=900, height=900, crop="limit"
     )
 
-def parse_json_list(val):
-    if not val: return []
-    try:
-        res = json.loads(val)
-        return res if isinstance(res, list) else []
-    except:
-        return []
-
 # --- 2. PERMANENT DATABASE CONFIG ---
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///fallback.db')
 if db_url.startswith("postgres://"):
@@ -44,7 +36,9 @@ if db_url.startswith("postgres://"):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = { "pool_pre_ping": True, "pool_recycle": 300, "pool_timeout": 30 }
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True, "pool_recycle": 300, "pool_timeout": 30      
+}
 
 db = SQLAlchemy(app)
 
@@ -76,6 +70,7 @@ class Product(db.Model):
     sort_order = db.Column(db.Integer, default=0)
     is_visible = db.Column(db.Boolean, default=True)
     discount_percent = db.Column(db.Float, default=0.0) 
+    # NEW FIELDS:
     use_custom_thumbnail = db.Column(db.Boolean, default=False)
     detail_images = db.Column(db.Text, nullable=True)
 
@@ -600,7 +595,11 @@ def update_product(id):
                 except: pass
     
     # Detail (View Only) Images Logic 
-    detail_urls = parse_json_list(getattr(p, 'detail_images', '[]'))
+    d_list = []
+    try: 
+        if getattr(p, 'detail_images', None): d_list = json.loads(p.detail_images)
+    except: pass
+
     new_detail_files = request.files.getlist('new_detail_images')
     if new_detail_files and new_detail_files[0].filename != '':
         for df in new_detail_files:
@@ -608,11 +607,11 @@ def update_product(id):
                 try:
                     upload_result = optimize_and_upload(df)
                     if upload_result and 'secure_url' in upload_result:
-                        detail_urls.append(upload_result['secure_url'])
+                        d_list.append(upload_result['secure_url'])
                 except Exception as e:
                     print(f"Error uploading detail image: {e}")
                     pass
-    p.detail_images = json.dumps(detail_urls)
+    p.detail_images = json.dumps(d_list)
 
     p.variants = json.dumps(updated_variants)
     p.stock = total_stock
@@ -692,23 +691,53 @@ def add_product():
         db.session.commit()
     return redirect(url_for('admin_inventory'))
 
+# =======================================================
+# FAIL-SAFE API (PREVENTS 500 ERRORS ON MISSING COLUMNS)
+# =======================================================
 @app.route('/api/products/<store_name>')
 def get_api(store_name):
     try:
         all_prods = Product.query.filter_by(is_visible=True).order_by(Product.sort_order.asc(), Product.id.desc()).all()
-        products = [p for p in all_prods if store_name in (p.store or '').split(',')]
+        
+        product_list = []
+        for p in all_prods:
+            if store_name not in (p.store or '').split(','):
+                continue
+            
+            # Safely Parse Variants
+            v_list = []
+            try:
+                if p.variants: v_list = json.loads(p.variants)
+            except: pass
+            
+            # Safely Parse Detail Images
+            d_list = []
+            try:
+                if getattr(p, 'detail_images', None): d_list = json.loads(p.detail_images)
+            except: pass
+            
+            product_list.append({
+                "id": p.id,
+                "title": p.title,
+                "price": p.price,
+                "stock": p.stock,
+                "category": p.category, 
+                "thumbnail": p.image,
+                "discount_percent": getattr(p, 'discount_percent', 0.0) or 0.0,
+                "use_custom_thumbnail": getattr(p, 'use_custom_thumbnail', False) or False,
+                "detail_images": d_list,
+                "variants": v_list
+            })
+            
         categories = Category.query.order_by(Category.sort_order.asc()).all()
         return jsonify({
-            "products": [{
-                "id": p.id, "title": p.title, "price": p.price, "stock": p.stock, "category": p.category, 
-                "thumbnail": p.image, "discount_percent": getattr(p, 'discount_percent', 0.0), 
-                "use_custom_thumbnail": getattr(p, 'use_custom_thumbnail', False),
-                "detail_images": parse_json_list(getattr(p, 'detail_images', '[]')),
-                "variants": parse_json_list(p.variants)
-            } for p in products],
+            "products": product_list,
             "categories": [{"name": c.name, "image": c.image} for c in categories]
         })
-    except Exception as e: return jsonify({"error": str(e)}), 500
+    except Exception as e: 
+        print(f"CRITICAL API ERROR: {str(e)}")
+        # Send empty payload instead of crashing the frontend
+        return jsonify({"products": [], "categories": [], "error": str(e)}), 200
 
 @app.route('/api/spin/redeem', methods=['POST'])
 def redeem_riel_code():
@@ -905,17 +934,24 @@ def admin_spin_delete_history(draw_id):
 @app.errorhandler(413)
 def request_entity_too_large(error): return redirect(request.referrer)
 
+# =======================================================
+# BULLETPROOF DATABASE SCHEMA BUILDER
+# =======================================================
 with app.app_context():
     db.create_all()
-    # Add new columns gracefully
-    try: db.session.execute(text('ALTER TABLE "order" ADD COLUMN promo_code_used VARCHAR(50)')); db.session.commit()
-    except: db.session.rollback()
-    try: db.session.execute(text('ALTER TABLE product ADD COLUMN discount_percent FLOAT DEFAULT 0.0')); db.session.commit()
-    except: db.session.rollback()
-    try: db.session.execute(text('ALTER TABLE product ADD COLUMN use_custom_thumbnail BOOLEAN DEFAULT 0')); db.session.commit()
-    except: db.session.rollback()
-    try: db.session.execute(text('ALTER TABLE product ADD COLUMN detail_images TEXT')); db.session.commit()
-    except: db.session.rollback()
+    # Execute Raw SQL to force-add columns safely
+    queries = [
+        'ALTER TABLE "order" ADD COLUMN promo_code_used VARCHAR(50)',
+        'ALTER TABLE product ADD COLUMN discount_percent FLOAT DEFAULT 0.0',
+        'ALTER TABLE product ADD COLUMN use_custom_thumbnail BOOLEAN DEFAULT FALSE',
+        'ALTER TABLE product ADD COLUMN detail_images TEXT'
+    ]
+    for q in queries:
+        try:
+            db.session.execute(text(q))
+            db.session.commit()
+        except:
+            db.session.rollback()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
