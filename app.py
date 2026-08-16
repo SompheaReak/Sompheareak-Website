@@ -6,7 +6,7 @@ import string
 import uuid
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, render_template_string
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 import cloudinary
@@ -66,11 +66,11 @@ class Product(db.Model):
     stock = db.Column(db.Integer, default=0) 
     image = db.Column(db.String(500), nullable=False) 
     category = db.Column(db.String(100), nullable=False)
-    store = db.Column(db.String(100), nullable=False) # Supports comma-separated stores e.g. "minifigure,toy"
+    store = db.Column(db.String(100), nullable=False) 
     variants = db.Column(db.Text, nullable=True)
     sort_order = db.Column(db.Integer, default=0)
     is_visible = db.Column(db.Boolean, default=True)
-    discount_percent = db.Column(db.Float, default=0.0) # Discount % e.g. 10.0 for 10% off
+    discount_percent = db.Column(db.Float, default=0.0) 
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -88,6 +88,19 @@ class Order(db.Model):
     total_usd = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default="Pending")
     stock_deducted = db.Column(db.Boolean, default=False)
+    promo_code_used = db.Column(db.String(50), nullable=True) # Tracks which code was used
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+# NEW: Storefront Redeem Codes Model
+class PromoCode(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    discount_type = db.Column(db.String(20), nullable=False) 
+    discount_value = db.Column(db.Float, nullable=False)
+    min_order_value = db.Column(db.Float, default=0.0)
+    max_uses = db.Column(db.Integer, default=0)
+    current_uses = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 # --- 4. SPINNER GAME MODELS ---
@@ -96,7 +109,7 @@ class PlayerSession(db.Model):
     player_id = db.Column(db.String(8), unique=True, nullable=False) 
     balance = db.Column(db.Integer, default=0)
 
-class RedeemCode(db.Model):
+class RedeemCode(db.Model): # Note: This is for Spin Riel Codes
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(8), unique=True, nullable=False)
     value = db.Column(db.Integer, nullable=False)  
@@ -204,10 +217,12 @@ def inject_global_data():
         products = Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
         for p in products: p.parsed_variants = json.loads(p.variants) if p.variants else []
         categories = Category.query.order_by(Category.sort_order).all()
+        promo_codes = PromoCode.query.order_by(PromoCode.timestamp.desc()).all()
         pending_count = Order.query.filter_by(status='Pending').count()
         return dict(
             global_products=products,
             global_categories=categories,
+            global_redeem_codes=promo_codes,
             pending_count=pending_count
         )
     return dict()
@@ -215,31 +230,112 @@ def inject_global_data():
 # --- 5. PUBLIC & STORE ROUTES ---
 @app.route('/')
 def index(): return render_template('index.html')
-
 @app.route('/toy-universe')
 def toy_universe(): return render_template('toy.html')
-
 @app.route('/lego')
 def lego_store(): return render_template('lego.html')
-
 @app.route('/bracelet')
 def shop(): return render_template('bracelet.html')
-
 @app.route('/custom-bracelet')
 def custom_bracelet(): return render_template('custom_bracelet.html')
-
 @app.route('/minifigure')
-def minifigure_store(): 
-    return render_template('minifigure.html')
-
+def minifigure_store(): return render_template('minifigure.html')
 @app.route('/mystery-box')
 @app.route('/lucky-draw')
 @app.route('/spin')
-def mystery_box(): 
-    return render_template('lucky_draw.html')
+def mystery_box(): return render_template('lucky_draw.html')
 
-@app.route('/api/checkout', methods=['POST'])
-def checkout():
+# ========================================================
+# NEW FULL CHECKOUT FLOW (Handles cart.html form submission)
+# ========================================================
+@app.route('/checkout', methods=['POST'])
+def checkout_page():
+    cart_data_raw = request.form.get('cart_data', '[]')
+    redeem_code = request.form.get('applied_redeem_code', '').strip().upper()
+    
+    try: cart_items = json.loads(cart_data_raw)
+    except: cart_items = []
+        
+    if not cart_items:
+        return redirect(url_for('index'))
+        
+    subtotal = sum(float(item.get('price', 0)) * int(item.get('qty', 1)) for item in cart_items)
+    discount_amount = 0
+    
+    if redeem_code:
+        promo = PromoCode.query.filter_by(code=redeem_code, is_active=True).first()
+        if promo and (promo.max_uses == 0 or promo.current_uses < promo.max_uses):
+            if subtotal >= promo.min_order_value:
+                if promo.discount_type == 'percent':
+                    discount_amount = subtotal * (promo.discount_value / 100.0)
+                elif promo.discount_type == 'flat':
+                    discount_amount = promo.discount_value
+
+    final_total = max(0, subtotal - discount_amount)
+    
+    checkout_html = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Secure Checkout</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet">
+    </head>
+    <body class="bg-slate-50 text-slate-800 p-4 md:p-10 font-['Plus_Jakarta_Sans']">
+        <div class="max-w-2xl mx-auto bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-slate-100">
+            <h1 class="text-2xl font-black text-slate-900 mb-6 flex items-center gap-2"><svg class="w-6 h-6 text-[#ff5000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> Secure Checkout</h1>
+            
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 space-y-1">
+                <div class="flex justify-between items-center text-sm font-bold text-slate-500">
+                    <span>Subtotal</span><span>${{ "%.2f"|format(subtotal) }}</span>
+                </div>
+                {% if discount_amount > 0 %}
+                <div class="flex justify-between items-center text-sm font-bold text-emerald-500">
+                    <span>Discount Code ({{ redeem_code }})</span><span>-${{ "%.2f"|format(discount_amount) }}</span>
+                </div>
+                {% endif %}
+                <div class="flex justify-between items-end mt-2 border-t border-slate-200 pt-3">
+                    <span class="text-xs font-black uppercase text-slate-900 tracking-wider">Total</span>
+                    <div class="text-right">
+                        <span class="text-xl font-black text-[#ff5000] leading-none block">${{ "%.2f"|format(final_total) }}</span>
+                        <span class="text-[10px] font-bold text-slate-400 block">{{ (final_total * 4000)|int }} ៛</span>
+                    </div>
+                </div>
+            </div>
+            
+            <form action="/place_order" method="POST" class="space-y-4">
+                <input type="hidden" name="cart_data" value="{{ cart_data_raw }}">
+                <input type="hidden" name="promo_code_used" value="{{ redeem_code if discount_amount > 0 else '' }}">
+                <input type="hidden" name="final_total" value="{{ final_total }}">
+                
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider pl-1 block mb-1">Full Name</label>
+                    <input type="text" name="name" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#ff5000] focus:ring-2 focus:ring-orange-500/10">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider pl-1 block mb-1">Phone Number</label>
+                    <input type="tel" name="phone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#ff5000] focus:ring-2 focus:ring-orange-500/10">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider pl-1 block mb-1">Delivery Address</label>
+                    <textarea name="address" rows="3" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-[#ff5000] focus:ring-2 focus:ring-orange-500/10"></textarea>
+                </div>
+                
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="history.back()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all">Cancel</button>
+                    <button type="submit" class="w-2/3 bg-[#ff5000] hover:bg-orange-600 text-white py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg shadow-orange-500/20 transition-all">Confirm Order</button>
+                </div>
+            </form>
+        </div>
+    </body>
+    </html>
+    """
+    return render_template_string(checkout_html, subtotal=subtotal, discount_amount=discount_amount, final_total=final_total, redeem_code=redeem_code, cart_data_raw=cart_data_raw)
+
+@app.route('/place_order', methods=['POST'])
+def place_order():
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     if client_ip and ',' in client_ip: client_ip = client_ip.split(',')[0].strip()
         
@@ -247,11 +343,49 @@ def checkout():
     if client_ip in spam_tracker:
         last_time, count = spam_tracker[client_ip]
         if current_time - last_time < 300:
-            if count >= 2: return jsonify({'status': 'error', 'message': 'Too many orders. Try again in 5 minutes.'}), 429
+            if count >= 2: return "Too many orders. Please try again in 5 minutes.", 429
             spam_tracker[client_ip] = (last_time, count + 1)
         else: spam_tracker[client_ip] = (current_time, 1)
     else: spam_tracker[client_ip] = (current_time, 1)
 
+    name = request.form.get('name')
+    phone = request.form.get('phone')
+    address = request.form.get('address')
+    cart_data = request.form.get('cart_data')
+    promo_code = request.form.get('promo_code_used')
+    final_total = float(request.form.get('final_total', 0))
+    
+    try:
+        new_order = Order(
+            customer_name=name, customer_phone=phone, customer_address=address,
+            items_json=cart_data, total_usd=final_total, status="Pending",
+            promo_code_used=promo_code
+        )
+        db.session.add(new_order)
+        db.session.commit()
+        
+        success_html = """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head><title>Success</title><script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet"></head>
+        <body class="bg-slate-50 flex items-center justify-center min-h-screen text-center p-4 font-['Plus_Jakarta_Sans']">
+            <div class="max-w-md w-full bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+                <div class="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg></div>
+                <h1 class="text-2xl font-black text-slate-900 mb-2">Order Confirmed!</h1>
+                <p class="text-sm font-bold text-slate-500 mb-8">We have received your order #{{ order_id }}. We will contact you shortly.</p>
+                <a href="/" class="block w-full bg-[#ff5000] text-white px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg shadow-orange-500/20">Return to Homepage</a>
+            </div>
+            <script>localStorage.removeItem('universal_store_cart');</script>
+        </body>
+        </html>
+        """
+        return render_template_string(success_html, order_id=new_order.id)
+    except Exception as e:
+        return f"Error: {str(e)}", 400
+
+# (Legacy API Checkout left for backwards compatibility if old scripts call it)
+@app.route('/api/checkout', methods=['POST'])
+def checkout():
     data = request.json
     try:
         new_order = Order(
@@ -300,7 +434,6 @@ def admin_inventory():
             for sub_cat in c_name.split(','):
                 sub_cat = sub_cat.strip()
                 if sub_cat and sub_cat != "Other" and not Category.query.filter_by(name=sub_cat).first():
-                    # Defaulting to toy, but logic holds fine
                     db.session.add(Category(name=sub_cat, store="toy", sort_order=999))
     db.session.commit()
     
@@ -325,6 +458,49 @@ def admin_spin():
     history = DrawHistory.query.order_by(DrawHistory.timestamp_utc.desc()).limit(100).all()
     reward_config = get_reward_config()
     return render_template('admin/spin.html', codes=codes, pool=pool, history=history, reward_config=reward_config)
+
+# ==========================================
+# NEW ADMIN REDEEM ROUTES (For Promo Codes)
+# ==========================================
+@app.route('/admin/redeem')
+@login_required
+def admin_redeem():
+    return render_template('admin/redeem.html')
+
+@app.route('/admin/redeem/add', methods=['POST'])
+@login_required
+def add_promo_code():
+    code = request.form.get('code', '').strip().upper()
+    discount_type = request.form.get('discount_type')
+    discount_value = float(request.form.get('discount_value', 0))
+    min_order_value = float(request.form.get('min_order_value', 0))
+    max_uses = int(request.form.get('max_uses', 0))
+    
+    if PromoCode.query.filter_by(code=code).first():
+        flash('Code already exists!', 'error')
+    else:
+        new_code = PromoCode(code=code, discount_type=discount_type, discount_value=discount_value, min_order_value=min_order_value, max_uses=max_uses)
+        db.session.add(new_code)
+        db.session.commit()
+    return redirect(url_for('admin_redeem'))
+
+@app.route('/admin/redeem/toggle/<int:id>', methods=['POST'])
+@login_required
+def toggle_promo_code(id):
+    code = PromoCode.query.get(id)
+    if code:
+        code.is_active = not code.is_active
+        db.session.commit()
+    return redirect(url_for('admin_redeem'))
+
+@app.route('/admin/redeem/delete/<int:id>', methods=['POST'])
+@login_required
+def delete_promo_code(id):
+    code = PromoCode.query.get(id)
+    if code:
+        db.session.delete(code)
+        db.session.commit()
+    return redirect(url_for('admin_redeem'))
 
 
 # --- ADMIN API & FORM ACTIONS ---
@@ -361,7 +537,8 @@ def update_order_status(id, status):
             try:
                 items = json.loads(order.items_json)
                 for item in items:
-                    parts = str(item.get('cartId', '')).split('-')
+                    # Look for variantId which comes from the new cart.html
+                    parts = str(item.get('variantId', item.get('cartId', ''))).split('-')
                     if len(parts) >= 2:
                         p_id = int(parts[0])
                         v_idx = int(parts[1])
@@ -379,6 +556,12 @@ def update_order_status(id, status):
                                 product.stock = max(0, product.stock - qty_bought)
                                 _sync_product_to_pool(p_id, -1, product.stock)
             except: pass
+            
+            # --- INCREASE PROMO CODE CURRENT USAGE ON CONFIRMATION ---
+            if order.promo_code_used:
+                promo = PromoCode.query.filter_by(code=order.promo_code_used).first()
+                if promo: promo.current_uses += 1
+
             order.stock_deducted = True
 
         order.status = status
@@ -795,6 +978,9 @@ def request_entity_too_large(error): return redirect(request.referrer)
 
 with app.app_context():
     db.create_all()
+    # Add new columns gracefully if they don't exist
+    try: db.session.execute(text('ALTER TABLE "order" ADD COLUMN promo_code_used VARCHAR(50)')); db.session.commit()
+    except: db.session.rollback()
     try: db.session.execute(text('ALTER TABLE product ADD COLUMN discount_percent FLOAT DEFAULT 0.0')); db.session.commit()
     except: db.session.rollback()
 
