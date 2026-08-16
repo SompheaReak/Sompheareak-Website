@@ -225,11 +225,14 @@
             document.getElementById('loadingOverlay').style.display = 'flex';
             try {
                 const res = await fetch('/api/products/toy');
-                if(!res.ok) throw new Error("API not accessible.");
+                if(!res.ok) throw new Error("API Connection Failed.");
                 const data = await res.json();
-                allProducts = data.products.filter(p => p.is_visible !== false && p.is_visible !== 0);
+                
+                // Extremely safe assignment to prevent crashes if 'products' is undefined.
+                allProducts = (data.products || []).filter(p => p.is_visible !== false && p.is_visible !== 0);
             } catch (e) {
-                console.warn("Using mock data.", e);
+                console.error("API Error - Could not load products", e);
+                allProducts = []; // Failsafe empty array
             } finally {
                 document.getElementById('loadingOverlay').style.display = 'none';
             }
@@ -276,8 +279,10 @@
         function renderCategoryFilters() {
             let cats = new Set(['All']);
             allProducts.forEach(p => {
-                if(p.category) p.category.split(',').forEach(c => { const trimmed = c.trim(); if (trimmed) cats.add(trimmed); });
-                let variants = p.variants || [];
+                if(p.category) {
+                    p.category.split(',').forEach(c => { const trimmed = c.trim(); if (trimmed) cats.add(trimmed); });
+                }
+                const variants = p.variants || [];
                 variants.forEach(v => {
                     if(v.category) v.category.split(',').forEach(c => { const trimmed = c.trim(); if (trimmed) cats.add(trimmed); });
                 });
@@ -309,19 +314,23 @@
                 const targetCatLower = activeCategory.toLowerCase();
                 filtered = filtered.filter(p => {
                     if (p.category && p.category.split(',').map(c => c.trim().toLowerCase()).includes(targetCatLower)) return true;
-                    return p.variants.some(v => v.category && v.category.split(',').map(c => c.trim().toLowerCase()).includes(targetCatLower));
+                    if (p.variants) {
+                        return p.variants.some(v => v.category && v.category.split(',').map(c => c.trim().toLowerCase()).includes(targetCatLower));
+                    }
+                    return false;
                 });
             }
 
-            // CRITICAL FIX: Custom Thumbnail logic properly prioritized.
+            // CRITICAL FIX: Ensure Thumbnail displays correctly!
             filtered = filtered.map(p => {
-                let displayImage = p.thumbnail;
+                let displayImage = p.thumbnail; // Safely mapped from 'image'
                 let matchedVariantIndex = 0;
                 let variants = p.variants || [];
                 
                 if (currentSearchQuery.trim() !== '') {
                     const q = currentSearchQuery.toLowerCase().trim();
                     const vIndex = variants.findIndex(v => v.name && v.name.toLowerCase().includes(q));
+                    
                     if (vIndex !== -1) { 
                         matchedVariantIndex = vIndex; 
                         displayImage = variants[vIndex].image || displayImage; 
@@ -344,7 +353,8 @@
                 const q = currentSearchQuery.toLowerCase().trim();
                 filtered = filtered.filter(p => {
                     const titleMatch = (p.title && p.title.toLowerCase().includes(q)) || (p.category && p.category.toLowerCase().includes(q));
-                    return titleMatch || p.matchedVariantIndex > 0 || (p.variants && p.variants[0] && p.variants[0].name && p.variants[0].name.toLowerCase().includes(q));
+                    const variantMatch = p.variants && p.variants.some(v => v.name && v.name.toLowerCase().includes(q));
+                    return titleMatch || p.matchedVariantIndex > 0 || variantMatch;
                 });
             }
 
@@ -428,17 +438,18 @@
             currentModalProduct._activeVariants = variants;
 
             let allImages = [];
-            // 1. Add Thumbnail if Custom Toggle is On
+            
+            // 1. Add Custom Thumbnail explicitly if available and activated
             if (currentModalProduct.use_custom_thumbnail && currentModalProduct.thumbnail) {
                 allImages.push(currentModalProduct.thumbnail);
             }
             
-            // 2. Add Variant Photos
+            // 2. Safely push Variant Photos
             variants.forEach(v => { 
                 if (v.image && !allImages.includes(v.image)) allImages.push(v.image); 
             });
             
-            // 3. Add View-Only Detail Images (Gallery)
+            // 3. Add Extra Gallery Pictures
             if (currentModalProduct.detail_images && Array.isArray(currentModalProduct.detail_images)) {
                 currentModalProduct.detail_images.forEach(img => { 
                     if (img && !allImages.includes(img)) allImages.push(img); 
@@ -496,9 +507,11 @@
             if (isModalImageScrolling) return; 
             clearTimeout(modalScrollTimeout);
             modalScrollTimeout = setTimeout(() => {
-                // If they scroll to an index that aligns with a variant, select it
-                if (index !== currentVariantIndex && index >= 0 && index < currentModalProduct._activeVariants.length) {
-                    updateVariantUIOnly(index, false);
+                let targetVariantIndex = index;
+                if (currentModalProduct.use_custom_thumbnail) targetVariantIndex = index - 1; 
+
+                if (targetVariantIndex !== currentVariantIndex && targetVariantIndex >= 0 && targetVariantIndex < currentModalProduct._activeVariants.length) {
+                    updateVariantUIOnly(targetVariantIndex, false);
                 }
             }, 50);
         }
@@ -559,7 +572,6 @@
                 stockLabel.innerHTML = `Out of Stock`;
             }
             
-            // Only scroll the image if requested, AND if there isn't a custom thumbnail pushing index 0.
             if (scrollImage && variants.length > 1) {
                 isModalImageScrolling = true;
                 const carousel = document.getElementById('modal-image-carousel');
@@ -664,7 +676,9 @@
 
         function openFullscreenViewer() {
             if(!currentModalProduct) return;
-            const src = currentModalProduct._allDetailImages ? currentModalProduct._allDetailImages[0] : currentModalProduct.thumbnail;
+            const src = currentModalProduct._allDetailImages && currentModalProduct._allDetailImages.length > 0 
+                ? currentModalProduct._allDetailImages[0] 
+                : currentModalProduct.thumbnail;
             if (src) openImageViewer(src);
         }
 
