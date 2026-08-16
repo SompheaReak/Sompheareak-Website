@@ -54,6 +54,15 @@
 {% endblock %}
 
 {% block content %}
+
+<!-- IMAGE VIEWER MODAL (Crucial for fullscreen view) -->
+<div id="image-viewer-modal" class="fixed inset-0 z-[9999] bg-slate-900/95 backdrop-blur-sm hidden flex-col items-center justify-center transition-opacity" onclick="closeImageViewer()">
+    <button type="button" onclick="closeImageViewer()" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
+        <i class="fa-solid fa-xmark text-xl"></i>
+    </button>
+    <img id="viewer-img" src="" class="max-w-[90%] max-h-[90%] object-contain rounded-xl shadow-2xl" onclick="event.stopPropagation()">
+</div>
+
 <div id="view-inventory" class="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6 pb-24 text-slate-800">
     
     <!-- ==================== LEFT COLUMN: QUICK UPLOAD FORM ==================== -->
@@ -114,7 +123,7 @@
                     </div>
                 </div>
 
-                <!-- 2. Custom Thumbnail Switcher (Catalog Display Only) -->
+                <!-- 2. Custom Thumbnail Switcher -->
                 <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/60 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
@@ -145,7 +154,7 @@
                     </div>
                 </div>
 
-                <!-- 3. Photo Upload Areas (Variants vs Detail Images) -->
+                <!-- 3. Photo Upload Areas -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <!-- Purchasable Variants -->
                     <div onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-[#ff5000]/60 rounded-2xl p-4 text-center bg-orange-50/50 hover:bg-orange-50 transition-all cursor-pointer group flex flex-col items-center justify-center h-full min-h-[140px]">
@@ -161,15 +170,17 @@
                     </div>
 
                     <!-- View-Only Detail Images -->
-                    <div onclick="document.getElementById('detail-file-input').click()" class="border-2 border-dashed border-purple-400/60 rounded-2xl p-4 text-center bg-purple-50/50 hover:bg-purple-50 transition-all cursor-pointer group flex flex-col items-center justify-center h-full min-h-[140px]">
+                    <div onclick="document.getElementById('detail-file-input').click()" class="border-2 border-dashed border-purple-400/60 rounded-2xl p-4 text-center bg-purple-50/50 hover:bg-purple-50 transition-all cursor-pointer group flex flex-col items-center justify-start h-full min-h-[140px]">
                         <input type="file" name="detail_images" id="detail-file-input" accept="image/*" multiple class="hidden" onchange="handleDetailSelect(this)">
-                        <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center mx-auto shadow-sm border border-purple-100 group-hover:scale-110 transition-transform">
+                        <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center mx-auto shadow-sm border border-purple-100 group-hover:scale-110 transition-transform mt-2">
                             <i class="fa-regular fa-images text-lg text-purple-500"></i>
                         </div>
                         <p class="text-[9px] font-black text-purple-600 mt-2.5 uppercase tracking-wider flex items-center justify-center gap-1">
                             Detail Images
                         </p>
                         <p class="text-[8px] font-semibold text-slate-400 mt-0.5" id="detail-count-text">Upload view-only gallery pics</p>
+                        <!-- Container for mini thumbnails previews -->
+                        <div id="detail-preview-container" class="flex flex-wrap gap-1.5 mt-3 justify-center hidden pointer-events-none w-full px-2"></div>
                     </div>
                 </div>
                 
@@ -177,7 +188,6 @@
                 <div id="variant-config" class="hidden space-y-2.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/60">
                     <span class="text-[10px] font-black text-slate-700 uppercase tracking-wider block">4. Configure Variants</span>
                     
-                    <!-- MAGIC BATCH SETUP -->
                     <div class="bg-blue-50/50 p-2.5 rounded-xl border border-blue-100 flex flex-col sm:flex-row gap-2 justify-between items-center mt-2 mb-2">
                         <span class="text-[9px] font-black text-blue-600 uppercase tracking-wider whitespace-nowrap"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Magic Batch</span>
                         <div class="flex gap-2 w-full sm:w-auto">
@@ -193,7 +203,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div id="variant-list" class="space-y-2.5 max-h-[40vh] overflow-y-auto pr-1 hide-scrollbar"></div>
                 </div>
 
@@ -225,14 +234,11 @@
         
         <!-- Search & Storefront Filter Bar -->
         <div class="bg-white border border-slate-200/80 p-2.5 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-3">
-            
-            <!-- Live Search Bar -->
             <div class="relative w-full md:w-72">
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                 <input type="text" id="inventory-search-input" oninput="filterProducts()" placeholder="Search title or ID..." class="input-field pl-9 w-full bg-slate-50 border-slate-200 text-xs">
             </div>
 
-            <!-- Store Filters -->
             <div class="flex items-center gap-1 overflow-x-auto hide-scrollbar w-full md:w-auto touch-pan-x">
                 <button onclick="filterStore('All')" id="flt-All" class="store-flt bg-slate-900 text-white px-3.5 py-2 text-[9px] font-extrabold uppercase rounded-xl transition-all whitespace-nowrap shadow-sm">All</button>
                 <button onclick="filterStore('toy')" id="flt-toy" class="store-flt text-slate-500 bg-slate-50 hover:bg-slate-100 px-3.5 py-2 text-[9px] font-extrabold uppercase rounded-xl transition-all whitespace-nowrap">Toys</button>
@@ -243,7 +249,6 @@
                 
                 <div class="h-5 w-px bg-slate-200 mx-1 shrink-0"></div>
 
-                <!-- Category Dropdown -->
                 <select id="category-filter" onchange="filterCategory()" class="input-field py-1.5 text-[9px] font-extrabold uppercase cursor-pointer shrink-0">
                     <option value="All">All Categories</option>
                     {% for cat in global_categories %}
@@ -258,7 +263,6 @@
             </div>
         </div>
 
-        <!-- Active Catalog Count Indicator -->
         <div class="flex items-center justify-between px-1">
             <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
                 Showing <span id="visible-item-count" class="text-slate-900 font-black">{{ global_products|length }}</span> Catalog Item(s)
@@ -278,12 +282,14 @@
                 <!-- VIEW CARD MODE -->
                 <div class="view-mode flex flex-col h-full">
                     
-                    <!-- Product Image Container -->
                     <div class="relative h-36 md:h-44 w-full bg-slate-50 p-3 flex items-center justify-center border-b border-slate-100 group cursor-pointer" onclick="openImageViewer('{{ p.image }}')">
                         <img src="{{ p.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply drop-shadow-sm group-hover:scale-105 transition-transform duration-300">
                         
-                        <!-- Badges Overlay -->
-                        <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start pointer-events-none">
+                        <div class="absolute inset-0 bg-black/30 hidden group-hover:flex items-center justify-center transition-all">
+                            <i class="fa-solid fa-expand text-white text-3xl opacity-80"></i>
+                        </div>
+
+                        <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start pointer-events-none z-10">
                             <span class="text-[7px] font-black text-white bg-slate-900/85 backdrop-blur px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm max-w-[80px] truncate">{{ p.store }}</span>
                             {% if p.discount_percent and p.discount_percent > 0 %}
                                 <span class="text-[8px] font-black text-white bg-red-600 backdrop-blur px-1.5 py-0.5 rounded shadow-sm">MASTER -{{p.discount_percent|int}}%</span>
@@ -293,13 +299,11 @@
                             {% endif %}
                         </div>
 
-                        <!-- ID Badge -->
-                        <div class="absolute top-2.5 right-2.5 font-mono text-[9px] font-bold text-slate-400 bg-white/90 backdrop-blur px-1.5 py-0.5 rounded border border-slate-200/60 shadow-sm">
+                        <div class="absolute top-2.5 right-2.5 font-mono text-[9px] font-bold text-slate-400 bg-white/90 backdrop-blur px-1.5 py-0.5 rounded border border-slate-200/60 shadow-sm z-10">
                             #{{ p.id }}
                         </div>
                     </div>
 
-                    <!-- Details Area -->
                     <div class="p-3.5 flex-1 flex flex-col justify-between">
                         <div>
                             <h4 class="font-extrabold text-xs text-slate-900 leading-snug line-clamp-2 {% if not p.is_visible %}line-through text-slate-400{% endif %}" title="{{ p.title }}">{{ p.title }}</h4>
@@ -312,7 +316,6 @@
                         </div>
                     </div>
 
-                    <!-- Quick Action Toolbar -->
                     <div class="p-2 border-t border-slate-100 bg-slate-50/50 flex gap-1.5">
                         <form action="/admin/product/toggle/{{ p.id }}" method="POST" class="m-0 flex-1">
                             <button type="submit" class="w-full h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm" title="Toggle Visibility">
@@ -444,9 +447,15 @@
                                         <div class="handle p-1.5 cursor-grab text-slate-300 hover:text-[#ff5000] flex items-center justify-center">
                                             <i class="fa-solid fa-grip-vertical text-sm"></i>
                                         </div>
-                                        <div class="w-11 h-11 bg-slate-50 border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:opacity-80 flex items-center justify-center" onclick="openImageViewer('{{v.image}}')">
+                                        
+                                        <!-- NEW EYE HOVER BADGE APPLIED HERE -->
+                                        <div class="relative w-11 h-11 bg-slate-50 border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:border-[#ff5000] transition-colors group flex items-center justify-center" onclick="openImageViewer('{{v.image}}')" title="Click to view image">
                                             <img src="{{v.image}}" class="max-w-full max-h-full object-contain mix-blend-multiply variant-image-preview">
+                                            <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-[7px] transition-all">
+                                                <i class="fa-solid fa-eye text-white text-[11px]"></i>
+                                            </div>
                                         </div>
+                                        
                                         <button type="button" onclick="removeVariantRow(this, '{{p.id}}')" class="md:hidden ml-auto w-7 h-7 flex items-center justify-center bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash-can text-xs"></i></button>
                                     </div>
 
@@ -459,7 +468,6 @@
                                             <input type="text" name="v_names[]" value="{{v.name}}" placeholder="Variant Name" class="input-field w-full text-xs font-bold">
                                         </div>
                                         
-                                        <!-- NEW: Per-Variant Discount Percentage Input -->
                                         <div class="relative">
                                             <input type="number" step="any" name="v_discounts[]" value="{{v.discount_percent|default(0)}}" placeholder="Disc %" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-5">
                                             <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400">%</span>
@@ -502,9 +510,38 @@
                                 <label class="text-[10px] font-black text-blue-600 uppercase tracking-wider"><i class="fa-solid fa-box-open mr-1"></i> Add Purchasable Variants</label>
                                 <input type="file" name="new_images" multiple class="block w-full text-[9px] text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:font-black file:bg-blue-600 file:text-white file:uppercase hover:file:bg-blue-700 cursor-pointer bg-white border border-slate-200 p-1 rounded-xl">
                             </div>
-                            <div class="bg-purple-50/50 p-3.5 rounded-2xl border border-purple-100 flex flex-col justify-between gap-3">
-                                <label class="text-[10px] font-black text-purple-600 uppercase tracking-wider"><i class="fa-regular fa-images mr-1"></i> Add View-Only Detail Images</label>
-                                <input type="file" name="new_detail_images" multiple class="block w-full text-[9px] text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:font-black file:bg-purple-500 file:text-white file:uppercase hover:file:bg-purple-600 cursor-pointer bg-white border border-slate-200 p-1 rounded-xl">
+                            
+                            <!-- NEW: Detail Image Gallery Viewer Block -->
+                            <div class="bg-purple-50/50 p-3.5 rounded-2xl border border-purple-100 flex flex-col gap-3 h-full">
+                                <label class="text-[10px] font-black text-purple-600 uppercase tracking-wider"><i class="fa-regular fa-images mr-1"></i> View-Only Detail Images</label>
+                                
+                                <!-- Parses & Renders Safely Existing Gallery Images with Eye Icons -->
+                                {% set raw_details = [] %}
+                                {% if p.detail_images and p.detail_images != '[]' and p.detail_images != 'null' %}
+                                    {% set cleaned = p.detail_images | replace('[', '') | replace(']', '') | replace('"', '') | replace(' ', '') %}
+                                    {% if cleaned %}
+                                        {% set raw_details = cleaned.split(',') %}
+                                    {% endif %}
+                                {% endif %}
+                                
+                                {% if raw_details|length > 0 %}
+                                <div class="flex flex-wrap gap-1.5 border-b border-purple-200/50 pb-2">
+                                    {% for img_url in raw_details %}
+                                    <div class="relative w-11 h-11 bg-white border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:border-purple-400 transition-colors group flex items-center justify-center shadow-sm" onclick="openImageViewer('{{img_url}}')" title="Click to View Image">
+                                        <img src="{{img_url}}" class="max-w-full max-h-full object-contain mix-blend-multiply">
+                                        <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-lg transition-all">
+                                            <i class="fa-solid fa-eye text-white text-[11px]"></i>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                        
+                                <div class="mt-auto">
+                                    <input type="file" name="new_detail_images" multiple accept="image/*" onchange="previewEditDetailImages(this, '{{p.id}}')" class="block w-full text-[9px] text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:font-black file:bg-purple-500 file:text-white file:uppercase hover:file:bg-purple-600 cursor-pointer bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
+                                    <!-- Container for JS Previews of new picks -->
+                                    <div id="edit-detail-preview-{{p.id}}" class="flex flex-wrap gap-1.5 mt-2 hidden pointer-events-none"></div>
+                                </div>
                             </div>
                         </div>
                         
@@ -820,15 +857,60 @@
         }
     }
 
+    // Handles live UI previews for Quick Add "Detail Images" selection
     function handleDetailSelect(input) {
         const textEl = document.getElementById('detail-count-text');
+        const container = document.getElementById('detail-preview-container');
+        if(!container) return;
+        
         if (input.files && input.files.length > 0) {
             textEl.innerText = `${input.files.length} gallery image(s) selected`;
             textEl.classList.add('text-purple-600', 'font-bold');
+            
+            container.innerHTML = '';
+            container.classList.remove('hidden');
+            
+            const fileCount = Math.min(input.files.length, 4);
+            for(let i=0; i<fileCount; i++) {
+                const url = URL.createObjectURL(input.files[i]);
+                container.innerHTML += `
+                    <div class="w-8 h-8 bg-white rounded-md border border-purple-200 p-0.5 shadow-sm">
+                        <img src="${url}" class="w-full h-full object-cover rounded-[3px]">
+                    </div>
+                `;
+            }
+            if(input.files.length > 4) {
+                container.innerHTML += `<div class="w-8 h-8 bg-purple-100 rounded-md border border-purple-200 flex items-center justify-center text-[9px] font-black text-purple-600 shadow-sm">+${input.files.length - 4}</div>`;
+            }
         } else {
             textEl.innerText = "Upload view-only gallery pics";
             textEl.classList.remove('text-purple-600', 'font-bold');
+            container.classList.add('hidden');
+            container.innerHTML = '';
         }
+    }
+
+    // Handles live UI previews for Editing "Detail Images" selection
+    function previewEditDetailImages(input, pid) {
+        const container = document.getElementById(`edit-detail-preview-${pid}`);
+        if(!container) return;
+        
+        container.innerHTML = '';
+        if (input.files && input.files.length > 0) {
+            container.classList.remove('hidden');
+            for(let i=0; i<input.files.length; i++) {
+                const url = URL.createObjectURL(input.files[i]);
+                container.innerHTML += `
+                    <div class="w-10 h-10 bg-white rounded-lg border border-purple-300 p-0.5 shadow-sm relative shrink-0">
+                        <img src="${url}" class="w-full h-full object-cover rounded-md">
+                        <div class="absolute -top-1 -right-1 bg-purple-500 text-white text-[7px] font-bold px-1 py-0.5 rounded shadow">New</div>
+                    </div>
+                `;
+            }
+        } else {
+            container.classList.add('hidden');
+        }
+        updateGlobalSaveBar();
     }
 
     // ================= 4. GLOBAL BATCH SAVE SYSTEM =================
@@ -1037,9 +1119,15 @@
                 <div class="variant-row flex flex-col md:flex-row gap-2 items-center bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm relative group hover:border-[#ff5000] transition-colors">
                     <div class="flex items-center gap-2 w-full md:w-auto shrink-0 border-b border-slate-100 pb-2 md:border-none md:pb-0">
                         <i class="fa-solid fa-grip-vertical text-slate-300 handle px-1 cursor-grab hover:text-[#ff5000]"></i>
-                        <div class="w-10 h-10 bg-slate-50 border border-slate-200 rounded-lg p-0.5">
-                            <img src="${tempUrl}" class="w-full h-full object-contain mix-blend-multiply">
+                        
+                        <!-- NEW EYE HOVER BADGE IN UPLOAD UI -->
+                        <div class="relative w-11 h-11 bg-slate-50 border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:border-[#ff5000] transition-colors group flex items-center justify-center" onclick="openImageViewer('${tempUrl}')" title="Click to View Image">
+                            <img src="${tempUrl}" class="w-full h-full object-contain mix-blend-multiply variant-image-preview">
+                            <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-[7px] transition-all">
+                                <i class="fa-solid fa-eye text-white text-[11px]"></i>
+                            </div>
                         </div>
+
                         <button type="button" onclick="this.closest('.variant-row').remove()" class="md:hidden ml-auto w-7 h-7 flex items-center justify-center bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash-can text-xs"></i></button>
                     </div>
                     
