@@ -10,6 +10,10 @@
         content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
         width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; border-radius: 1px;
     }
+    
+    /* Hide scrollbar for horizontal bracelet image */
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 
 <!-- ==================== UNIFIED CART DRAWER ==================== -->
@@ -23,13 +27,19 @@
                 <h2 class="text-xl font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2>
                 <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Your Shopping Cart</p>
             </div>
-            <button onclick="closeUniversalCart()" class="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+            <div class="flex items-center gap-2">
+                <!-- Order History Button -->
+                <button onclick="openOrderHistory()" class="w-9 h-9 flex items-center justify-center bg-orange-50 border border-orange-100 rounded-full text-[#ea580c] hover:bg-orange-100 active:scale-90 transition-all shadow-sm">
+                    <i class="fa-solid fa-receipt"></i>
+                </button>
+                <button onclick="closeUniversalCart()" class="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all shadow-sm">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
         </div>
         
         <!-- Dynamic Items Container -->
-        <div id="universal-cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+        <div id="universal-cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
         
         <!-- Footer / Checkout Summary -->
         <div class="bg-white border-t border-gray-100 p-5 z-10 pb-8 md:pb-5 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
@@ -53,6 +63,20 @@
                 <i class="fa-solid fa-truck-fast"></i> <span>បន្តទៅការដឹកជញ្ជូន (Checkout)</span>
             </button>
         </div>
+    </div>
+</div>
+
+<!-- ==================== ORDER HISTORY MODAL ==================== -->
+<div id="universal-history-modal" class="fixed inset-0 z-[9500] bg-gray-50 flex flex-col translate-x-full transition-transform duration-300 ease-in-out">
+    <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
+        <div>
+            <h2 class="text-lg font-black font-['Moul'] text-gray-900">ប្រវត្តិកម្ម៉ង់របស់អ្នក</h2>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order History</p>
+        </div>
+        <button onclick="closeOrderHistory()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-arrow-right text-lg"></i></button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4 space-y-4" id="universal-history-container">
+        <!-- Order History Items go here -->
     </div>
 </div>
 
@@ -95,13 +119,12 @@
     // 1. CRITICAL SYNC FUNCTION: Prevents overwriting items!
     function syncCartFromStorage() {
         try {
-            // Check for previous custom_bracelet cart (sr_cart) and migrate it seamlessly
             let oldBraceletCart = JSON.parse(localStorage.getItem('sr_cart') || '[]');
             let mainCart = JSON.parse(localStorage.getItem('universal_store_cart') || '[]');
             
             if (oldBraceletCart.length > 0) {
                 mainCart = [...mainCart, ...oldBraceletCart];
-                localStorage.removeItem('sr_cart'); // Migration complete!
+                localStorage.removeItem('sr_cart'); 
             }
             globalStoreCart = mainCart;
         } catch(e) {
@@ -109,12 +132,11 @@
         }
     }
 
-    // Initialize immediately on load
     syncCartFromStorage();
     
     // --- 2. EXPOSED GLOBAL FUNCTIONS ---
     window.updateCartBadge = function() {
-        syncCartFromStorage(); // Make sure count is completely accurate
+        syncCartFromStorage();
         const count = globalStoreCart.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
         document.querySelectorAll('.cart-badge-count, #cart-badge').forEach(badge => {
             if (count > 0) {
@@ -127,7 +149,6 @@
     };
 
     window.addToGlobalCart = function(item) {
-        // MUST Sync immediately before adding so we don't accidentally overwrite another tab's additions
         syncCartFromStorage(); 
         
         let existing;
@@ -149,7 +170,7 @@
     };
 
     window.openCart = window.openCartDrawer = function() {
-        syncCartFromStorage(); // Refresh UI right before opening
+        syncCartFromStorage();
         renderUniversalCartUI();
         const drawer = document.getElementById('universal-cart-drawer');
         if(drawer) {
@@ -207,43 +228,38 @@
             if(item.selected) subtotalKHR += itemTotalKHR;
             
             // ============================================
-            // NEW MOBILE-FRIENDLY CUSTOM BRACELET TEMPLATE
+            // ⭐️ NEW HORIZONTAL CUSTOM BRACELET TEMPLATE
             // ============================================
             if (item.type === 'custom_bracelet') {
                 return `
-                <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-50' : 'border-gray-100'} flex gap-3 relative transition-all items-center">
-                    <!-- Checkbox -->
-                    <label class="flex items-center justify-center cursor-pointer h-full">
-                        <input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')">
-                    </label>
+                <div class="bg-white p-4 rounded-[2rem] shadow-sm border ${item.selected ? 'border-[#ea580c] ring-4 ring-orange-50' : 'border-gray-100'} flex flex-col relative transition-all">
                     
-                    <!-- Wide Thumbnail for Bracelet -->
-                    <div class="w-24 sm:w-28 h-16 sm:h-20 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex flex-col items-center justify-center relative overflow-hidden cursor-pointer shadow-inner" onclick="if(typeof openImageViewer === 'function') openImageViewer('${item.image}')">
-                        <img src="${item.image}" class="w-full h-full object-contain p-1 mix-blend-multiply">
-                        <div class="absolute bottom-0 inset-x-0 bg-black/60 text-[8px] font-bold text-white text-center py-0.5 tracking-wider">
-                            ${item.charms.length} Charms
-                        </div>
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')">
+                            <span class="font-black text-sm text-gray-900">Custom DIY Bracelet #${customIndex++}</span>
+                        </label>
+                        <button onclick="removeUniCartItem('${item.id}')" class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
 
-                    <!-- Details -->
-                    <div class="flex-1 flex flex-col justify-center min-w-0 py-0.5">
-                        <div class="flex justify-between items-start mb-1">
-                            <h4 class="font-black text-[11px] sm:text-xs text-gray-900 leading-tight truncate pr-2">Custom Bracelet</h4>
-                            <button onclick="removeUniCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-1.5 -mt-1 -mr-1 transition-colors active:scale-90"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                    <!-- Scrollable Horizontal Image (No Horizontal Limit) -->
+                    <div class="w-full h-[150px] sm:h-[180px] bg-slate-50 rounded-2xl border border-gray-100 overflow-x-auto overflow-y-hidden hide-scrollbar mb-3 relative" onclick="if(typeof openImageViewer === 'function') openImageViewer('${item.image}')">
+                        <img src="${item.image}" class="h-full w-auto min-w-full object-contain p-2 mix-blend-multiply cursor-pointer">
+                    </div>
+
+                    <!-- Details & Qty -->
+                    <div class="flex justify-between items-end">
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Code: <span class="text-gray-900 font-mono tracking-wider">${item.code || 'N/A'}</span></span>
+                            <span class="text-[9px] font-black text-orange-600 bg-orange-50 px-2 py-1 rounded border border-orange-100 uppercase tracking-widest w-max">${item.pkgName} • ${item.charms.length} Charms</span>
                         </div>
                         
-                        <div class="mb-2.5">
-                            <span class="text-[9px] font-black text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100 uppercase tracking-widest inline-block truncate max-w-full">${item.pkgName}</span>
-                        </div>
-
-                        <div class="flex justify-between items-end">
-                            <span class="font-black text-[13px] sm:text-sm text-[#ea580c] leading-none">${Math.round(itemTotalKHR).toLocaleString()}៛</span>
-                            
-                            <!-- Qty Control -->
-                            <div class="flex items-center gap-2 sm:gap-3 bg-gray-50 rounded-lg p-0.5 border border-gray-200 shadow-sm">
-                                <button onclick="updateUniCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-500 hover:text-[#ea580c] active:scale-95 transition-all">-</button>
-                                <span class="font-black text-[11px] w-4 text-center text-gray-800">${item.qty}</span>
-                                <button onclick="updateUniCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-500 hover:text-[#ea580c] active:scale-95 transition-all">+</button>
+                        <div class="flex flex-col items-end gap-2">
+                            <span class="font-black text-[15px] sm:text-base text-[#ea580c] leading-none">${Math.round(itemTotalKHR).toLocaleString()}៛</span>
+                            <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-0.5 border border-gray-200">
+                                <button onclick="updateUniCartQty('${item.id}', -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-gray-500 hover:text-[#ea580c] active:scale-95 transition-all">-</button>
+                                <span class="font-black text-xs w-4 text-center text-gray-800">${item.qty}</span>
+                                <button onclick="updateUniCartQty('${item.id}', 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-gray-500 hover:text-[#ea580c] active:scale-95 transition-all">+</button>
                             </div>
                         </div>
                     </div>
@@ -258,12 +274,10 @@
                         <input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')">
                     </label>
                     
-                    <!-- Standard Thumbnail -->
                     <div class="w-16 sm:w-20 h-16 sm:h-20 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden cursor-pointer shadow-inner" onclick="if(typeof openImageViewer === 'function') openImageViewer('${item.image}')">
                         <img src="${item.image}" class="max-w-full max-h-full object-contain mix-blend-multiply">
                     </div>
                     
-                    <!-- Details -->
                     <div class="flex-1 flex flex-col justify-center min-w-0 py-0.5">
                         <div class="flex justify-between items-start">
                             <h4 class="font-black text-[11px] sm:text-xs text-gray-900 leading-tight truncate pr-2">${item.name || item.title}</h4>
@@ -274,8 +288,6 @@
                         
                         <div class="flex justify-between items-end">
                             <span class="font-black text-[13px] sm:text-sm text-[#ea580c] leading-none">${Math.round(itemTotalKHR).toLocaleString()}៛</span>
-                            
-                            <!-- Qty Control -->
                             <div class="flex items-center gap-2 sm:gap-3 bg-gray-50 rounded-lg p-0.5 border border-gray-200 shadow-sm">
                                 <button onclick="updateUniCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-500 hover:text-[#ea580c] active:scale-95 transition-all">-</button>
                                 <span class="font-black text-[11px] w-4 text-center text-gray-800">${item.qty}</span>
@@ -302,7 +314,6 @@
         document.getElementById('uni-cart-grand-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
     }
 
-    // --- 4. CART INTERACTIONS ---
     function toggleUniCartItem(id) { 
         syncCartFromStorage();
         const item = globalStoreCart.find(i => i.id === id); 
@@ -354,6 +365,59 @@
         document.getElementById('universal-checkout-modal').classList.add('translate-y-full'); 
     }
 
+    // --- 6. ORDER HISTORY (MY ORDERS) LOGIC ---
+    function openOrderHistory() {
+        closeUniversalCart();
+        const historyContainer = document.getElementById('universal-history-container');
+        let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
+        
+        if (history.length === 0) {
+            historyContainer.innerHTML = `
+                <div class="py-20 text-center opacity-40">
+                    <i class="fa-solid fa-box-open text-5xl mb-3 text-gray-400"></i>
+                    <p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-gray-500">មិនទាន់មានប្រវត្តិកម្ម៉ង់ទេ</p>
+                    <p class="text-[10px] font-bold text-gray-400 mt-1">No orders yet</p>
+                </div>
+            `;
+        } else {
+            historyContainer.innerHTML = history.map(order => `
+                <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm mb-4">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-3">
+                        <div>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order ID</span>
+                            <p class="font-black text-sm text-gray-800 font-mono">${order.id}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-100 px-2 py-1 rounded uppercase tracking-widest">${order.status}</span>
+                            <p class="text-[9px] font-bold text-gray-400 mt-1">${new Date(order.date).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <div class="space-y-3 mb-3">
+                        ${order.items.map(item => `
+                            <div class="flex items-center gap-3">
+                                <img src="${item.image}" class="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 object-contain p-0.5 shrink-0" onerror="this.src='https://via.placeholder.com/100?text=Item'">
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-bold text-xs text-gray-900 truncate">${item.title}</p>
+                                    <p class="text-[9px] font-bold text-gray-400 truncate">Qty: ${item.qty} • ${item.style || ''}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="flex justify-between items-center border-t border-gray-100 pt-3">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">សរុប (Total)</span>
+                        <span class="font-black text-sm text-[#ea580c]">${Math.round(order.totalKHR).toLocaleString()}៛</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        document.getElementById('universal-history-modal').classList.remove('translate-x-full');
+    }
+
+    function closeOrderHistory() {
+        document.getElementById('universal-history-modal').classList.add('translate-x-full');
+    }
+
     async function processUniversalFinalOrder() {
         syncCartFromStorage();
         const selectedItems = globalStoreCart.filter(i => i.selected);
@@ -372,6 +436,9 @@
         let subtotalKHR = 0; 
         const itemsPayload = [], charmCounts = {};
         
+        // For history
+        const orderHistoryItems = [];
+
         selectedItems.forEach((i, bIdx) => {
             if (i.type === 'custom_bracelet') {
                 const itemPriceKHR = i.baseTotal + i.pkgPrice;
@@ -382,6 +449,14 @@
                     style: `Code: ${i.code} | Charms: ${i.charms.length} | Pkg: ${i.pkgName}`,
                     price: itemPriceKHR / UNIVERSAL_CART_RATE, qty: i.qty, image: i.image, maxStock: 99
                 });
+                
+                orderHistoryItems.push({
+                    title: "DIY Bracelet",
+                    style: `Code: ${i.code}`,
+                    qty: i.qty,
+                    image: i.image
+                });
+
                 i.charms.forEach(c => { 
                     const dbId = c.db_id || "0-0";
                     charmCounts[dbId] = (charmCounts[dbId] || 0) + (1 * i.qty); 
@@ -391,6 +466,13 @@
                 itemsPayload.push({
                     cartId: i.variantId || i.id, title: i.name || i.title, style: i.style || "Standard Option", 
                     price: parseFloat(i.price), qty: i.qty, image: i.image, maxStock: i.stock || 99
+                });
+                
+                orderHistoryItems.push({
+                    title: i.name || i.title,
+                    style: i.style,
+                    qty: i.qty,
+                    image: i.image
                 });
             }
         });
@@ -411,6 +493,18 @@
             });
             
             if (res.ok) {
+                // SAVE ORDER TO HISTORY
+                const newOrder = {
+                    id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+                    date: new Date().toISOString(),
+                    items: orderHistoryItems,
+                    totalKHR: subtotalKHR + delivery,
+                    status: "កំពុងរៀបចំ (Pending)"
+                };
+                let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
+                history.unshift(newOrder); // Add to top
+                localStorage.setItem('sr_order_history', JSON.stringify(history));
+
                 alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");
                 globalStoreCart = globalStoreCart.filter(i => !i.selected); 
                 saveGlobalCart(); 
@@ -421,6 +515,18 @@
                 btn.innerHTML = originalText; btn.disabled = false;
             }
         } catch (e) { 
+            // Fallback save in case of error but assumed success via bot logic
+            const newOrder = {
+                id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+                date: new Date().toISOString(),
+                items: orderHistoryItems,
+                totalKHR: subtotalKHR + delivery,
+                status: "បានផ្ញើទៅ Telegram (Sent)"
+            };
+            let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
+            history.unshift(newOrder);
+            localStorage.setItem('sr_order_history', JSON.stringify(history));
+
             alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");
             globalStoreCart = globalStoreCart.filter(i => !i.selected); 
             saveGlobalCart(); 
