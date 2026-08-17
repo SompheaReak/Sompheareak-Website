@@ -28,7 +28,7 @@
                 <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Your Shopping Cart</p>
             </div>
             <div class="flex items-center gap-2">
-                <!-- Order History Button -->
+                <!-- Order History Button (Also available inside the cart) -->
                 <button onclick="openOrderHistory()" class="w-9 h-9 flex items-center justify-center bg-orange-50 border border-orange-100 rounded-full text-[#ea580c] hover:bg-orange-100 active:scale-90 transition-all shadow-sm">
                     <i class="fa-solid fa-receipt"></i>
                 </button>
@@ -116,7 +116,7 @@
     const UNIVERSAL_CART_RATE = 4000;
     let globalStoreCart = [];
 
-    // 1. CRITICAL SYNC FUNCTION: Prevents overwriting items!
+    // 1. CRITICAL SYNC FUNCTION
     function syncCartFromStorage() {
         try {
             let oldBraceletCart = JSON.parse(localStorage.getItem('sr_cart') || '[]');
@@ -134,7 +134,6 @@
 
     syncCartFromStorage();
     
-    // --- 2. EXPOSED GLOBAL FUNCTIONS ---
     window.updateCartBadge = function() {
         syncCartFromStorage();
         const count = globalStoreCart.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
@@ -201,7 +200,7 @@
         return 0;
     }
 
-    // --- 3. RENDER THE CART UI (Mixed Products) ---
+    // --- 3. RENDER THE CART UI ---
     function renderUniversalCartUI() {
         const container = document.getElementById('universal-cart-items-container');
         if (!container) return;
@@ -228,7 +227,7 @@
             if(item.selected) subtotalKHR += itemTotalKHR;
             
             // ============================================
-            // ⭐️ NEW HORIZONTAL CUSTOM BRACELET TEMPLATE
+            // ⭐️ NEW 220PX HEIGHT HORIZONTAL BRACELET
             // ============================================
             if (item.type === 'custom_bracelet') {
                 return `
@@ -242,9 +241,11 @@
                         <button onclick="removeUniCartItem('${item.id}')" class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
 
-                    <!-- Scrollable Horizontal Image (No Horizontal Limit) -->
-                    <div class="w-full h-[150px] sm:h-[180px] bg-slate-50 rounded-2xl border border-gray-100 overflow-x-auto overflow-y-hidden hide-scrollbar mb-3 relative" onclick="if(typeof openImageViewer === 'function') openImageViewer('${item.image}')">
-                        <img src="${item.image}" class="h-full w-auto min-w-full object-contain p-2 mix-blend-multiply cursor-pointer">
+                    <!-- 220px Height with Infinite Horizontal Scroll -->
+                    <div class="w-full h-[220px] bg-slate-50 rounded-2xl border border-gray-100 overflow-x-auto overflow-y-hidden hide-scrollbar mb-4 relative" onclick="if(typeof openImageViewer === 'function') openImageViewer('${item.image}')">
+                        <div class="h-full w-max min-w-full flex items-center justify-center px-4">
+                            <img src="${item.image}" class="h-full w-auto max-w-none object-contain mix-blend-multiply cursor-pointer py-2">
+                        </div>
                     </div>
 
                     <!-- Details & Qty -->
@@ -436,7 +437,6 @@
         let subtotalKHR = 0; 
         const itemsPayload = [], charmCounts = {};
         
-        // For history
         const orderHistoryItems = [];
 
         selectedItems.forEach((i, bIdx) => {
@@ -502,7 +502,7 @@
                     status: "កំពុងរៀបចំ (Pending)"
                 };
                 let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
-                history.unshift(newOrder); // Add to top
+                history.unshift(newOrder); 
                 localStorage.setItem('sr_order_history', JSON.stringify(history));
 
                 alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");
@@ -515,7 +515,7 @@
                 btn.innerHTML = originalText; btn.disabled = false;
             }
         } catch (e) { 
-            // Fallback save in case of error but assumed success via bot logic
+            // Fallback save
             const newOrder = {
                 id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
                 date: new Date().toISOString(),
