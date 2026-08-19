@@ -70,7 +70,6 @@ class Product(db.Model):
     sort_order = db.Column(db.Integer, default=0)
     is_visible = db.Column(db.Boolean, default=True)
     discount_percent = db.Column(db.Float, default=0.0) 
-    # NEW FIELDS:
     use_custom_thumbnail = db.Column(db.Boolean, default=False)
     detail_images = db.Column(db.Text, nullable=True)
 
@@ -374,12 +373,107 @@ def admin_inventory():
     db.session.commit()
     return render_template('admin/inventory.html', products=Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all(), categories=Category.query.order_by(Category.sort_order).all())
 
+
+# =======================================================
+# NEW ORDER MANAGEMENT ROUTES (Confirm, Update, View)
+# =======================================================
 @app.route('/admin/orders')
 @login_required
 def admin_orders():
     orders = Order.query.order_by(Order.timestamp.desc()).all()
-    for o in orders: o.parsed_items = json.loads(o.items_json)
-    return render_template('admin/orders.html', orders=orders)
+    for o in orders: 
+        o.parsed_items = json.loads(o.items_json)
+        
+        # Format mapping so template doesn't break
+        o.items = o.parsed_items
+        for item in o.items:
+            if 'id' not in item:
+                # Map various ID formats to a standard 'id' for the template
+                item['id'] = item.get('cartId', item.get('variantId', str(uuid.uuid4())[:8]))
+                
+        o.created_at = o.timestamp
+        o.total_amount = o.total_usd
+        
+    return render_template('admin/orders.html', global_orders=orders)
+
+@app.route('/admin/orders/confirm/<int:id>', methods=['POST'])
+@login_required
+def confirm_admin_order(id):
+    order = Order.query.get(id)
+    if order and order.status == 'Pending':
+        if not order.stock_deducted:
+            try:
+                for item in json.loads(order.items_json):
+                    parts = str(item.get('variantId', item.get('cartId', ''))).split('-')
+                    if len(parts) >= 2 and parts[0].isdigit():
+                        p_id = int(parts[0])
+                        v_idx = int(parts[1]) if parts[1].isdigit() else -1
+                        qty = int(item.get('qty', 1))
+                        product = Product.query.get(p_id)
+                        if product:
+                            if product.variants and v_idx != -1:
+                                variants = json.loads(product.variants)
+                                if 0 <= v_idx < len(variants):
+                                    variants[v_idx]['stock'] = max(0, int(variants[v_idx].get('stock', 0)) - qty)
+                                    product.variants = json.dumps(variants)
+                                    product.stock = sum(int(v.get('stock', 0)) for v in variants)
+                                    _sync_product_to_pool(p_id, v_idx, variants[v_idx]['stock'])
+                            else: 
+                                product.stock = max(0, product.stock - qty)
+                                _sync_product_to_pool(p_id, -1, product.stock)
+                    elif item.get('cartId') and str(item.get('cartId')).isdigit():
+                        product = Product.query.get(int(item.get('cartId')))
+                        if product:
+                            product.stock = max(0, product.stock - int(item.get('qty', 1)))
+                            _sync_product_to_pool(product.id, -1, product.stock)
+            except Exception as e: 
+                print(f"Stock deduction error: {e}")
+            
+            if order.promo_code_used:
+                promo = PromoCode.query.filter_by(code=order.promo_code_used).first()
+                if promo: promo.current_uses += 1
+            order.stock_deducted = True
+        
+        order.status = 'Processing'
+        db.session.commit()
+        flash('Order Confirmed and Stock Deducted!', 'success')
+    return redirect(url_for('admin_orders'))
+
+@app.route('/admin/orders/update/<int:id>', methods=['POST'])
+@login_required
+def update_admin_order(id):
+    order = Order.query.get(id)
+    if order:
+        order.customer_name = request.form.get('customer_name', order.customer_name)
+        order.customer_phone = request.form.get('customer_phone', order.customer_phone)
+        order.customer_address = request.form.get('customer_address', order.customer_address)
+        order.status = request.form.get('status', order.status)
+        
+        item_ids = request.form.getlist('item_ids[]')
+        item_qtys = request.form.getlist('item_qtys[]')
+        
+        if item_ids and item_qtys:
+            try:
+                items = json.loads(order.items_json)
+                new_total = 0
+                for i, item_id in enumerate(item_ids):
+                    for item in items:
+                        if str(item.get('id', item.get('cartId', item.get('variantId', '')))) == str(item_id):
+                            item['qty'] = int(item_qtys[i])
+                            
+                for item in items:
+                    new_total += float(item.get('price', 0)) * int(item.get('qty', 1))
+                
+                order.items_json = json.dumps(items)
+                order.total_usd = new_total
+            except Exception as e:
+                print(f"Error updating items: {e}")
+        
+        db.session.commit()
+        flash('Order Information Updated!', 'success')
+    return redirect(url_for('admin_orders'))
+# =======================================================
+
 
 @app.route('/admin/spin')
 @login_required
@@ -440,6 +534,7 @@ def quick_update_stock():
 @app.route('/admin/order/status/<int:id>/<string:status>', methods=['POST'])
 @login_required
 def update_order_status(id, status):
+    # Retained as a fallback for other views that might use it
     order = Order.query.get(id)
     if order:
         if status == 'Completed' and not order.stock_deducted:
@@ -533,9 +628,6 @@ def delete_product(id):
     if p: db.session.delete(p); db.session.commit()
     return redirect(url_for('admin_inventory'))
 
-# =======================================================
-# THE FULLY UPDATED PRODUCT HANDLERS (Thumbnails & Disc)
-# =======================================================
 @app.route('/admin/product/update/<int:id>', methods=['POST'])
 @login_required
 def update_product(id):
@@ -594,7 +686,6 @@ def update_product(id):
                     total_stock += 1
                 except: pass
     
-    # Detail (View Only) Images Logic 
     d_list = []
     try: 
         if getattr(p, 'detail_images', None): d_list = json.loads(p.detail_images)
@@ -691,9 +782,6 @@ def add_product():
         db.session.commit()
     return redirect(url_for('admin_inventory'))
 
-# =======================================================
-# FAIL-SAFE API (PREVENTS 500 ERRORS ON MISSING COLUMNS)
-# =======================================================
 @app.route('/api/products/<store_name>')
 def get_api(store_name):
     try:
@@ -704,13 +792,11 @@ def get_api(store_name):
             if store_name not in (p.store or '').split(','):
                 continue
             
-            # Safely Parse Variants
             v_list = []
             try:
                 if p.variants: v_list = json.loads(p.variants)
             except: pass
             
-            # Safely Parse Detail Images
             d_list = []
             try:
                 if getattr(p, 'detail_images', None): d_list = json.loads(p.detail_images)
@@ -736,7 +822,6 @@ def get_api(store_name):
         })
     except Exception as e: 
         print(f"CRITICAL API ERROR: {str(e)}")
-        # Send empty payload instead of crashing the frontend
         return jsonify({"products": [], "categories": [], "error": str(e)}), 200
 
 @app.route('/api/spin/redeem', methods=['POST'])
@@ -808,7 +893,6 @@ def get_live_pool():
     items = MinifigurePool.query.all()
     return jsonify({"pool": [{"id": i.id, "name": i.name, "image": i.image, "rarity": i.rarity, "stock": i.stock} for i in items]})
 
-# --- 8. SPINNER ADMIN ROUTES ---
 @app.route('/admin/spin/update_rewards', methods=['POST'])
 @login_required
 def update_spin_rewards():
@@ -934,12 +1018,8 @@ def admin_spin_delete_history(draw_id):
 @app.errorhandler(413)
 def request_entity_too_large(error): return redirect(request.referrer)
 
-# =======================================================
-# BULLETPROOF DATABASE SCHEMA BUILDER
-# =======================================================
 with app.app_context():
     db.create_all()
-    # Execute Raw SQL to force-add columns safely
     queries = [
         'ALTER TABLE "order" ADD COLUMN promo_code_used VARCHAR(50)',
         'ALTER TABLE product ADD COLUMN discount_percent FLOAT DEFAULT 0.0',
