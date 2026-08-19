@@ -1,549 +1,353 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Somphea Reak | Premium Studio</title>
+{% extends "admin/base.html" %}
+
+{% block head %}
+<!-- Google Fonts - Plus Jakarta Sans & Kantumruy Pro -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Moul&display=swap" rel="stylesheet">
+
+<style>
+    /* Premium Typography & Surface Treatments */
+    #view-orders, .admin-font {
+        font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        letter-spacing: -0.015em;
+    }
     
-    <!-- Tailwind & FontAwesome -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    .khmer-title { font-family: 'Moul', serif; font-weight: normal; }
+
+    /* Edit Mode Smooth Transitions (Mirrored from Inventory) */
+    .edit-mode { display: none; }
+    .is-editing .view-mode { display: none; }
+    .is-editing .edit-mode { display: block; animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+    .is-editing { grid-column: 1 / -1 !important; }
     
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Moul&display=swap');
-        
-        body { 
-            font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif; 
-            background-color: #f6f5f3;
-            -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: none;
-        }
-        
-        h1, h2, h3, h4, .khmer-title { font-family: 'Moul', serif; font-weight: normal; }
+    @keyframes slideDown { 
+        from { opacity: 0; transform: translateY(-12px); } 
+        to { opacity: 1; transform: translateY(0); } 
+    }
 
-        /* Modern Mesh Background */
-        .premium-bg {
-            background-color: #f8f7f5;
-            background-image: radial-gradient(#ea580c 0.75px, transparent 0.75px), radial-gradient(#ea580c 0.75px, #f8f7f5 0.75px);
-            background-size: 24px 24px; 
-            background-position: 0 0, 12px 12px; 
-            opacity: 0.15;
-            position: fixed; inset: 0; z-index: -1;
-        }
+    /* Input & Focus Polish */
+    .input-field {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f172a;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+    .input-field:focus {
+        background-color: #ffffff;
+        border-color: #ff5000;
+        box-shadow: 0 0 0 3px rgba(255, 80, 0, 0.08);
+    }
 
-        /* Bento Card Styling */
-        .bento-card { 
-            border-radius: 32px;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
-            transform: translateZ(0); 
-            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); 
-            overflow: hidden;
-            display: block;
-        }
-        .bento-card:active { transform: scale(0.95); box-shadow: 0 5px 15px -5px rgba(0,0,0,0.1); }
-        .bento-card img { transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-        .bento-card:hover img { transform: scale(1.1); }
-        
-        .gradient-bottom { background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.3) 50%, transparent 100%); }
-        .gradient-side { background: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%); }
-        
-        /* Glassmorphism */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.85); 
-            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.6); 
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05);
-        }
-        
-        .glass-dark {
-            background: rgba(20, 20, 20, 0.6); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-        }
-
-        /* Animations */
-        .animate-fade-up { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
-        .delay-100 { animation-delay: 100ms; }
-        .delay-200 { animation-delay: 200ms; }
-        .delay-300 { animation-delay: 300ms; }
-        
-        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-        
-        .pulse-ring { animation: pulseRing 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulseRing {
-            0% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(234, 88, 12, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
-        }
-
-        /* Universal Cart Checkbox */
-        .universal-cart-checkbox { 
-            appearance: none; width: 22px; height: 22px; border: 2px solid #cbd5e1; border-radius: 50%; 
-            outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-            background: white; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .universal-cart-checkbox:checked { background-color: #ea580c; border-color: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3); }
-        .universal-cart-checkbox:checked::after { 
-            content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
-            width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; border-radius: 1px;
-        }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
-</head>
-<body class="text-slate-900 pb-32 select-none antialiased">
-
-    <div class="premium-bg"></div>
-
-    <!-- 🌟 FLOATING PILL APP HEADER 🌟 -->
-    <header class="fixed top-4 left-4 right-4 sm:left-auto sm:right-auto sm:w-[480px] sm:left-1/2 sm:-translate-x-1/2 z-[100] glass-panel rounded-full px-2 py-2 flex items-center justify-between transition-all">
-        <button onclick="toggleLang()" class="w-11 h-11 flex items-center justify-center bg-white rounded-full text-xs font-black text-slate-600 border border-slate-100 active:scale-90 transition-transform shadow-sm hover:text-[#ea580c]">
-            <span id="lang-btn-text">KH</span>
-        </button>
-        
-        <div class="flex items-center justify-center flex-1 px-2 gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center shadow-lg shrink-0 overflow-hidden relative">
-                <img src="static/images/logo.png" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=000&color=fff&rounded=true'" class="w-full h-full object-cover">
-                <div class="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-full"></div>
-            </div>
-            <div class="flex flex-col justify-center text-left pt-0.5">
-                <h1 class="text-[14px] sm:text-[16px] font-black text-slate-900 leading-none tracking-tight font-['Moul']">
-                    សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs sm:text-sm text-slate-700">- Somphea Reak</span>
-                </h1>
-                <p class="text-[8px] font-black text-[#ea580c] uppercase tracking-[0.25em] leading-none mt-1.5">Premium Studio</p>
-            </div>
-        </div>
-        
-        <button onclick="openUniversalCart()" class="relative w-11 h-11 flex items-center justify-center bg-white border border-slate-100 rounded-full text-slate-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]">
-            <i class="fa-solid fa-cart-shopping"></i>
-            <span class="cart-badge-count absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden border border-white">0</span>
-        </button>
-    </header>
-
-    <!-- MAIN APP CONTAINER -->
-    <main class="max-w-2xl mx-auto pt-24 px-4 sm:px-6">
-        
-        <!-- Holographic Welcome Banner -->
-        <section class="pb-6 animate-fade-up">
-            <div class="w-full bg-gradient-to-br from-slate-900 via-[#2a1309] to-black rounded-[32px] p-7 md:p-8 text-white relative overflow-hidden shadow-2xl shadow-orange-900/10 border border-white/10 group">
-                <div class="absolute top-0 right-0 w-48 h-48 bg-[#ea580c] rounded-full blur-[80px] opacity-40 mix-blend-screen group-hover:opacity-60 transition-opacity duration-700 -mr-10 -mt-10"></div>
-                <div class="absolute bottom-0 left-0 w-32 h-32 bg-purple-600 rounded-full blur-[60px] opacity-20 mix-blend-screen"></div>
-                
-                <div class="relative z-10">
-                    <div class="inline-flex items-center gap-1.5 bg-white/10 text-white text-[9px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-white/20 backdrop-blur-md mb-5 shadow-inner">
-                        <i class="fa-solid fa-crown text-yellow-400"></i> <span data-en="Welcome to Studio" data-kh="សូមស្វាគមន៍">Welcome to Studio</span>
-                    </div>
-                    <h2 class="text-3xl sm:text-4xl font-black leading-tight font-['Moul'] tracking-wide drop-shadow-lg" data-en="Discover Our Latest Collections" data-kh="ស្វែងរកកូឡិកសិនថ្មីៗរបស់យើង">
-                        Discover Our<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-[#ea580c] to-yellow-400 font-['Plus_Jakarta_Sans'] italic">Latest</span> Collections
-                    </h2>
-                </div>
-            </div>
-        </section>
-
-        <!-- BENTO BOX STORE GRID (FIXED RELATIVE FILE LINKS) -->
-        <section class="space-y-4">
-            <div class="flex items-center justify-between px-2 mb-3 animate-fade-up delay-100">
-                <h2 class="font-black text-[11px] uppercase tracking-[0.25em] text-slate-400" data-en="Explore Categories" data-kh="រុករកស្ទូឌីយោ">Explore Categories</h2>
-                <div class="h-px flex-grow ml-4 bg-gradient-to-r from-slate-200 to-transparent"></div>
-            </div>
-
-            <!-- Grid Layout -->
-            <div class="grid grid-cols-2 gap-4 sm:gap-5">
-                
-                <!-- 1. Custom Bracelet Builder -->
-                <a href="custom_bracelet.html" class="bento-card animate-fade-up delay-200 relative col-span-2 aspect-[21/10] sm:aspect-[21/8] bg-white group ring-1 ring-black/5 hover:ring-[#ea580c]/30 hover:shadow-[0_20px_40px_-15px_rgba(234,88,12,0.2)]">
-                    <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover mix-blend-multiply">
-                    <div class="gradient-side absolute inset-0 flex flex-col justify-center p-6 sm:p-8">
-                        <div class="flex gap-2 mb-3 z-10">
-                            <span class="bg-[#ea580c] text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-lg shadow-[0_0_15px_rgba(234,88,12,0.6)] flex items-center gap-1 animate-pulse border border-orange-400"><i class="fa-solid fa-fire"></i> Hot</span>
-                            <span class="glass-dark text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-lg">DIY Studio</span>
-                        </div>
-                        <h3 class="text-white font-black text-2xl sm:text-3xl uppercase italic leading-none drop-shadow-xl relative z-10" data-en="Customize Italy Charm Bracelet" data-kh="រចនាខ្សែដៃអុីតាលី">Customize Italy<br>Charm</h3>
-                        <p class="text-orange-300 text-[10px] font-extrabold uppercase mt-2.5 tracking-[0.2em] relative z-10 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles"></i> Design Your Own <i class="fa-solid fa-arrow-right ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all"></i></p>
-                    </div>
-                </a>
-
-                <!-- 2. Minifigure Store -->
-                <a href="minifigure.html" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-slate-900 group ring-1 ring-black/5 hover:shadow-xl">
-                    <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
-                    <img src="static/images/lego.jpg" onerror="this.src='https://images.unsplash.com/photo-1518331647614-7a1f04cd34ce?auto=format&fit=crop&q=80&w=600'" class="absolute inset-0 w-full h-full object-cover opacity-70">
-                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-5 sm:p-6">
-                        <div class="mb-1.5 ml-1">
-                            <div class="relative inline-flex items-center justify-center bg-[#E3000B] border-[2px] border-black rounded px-3 py-1 shadow-xl transform -rotate-2">
-                                <div class="absolute inset-[1px] border border-[#FFCF00] rounded-[2px] pointer-events-none"></div>
-                                <span class="font-black italic text-white text-lg tracking-tighter leading-none relative z-10 drop-shadow-md" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">LEGO</span>
-                            </div>
-                        </div>
-                        <h3 class="text-white font-black text-[13px] sm:text-sm uppercase tracking-[0.25em] drop-shadow-lg mt-2 ml-1.5 font-['Moul']" data-en="Minifigures" data-kh="យូនីវើស">Minifigures</h3>
-                    </div>
-                </a>
-
-                <!-- 3. Toy Universe Store -->
-                <a href="toy.html" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-white group ring-1 ring-black/5 hover:shadow-xl">
-                    <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
-                    <img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&q=80&w=600" class="absolute inset-0 w-full h-full object-cover">
-                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-5 sm:p-6">
-                        <span class="text-orange-300 text-[8px] font-black uppercase tracking-widest mb-1 drop-shadow-md">Premium</span>
-                        <h3 class="text-white font-black text-xl sm:text-2xl uppercase leading-none font-['Moul'] drop-shadow-xl" data-en="Toy Universe" data-kh="ពិភពប្រដាប់ក្មេងលេង">Toy<br>Universe</h3>
-                    </div>
-                </a>
-
-                <!-- 4. Ready-Made Bracelets Store -->
-                <a href="bracelet.html" class="bento-card animate-fade-up delay-300 relative col-span-2 aspect-[21/10] sm:aspect-[21/8] bg-white group ring-1 ring-black/5 hover:shadow-xl">
-                    <div class="absolute top-5 right-5 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform group-hover:bg-[#ea580c] group-hover:border-orange-400"><i class="fa-solid fa-arrow-right text-[10px]"></i></div>
-                    <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover">
-                    <div class="gradient-side absolute inset-0 flex flex-col justify-center p-6 sm:p-8">
-                        <span class="glass-dark text-white text-[8px] font-black uppercase px-2.5 py-1 rounded-lg w-fit mb-2.5">Ready to Wear</span>
-                        <h3 class="text-white font-black text-2xl sm:text-3xl uppercase leading-none font-['Moul'] drop-shadow-xl" data-en="Ready-Made Bracelets" data-kh="ខ្សែក និងខ្សែដៃ">Ready-Made<br>Bracelets</h3>
-                        <p class="text-slate-200 text-[10px] font-extrabold uppercase mt-2 tracking-[0.2em] drop-shadow-md">Jade & Premium Gems</p>
-                    </div>
-                </a>
-                
-                <!-- 5. Mystery Box -->
-                <a href="mystery_box.html" class="bento-card animate-fade-up delay-300 relative col-span-2 aspect-[21/9] bg-slate-900 group border border-orange-500/30 shadow-[0_0_20px_rgba(234,88,12,0.15)] ring-1 ring-white/10">
-                    <img src="https://images.unsplash.com/photo-1585366119957-e5733f3951cf?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay group-hover:scale-105 transition-all duration-700">
-                    <div class="absolute inset-0 bg-gradient-to-r from-orange-900/60 to-purple-900/60"></div>
-                    <div class="absolute inset-0 flex flex-col justify-center items-center text-center p-6 z-10">
-                        <span class="bg-gradient-to-r from-[#ea580c] to-orange-400 text-white text-[9px] font-black uppercase px-3 py-1.5 rounded-full mb-2 shadow-[0_0_15px_rgba(234,88,12,0.5)] border border-orange-300 animate-pulse tracking-widest">
-                            <i class="fa-solid fa-bolt text-yellow-300 mr-1"></i> Try Your Luck
-                        </span>
-                        <h3 class="text-white font-black text-2xl md:text-3xl uppercase tracking-widest drop-shadow-lg font-['Moul']" data-en="Mystery Box" data-kh="ចាប់យករង្វាន់">Mystery Box</h3>
-                        <p class="text-orange-200 text-[10px] font-bold uppercase mt-1.5 tracking-[0.2em]">Premium Minifigures</p>
-                    </div>
-                </a>
-
-            </div>
-        </section>
-
-    </main>
-
-    <!-- 🌟 APP-STYLE BOTTOM NAVIGATION 🌟 -->
-    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[380px] h-16 glass-panel rounded-[24px] flex items-center justify-around px-2 z-40">
-        <!-- Home (Active) -->
-        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-14 h-full flex items-center justify-center text-[#ea580c] flex-col gap-1 active:scale-90 transition-transform">
-            <i class="fa-solid fa-house text-lg drop-shadow-sm"></i>
-            <span class="text-[8px] font-black uppercase tracking-[0.2em]">Home</span>
-        </button>
-        
-        <!-- Big Magic Button (Links to Builder) -->
-        <div class="relative w-16 h-16 -translate-y-5 flex items-center justify-center">
-            <div class="absolute inset-0 rounded-full pulse-ring bg-[#ea580c]"></div>
-            <a href="custom_bracelet.html" class="relative w-14 h-14 bg-slate-900 rounded-full flex items-center justify-center text-white border-[3px] border-white shadow-2xl active:scale-90 transition-all hover:bg-[#ea580c] group z-10">
-                <i class="fa-solid fa-wand-magic-sparkles text-xl relative z-10 group-hover:animate-spin-slow"></i>
-            </a>
-        </div>
-        
-        <!-- My Orders / Connects to global cart logic! -->
-        <button onclick="openOrderHistory()" class="w-14 h-full flex items-center justify-center text-slate-400 hover:text-[#ea580c] flex-col gap-1 active:scale-90 transition-colors">
-            <i class="fa-solid fa-receipt text-lg"></i>
-            <span class="text-[8px] font-black uppercase tracking-[0.2em]">Orders</span>
-        </button>
-    </nav>
-
-    <!-- ========================================================================= -->
-    <!-- UNIFIED CART & CHECKOUT UI                                                -->
-    <!-- ========================================================================= -->
+    /* Order Card Hover Effects */
+    .order-card { transition: all 0.3s ease; }
+    .order-card:hover { border-color: #cbd5e1; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
     
-    <!-- CART DRAWER -->
-    <div id="universal-cart-drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[8000] flex flex-col justify-end transition-transform duration-300">
-        <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeUniversalCart()"></div>
-        <div class="relative w-full h-[85vh] bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
-            <div class="bg-white px-5 sm:px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10">
-                <div>
-                    <h2 class="text-xl font-black text-gray-900 font-['Moul']" data-en="Your Cart" data-kh="កន្ត្រករបស់អ្នក">កន្ត្រករបស់អ្នក</h2>
-                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Your Shopping Cart</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="openOrderHistory()" class="w-9 h-9 flex items-center justify-center bg-orange-50 border border-orange-100 rounded-full text-[#ea580c] hover:bg-orange-100 active:scale-90 transition-all shadow-sm"><i class="fa-solid fa-receipt"></i></button>
-                    <button onclick="closeUniversalCart()" class="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
-                </div>
-            </div>
-            
-            <div id="universal-cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
-            
-            <div class="bg-white border-t border-gray-100 p-5 z-10 pb-8 md:pb-5 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                <div class="space-y-2 mb-4">
-                    <div class="flex justify-between items-center text-xs font-bold text-gray-500"><span>Subtotal (តម្លៃទំនិញ)</span><span id="uni-cart-subtotal">0៛</span></div>
-                    <div class="flex justify-between items-center text-xs font-bold text-gray-500"><span>Delivery (ថ្លៃដឹកជញ្ជូន)</span><span id="uni-cart-delivery">0៛</span></div>
-                    <div class="flex justify-between items-end pt-2 border-t border-gray-100">
-                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Grand Total)</span>
-                        <span id="uni-cart-grand-total-khr" class="text-2xl font-black text-[#ea580c] leading-none block">0៛</span>
-                    </div>
-                </div>
-                <button onclick="openUniversalCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
-                    <i class="fa-solid fa-truck-fast"></i> <span>បន្តទៅការដឹកជញ្ជូន (Checkout)</span>
-                </button>
-            </div>
-        </div>
-    </div>
+    /* Status Colors */
+    .status-pending { background: #fff7ed; color: #ff5000; border-color: #fed7aa; }
+    .status-processing { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+    .status-completed { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+    .status-cancelled { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+    
+    /* Scrollbar Utility */
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+{% endblock %}
 
-    <!-- ORDER HISTORY MODAL -->
-    <div id="universal-history-modal" class="fixed inset-0 z-[9500] bg-gray-50 flex flex-col translate-x-full transition-transform duration-300 ease-in-out">
-        <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
+{% block content %}
+<div id="view-orders" class="pb-24 text-slate-800 admin-font">
+    
+    <!-- ==================== HEADER & STATS ==================== -->
+    <div class="mb-6 space-y-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-[#ff5000]">
+                <i class="fa-solid fa-receipt text-lg"></i>
+            </div>
             <div>
-                <h2 class="text-lg font-black font-['Moul'] text-gray-900" data-en="Order History" data-kh="ប្រវត្តិកម្ម៉ង់របស់អ្នក">ប្រវត្តិកម្ម៉ង់របស់អ្នក</h2>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">My Orders</p>
+                <h1 class="text-lg font-black text-slate-900 khmer-title leading-tight">គ្រប់គ្រងការបញ្ជាទិញ</h1>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order Management System</p>
             </div>
-            <button onclick="closeOrderHistory()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-arrow-right text-lg"></i></button>
         </div>
-        <div class="flex-1 overflow-y-auto p-4 space-y-4" id="universal-history-container"></div>
+
+        <!-- Dashboard Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Total Orders</span>
+                <span class="block text-2xl font-black text-slate-800 mt-1">{{ global_orders|length }}</span>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-orange-100 shadow-sm relative overflow-hidden">
+                <div class="absolute inset-0 bg-orange-50/50"></div>
+                <span class="text-[10px] font-black text-orange-400 uppercase tracking-wider relative z-10">New / Pending</span>
+                <span class="block text-2xl font-black text-[#ff5000] mt-1 relative z-10">{{ global_orders|selectattr("status", "equalto", "Pending")|list|length }}</span>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
+                <div class="absolute inset-0 bg-blue-50/50"></div>
+                <span class="text-[10px] font-black text-blue-400 uppercase tracking-wider relative z-10">Processing</span>
+                <span class="block text-2xl font-black text-blue-600 mt-1 relative z-10">{{ global_orders|selectattr("status", "equalto", "Processing")|list|length }}</span>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm relative overflow-hidden">
+                <div class="absolute inset-0 bg-emerald-50/50"></div>
+                <span class="text-[10px] font-black text-emerald-400 uppercase tracking-wider relative z-10">Completed</span>
+                <span class="block text-2xl font-black text-emerald-600 mt-1 relative z-10">{{ global_orders|selectattr("status", "equalto", "Completed")|list|length }}</span>
+            </div>
+        </div>
     </div>
 
-    <!-- CHECKOUT MODAL -->
-    <div id="universal-checkout-modal" class="fixed inset-0 z-[9000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
-        <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
-            <h2 class="text-xl font-black font-['Moul']" data-en="Checkout" data-kh="ព័ត៌មានដឹកជញ្ជូន">ព័ត៌មានដឹកជញ្ជូន</h2>
-            <button onclick="closeUniversalCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <!-- ==================== SEARCH & FILTER BAR ==================== -->
+    <div class="bg-white border border-slate-200/80 p-2.5 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-3 mb-6">
+        <div class="relative w-full md:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="order-search-input" oninput="filterOrders()" placeholder="Search Order ID, Name, or Phone..." class="input-field pl-9 w-full bg-slate-50 border-slate-200 text-xs">
         </div>
-        <div class="flex-1 overflow-y-auto p-5 sm:p-6 pb-32 bg-gray-50">
-            <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm max-w-lg mx-auto">
-                <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
-                <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប (Subtotal):</span><span id="uni-check-subtotal">0៛</span></div>
-                <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន (Delivery):</span><span id="uni-check-delivery">0៛</span></div>
-                <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
-                    <span class="text-sm">សរុបត្រូវបង់ (Total):</span><span id="uni-check-total-khr" class="text-[#ea580c] text-xl leading-none">0៛</span>
+
+        <div class="flex items-center gap-1 overflow-x-auto hide-scrollbar w-full md:w-auto touch-pan-x">
+            <button onclick="filterStatus('All')" id="flt-All" class="status-flt bg-slate-900 text-white px-4 py-2 text-[10px] font-extrabold uppercase rounded-xl transition-all whitespace-nowrap shadow-sm">All Orders</button>
+            <button onclick="filterStatus('Pending')" id="flt-Pending" class="status-flt text-slate-500 bg-slate-50 hover:bg-slate-100 px-4 py-2 text-[10px] font-extrabold uppercase rounded-xl transition-all whitespace-nowrap">Pending</button>
+            <button onclick="filterStatus('Processing')" id="flt-Processing" class="status-flt text-slate-500 bg-slate-50 hover:bg-slate-100 px-4 py-2 text-[10px] font-extrabold uppercase rounded-xl transition-all whitespace-nowrap">Processing</button>
+            <button onclick="filterStatus('Completed')" id="flt-Completed" class="status-flt text-slate-500 bg-slate-50 hover:bg-slate-100 px-4 py-2 text-[10px] font-extrabold uppercase rounded-xl transition-all whitespace-nowrap">Completed</button>
+        </div>
+    </div>
+
+    <!-- ==================== ORDERS GRID ==================== -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-5" id="main-orders-list">
+        {% for order in global_orders %}
+        
+        <!-- Status Class Logic -->
+        {% set status_class = 'status-pending' %}
+        {% if order.status == 'Processing' %}{% set status_class = 'status-processing' %}{% endif %}
+        {% if order.status == 'Completed' %}{% set status_class = 'status-completed' %}{% endif %}
+        {% if order.status == 'Cancelled' %}{% set status_class = 'status-cancelled' %}{% endif %}
+
+        <div class="order-item order-card bg-white rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden" data-status="{{ order.status }}" data-search="{{ order.id | lower }} {{ order.customer_name | lower }} {{ order.customer_phone }}" id="order-{{ order.id }}">
+            
+            <!-- Side accent line for Pending orders -->
+            {% if order.status == 'Pending' %}
+            <div class="absolute top-0 left-0 w-1.5 h-full bg-[#ff5000]"></div>
+            {% endif %}
+
+            <!-- ================= VIEW MODE ================= -->
+            <div class="view-mode flex flex-col h-full p-5 md:p-6">
+                <!-- Header -->
+                <div class="flex justify-between items-start border-b border-slate-100 pb-4 mb-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-100 px-2.5 py-0.5 rounded border border-slate-200">#{{ order.id }}</span>
+                            <span class="text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded border {{ status_class }}">
+                                {% if order.status == 'Pending' %}<i class="fa-regular fa-clock mr-1"></i>{% endif %}
+                                {% if order.status == 'Processing' %}<i class="fa-solid fa-box-open mr-1"></i>{% endif %}
+                                {% if order.status == 'Completed' %}<i class="fa-solid fa-check-double mr-1"></i>{% endif %}
+                                {{ order.status }}
+                            </span>
+                        </div>
+                        <h3 class="font-black text-base text-slate-900 mt-2">{{ order.customer_name }}</h3>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-bold text-slate-400 block">{{ order.created_at.strftime('%d %b %Y') }}</span>
+                        <span class="text-xs font-black text-slate-700 block">{{ order.created_at.strftime('%I:%M %p') }}</span>
+                    </div>
+                </div>
+
+                <!-- Customer Details -->
+                <div class="bg-slate-50 rounded-2xl p-3.5 border border-slate-100 mb-4 space-y-2">
+                    <div class="flex items-center gap-3 text-sm font-bold text-slate-700">
+                        <div class="w-6 h-6 rounded-full bg-orange-100 text-[#ff5000] flex items-center justify-center shrink-0"><i class="fa-solid fa-phone text-[10px]"></i></div>
+                        <a href="tel:{{ order.customer_phone }}" class="hover:text-[#ff5000] transition-colors">{{ order.customer_phone }}</a>
+                    </div>
+                    <div class="flex items-start gap-3 text-xs font-bold text-slate-600">
+                        <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-location-dot text-[10px]"></i></div>
+                        <span class="leading-relaxed">{{ order.customer_address }}</span>
+                    </div>
+                </div>
+
+                <!-- Order Items (Mini List) -->
+                <div class="space-y-3 mb-5 flex-1">
+                    <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1.5 mb-2">Order Items ({{ order.items|length }})</h4>
+                    <div class="max-h-[160px] overflow-y-auto pr-1 hide-scrollbar space-y-2">
+                        {% for item in order.items %}
+                        <div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
+                            <img src="{{ item.image }}" class="w-12 h-12 rounded-lg bg-slate-50 border border-slate-200 object-contain p-1 shrink-0" onerror="this.src='https://ui-avatars.com/api/?name=Item&background=f8fafc&color=64748b'">
+                            <div class="flex-1 min-w-0">
+                                <p class="font-black text-xs text-slate-900 truncate">{{ item.title }}</p>
+                                <p class="text-[10px] font-bold text-slate-500 truncate">{{ item.style | default('Standard') }}</p>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span class="bg-slate-100 text-slate-700 font-black text-xs px-2 py-1 rounded-lg">x{{ item.qty }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Actions & Total -->
+                <div class="flex justify-between items-center border-t border-slate-100 pt-4 mt-auto">
+                    <div class="flex gap-2">
+                        {% if order.status == 'Pending' %}
+                            <!-- Action: Confirm & Deduct Stock -->
+                            <form action="/admin/orders/confirm/{{ order.id }}" method="POST" class="m-0" onsubmit="return confirm('Confirm order and deduct item quantities from inventory?')">
+                                <button type="submit" class="bg-[#ff5000] text-white text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl shadow-md shadow-orange-500/20 hover:bg-orange-600 active:scale-95 transition-all flex items-center gap-1.5">
+                                    <i class="fa-solid fa-check"></i> Confirm
+                                </button>
+                            </form>
+                        {% endif %}
+                        
+                        <!-- Action: Edit Information -->
+                        <button type="button" onclick="toggleEdit('{{ order.id }}')" class="bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl hover:bg-slate-200 hover:text-slate-900 active:scale-95 transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                    </div>
+
+                    <div class="text-right">
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Grand Total</span>
+                        <span class="font-black text-xl text-[#ff5000] leading-none block">{{ (order.total_amount * 4000) | int | format_currency }}៛</span>
+                    </div>
                 </div>
             </div>
-            <div class="space-y-4 max-w-lg mx-auto">
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង (Contact Info)</label>
-                <input type="text" id="uni-cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Full Name)">
-                <input type="tel" id="uni-cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone Number)">
-                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន (Address)</label>
-                <textarea id="uni-cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ..."></textarea>
+
+            <!-- ================= EDIT MODE (Slide Down) ================= -->
+            <div class="edit-mode h-full">
+                <form action="/admin/orders/update/{{ order.id }}" method="POST" class="bg-slate-50 p-5 md:p-6 rounded-3xl border-2 border-[#ff5000] ring-4 ring-orange-500/10 shadow-2xl relative w-full h-full flex flex-col">
+                    
+                    <!-- Header -->
+                    <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center text-[#ff5000]">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-black text-slate-900 uppercase tracking-wider">Edit Order Information</h5>
+                                <p class="text-[9px] text-slate-500 font-bold">Order ID: #{{ order.id }}</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="toggleEdit('{{ order.id }}')" class="text-[10px] font-black text-slate-600 bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 px-3 py-1.5 rounded-xl shadow-sm transition-all uppercase tracking-wider flex items-center gap-1">
+                            <i class="fa-solid fa-xmark"></i> Close
+                        </button>
+                    </div>
+
+                    <!-- Customer Info Edit -->
+                    <div class="space-y-3 mb-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Customer Name</label>
+                                <input type="text" name="customer_name" value="{{ order.customer_name }}" class="input-field w-full" required>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Phone Number</label>
+                                <input type="text" name="customer_phone" value="{{ order.customer_phone }}" class="input-field w-full" required>
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Delivery Address</label>
+                            <textarea name="customer_address" rows="2" class="input-field w-full resize-none" required>{{ order.customer_address }}</textarea>
+                        </div>
+                        
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Order Status</label>
+                            <select name="status" class="input-field w-full font-bold cursor-pointer">
+                                <option value="Pending" {% if order.status == 'Pending' %}selected{% endif %}>🟠 Pending (New Order)</option>
+                                <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>🔵 Processing (Packing)</option>
+                                <option value="Completed" {% if order.status == 'Completed' %}selected{% endif %}>🟢 Completed (Delivered)</option>
+                                <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>🔴 Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Items Edit (Quantities) -->
+                    <div class="flex-1 space-y-2 mb-4 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm overflow-y-auto hide-scrollbar max-h-[250px]">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1 mb-2">Adjust Items</label>
+                        {% for item in order.items %}
+                        <div class="flex items-center gap-3 p-1">
+                            <img src="{{ item.image }}" class="w-10 h-10 rounded-lg border border-slate-200 object-contain p-0.5">
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold text-xs text-slate-900 truncate">{{ item.title }}</p>
+                                <input type="hidden" name="item_ids[]" value="{{ item.id }}">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[9px] font-bold text-slate-400">Qty:</span>
+                                <input type="number" name="item_qtys[]" value="{{ item.qty }}" min="0" class="input-field w-16 text-center text-xs font-black p-1.5 h-8">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Save Actions -->
+                    <div class="pt-4 mt-auto border-t border-slate-200 grid grid-cols-2 gap-3">
+                        <button type="button" onclick="toggleEdit('{{ order.id }}')" class="w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-wider text-slate-600 bg-white border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-wider text-white bg-[#ff5000] shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition-colors flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
             </div>
+            
         </div>
-        <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:pb-5">
-            <button onclick="processUniversalFinalOrder()" id="uni-confirm-btn" class="w-full max-w-lg mx-auto block bg-[#ea580c] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
-        </div>
+        {% endfor %}
     </div>
 
-    <!-- ========================================================================= -->
-    <!-- JAVASCRIPT LOGIC                                                          -->
-    <!-- ========================================================================= -->
-    <script>
-        // Language System
-        let currentLang = localStorage.getItem('app_lang') || 'kh';
-        function applyLanguage() {
-            document.getElementById('lang-btn-text').innerText = currentLang === 'en' ? 'KH' : 'EN';
-            document.querySelectorAll('[data-en]').forEach(el => { el.innerHTML = currentLang === 'kh' ? el.getAttribute('data-kh') : el.getAttribute('data-en'); });
-        }
-        function toggleLang() {
-            currentLang = currentLang === 'en' ? 'kh' : 'en';
-            localStorage.setItem('app_lang', currentLang); applyLanguage();
-        }
+</div>
+{% endblock %}
 
-        // Global Cart Logic
-        const UNIVERSAL_CART_RATE = 4000;
-        let globalStoreCart = [];
+{% block scripts %}
+<script>
+    // ================= 1. UI HELPERS & EDIT MODE ACTIONS =================
+    function toggleEdit(id) { 
+        const item = document.getElementById(`order-${id}`); 
+        if(item) {
+            item.classList.toggle('is-editing'); 
+            if (item.classList.contains('is-editing')) {
+                setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+            }
+        }
+    }
 
-        function syncCartFromStorage() {
-            try {
-                let oldCart = JSON.parse(localStorage.getItem('sr_cart') || '[]');
-                let mainCart = JSON.parse(localStorage.getItem('universal_store_cart') || '[]');
-                if (oldCart.length > 0) { mainCart = [...mainCart, ...oldCart]; localStorage.removeItem('sr_cart'); }
-                globalStoreCart = mainCart;
-            } catch(e) { globalStoreCart = []; }
+    // ================= 2. FILTERING & LIVE SEARCH =================
+    function filterStatus(status) {
+        // Update Buttons UI
+        document.querySelectorAll('.status-flt').forEach(btn => { 
+            btn.classList.remove('bg-slate-900', 'text-white', 'shadow-sm'); 
+            btn.classList.add('text-slate-500', 'bg-slate-50'); 
+        });
+        const activeBtn = document.getElementById(`flt-${status}`);
+        if(activeBtn) {
+            activeBtn.classList.add('bg-slate-900', 'text-white', 'shadow-sm');
+            activeBtn.classList.remove('text-slate-500', 'bg-slate-50');
         }
         
-        window.updateCartBadge = function() {
-            syncCartFromStorage();
-            const count = globalStoreCart.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
-            document.querySelectorAll('.cart-badge-count').forEach(badge => {
-                if (count > 0) { badge.innerText = count; badge.classList.remove('hidden'); } 
-                else { badge.classList.add('hidden'); }
-            });
-        };
+        // Trigger generic filter logic
+        filterOrders(status);
+    }
 
-        function saveGlobalCart() { localStorage.setItem('universal_store_cart', JSON.stringify(globalStoreCart)); window.updateCartBadge(); }
+    function filterOrders(forceStatus = null) {
+        const activeStatusBtn = document.querySelector('.status-flt.bg-slate-900');
+        const statusFlt = forceStatus || (activeStatusBtn ? activeStatusBtn.id.replace('flt-', '') : 'All');
+        const searchTerm = (document.getElementById('order-search-input')?.value || '').toLowerCase().trim();
+        
+        document.querySelectorAll('.order-item').forEach(item => {
+            const mStatus = statusFlt === 'All' || item.dataset.status === statusFlt;
+            const searchData = item.dataset.search || '';
+            const mSearch = !searchTerm || searchData.includes(searchTerm);
 
-        window.openUniversalCart = window.openCartDrawer = function() {
-            syncCartFromStorage(); renderUniversalCartUI();
-            const drawer = document.getElementById('universal-cart-drawer');
-            if(drawer) { drawer.style.transform = 'translateY(0%)'; drawer.style.pointerEvents = 'auto'; }
-        };
-
-        window.closeUniversalCart = window.closeCartDrawer = function() {
-            const drawer = document.getElementById('universal-cart-drawer');
-            if(drawer) { drawer.style.transform = 'translateY(100%)'; drawer.style.pointerEvents = 'none'; }
-        };
-
-        function calculateUniversalDelivery(subtotalKHR) {
-            if (subtotalKHR === 0) return 0;
-            if (subtotalKHR < 20000) return 8000; if (subtotalKHR < 40000) return 6000;
-            if (subtotalKHR < 60000) return 4000; if (subtotalKHR < 80000) return 2000;
-            return 0;
-        }
-
-        function renderUniversalCartUI() {
-            const container = document.getElementById('universal-cart-items-container');
-            if(globalStoreCart.length === 0) {
-                container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3 text-slate-400"></i><p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-slate-500">កន្ត្រកទទេ (Empty)</p></div>`;
-                document.getElementById('uni-cart-subtotal').innerText = "0៛"; document.getElementById('uni-cart-delivery').innerText = "0៛"; document.getElementById('uni-cart-grand-total-khr').innerText = "0៛";
-                return;
-            }
-
-            let subtotalKHR = 0; let customIndex = 1;
-            container.innerHTML = globalStoreCart.map((item) => {
-                let itemTotalKHR = 0;
-                if (item.type === 'custom_bracelet') itemTotalKHR = (item.baseTotal + item.pkgPrice) * item.qty;
-                else itemTotalKHR = Math.round(parseFloat(item.price) * UNIVERSAL_CART_RATE) * item.qty;
-                
-                if(item.selected) subtotalKHR += itemTotalKHR;
-                
-                if (item.type === 'custom_bracelet') {
-                    return `
-                    <div class="bg-white p-4 rounded-[2rem] shadow-sm border ${item.selected ? 'border-[#ea580c] ring-4 ring-orange-50' : 'border-slate-100'} flex flex-col relative transition-all">
-                        <div class="flex justify-between items-center mb-3">
-                            <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')">
-                                <span class="font-black text-sm text-slate-900">Custom DIY Bracelet #${customIndex++}</span>
-                            </label>
-                            <button onclick="removeUniCartItem('${item.id}')" class="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
-                        </div>
-                        <div class="w-full h-[220px] bg-slate-50 rounded-2xl border border-slate-100 overflow-x-auto overflow-y-hidden hide-scrollbar mb-4 relative" onclick="if(typeof openImageViewer === 'function') openImageViewer('${item.image}')">
-                            <div class="h-full w-max min-w-full flex items-center justify-center px-4">
-                                <img src="${item.image}" class="h-full w-auto max-w-none object-contain mix-blend-multiply cursor-pointer py-2">
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-end">
-                            <div class="flex flex-col gap-1.5">
-                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Code: <span class="text-slate-900 font-mono tracking-wider">${item.code || 'N/A'}</span></span>
-                                <span class="text-[9px] font-black text-orange-600 bg-orange-50 px-2 py-1 rounded border border-orange-100 uppercase tracking-widest w-max">${item.pkgName} • ${item.charms.length} Charms</span>
-                            </div>
-                            <div class="flex flex-col items-end gap-2">
-                                <span class="font-black text-[15px] sm:text-base text-[#ea580c] leading-none">${Math.round(itemTotalKHR).toLocaleString()}៛</span>
-                                <div class="flex items-center gap-3 bg-slate-50 rounded-xl p-0.5 border border-slate-200">
-                                    <button onclick="updateUniCartQty('${item.id}', -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ea580c]">-</button>
-                                    <span class="font-black text-xs w-4 text-center text-slate-800">${item.qty}</span>
-                                    <button onclick="updateUniCartQty('${item.id}', 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ea580c]">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                } else {
-                    return `
-                    <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-50' : 'border-slate-100'} flex gap-3 relative transition-all items-center">
-                        <label class="flex items-center justify-center cursor-pointer h-full"><input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')"></label>
-                        <div class="w-16 sm:w-20 h-16 sm:h-20 bg-slate-50 rounded-xl border border-slate-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden cursor-pointer shadow-inner"><img src="${item.image}" class="max-w-full max-h-full object-contain mix-blend-multiply"></div>
-                        <div class="flex-1 flex flex-col justify-center min-w-0 py-0.5">
-                            <div class="flex justify-between items-start">
-                                <h4 class="font-black text-[11px] sm:text-xs text-slate-900 leading-tight truncate pr-2">${item.name || item.title}</h4>
-                                <button onclick="removeUniCartItem('${item.id}')" class="text-slate-300 hover:text-red-500 p-1.5 -mt-1 -mr-1 transition-colors active:scale-90"><i class="fa-solid fa-trash-can text-sm"></i></button>
-                            </div>
-                            <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest truncate mb-2.5">${item.style || "Standard Option"}</p>
-                            <div class="flex justify-between items-end">
-                                <span class="font-black text-[13px] sm:text-sm text-[#ea580c] leading-none">${Math.round(itemTotalKHR).toLocaleString()}៛</span>
-                                <div class="flex items-center gap-2 sm:gap-3 bg-slate-50 rounded-lg p-0.5 border border-slate-200 shadow-sm">
-                                    <button onclick="updateUniCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ea580c]">-</button>
-                                    <span class="font-black text-[11px] w-4 text-center text-slate-800">${item.qty}</span>
-                                    <button onclick="updateUniCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ea580c]">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                }
-            }).join('');
-            
-            const delivery = calculateUniversalDelivery(subtotalKHR);
-            document.getElementById('uni-cart-subtotal').innerText = Math.round(subtotalKHR).toLocaleString() + "៛";
-            const deliveryEl = document.getElementById('uni-cart-delivery');
-            if (delivery === 0 && subtotalKHR > 0) { deliveryEl.innerText = "ឥតគិតថ្លៃ (Free)"; deliveryEl.className = "text-emerald-500 font-black"; } 
-            else if (subtotalKHR > 0) { deliveryEl.innerText = Math.round(delivery).toLocaleString() + "៛"; deliveryEl.className = "text-[#ea580c] font-black"; } 
-            else { deliveryEl.innerText = "0៛"; deliveryEl.className = "text-slate-500 font-bold"; }
-            document.getElementById('uni-cart-grand-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
-        }
-
-        window.toggleUniCartItem = function(id) { syncCartFromStorage(); const item = globalStoreCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveGlobalCart(); renderUniversalCartUI(); } }
-        window.updateUniCartQty = function(id, delta) { syncCartFromStorage(); const item = globalStoreCart.find(i => i.id === id); if(item) { item.qty = Math.max(1, Math.min(20, item.qty + delta)); saveGlobalCart(); renderUniversalCartUI(); } }
-        window.removeUniCartItem = function(id) { if(confirm("លុបចេញពីកន្ត្រក? (Remove item?)")) { syncCartFromStorage(); globalStoreCart = globalStoreCart.filter(i => i.id !== id); saveGlobalCart(); renderUniversalCartUI(); } }
-
-        window.openUniversalCheckout = function() {
-            syncCartFromStorage(); const selectedItems = globalStoreCart.filter(i => i.selected);
-            if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយ! (Select an item first!)");
-            let subtotalKHR = 0; 
-            selectedItems.forEach(i => {
-                if (i.type === 'custom_bracelet') subtotalKHR += (i.baseTotal + i.pkgPrice) * i.qty;
-                else subtotalKHR += Math.round(parseFloat(i.price) * UNIVERSAL_CART_RATE) * i.qty;
-            });
-            const delivery = calculateUniversalDelivery(subtotalKHR);
-            document.getElementById('uni-check-subtotal').innerText = Math.round(subtotalKHR).toLocaleString() + "៛";
-            document.getElementById('uni-check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ" : Math.round(delivery).toLocaleString() + "៛";
-            document.getElementById('uni-check-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
-            closeUniversalCart(); document.getElementById('universal-checkout-modal').classList.remove('translate-y-full');
-        };
-        window.closeUniversalCheckout = function() { document.getElementById('universal-checkout-modal').classList.add('translate-y-full'); };
-
-        window.openOrderHistory = function() {
-            closeUniversalCart(); const historyContainer = document.getElementById('universal-history-container');
-            let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
-            if (history.length === 0) {
-                historyContainer.innerHTML = `<div class="py-20 text-center opacity-40"><i class="fa-solid fa-box-open text-5xl mb-3 text-slate-400"></i><p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-slate-500">មិនទាន់មានប្រវត្តិកម្ម៉ង់ទេ</p><p class="text-[10px] font-bold text-slate-400 mt-1">No orders yet</p></div>`;
+            if (mStatus && mSearch) {
+                item.style.display = 'block';
             } else {
-                historyContainer.innerHTML = history.map(order => `
-                    <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm mb-4">
-                        <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-3">
-                            <div><span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order ID</span><p class="font-black text-sm text-slate-800 font-mono">${order.id}</p></div>
-                            <div class="text-right"><span class="text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-100 px-2 py-1 rounded uppercase tracking-widest">${order.status}</span><p class="text-[9px] font-bold text-slate-400 mt-1">${new Date(order.date).toLocaleDateString()}</p></div>
-                        </div>
-                        <div class="space-y-3 mb-3">${order.items.map(item => `
-                            <div class="flex items-center gap-3">
-                                <img src="${item.image}" class="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 object-contain p-0.5 shrink-0" onerror="this.src='https://via.placeholder.com/100?text=Item'">
-                                <div class="flex-1 min-w-0"><p class="font-bold text-xs text-slate-900 truncate">${item.title}</p><p class="text-[9px] font-bold text-slate-400 truncate">Qty: ${item.qty} • ${item.style || ''}</p></div>
-                            </div>`).join('')}
-                        </div>
-                        <div class="flex justify-between items-center border-t border-slate-100 pt-3"><span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">សរុប (Total)</span><span class="font-black text-sm text-[#ea580c]">${Math.round(order.totalKHR).toLocaleString()}៛</span></div>
-                    </div>`).join('');
+                item.style.display = 'none';
             }
-            document.getElementById('universal-history-modal').classList.remove('translate-x-full');
-        };
-        window.closeOrderHistory = function() { document.getElementById('universal-history-modal').classList.add('translate-x-full'); };
-
-        window.processUniversalFinalOrder = async function() {
-            syncCartFromStorage(); const selectedItems = globalStoreCart.filter(i => i.selected);
-            const name = document.getElementById('uni-cust-name').value.trim(); const phone = document.getElementById('uni-cust-phone').value.trim(); const address = document.getElementById('uni-cust-address').value.trim();
-            if(!name || !phone || !address) return alert("សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់! (Please fill all info!)");
-            if(phone.length < 8) return alert("លេខទូរស័ព្ទមិនត្រឹមត្រូវ! (Invalid phone number!)");
-
-            const btn = document.getElementById('uni-confirm-btn'); const originalText = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> កំពុងបញ្ជូន...`; btn.disabled = true;
-
-            let subtotalKHR = 0; const itemsPayload = [], charmCounts = {}, orderHistoryItems = [];
-            selectedItems.forEach((i, bIdx) => {
-                if (i.type === 'custom_bracelet') {
-                    const itemPriceKHR = i.baseTotal + i.pkgPrice; subtotalKHR += itemPriceKHR * i.qty;
-                    itemsPayload.push({ cartId: "custom-" + Date.now() + "-" + bIdx, title: "Custom DIY Bracelet", style: `Code: ${i.code} | Charms: ${i.charms.length} | Pkg: ${i.pkgName}`, price: itemPriceKHR / UNIVERSAL_CART_RATE, qty: i.qty, image: i.image, maxStock: 99 });
-                    orderHistoryItems.push({ title: "DIY Bracelet", style: `Code: ${i.code}`, qty: i.qty, image: i.image });
-                    i.charms.forEach(c => { const dbId = c.db_id || "0-0"; charmCounts[dbId] = (charmCounts[dbId] || 0) + (1 * i.qty); });
-                } else {
-                    subtotalKHR += Math.round(parseFloat(i.price) * UNIVERSAL_CART_RATE) * i.qty;
-                    itemsPayload.push({ cartId: i.variantId || i.id, title: i.name || i.title, style: i.style || "Standard Option", price: parseFloat(i.price), qty: i.qty, image: i.image, maxStock: i.stock || 99 });
-                    orderHistoryItems.push({ title: i.name || i.title, style: i.style, qty: i.qty, image: i.image });
-                }
-            });
-            for (const [id, count] of Object.entries(charmCounts)) { itemsPayload.push({ cartId: id, title: "DIY-Part", style: "Hidden stock component", price: 0, qty: count, image: "hidden", maxStock: 99 }); }
-
-            const delivery = calculateUniversalDelivery(subtotalKHR); const totalUSD = (subtotalKHR + delivery) / UNIVERSAL_CART_RATE;
-
-            const handleSuccess = () => {
-                const newOrder = { id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(), date: new Date().toISOString(), items: orderHistoryItems, totalKHR: subtotalKHR + delivery, status: "បានផ្ញើទៅ Telegram (Sent)" };
-                let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]'); history.unshift(newOrder); localStorage.setItem('sr_order_history', JSON.stringify(history));
-                alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");
-                globalStoreCart = globalStoreCart.filter(i => !i.selected); saveGlobalCart(); window.location.href = "https://t.me/Somphea_Reak";
-            };
-
-            try {
-                const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, address, items: itemsPayload, total: totalUSD }) });
-                if (res.ok) { handleSuccess(); } 
-                else { const errData = await res.json(); alert("Error: " + (errData.message || "Could not process order.")); btn.innerHTML = originalText; btn.disabled = false; }
-            } catch (e) { handleSuccess(); }
-        };
-
-        // Initialize App
-        document.addEventListener('DOMContentLoaded', () => {
-            syncCartFromStorage(); applyLanguage(); updateCartBadge();
         });
-    </script>
-</body>
-</html>
+    }
+
+    // Handle initial state rendering logic if needed
+    document.addEventListener("DOMContentLoaded", () => {
+        // Initialization code if required.
+    });
+</script>
+{% endblock %}
 
