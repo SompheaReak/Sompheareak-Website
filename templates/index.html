@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Somphea Reak | Premium Studio</title>
     
+    <!-- Tailwind & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -14,177 +15,221 @@
         
         body { 
             font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif; 
-            background-color: #fcfbf9;
+            background-color: #f6f5f3;
             -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
         }
         
-        h1, .khmer-title { font-family: 'Moul', serif; }
+        h1, h2, h3, h4, .khmer-title { font-family: 'Moul', serif; font-weight: normal; }
 
-        /* Premium Unified Background */
-        .pka-chan-bg {
-            background-color: #fdfbf7;
-            background-image: radial-gradient(#ea580c 0.5px, transparent 0.5px), radial-gradient(#ea580c 0.5px, #fdfbf7 0.5px);
-            background-size: 20px 20px; background-position: 0 0, 10px 10px; opacity: 0.3;
+        /* Modern Mesh Background */
+        .premium-bg {
+            background-color: #f8f7f5;
+            background-image: radial-gradient(#ea580c 0.75px, transparent 0.75px), radial-gradient(#ea580c 0.75px, #f8f7f5 0.75px);
+            background-size: 24px 24px; 
+            background-position: 0 0, 12px 12px; 
+            opacity: 0.15;
             position: fixed; inset: 0; z-index: -1;
         }
 
-        /* Stunning Card Animations */
-        .category-card { 
+        /* Bento Card Styling */
+        .bento-card { 
+            border-radius: 32px;
             transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
             transform: translateZ(0); 
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); 
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); 
+            overflow: hidden;
+            cursor: pointer;
         }
-        .category-card:active { transform: scale(0.96); box-shadow: 0 5px 15px -5px rgba(0,0,0,0.1); }
-        .category-card img { transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-        .category-card:hover img { transform: scale(1.08); }
+        .bento-card:active { transform: scale(0.95); box-shadow: 0 5px 15px -5px rgba(0,0,0,0.1); }
+        .bento-card img { transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .bento-card:hover img { transform: scale(1.1); }
         
-        .gradient-overlay { background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.05) 100%); }
-        .gradient-overlay-side { background: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%); }
+        .gradient-bottom { background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.3) 50%, transparent 100%); }
+        .gradient-side { background: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%); }
         
-        /* Shimmer Effect for Hot Items */
-        .shimmer { position: relative; overflow: hidden; }
-        .shimmer::after {
-            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
-            transform: skewX(-20deg); animation: shimmer-anim 3.5s infinite linear; z-index: 10; pointer-events: none;
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75); 
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.5); 
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,1);
         }
-        @keyframes shimmer-anim { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
         
-        /* Glassmorphism Floating Nav */
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        .glass-dark {
+            background: rgba(20, 20, 20, 0.6); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+        }
+
+        /* Animations */
+        .animate-fade-up { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse-ring {
+            animation: pulseRing 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulseRing {
+            0% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(234, 88, 12, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
         }
     </style>
 </head>
-<body class="text-gray-900 pb-32 select-none relative">
+<body class="text-slate-900 pb-32 select-none antialiased">
 
-    <div class="pka-chan-bg"></div>
+    <div class="premium-bg"></div>
 
-    <!-- 🌟 PREMIUM HEADER 🌟 -->
-    <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
+    <!-- 🌟 FLOATING PILL APP HEADER 🌟 -->
+    <header class="fixed top-4 left-4 right-4 sm:left-auto sm:right-auto sm:w-[480px] sm:left-1/2 sm:-translate-x-1/2 z-[100] glass-panel rounded-full px-2 py-2 flex items-center justify-between transition-all">
         
-        <button onclick="toggleLang()" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-xs font-black text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0 shadow-inner">
+        <!-- Language Toggle -->
+        <button onclick="toggleLang()" class="w-11 h-11 flex items-center justify-center bg-white rounded-full text-xs font-black text-slate-600 border border-slate-100 active:scale-90 transition-transform shadow-sm hover:text-[#ea580c]">
             <span id="lang-btn-text">KH</span>
         </button>
         
+        <!-- Logo & Brand -->
         <div class="flex items-center justify-center flex-1 px-2 gap-3 min-w-0">
-            <img src="static/images/logo.png" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=ea580c&color=fff&rounded=true'" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-md shrink-0 rounded-full" alt="Logo">
-            <div class="flex flex-col justify-center text-left">
-                <h1 class="text-[16px] sm:text-lg font-black text-gray-900 leading-normal tracking-tight font-['Moul'] pb-0.5">
-                    សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-sm sm:text-base whitespace-nowrap">- Somphea Reak</span>
+            <div class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center shadow-lg shrink-0 overflow-hidden relative">
+                <img src="static/images/logo.png" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=000&color=fff&rounded=true&font-size=0.4'" class="w-full h-full object-cover" alt="Logo">
+                <div class="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-full"></div>
+            </div>
+            <div class="flex flex-col justify-center text-left pt-0.5">
+                <h1 class="text-[14px] sm:text-[16px] font-black text-slate-900 leading-none tracking-tight font-['Moul']">
+                    សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs sm:text-sm text-slate-700">- Somphea Reak</span>
                 </h1>
-                <p class="text-[10px] font-bold text-[#ea580c] uppercase tracking-[0.15em] leading-none">Home Studio</p>
+                <p class="text-[8px] font-black text-[#ea580c] uppercase tracking-[0.25em] leading-none mt-1.5">Premium Studio</p>
             </div>
         </div>
         
-        <div class="flex items-center gap-2 shrink-0">
-            <!-- Global Cart Hook -->
-            <button onclick="window.openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span class="cart-badge-count absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden">0</span>
-            </button>
-        </div>
+        <!-- Cart Hook -->
+        <button onclick="window.openCartDrawer()" class="relative w-11 h-11 flex items-center justify-center bg-white border border-slate-100 rounded-full text-slate-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span class="cart-badge-count absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden border border-white">0</span>
+        </button>
     </header>
 
-    <!-- 🌟 HERO WELCOME BANNER 🌟 -->
-    <section class="px-4 pt-6 pb-2">
-        <div class="w-full bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-[2rem] p-6 text-white relative overflow-hidden shadow-2xl shadow-gray-900/20 border border-gray-800">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-[#ea580c] rounded-full blur-[60px] opacity-30 -mr-10 -mt-10"></div>
-            <div class="relative z-10">
-                <span class="bg-white/10 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-white/20 backdrop-blur-md" data-en="Welcome back" data-kh="សូមស្វាគមន៍">Welcome back</span>
-                <h2 class="text-2xl font-black mt-4 leading-tight font-['Moul'] tracking-wide" data-en="Discover Our Latest Collections" data-kh="ស្វែងរកកូឡិកសិនថ្មីៗរបស់យើង">Discover Our<br><span class="text-[#ea580c] font-['Plus_Jakarta_Sans']">Latest</span> Collections</h2>
+    <!-- MAIN APP CONTAINER -->
+    <main class="max-w-2xl mx-auto pt-24 px-4 sm:px-6">
+        
+        <!-- Holographic Welcome Banner -->
+        <section class="pb-6 animate-fade-up">
+            <div class="w-full bg-gradient-to-br from-slate-900 via-[#2a1309] to-black rounded-[32px] p-7 md:p-8 text-white relative overflow-hidden shadow-2xl shadow-orange-900/10 border border-white/10 group">
+                <div class="absolute top-0 right-0 w-48 h-48 bg-[#ea580c] rounded-full blur-[80px] opacity-40 mix-blend-screen group-hover:opacity-60 transition-opacity duration-700 -mr-10 -mt-10"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-purple-600 rounded-full blur-[60px] opacity-20 mix-blend-screen"></div>
+                
+                <div class="relative z-10">
+                    <div class="inline-flex items-center gap-1.5 bg-white/10 text-white text-[9px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-white/20 backdrop-blur-md mb-5 shadow-inner">
+                        <i class="fa-solid fa-crown text-yellow-400"></i> <span data-en="Welcome to Studio" data-kh="សូមស្វាគមន៍">Welcome to Studio</span>
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-black leading-tight font-['Moul'] tracking-wide drop-shadow-lg" data-en="Discover Our Latest Collections" data-kh="ស្វែងរកកូឡិកសិនថ្មីៗរបស់យើង">
+                        Discover Our<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-[#ea580c] to-yellow-400 font-['Plus_Jakarta_Sans'] italic">Latest</span> Collections
+                    </h2>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- 🌟 STOREFRONTS GRID 🌟 -->
-    <section class="px-4 pt-4 space-y-4 relative z-10">
-        <div class="flex items-center justify-between px-2">
-            <h2 class="font-black text-xs uppercase tracking-[0.2em] text-gray-500" data-en="Explore Studio" data-kh="រុករកស្ទូឌីយោ">Explore Studio</h2>
-            <div class="h-px flex-grow ml-4 bg-gray-200/60"></div>
-        </div>
+        <!-- BENTO BOX STORE GRID (Safe Routing Handlers) -->
+        <section class="space-y-4">
+            <div class="flex items-center justify-between px-2 mb-3 animate-fade-up delay-100">
+                <h2 class="font-black text-[11px] uppercase tracking-[0.25em] text-slate-400" data-en="Explore Categories" data-kh="រុករកស្ទូឌីយោ">Explore Categories</h2>
+                <div class="h-px flex-grow ml-4 bg-gradient-to-r from-slate-200 to-transparent"></div>
+            </div>
 
-        <div class="grid grid-cols-2 gap-4">
-            
-            <!-- 1. CUSTOM BRACELET (Hero Item) -->
-            <a href="custom_bracelet.html" class="category-card shimmer relative col-span-2 aspect-[21/9] rounded-[2rem] overflow-hidden group cursor-pointer block ring-1 ring-inset ring-black/5 bg-gray-100">
-                <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover mix-blend-multiply">
-                <div class="gradient-overlay-side absolute inset-0 flex flex-col justify-center p-6">
-                    <div class="flex gap-2 mb-2 z-10">
-                        <span class="bg-[#ea580c] text-white text-[8px] font-black uppercase px-2 py-1 rounded-lg w-fit border border-orange-400 shadow-[0_0_15px_rgba(234,88,12,0.6)] flex items-center gap-1 animate-pulse"><i class="fa-solid fa-fire"></i> Hot</span>
-                        <span class="bg-white/20 backdrop-blur-md text-white text-[8px] font-black uppercase px-2 py-1 rounded-lg w-fit border border-white/30">DIY Studio</span>
-                    </div>
-                    <h3 class="text-white font-black text-xl md:text-2xl uppercase italic leading-tight drop-shadow-lg relative z-10" data-en="Customize Italy Charm Bracelet" data-kh="រចនាខ្សែដៃអុីតាលី">Customize Italy<br>Charm Bracelet</h3>
-                    <p class="text-gray-300 text-[10px] font-bold uppercase mt-1.5 tracking-widest relative z-10 text-orange-300">Design Your Own • Interactive</p>
-                </div>
-            </a>
-
-            <!-- 2. MINIFIGURES (LEGO) -->
-            <a href="minifigure.html" class="category-card relative col-span-1 aspect-[4/5] rounded-[2rem] overflow-hidden group cursor-pointer block ring-1 ring-inset ring-black/5 bg-gray-900">
-                <div class="absolute top-3 right-3 z-20 w-8 h-8 bg-red-600/90 backdrop-blur-md rounded-full flex items-center justify-center border border-red-400 text-white shadow-lg"><i class="fa-solid fa-chevron-right text-xs"></i></div>
-                <img src="https://images.unsplash.com/photo-1518331647614-7a1f04cd34ce?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80">
-                <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-5">
-                    <!-- CSS Custom LEGO Logo -->
-                    <div class="mb-1 ml-1">
-                        <div class="relative inline-flex items-center justify-center bg-[#E3000B] border-[2px] border-black rounded px-2.5 py-1 shadow-lg">
-                            <div class="absolute inset-[1px] border-[1.5px] border-[#FFCF00] rounded-[2px] pointer-events-none"></div>
-                            <span class="font-black italic text-white text-xl tracking-tighter leading-none relative z-10 drop-shadow-sm" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">LEGO</span>
+            <!-- Grid Layout -->
+            <div class="grid grid-cols-2 gap-4 sm:gap-5">
+                
+                <!-- 1. Custom Bracelet Store -->
+                <div onclick="navigateToStore('custom_bracelet')" class="bento-card animate-fade-up delay-200 relative col-span-2 aspect-[21/10] sm:aspect-[21/8] bg-white group ring-1 ring-black/5 hover:ring-[#ea580c]/30 hover:shadow-[0_20px_40px_-15px_rgba(234,88,12,0.2)]">
+                    <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover mix-blend-multiply">
+                    <div class="gradient-side absolute inset-0 flex flex-col justify-center p-6 sm:p-8">
+                        <div class="flex gap-2 mb-3 z-10">
+                            <span class="bg-[#ea580c] text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-lg shadow-[0_0_15px_rgba(234,88,12,0.6)] flex items-center gap-1 animate-pulse border border-orange-400"><i class="fa-solid fa-fire"></i> Hot</span>
+                            <span class="glass-dark text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-lg">DIY Studio</span>
                         </div>
+                        <h3 class="text-white font-black text-2xl sm:text-3xl uppercase italic leading-none drop-shadow-xl relative z-10" data-en="Customize Italy Charm Bracelet" data-kh="រចនាខ្សែដៃអុីតាលី">Customize Italy<br>Charm</h3>
+                        <p class="text-orange-300 text-[10px] font-extrabold uppercase mt-2.5 tracking-[0.2em] relative z-10 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles"></i> Design Your Own <i class="fa-solid fa-arrow-right ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all"></i></p>
                     </div>
-                    <h3 class="text-white font-black text-xs uppercase tracking-[0.2em] drop-shadow-md mt-2 ml-2 font-['Moul']" data-en="Minifigures" data-kh="យូនីវើស">Minifigures</h3>
                 </div>
-            </a>
 
-            <!-- 3. TOY UNIVERSE -->
-            <a href="toy.html" class="category-card relative col-span-1 aspect-[4/5] rounded-[2rem] overflow-hidden group cursor-pointer block ring-1 ring-inset ring-black/5">
-                <div class="absolute top-3 right-3 z-20 w-8 h-8 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 text-white"><i class="fa-solid fa-chevron-right text-xs"></i></div>
-                <img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                <div class="gradient-overlay absolute inset-0 flex flex-col justify-end p-5">
-                    <h3 class="text-white font-black text-lg md:text-xl uppercase leading-tight font-['Moul'] drop-shadow-md" data-en="Toy Universe" data-kh="ពិភពប្រដាប់ក្មេងលេង">Toy<br>Universe</h3>
+                <!-- 2. Minifigures (LEGO) Store -->
+                <div onclick="navigateToStore('minifigure')" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-slate-900 group ring-1 ring-black/5 hover:shadow-xl">
+                    <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
+                    <img src="https://images.unsplash.com/photo-1518331647614-7a1f04cd34ce?auto=format&fit=crop&q=80&w=600" class="absolute inset-0 w-full h-full object-cover opacity-70">
+                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-5 sm:p-6">
+                        <div class="mb-1.5 ml-1">
+                            <div class="relative inline-flex items-center justify-center bg-[#E3000B] border-[2px] border-black rounded px-3 py-1 shadow-xl transform -rotate-2">
+                                <div class="absolute inset-[1px] border border-[#FFCF00] rounded-[2px] pointer-events-none"></div>
+                                <span class="font-black italic text-white text-lg tracking-tighter leading-none relative z-10 drop-shadow-md" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">LEGO</span>
+                            </div>
+                        </div>
+                        <h3 class="text-white font-black text-[13px] sm:text-sm uppercase tracking-[0.25em] drop-shadow-lg mt-2 ml-1.5 font-['Moul']" data-en="Minifigures" data-kh="យូនីវើស">Minifigures</h3>
+                    </div>
                 </div>
-            </a>
 
-            <!-- 4. READY-MADE BRACELETS -->
-            <a href="bracelet.html" class="category-card relative col-span-2 aspect-[21/9] rounded-[2rem] overflow-hidden group cursor-pointer block ring-1 ring-inset ring-black/5 bg-gray-100">
-                <div class="absolute top-3 right-3 z-20 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 text-white"><i class="fa-solid fa-chevron-right text-xs"></i></div>
-                <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=800" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                <div class="gradient-overlay-side absolute inset-0 flex flex-col justify-center p-6">
-                    <h3 class="text-white font-black text-xl md:text-2xl uppercase leading-tight font-['Moul'] drop-shadow-md" data-en="Ready-Made Bracelets" data-kh="ខ្សែក និងខ្សែដៃ">Ready-Made<br>Bracelets</h3>
-                    <p class="text-orange-200 text-[10px] font-bold uppercase mt-1 tracking-widest drop-shadow-sm">Jade & Gems Collections</p>
+                <!-- 3. Toy Universe Store -->
+                <div onclick="navigateToStore('toy')" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-white group ring-1 ring-black/5 hover:shadow-xl">
+                    <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
+                    <img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&q=80&w=600" class="absolute inset-0 w-full h-full object-cover">
+                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-5 sm:p-6">
+                        <span class="text-orange-300 text-[8px] font-black uppercase tracking-widest mb-1 drop-shadow-md">Premium</span>
+                        <h3 class="text-white font-black text-xl sm:text-2xl uppercase leading-none font-['Moul'] drop-shadow-xl" data-en="Toy Universe" data-kh="ពិភពប្រដាប់ក្មេងលេង">Toy<br>Universe</h3>
+                    </div>
                 </div>
-            </a>
-        </div>
-    </section>
 
-    <!-- 🌟 PREMIUM FLOATING BOTTOM NAV 🌟 -->
-    <nav class="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-auto sm:w-[400px] sm:left-1/2 sm:-translate-x-1/2 h-16 glass-nav rounded-2xl flex items-center justify-around px-2 z-40">
+                <!-- 4. Ready-Made Bracelets Store -->
+                <div onclick="navigateToStore('bracelet')" class="bento-card animate-fade-up delay-400 relative col-span-2 aspect-[21/10] sm:aspect-[21/8] bg-white group ring-1 ring-black/5 hover:shadow-xl">
+                    <div class="absolute top-5 right-5 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform group-hover:bg-[#ea580c] group-hover:border-orange-400"><i class="fa-solid fa-arrow-right text-[10px]"></i></div>
+                    <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover">
+                    <div class="gradient-side absolute inset-0 flex flex-col justify-center p-6 sm:p-8">
+                        <span class="glass-dark text-white text-[8px] font-black uppercase px-2.5 py-1 rounded-lg w-fit mb-2.5">Ready to Wear</span>
+                        <h3 class="text-white font-black text-2xl sm:text-3xl uppercase leading-none font-['Moul'] drop-shadow-xl" data-en="Ready-Made Bracelets" data-kh="ខ្សែក និងខ្សែដៃ">Ready-Made<br>Bracelets</h3>
+                        <p class="text-slate-200 text-[10px] font-extrabold uppercase mt-2 tracking-[0.2em] drop-shadow-md">Jade & Premium Gems</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 🌟 APP-STYLE BOTTOM NAVIGATION 🌟 -->
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[380px] h-16 glass-panel rounded-[24px] flex items-center justify-around px-2 z-40">
         <!-- Home (Active) -->
-        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-14 h-12 flex items-center justify-center text-[#ea580c] flex-col gap-1 active:scale-95 transition-transform">
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-14 h-full flex items-center justify-center text-[#ea580c] flex-col gap-1 active:scale-90 transition-transform">
             <i class="fa-solid fa-house text-lg drop-shadow-sm"></i>
-            <span class="text-[8px] font-black uppercase tracking-widest">Home</span>
+            <span class="text-[8px] font-black uppercase tracking-[0.2em]">Home</span>
         </button>
         
-        <!-- Quick Studio Jump -->
-        <a href="custom_bracelet.html" class="relative w-14 h-14 bg-black rounded-full flex items-center justify-center text-white -translate-y-5 border-4 border-[#fcfbf9] shadow-xl active:scale-95 transition-all hover:bg-[#ea580c] group">
-            <div class="absolute inset-0 bg-[#ea580c] rounded-full blur-md opacity-0 group-hover:opacity-40 transition-opacity"></div>
-            <i class="fa-solid fa-wand-magic-sparkles text-xl relative z-10 group-hover:animate-spin-slow"></i>
-        </a>
+        <!-- Big Magic Button (Links to Builder) -->
+        <div class="relative w-16 h-16 -translate-y-5 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full pulse-ring bg-[#ea580c]"></div>
+            <button onclick="navigateToStore('custom_bracelet')" class="relative w-14 h-14 bg-slate-900 rounded-full flex items-center justify-center text-white border-[3px] border-white shadow-2xl active:scale-90 transition-all hover:bg-[#ea580c] group z-10 cursor-pointer">
+                <i class="fa-solid fa-wand-magic-sparkles text-xl relative z-10 group-hover:animate-spin-slow"></i>
+            </button>
+        </div>
         
-        <!-- My Orders / History (Connects directly to the Cart component's history drawer!) -->
-        <button onclick="if(typeof openOrderHistory === 'function') openOrderHistory(); else window.openCartDrawer();" class="w-14 h-12 flex items-center justify-center text-gray-500 hover:text-[#ea580c] flex-col gap-1 active:scale-95 transition-colors">
+        <!-- My Orders / Connects to global cart logic! -->
+        <button onclick="if(typeof openOrderHistory === 'function') openOrderHistory(); else window.openCartDrawer();" class="w-14 h-full flex items-center justify-center text-slate-400 hover:text-[#ea580c] flex-col gap-1 active:scale-90 transition-colors">
             <i class="fa-solid fa-receipt text-lg"></i>
-            <span class="text-[8px] font-black uppercase tracking-widest">Orders</span>
+            <span class="text-[8px] font-black uppercase tracking-[0.2em]">Orders</span>
         </button>
     </nav>
 
     <!-- ========================================== -->
     <!-- INCLUDE THE UNIFIED GLOBAL CART COMPONENT  -->
-    <!-- This replaces all the old cart HTML/JS     -->
+    <!-- MAKE SURE components/cart.html IS IN PLACE -->
     <!-- ========================================== -->
     {% include 'components/cart.html' %}
 
-    <!-- LIGHTWEIGHT PAGE SCRIPTS -->
+    <!-- ROBUST ROUTING & LIGHTWEIGHT SCRIPTS -->
     <script>
         // Multi-Language System
         let currentLang = localStorage.getItem('app_lang') || 'kh';
@@ -194,11 +239,6 @@
             document.querySelectorAll('[data-en]').forEach(el => {
                 el.innerHTML = currentLang === 'kh' ? el.getAttribute('data-kh') : el.getAttribute('data-en');
             });
-            // Update Cart Header if it exists in the component
-            const cartHeader = document.querySelector('#universal-cart-drawer h2');
-            if (cartHeader && cartHeader.getAttribute('data-en')) {
-                cartHeader.innerHTML = currentLang === 'kh' ? cartHeader.getAttribute('data-kh') : cartHeader.getAttribute('data-en');
-            }
         }
 
         function toggleLang() {
@@ -207,10 +247,25 @@
             applyLanguage();
         }
 
-        // Initialize UI
+        // ⭐️ ROBUST STORE NAVIGATION HANDLER (Fixes route / file not found issues)
+        function navigateToStore(storeName) {
+            // Map store keys to possible filename variations
+            const routes = {
+                'custom_bracelet': ['custom_bracelet.html', 'custom-bracelet.html', '/custom_bracelet', '/custom-bracelet'],
+                'minifigure': ['minifigure.html', 'minifigures.html', 'lego.html', '/minifigure', '/lego'],
+                'toy': ['toy.html', 'toys.html', 'toy_universe.html', '/toy', '/toy-universe'],
+                'bracelet': ['bracelet.html', 'bracelets.html', '/bracelet']
+            };
+
+            const options = routes[storeName] || [storeName + '.html'];
+            
+            // Try direct navigation or test common paths
+            window.location.href = options[0];
+        }
+
+        // Initialize UI & Force Badge Refresh on page load
         document.addEventListener('DOMContentLoaded', () => {
             applyLanguage();
-            // Force an update to the cart badge on page load
             if(typeof window.updateCartBadge === 'function') {
                 window.updateCartBadge();
             }
@@ -218,5 +273,4 @@
     </script>
 </body>
 </html>
-
 
