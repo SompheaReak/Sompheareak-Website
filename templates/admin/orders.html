@@ -1,395 +1,538 @@
-{% extends "admin/base.html" %}
-
-{% block content %}
-<div class="max-w-[1400px] mx-auto space-y-5">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Somphea Reak | Premium Studio</title>
     
-    <!-- HEADER BAR WITH BULK DELETE CONTROLS -->
-    <div class="bg-white rounded-2xl md:rounded-[24px] border border-gray-100 shadow-sm p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-            <h2 class="font-black text-lg md:text-xl text-gray-900">Order Management</h2>
-            <p class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 md:mt-1">
-                Total Orders: <span class="text-[#ff5000] font-black">{{ orders|length }}</span>
-            </p>
-        </div>
-
-        {% if orders|length > 0 %}
-        <!-- Bulk Operations Bar -->
-        <div class="flex items-center gap-2 w-full sm:w-auto bg-gray-50 p-2 rounded-xl border border-gray-200 shadow-inner">
-            <label class="flex items-center gap-2 cursor-pointer px-3 py-1.5 text-[9px] md:text-[10px] font-black text-gray-700 uppercase tracking-widest hover:text-black transition-colors">
-                <input type="checkbox" id="select-all-orders" onchange="toggleAllOrders(this)" class="w-4 h-4 accent-[#ff5000] cursor-pointer rounded">
-                <span class="whitespace-nowrap">Select All</span>
-            </label>
-            
-            <div class="w-px h-5 bg-gray-300"></div>
-
-            <form id="bulk-delete-orders-form" action="/admin/order/bulk_delete" method="POST" class="m-0 flex-1 sm:flex-none">
-                <input type="hidden" name="order_ids" id="bulk-order-ids">
-                <button type="button" onclick="submitBulkOrderDelete()" id="bulk-delete-btn" class="w-full text-[9px] md:text-[10px] px-4 py-2 bg-red-600 text-white rounded-lg font-black hover:bg-red-700 transition-all uppercase tracking-widest shadow-md flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="selected-count">0</span>)
-                </button>
-            </form>
-        </div>
-        {% endif %}
-    </div>
-
-    {% if orders|length == 0 %}
-    <div class="py-16 md:py-24 text-center text-gray-300 bg-white rounded-2xl md:rounded-[32px] border-2 border-dashed border-gray-200 max-w-4xl mx-auto">
-        <i class="fa-solid fa-receipt text-5xl md:text-6xl mb-4 md:mb-5 text-gray-200"></i>
-        <h3 class="font-black text-lg md:text-xl text-gray-700 mb-1 md:mb-2">Inbox Zero!</h3>
-        <p class="font-bold text-xs md:text-sm text-gray-400">No active orders right now.</p>
-    </div>
-    {% endif %}
-
-    <!-- RECEIPT GRID LAYOUT -->
-    <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-    {% for order in orders %}
-        {% set is_completed = (order.status == 'Completed' or order.status == 'completed') %}
+    <!-- Tailwind & FontAwesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Moul&display=swap');
         
-        <!-- INDIVIDUAL RECEIPT CARD -->
-        <div id="receipt-card-{{ order.id }}" class="bg-white rounded-xl border order-data-card shadow-sm p-5 md:p-6 space-y-4 relative transition-all duration-300 {% if is_completed %}border-gray-200 bg-gray-50/50 opacity-80{% else %}border-[#ff5000] ring-1 ring-[#ff5000]/20{% endif %} max-w-sm mx-auto w-full group" data-order-id="{{ order.id }}" data-status="{{ order.status }}" data-customer="{{ order.customer_name }}" data-phone="{{ order.customer_phone }}" data-total="{{ order.total_usd }}" data-date="{{ order.timestamp.strftime('%Y-%m-%d') }}">
-            
-            <!-- BULK SELECTION CHECKBOX (Top Left) -->
-            <div class="absolute top-4 left-4 z-20 flex items-center gap-2">
-                <input type="checkbox" class="order-checkbox w-5 h-5 accent-[#ff5000] cursor-pointer rounded shadow-sm" value="{{ order.id }}" onchange="updateSelectedCount()">
-                <span class="text-[8px] font-mono font-black text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">#{{ order.id }}</span>
-            </div>
+        body { 
+            font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif; 
+            background-color: #f6f5f3;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
+        
+        h1, h2, h3, h4, .khmer-title { font-family: 'Moul', serif; font-weight: normal; }
 
-            <!-- Status Badge (Top Right) -->
-            <div class="absolute top-4 right-4 z-10 flex flex-col items-end gap-1">
-                <span class="px-2 py-1 rounded border text-[8px] font-black uppercase tracking-widest shadow-sm {% if is_completed %}bg-green-50 text-green-600 border-green-200{% elif order.status == 'Pending' %}bg-[#ff5000] text-white border-orange-600 animate-pulse{% else %}bg-gray-100 text-gray-600 border-gray-200{% endif %}">{{ order.status }}</span>
-            </div>
+        /* Modern Mesh Background */
+        .premium-bg {
+            background-color: #f8f7f5;
+            background-image: radial-gradient(#ea580c 0.75px, transparent 0.75px), radial-gradient(#ea580c 0.75px, #f8f7f5 0.75px);
+            background-size: 24px 24px; 
+            background-position: 0 0, 12px 12px; 
+            opacity: 0.15;
+            position: fixed; inset: 0; z-index: -1;
+        }
 
-            <!-- Receipt Header (Logo & Brand) -->
-            <div class="text-center pb-4 border-b-2 border-dashed border-gray-200 pt-6 relative">
-                <img src="/static/images/logo.jpg" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=ff5000&color=fff'" class="w-14 h-14 rounded-full mx-auto mb-2 object-cover shadow-sm border border-gray-100">
-                <h2 class="font-black text-[15px] uppercase tracking-wide text-gray-900 font-['Moul']">សម្ភារៈ - Somphea Reak</h2>
-                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1">Official Receipt</p>
+        /* Bento Card Styling */
+        .bento-card { 
+            border-radius: 32px;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
+            transform: translateZ(0); 
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); 
+            overflow: hidden;
+            display: block;
+        }
+        .bento-card:active { transform: scale(0.95); box-shadow: 0 5px 15px -5px rgba(0,0,0,0.1); }
+        .bento-card img { transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .bento-card:hover img { transform: scale(1.1); }
+        
+        .gradient-bottom { background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.3) 50%, transparent 100%); }
+        .gradient-side { background: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%); }
+        
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.6); 
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05);
+        }
+        
+        .glass-dark {
+            background: rgba(20, 20, 20, 0.6); 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+        }
+
+        /* Animations */
+        .animate-fade-up { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+        
+        .pulse-ring { animation: pulseRing 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulseRing {
+            0% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(234, 88, 12, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
+        }
+
+        /* Universal Cart Checkbox (Restored) */
+        .universal-cart-checkbox { 
+            appearance: none; width: 22px; height: 22px; border: 2px solid #cbd5e1; border-radius: 50%; 
+            outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            background: white; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .universal-cart-checkbox:checked { background-color: #ea580c; border-color: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3); }
+        .universal-cart-checkbox:checked::after { 
+            content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
+            width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; border-radius: 1px;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="text-slate-900 pb-32 select-none antialiased">
+
+    <div class="premium-bg"></div>
+
+    <!-- 🌟 FLOATING PILL APP HEADER 🌟 -->
+    <header class="fixed top-4 left-4 right-4 sm:left-auto sm:right-auto sm:w-[480px] sm:left-1/2 sm:-translate-x-1/2 z-[100] glass-panel rounded-full px-2 py-2 flex items-center justify-between transition-all">
+        <button onclick="toggleLang()" class="w-11 h-11 flex items-center justify-center bg-white rounded-full text-xs font-black text-slate-600 border border-slate-100 active:scale-90 transition-transform shadow-sm hover:text-[#ea580c]">
+            <span id="lang-btn-text">KH</span>
+        </button>
+        
+        <div class="flex items-center justify-center flex-1 px-2 gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center shadow-lg shrink-0 overflow-hidden relative">
+                <img src="static/images/logo.png" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=000&color=fff&rounded=true'" class="w-full h-full object-cover">
+                <div class="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-full"></div>
+            </div>
+            <div class="flex flex-col justify-center text-left pt-0.5">
+                <h1 class="text-[14px] sm:text-[16px] font-black text-slate-900 leading-none tracking-tight font-['Moul']">
+                    សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs sm:text-sm text-slate-700">- Somphea Reak</span>
+                </h1>
+                <p class="text-[8px] font-black text-[#ea580c] uppercase tracking-[0.25em] leading-none mt-1.5">Premium Studio</p>
+            </div>
+        </div>
+        
+        <button onclick="openUniversalCart()" class="relative w-11 h-11 flex items-center justify-center bg-white border border-slate-100 rounded-full text-slate-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span class="cart-badge-count absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden border border-white">0</span>
+        </button>
+    </header>
+
+    <!-- MAIN APP CONTAINER -->
+    <main class="max-w-2xl mx-auto pt-24 px-4 sm:px-6">
+        
+        <!-- Holographic Welcome Banner -->
+        <section class="pb-6 animate-fade-up">
+            <div class="w-full bg-gradient-to-br from-slate-900 via-[#2a1309] to-black rounded-[32px] p-7 md:p-8 text-white relative overflow-hidden shadow-2xl shadow-orange-900/10 border border-white/10 group">
+                <div class="absolute top-0 right-0 w-48 h-48 bg-[#ea580c] rounded-full blur-[80px] opacity-40 mix-blend-screen group-hover:opacity-60 transition-opacity duration-700 -mr-10 -mt-10"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-purple-600 rounded-full blur-[60px] opacity-20 mix-blend-screen"></div>
                 
-                <div class="mt-3 inline-flex flex-col items-center justify-center bg-orange-50 border border-orange-100 rounded-lg px-4 py-2 shadow-sm w-full max-w-[220px]">
-                    <div class="flex items-center justify-between w-full border-b border-orange-200/50 pb-1 mb-1">
-                        <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Order ID</span>
-                        <span class="text-[10px] text-gray-800 font-mono font-black">#{{ order.id }}</span>
+                <div class="relative z-10">
+                    <div class="inline-flex items-center gap-1.5 bg-white/10 text-white text-[9px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-white/20 backdrop-blur-md mb-5 shadow-inner">
+                        <i class="fa-solid fa-crown text-yellow-400"></i> <span data-en="Welcome to Studio" data-kh="សូមស្វាគមន៍">Welcome to Studio</span>
                     </div>
-                    <div class="flex items-center justify-between w-full">
-                        <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Date/Time</span>
-                        <span class="text-[9px] text-[#ff5000] font-black uppercase kh-time-display" data-utc="{{ order.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ') }}">
-                            <i class="fa-solid fa-spinner fa-spin mr-1"></i> Syncing...
-                        </span>
-                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-black leading-tight font-['Moul'] tracking-wide drop-shadow-lg" data-en="Discover Our Latest Collections" data-kh="ស្វែងរកកូឡិកសិនថ្មីៗរបស់យើង">
+                        Discover Our<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-[#ea580c] to-yellow-400 font-['Plus_Jakarta_Sans'] italic">Latest</span> Collections
+                    </h2>
                 </div>
             </div>
+        </section>
 
-            <!-- Customer Info -->
-            <div class="space-y-2 pb-4 border-b-2 border-dashed border-gray-200 text-[11px] text-gray-700">
-                <div class="flex justify-between items-center"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px]">Customer</span> <span class="font-black text-gray-900 editable" contenteditable="false">{{ order.customer_name }}</span></div>
-                <div class="flex justify-between items-center"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px]">Phone</span> <a href="tel:{{ order.customer_phone }}" class="font-black text-blue-600 editable" contenteditable="false">{{ order.customer_phone }}</a></div>
-                <div class="flex justify-between items-start gap-4"><span class="font-bold text-gray-400 uppercase tracking-widest text-[9px] shrink-0 mt-0.5">Address</span> <span class="font-black text-right editable" contenteditable="false">{{ order.customer_address }}</span></div>
+        <!-- BENTO BOX STORE GRID (FIXED LINKS) -->
+        <section class="space-y-4">
+            <div class="flex items-center justify-between px-2 mb-3 animate-fade-up delay-100">
+                <h2 class="font-black text-[11px] uppercase tracking-[0.25em] text-slate-400" data-en="Explore Categories" data-kh="រុករកស្ទូឌីយោ">Explore Categories</h2>
+                <div class="h-px flex-grow ml-4 bg-gradient-to-r from-slate-200 to-transparent"></div>
             </div>
 
-            <!-- Items -->
-            <div class="space-y-4 pb-4 border-b-2 border-dashed border-gray-200">
-                <div class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3 flex justify-between">
-                    <span>Description</span>
-                    <span>Amount</span>
-                </div>
+            <!-- Grid Layout -->
+            <div class="grid grid-cols-2 gap-4 sm:gap-5">
                 
-                {% set subtotal_usd = namespace(value=0) %}
-                {% for item in order.parsed_items %}
-                    {% if item.image != "hidden" %}
-                        {% set item_price = item.price | default(0) | float %}
-                        {% set item_total_usd = item_price * item.qty %}
-                        {% set subtotal_usd.value = subtotal_usd.value + item_total_usd %}
-                        
-                        <div class="flex flex-col gap-2 relative group/item">
-                            {% if "Custom DIY Bracelet" in item.title %}
-                                {% if item.image %}
-                                <div class="w-full flex justify-center py-2 rounded-lg overflow-hidden border border-gray-200 cursor-zoom-in hover:opacity-90 transition-opacity bg-gray-50" onclick="openImageViewer('{{ item.image }}')">
-                                    <img src="{{ item.image }}" class="w-full h-auto max-h-[180px] object-contain">
-                                </div>
-                                {% endif %}
-                                
-                                <div class="flex justify-between items-start gap-2">
-                                    <div class="flex-1">
-                                        <p class="font-black text-[11px] text-gray-900 leading-tight">DIY Bracelet <span class="text-[#ff5000]">x{{ item.qty }}</span></p>
-                                        <div class="text-[9px] text-gray-500 font-medium mt-1 leading-relaxed">
-                                            {% set parts = item.style.split(' | ') %}
-                                            {% for part in parts %}
-                                                <div class="truncate">{{ part }}</div>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="font-black text-[12px] text-gray-900 flex items-center justify-end gap-0.5">$<span class="item-total-usd editable px-1" contenteditable="false" onblur="recalculateReceipt({{ order.id }})">{{ "{:,.2f}".format(item_total_usd) }}</span></div>
-                                        <div class="font-bold text-[9px] text-gray-400 item-total-khr mt-0.5">{{ "{:,.0f}".format(item_total_usd * 4000) }} ៛</div>
-                                    </div>
-                                </div>
-
-                            {% else %}
-                                <div class="flex justify-between items-start gap-2">
-                                    {% if item.image %}
-                                    <div class="w-10 h-10 rounded border border-gray-200 bg-gray-50 shrink-0 cursor-zoom-in" onclick="openImageViewer('{{ item.image }}')">
-                                        <img src="{{ item.image }}" class="w-full h-full object-contain p-0.5">
-                                    </div>
-                                    {% endif %}
-                                    <div class="flex-1 min-w-0">
-                                        <p class="font-black text-[11px] text-gray-900 leading-tight truncate editable" contenteditable="false">{{ item.title | default(item.name) }}</p>
-                                        {% if item.style or item.variantName %}
-                                        <p class="text-[9px] text-gray-500 font-medium truncate mt-0.5 editable" contenteditable="false">{{ item.style | default(item.variantName) }}</p>
-                                        {% endif %}
-                                    </div>
-                                    <div class="text-right shrink-0">
-                                        <div class="font-black text-[12px] text-gray-900 flex items-center justify-end gap-0.5">$<span class="item-total-usd editable px-1" contenteditable="false" onblur="recalculateReceipt({{ order.id }})">{{ "{:,.2f}".format(item_total_usd) }}</span></div>
-                                        <div class="font-bold text-[9px] text-gray-400 item-total-khr mt-0.5">{{ "{:,.0f}".format(item_total_usd * 4000) }} ៛</div>
-                                    </div>
-                                </div>
-                            {% endif %}
+                <!-- 1. Custom Bracelet (FIXED LINK) -->
+                <a href="custom_bracelet.html" class="bento-card animate-fade-up delay-200 relative col-span-2 aspect-[21/10] sm:aspect-[21/8] bg-white group ring-1 ring-black/5 hover:ring-[#ea580c]/30 hover:shadow-[0_20px_40px_-15px_rgba(234,88,12,0.2)]">
+                    <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover mix-blend-multiply">
+                    <div class="gradient-side absolute inset-0 flex flex-col justify-center p-6 sm:p-8">
+                        <div class="flex gap-2 mb-3 z-10">
+                            <span class="bg-[#ea580c] text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-lg shadow-[0_0_15px_rgba(234,88,12,0.6)] flex items-center gap-1 animate-pulse border border-orange-400"><i class="fa-solid fa-fire"></i> Hot</span>
+                            <span class="glass-dark text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-lg">DIY Studio</span>
                         </div>
-                    {% endif %}
-                {% endfor %}
+                        <h3 class="text-white font-black text-2xl sm:text-3xl uppercase italic leading-none drop-shadow-xl relative z-10" data-en="Customize Italy Charm Bracelet" data-kh="រចនាខ្សែដៃអុីតាលី">Customize Italy<br>Charm</h3>
+                        <p class="text-orange-300 text-[10px] font-extrabold uppercase mt-2.5 tracking-[0.2em] relative z-10 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles"></i> Design Your Own <i class="fa-solid fa-arrow-right ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all"></i></p>
+                    </div>
+                </a>
+
+                <!-- 2. Minifigures (LEGO) (FIXED LINK) -->
+                <a href="minifigure.html" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-slate-900 group ring-1 ring-black/5 hover:shadow-xl">
+                    <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
+                    <img src="https://images.unsplash.com/photo-1518331647614-7a1f04cd34ce?auto=format&fit=crop&q=80&w=600" class="absolute inset-0 w-full h-full object-cover opacity-70">
+                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-5 sm:p-6">
+                        <div class="mb-1.5 ml-1">
+                            <div class="relative inline-flex items-center justify-center bg-[#E3000B] border-[2px] border-black rounded px-3 py-1 shadow-xl transform -rotate-2">
+                                <div class="absolute inset-[1px] border border-[#FFCF00] rounded-[2px] pointer-events-none"></div>
+                                <span class="font-black italic text-white text-lg tracking-tighter leading-none relative z-10 drop-shadow-md" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">LEGO</span>
+                            </div>
+                        </div>
+                        <h3 class="text-white font-black text-[13px] sm:text-sm uppercase tracking-[0.25em] drop-shadow-lg mt-2 ml-1.5 font-['Moul']" data-en="Minifigures" data-kh="យូនីវើស">Minifigures</h3>
+                    </div>
+                </a>
+
+                <!-- 3. Toy Universe (FIXED LINK) -->
+                <a href="toy.html" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-white group ring-1 ring-black/5 hover:shadow-xl">
+                    <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
+                    <img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&q=80&w=600" class="absolute inset-0 w-full h-full object-cover">
+                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-5 sm:p-6">
+                        <span class="text-orange-300 text-[8px] font-black uppercase tracking-widest mb-1 drop-shadow-md">Premium</span>
+                        <h3 class="text-white font-black text-xl sm:text-2xl uppercase leading-none font-['Moul'] drop-shadow-xl" data-en="Toy Universe" data-kh="ពិភពប្រដាប់ក្មេងលេង">Toy<br>Universe</h3>
+                    </div>
+                </a>
+
+                <!-- 4. Ready-Made Bracelets (FIXED LINK) -->
+                <a href="bracelet.html" class="bento-card animate-fade-up delay-300 relative col-span-2 aspect-[21/10] sm:aspect-[21/8] bg-white group ring-1 ring-black/5 hover:shadow-xl">
+                    <div class="absolute top-5 right-5 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform group-hover:bg-[#ea580c] group-hover:border-orange-400"><i class="fa-solid fa-arrow-right text-[10px]"></i></div>
+                    <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover">
+                    <div class="gradient-side absolute inset-0 flex flex-col justify-center p-6 sm:p-8">
+                        <span class="glass-dark text-white text-[8px] font-black uppercase px-2.5 py-1 rounded-lg w-fit mb-2.5">Ready to Wear</span>
+                        <h3 class="text-white font-black text-2xl sm:text-3xl uppercase leading-none font-['Moul'] drop-shadow-xl" data-en="Ready-Made Bracelets" data-kh="ខ្សែក និងខ្សែដៃ">Ready-Made<br>Bracelets</h3>
+                        <p class="text-slate-200 text-[10px] font-extrabold uppercase mt-2 tracking-[0.2em] drop-shadow-md">Jade & Premium Gems</p>
+                    </div>
+                </a>
+
             </div>
+        </section>
 
-            {% set delivery_usd = order.total_usd - subtotal_usd.value %}
-            {% if delivery_usd < 0.01 %}{% set delivery_usd = 0 %}{% endif %}
+    </main>
 
-            <!-- Totals -->
-            <div class="space-y-1.5 text-[11px]">
-                <div class="flex justify-between items-center text-gray-600">
-                    <span class="font-bold uppercase tracking-widest text-[9px]">Subtotal</span>
-                    <span class="font-black receipt-subtotal-usd">${{ "{:,.2f}".format(subtotal_usd.value) }}</span>
+    <!-- 🌟 APP-STYLE BOTTOM NAVIGATION 🌟 -->
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[380px] h-16 glass-panel rounded-[24px] flex items-center justify-around px-2 z-40">
+        <!-- Home (Active) -->
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-14 h-full flex items-center justify-center text-[#ea580c] flex-col gap-1 active:scale-90 transition-transform">
+            <i class="fa-solid fa-house text-lg drop-shadow-sm"></i>
+            <span class="text-[8px] font-black uppercase tracking-[0.2em]">Home</span>
+        </button>
+        
+        <!-- Big Magic Button (Links to Builder) -->
+        <div class="relative w-16 h-16 -translate-y-5 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full pulse-ring bg-[#ea580c]"></div>
+            <a href="custom_bracelet.html" class="relative w-14 h-14 bg-slate-900 rounded-full flex items-center justify-center text-white border-[3px] border-white shadow-2xl active:scale-90 transition-all hover:bg-[#ea580c] group z-10">
+                <i class="fa-solid fa-wand-magic-sparkles text-xl relative z-10 group-hover:animate-spin-slow"></i>
+            </a>
+        </div>
+        
+        <!-- My Orders / Connects to global cart logic! -->
+        <button onclick="openOrderHistory()" class="w-14 h-full flex items-center justify-center text-slate-400 hover:text-[#ea580c] flex-col gap-1 active:scale-90 transition-colors">
+            <i class="fa-solid fa-receipt text-lg"></i>
+            <span class="text-[8px] font-black uppercase tracking-[0.2em]">Orders</span>
+        </button>
+    </nav>
+
+    <!-- ========================================================================= -->
+    <!-- UNIFIED CART & CHECKOUT UI (EMBEDDED TO GUARANTEE IT WORKS ANYWHERE)      -->
+    <!-- ========================================================================= -->
+    
+    <!-- CART DRAWER -->
+    <div id="universal-cart-drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[8000] flex flex-col justify-end transition-transform duration-300">
+        <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeUniversalCart()"></div>
+        <div class="relative w-full h-[85vh] bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
+            <div class="bg-white px-5 sm:px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10">
+                <div>
+                    <h2 class="text-xl font-black text-gray-900 font-['Moul']" data-en="Your Cart" data-kh="កន្ត្រករបស់អ្នក">កន្ត្រករបស់អ្នក</h2>
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Your Shopping Cart</p>
                 </div>
-                <div class="flex justify-between items-center text-gray-600">
-                    <span class="font-bold uppercase tracking-widest text-[9px]">Delivery Fee</span>
-                    <div class="font-black flex items-center justify-end gap-0.5 text-[#ea580c]">$<span class="delivery-usd editable px-1" contenteditable="false" onblur="recalculateReceipt({{ order.id }})">{{ "{:,.2f}".format(delivery_usd) }}</span></div>
+                <div class="flex items-center gap-2">
+                    <button onclick="openOrderHistory()" class="w-9 h-9 flex items-center justify-center bg-orange-50 border border-orange-100 rounded-full text-[#ea580c] hover:bg-orange-100 active:scale-90 transition-all shadow-sm"><i class="fa-solid fa-receipt"></i></button>
+                    <button onclick="closeUniversalCart()" class="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
                 </div>
-                <div class="flex justify-between items-end border-t-2 border-dashed border-gray-200 pt-3 mt-2">
-                    <span class="font-black uppercase tracking-widest text-[11px] text-gray-900 mb-1">Total Due</span>
-                    <div class="text-right">
-                        <div class="font-black text-xl text-[#ea580c] flex items-center justify-end gap-0.5">$<span class="grand-total-usd">{{ "{:,.2f}".format(order.total_usd) }}</span></div>
-                        <div class="font-bold text-[10px] text-gray-500 mt-0.5"><span class="grand-total-khr">{{ "{:,.0f}".format(order.total_usd * 4000) }}</span> ៛</div>
+            </div>
+            
+            <div id="universal-cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+            
+            <div class="bg-white border-t border-gray-100 p-5 z-10 pb-8 md:pb-5 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+                <div class="space-y-2 mb-4">
+                    <div class="flex justify-between items-center text-xs font-bold text-gray-500"><span>Subtotal (តម្លៃទំនិញ)</span><span id="uni-cart-subtotal">0៛</span></div>
+                    <div class="flex justify-between items-center text-xs font-bold text-gray-500"><span>Delivery (ថ្លៃដឹកជញ្ជូន)</span><span id="uni-cart-delivery">0៛</span></div>
+                    <div class="flex justify-between items-end pt-2 border-t border-gray-100">
+                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Grand Total)</span>
+                        <span id="uni-cart-grand-total-khr" class="text-2xl font-black text-[#ea580c] leading-none block">0៛</span>
                     </div>
                 </div>
-            </div>
-
-            <!-- Custom Photo Display -->
-            {% if order.receipt_photo %}
-            <div class="mt-4 pt-4 border-t border-gray-100">
-                <span class="font-bold text-gray-400 uppercase tracking-widest text-[9px] mb-2 block"><i class="fa-solid fa-paperclip mr-1"></i> Attached Photo</span>
-                <img src="{{ order.receipt_photo }}" class="w-full h-auto max-h-40 object-cover rounded-lg border border-gray-200 cursor-zoom-in hover:opacity-90 transition-opacity" onclick="openImageViewer('{{ order.receipt_photo }}')">
-            </div>
-            {% endif %}
-
-            <!-- Action Buttons -->
-            <div class="action-buttons flex gap-2 pt-2 border-t border-gray-100 mt-4">
-                <button type="button" onclick="toggleReceiptEdit({{ order.id }})" title="Edit Prices & Text" class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all border border-blue-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-pen text-sm"></i></button>
-                <button type="button" onclick="generateReceiptPDF({{ order.id }})" title="Save Receipt PDF" class="w-10 h-10 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white flex items-center justify-center transition-all border border-red-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-file-pdf text-sm"></i></button>
-                <button type="button" onclick="generateReceiptImage({{ order.id }})" title="Save Receipt Image" class="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl hover:bg-[#ff5000] hover:text-white flex items-center justify-center transition-all border border-orange-200 shadow-sm font-bold text-[10px] shrink-0"><i class="fa-solid fa-image text-sm"></i></button>
-
-                {% if is_completed %}
-                    <button type="button" disabled class="flex-1 bg-gray-100 text-gray-400 h-10 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-inner cursor-not-allowed flex items-center justify-center border border-gray-200"><i class="fa-solid fa-check-circle mr-1"></i> Completed</button>
-                {% else %}
-                    <form action="/admin/order/status/{{ order.id }}/Completed" method="POST" class="flex-1 m-0 h-10" onsubmit="return confirm('Mark as finished? This will deduct stock permanently.')">
-                        <button type="submit" class="w-full h-full bg-[#10b981] text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:bg-[#059669] transition-transform active:scale-95 flex items-center justify-center"><i class="fa-solid fa-box-open mr-1"></i> Fulfill</button>
-                    </form>
-                {% endif %}
-
-                <form action="/admin/order/delete/{{ order.id }}" method="POST" onsubmit="return confirm('WARNING: Delete order history permanently?')" class="m-0 h-10 shrink-0">
-                    <button type="submit" class="w-10 h-full bg-gray-50 text-gray-400 border border-gray-200 rounded-xl hover:text-red-500 hover:bg-red-50 hover:border-red-200 flex items-center justify-center transition-all shadow-sm"><i class="fa-solid fa-trash-can text-sm"></i></button>
-                </form>
+                <button onclick="openUniversalCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
+                    <i class="fa-solid fa-truck-fast"></i> <span>បន្តទៅការដឹកជញ្ជូន (Checkout)</span>
+                </button>
             </div>
         </div>
-    {% endfor %}
     </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-    if (window.jspdf && window.jspdf.jsPDF) {
-        window.jsPDF = window.jspdf.jsPDF; 
-    }
+    <!-- ORDER HISTORY MODAL -->
+    <div id="universal-history-modal" class="fixed inset-0 z-[9500] bg-gray-50 flex flex-col translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
+            <div>
+                <h2 class="text-lg font-black font-['Moul'] text-gray-900" data-en="Order History" data-kh="ប្រវត្តិកម្ម៉ង់របស់អ្នក">ប្រវត្តិកម្ម៉ង់របស់អ្នក</h2>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">My Orders</p>
+            </div>
+            <button onclick="closeOrderHistory()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-arrow-right text-lg"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4" id="universal-history-container"></div>
+    </div>
 
-    // --- BULK DELETE JARS / FUNCTIONS ---
-    function toggleAllOrders(masterCheckbox) {
-        document.querySelectorAll('.order-checkbox').forEach(cb => {
-            cb.checked = masterCheckbox.checked;
-        });
-        updateSelectedCount();
-    }
+    <!-- CHECKOUT MODAL -->
+    <div id="universal-checkout-modal" class="fixed inset-0 z-[9000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
+        <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
+            <h2 class="text-xl font-black font-['Moul']" data-en="Checkout" data-kh="ព័ត៌មានដឹកជញ្ជូន">ព័ត៌មានដឹកជញ្ជូន</h2>
+            <button onclick="closeUniversalCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-5 sm:p-6 pb-32 bg-gray-50">
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm max-w-lg mx-auto">
+                <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
+                <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប (Subtotal):</span><span id="uni-check-subtotal">0៛</span></div>
+                <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន (Delivery):</span><span id="uni-check-delivery">0៛</span></div>
+                <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
+                    <span class="text-sm">សរុបត្រូវបង់ (Total):</span><span id="uni-check-total-khr" class="text-[#ea580c] text-xl leading-none">0៛</span>
+                </div>
+            </div>
+            <div class="space-y-4 max-w-lg mx-auto">
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង (Contact Info)</label>
+                <input type="text" id="uni-cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Full Name)">
+                <input type="tel" id="uni-cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone Number)">
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន (Address)</label>
+                <textarea id="uni-cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ..."></textarea>
+            </div>
+        </div>
+        <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:pb-5">
+            <button onclick="processUniversalFinalOrder()" id="uni-confirm-btn" class="w-full max-w-lg mx-auto block bg-[#ea580c] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
+        </div>
+    </div>
 
-    function updateSelectedCount() {
-        const selectedCount = document.querySelectorAll('.order-checkbox:checked').length;
-        document.getElementById('selected-count').innerText = selectedCount;
-        
-        // Update master checkbox state visually
-        const totalCheckboxes = document.querySelectorAll('.order-checkbox').length;
-        const masterCb = document.getElementById('select-all-orders');
-        if (masterCb) {
-            masterCb.checked = (selectedCount > 0 && selectedCount === totalCheckboxes);
+    <!-- ========================================================================= -->
+    <!-- ALL JAVASCRIPT LOGIC (Language, Cart, Routing)                            -->
+    <!-- ========================================================================= -->
+    <script>
+        // --- 1. Language System ---
+        let currentLang = localStorage.getItem('app_lang') || 'kh';
+        function applyLanguage() {
+            document.getElementById('lang-btn-text').innerText = currentLang === 'en' ? 'KH' : 'EN';
+            document.querySelectorAll('[data-en]').forEach(el => { el.innerHTML = currentLang === 'kh' ? el.getAttribute('data-kh') : el.getAttribute('data-en'); });
         }
-    }
-
-    function submitBulkOrderDelete() {
-        const selectedIds = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(cb => cb.value);
-        if (selectedIds.length === 0) {
-            alert('Please select at least one order to delete.');
-            return;
+        function toggleLang() {
+            currentLang = currentLang === 'en' ? 'kh' : 'en';
+            localStorage.setItem('app_lang', currentLang); applyLanguage();
         }
 
-        if (confirm(`ARE YOU SURE?\n\nYou are about to permanently delete ${selectedIds.length} order(s).\nThis action cannot be undone.`)) {
-            document.getElementById('bulk-order-ids').value = selectedIds.join(',');
-            document.getElementById('bulk-delete-orders-form').submit();
+        // --- 2. Global Cart Logic ---
+        const UNIVERSAL_CART_RATE = 4000;
+        let globalStoreCart = [];
+
+        function syncCartFromStorage() {
+            try {
+                let oldCart = JSON.parse(localStorage.getItem('sr_cart') || '[]');
+                let mainCart = JSON.parse(localStorage.getItem('universal_store_cart') || '[]');
+                if (oldCart.length > 0) { mainCart = [...mainCart, ...oldCart]; localStorage.removeItem('sr_cart'); }
+                globalStoreCart = mainCart;
+            } catch(e) { globalStoreCart = []; }
         }
-    }
-
-    // --- CAMBODIA (UTC+7) TIMELINE SCRIPT ---
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.kh-time-display').forEach(el => {
-            let utcStr = el.getAttribute('data-utc');
-            if (!utcStr) return;
-            
-            let d = new Date(utcStr);
-            let khDate = new Date(d.getTime() + (7 * 60 * 60 * 1000));
-            
-            let year = khDate.getUTCFullYear();
-            let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            let month = months[khDate.getUTCMonth()];
-            let dateNum = String(khDate.getUTCDate()).padStart(2, '0');
-            
-            let hours = khDate.getUTCHours();
-            let minutes = String(khDate.getUTCMinutes()).padStart(2, '0');
-            let ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12;
-            let strHours = String(hours).padStart(2, '0');
-            
-            el.innerHTML = `<i class="fa-regular fa-clock mr-1"></i>${dateNum} ${month} ${year}, ${strHours}:${minutes} ${ampm}`;
-            
-            let monthNum = String(khDate.getUTCMonth() + 1).padStart(2, '0');
-            let card = el.closest('.order-data-card');
-            if(card) card.setAttribute('data-date', `${year}-${monthNum}-${dateNum}`);
-        });
-    });
-
-    function toggleReceiptEdit(orderId) {
-        const card = document.getElementById(`receipt-card-${orderId}`);
-        if (!card) return;
         
-        const editables = card.querySelectorAll('.editable');
-        const editBtnIcon = card.querySelector('.action-buttons button:first-child i');
-        
-        if (card.classList.contains('is-editing-receipt')) {
-            editables.forEach(el => el.contentEditable = "false"); 
-            card.classList.remove('is-editing-receipt'); 
-            editBtnIcon.className = "fa-solid fa-pen text-sm";
-            showClientToast("Receipt Updated Visually");
-        } else { 
-            editables.forEach(el => el.contentEditable = "true"); 
-            card.classList.add('is-editing-receipt'); 
-            editBtnIcon.className = "fa-solid fa-save text-sm text-[#ff5000]";
-            if(editables.length > 0) editables[0].focus(); 
+        window.updateCartBadge = function() {
+            syncCartFromStorage();
+            const count = globalStoreCart.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
+            document.querySelectorAll('.cart-badge-count').forEach(badge => {
+                if (count > 0) { badge.innerText = count; badge.classList.remove('hidden'); } 
+                else { badge.classList.add('hidden'); }
+            });
+        };
+
+        function saveGlobalCart() { localStorage.setItem('universal_store_cart', JSON.stringify(globalStoreCart)); window.updateCartBadge(); }
+
+        window.openUniversalCart = window.openCartDrawer = function() {
+            syncCartFromStorage(); renderUniversalCartUI();
+            const drawer = document.getElementById('universal-cart-drawer');
+            if(drawer) { drawer.style.transform = 'translateY(0%)'; drawer.style.pointerEvents = 'auto'; }
+        };
+
+        window.closeUniversalCart = window.closeCartDrawer = function() {
+            const drawer = document.getElementById('universal-cart-drawer');
+            if(drawer) { drawer.style.transform = 'translateY(100%)'; drawer.style.pointerEvents = 'none'; }
+        };
+
+        function calculateUniversalDelivery(subtotalKHR) {
+            if (subtotalKHR === 0) return 0;
+            if (subtotalKHR < 20000) return 8000; if (subtotalKHR < 40000) return 6000;
+            if (subtotalKHR < 60000) return 4000; if (subtotalKHR < 80000) return 2000;
+            return 0;
         }
-    }
 
-    function recalculateReceipt(orderId) {
-        const card = document.getElementById(`receipt-card-${orderId}`);
-        if (!card) return;
-
-        let subtotal = 0;
-        const itemTotals = card.querySelectorAll('.item-total-usd');
-        itemTotals.forEach(item => {
-            subtotal += parseFloat(item.innerText) || 0;
-        });
-
-        const delivery = parseFloat(card.querySelector('.delivery-usd').innerText) || 0;
-        const grandTotal = subtotal + delivery;
-
-        card.querySelector('.receipt-subtotal-usd').innerText = "$" + subtotal.toFixed(2);
-        card.querySelector('.grand-total-usd').innerText = grandTotal.toFixed(2);
-        card.querySelector('.grand-total-khr').innerText = (grandTotal * 4000).toLocaleString();
-        
-        card.dataset.total = grandTotal.toFixed(2);
-        
-        if(typeof calculateIncome === 'function') calculateIncome();
-    }
-
-    function prepareReceiptForCapture(card) {
-        const actionRow = card.querySelector('.action-buttons');
-        const origDisplay = actionRow.style.display;
-        const origRadius = card.style.borderRadius;
-        const origBorder = card.style.border;
-        const origShadow = card.style.boxShadow;
-        
-        actionRow.style.display = 'none';
-        card.style.borderRadius = '0px';
-        card.style.border = 'none';
-        card.style.boxShadow = 'none';
-        card.classList.remove('ring-1', 'border-[#ff5000]');
-
-        return { actionRow, origDisplay, origRadius, origBorder, origShadow };
-    }
-
-    function restoreReceiptAfterCapture(card, styles) {
-        styles.actionRow.style.display = styles.origDisplay; 
-        card.style.borderRadius = styles.origRadius;
-        card.style.border = styles.origBorder;
-        card.style.boxShadow = styles.origShadow;
-    }
-
-    function generateReceiptPDF(orderId) {
-        const receiptEl = document.getElementById(`receipt-card-${orderId}`);
-        const styles = prepareReceiptForCapture(receiptEl);
-        
-        showClientToast("Generating Sheet-by-Sheet PDF...");
-
-        html2canvas(receiptEl, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false }).then(canvas => {
-            const imgData = canvas.toDataURL('image/jpeg', 1.0);
-            
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pageHeight = pdf.internal.pageSize.getHeight();
-            
-            const imgWidthPdf = pdfWidth;
-            const imgHeightPdf = (canvas.height * pdfWidth) / canvas.width;
-            
-            let heightLeft = imgHeightPdf;
-            let position = 0;
-
-            pdf.addImage(imgData, 'JPEG', 0, position, imgWidthPdf, imgHeightPdf);
-            heightLeft -= pageHeight;
-
-            while (heightLeft > 0) {
-                position -= pageHeight;
-                pdf.addPage();
-                pdf.addImage(imgData, 'JPEG', 0, position, imgWidthPdf, imgHeightPdf);
-                heightLeft -= pageHeight;
+        function renderUniversalCartUI() {
+            const container = document.getElementById('universal-cart-items-container');
+            if(globalStoreCart.length === 0) {
+                container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3 text-gray-400"></i><p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-gray-500">កន្ត្រកទទេ (Empty)</p></div>`;
+                document.getElementById('uni-cart-subtotal').innerText = "0៛"; document.getElementById('uni-cart-delivery').innerText = "0៛"; document.getElementById('uni-cart-grand-total-khr').innerText = "0៛";
+                return;
             }
-            
-            pdf.save(`SompheaReak_Receipt_#${orderId}.pdf`);
-            restoreReceiptAfterCapture(receiptEl, styles);
-        }).catch(e => {
-            showClientToast("PDF Generation Failed", true);
-            restoreReceiptAfterCapture(receiptEl, styles);
-        });
-    }
 
-    function generateReceiptImage(orderId) {
-        const receiptEl = document.getElementById(`receipt-card-${orderId}`);
-        const styles = prepareReceiptForCapture(receiptEl);
-        
-        showClientToast("Generating Image...");
-
-        html2canvas(receiptEl, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = `SompheaReak_Receipt_#${orderId}.jpg`;
-            link.href = canvas.toDataURL('image/jpeg', 1.0);
-            link.click();
+            let subtotalKHR = 0; let customIndex = 1;
+            container.innerHTML = globalStoreCart.map((item) => {
+                let itemTotalKHR = 0;
+                if (item.type === 'custom_bracelet') itemTotalKHR = (item.baseTotal + item.pkgPrice) * item.qty;
+                else itemTotalKHR = Math.round(parseFloat(item.price) * UNIVERSAL_CART_RATE) * item.qty;
+                
+                if(item.selected) subtotalKHR += itemTotalKHR;
+                
+                // 220px Height Horizontal Bracelet format
+                if (item.type === 'custom_bracelet') {
+                    return `
+                    <div class="bg-white p-4 rounded-[2rem] shadow-sm border ${item.selected ? 'border-[#ea580c] ring-4 ring-orange-50' : 'border-gray-100'} flex flex-col relative transition-all">
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')">
+                                <span class="font-black text-sm text-gray-900">Custom DIY Bracelet #${customIndex++}</span>
+                            </label>
+                            <button onclick="removeUniCartItem('${item.id}')" class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                        <div class="w-full h-[220px] bg-slate-50 rounded-2xl border border-gray-100 overflow-x-auto overflow-y-hidden hide-scrollbar mb-4 relative" onclick="if(typeof openImageViewer === 'function') openImageViewer('${item.image}')">
+                            <div class="h-full w-max min-w-full flex items-center justify-center px-4">
+                                <img src="${item.image}" class="h-full w-auto max-w-none object-contain mix-blend-multiply cursor-pointer py-2">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-end">
+                            <div class="flex flex-col gap-1.5">
+                                <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Code: <span class="text-gray-900 font-mono tracking-wider">${item.code || 'N/A'}</span></span>
+                                <span class="text-[9px] font-black text-orange-600 bg-orange-50 px-2 py-1 rounded border border-orange-100 uppercase tracking-widest w-max">${item.pkgName} • ${item.charms.length} Charms</span>
+                            </div>
+                            <div class="flex flex-col items-end gap-2">
+                                <span class="font-black text-[15px] sm:text-base text-[#ea580c] leading-none">${Math.round(itemTotalKHR).toLocaleString()}៛</span>
+                                <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-0.5 border border-gray-200">
+                                    <button onclick="updateUniCartQty('${item.id}', -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-gray-500 hover:text-[#ea580c]">-</button>
+                                    <span class="font-black text-xs w-4 text-center text-gray-800">${item.qty}</span>
+                                    <button onclick="updateUniCartQty('${item.id}', 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-gray-500 hover:text-[#ea580c]">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                } else {
+                    return `
+                    <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-50' : 'border-gray-100'} flex gap-3 relative transition-all items-center">
+                        <label class="flex items-center justify-center cursor-pointer h-full"><input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')"></label>
+                        <div class="w-16 sm:w-20 h-16 sm:h-20 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden cursor-pointer shadow-inner"><img src="${item.image}" class="max-w-full max-h-full object-contain mix-blend-multiply"></div>
+                        <div class="flex-1 flex flex-col justify-center min-w-0 py-0.5">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-black text-[11px] sm:text-xs text-gray-900 leading-tight truncate pr-2">${item.name || item.title}</h4>
+                                <button onclick="removeUniCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-1.5 -mt-1 -mr-1 transition-colors active:scale-90"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                            </div>
+                            <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-widest truncate mb-2.5">${item.style || "Standard Option"}</p>
+                            <div class="flex justify-between items-end">
+                                <span class="font-black text-[13px] sm:text-sm text-[#ea580c] leading-none">${Math.round(itemTotalKHR).toLocaleString()}៛</span>
+                                <div class="flex items-center gap-2 sm:gap-3 bg-gray-50 rounded-lg p-0.5 border border-gray-200 shadow-sm">
+                                    <button onclick="updateUniCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-500 hover:text-[#ea580c]">-</button>
+                                    <span class="font-black text-[11px] w-4 text-center text-gray-800">${item.qty}</span>
+                                    <button onclick="updateUniCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-500 hover:text-[#ea580c]">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                }
+            }).join('');
             
-            restoreReceiptAfterCapture(receiptEl, styles);
-        }).catch(e => {
-            showClientToast("Image Generation Failed", true);
-            restoreReceiptAfterCapture(receiptEl, styles);
+            const delivery = calculateUniversalDelivery(subtotalKHR);
+            document.getElementById('uni-cart-subtotal').innerText = Math.round(subtotalKHR).toLocaleString() + "៛";
+            const deliveryEl = document.getElementById('uni-cart-delivery');
+            if (delivery === 0 && subtotalKHR > 0) { deliveryEl.innerText = "ឥតគិតថ្លៃ (Free)"; deliveryEl.className = "text-emerald-500 font-black"; } 
+            else if (subtotalKHR > 0) { deliveryEl.innerText = Math.round(delivery).toLocaleString() + "៛"; deliveryEl.className = "text-[#ea580c] font-black"; } 
+            else { deliveryEl.innerText = "0៛"; deliveryEl.className = "text-gray-500 font-bold"; }
+            document.getElementById('uni-cart-grand-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
+        }
+
+        window.toggleUniCartItem = function(id) { syncCartFromStorage(); const item = globalStoreCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveGlobalCart(); renderUniversalCartUI(); } }
+        window.updateUniCartQty = function(id, delta) { syncCartFromStorage(); const item = globalStoreCart.find(i => i.id === id); if(item) { item.qty = Math.max(1, Math.min(20, item.qty + delta)); saveGlobalCart(); renderUniversalCartUI(); } }
+        window.removeUniCartItem = function(id) { if(confirm("លុបចេញពីកន្ត្រក? (Remove item?)")) { syncCartFromStorage(); globalStoreCart = globalStoreCart.filter(i => i.id !== id); saveGlobalCart(); renderUniversalCartUI(); } }
+
+        window.openUniversalCheckout = function() {
+            syncCartFromStorage(); const selectedItems = globalStoreCart.filter(i => i.selected);
+            if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយ! (Select an item first!)");
+            let subtotalKHR = 0; 
+            selectedItems.forEach(i => {
+                if (i.type === 'custom_bracelet') subtotalKHR += (i.baseTotal + i.pkgPrice) * i.qty;
+                else subtotalKHR += Math.round(parseFloat(i.price) * UNIVERSAL_CART_RATE) * i.qty;
+            });
+            const delivery = calculateUniversalDelivery(subtotalKHR);
+            document.getElementById('uni-check-subtotal').innerText = Math.round(subtotalKHR).toLocaleString() + "៛";
+            document.getElementById('uni-check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ" : Math.round(delivery).toLocaleString() + "៛";
+            document.getElementById('uni-check-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
+            closeUniversalCart(); document.getElementById('universal-checkout-modal').classList.remove('translate-y-full');
+        };
+        window.closeUniversalCheckout = function() { document.getElementById('universal-checkout-modal').classList.add('translate-y-full'); };
+
+        window.openOrderHistory = function() {
+            closeUniversalCart(); const historyContainer = document.getElementById('universal-history-container');
+            let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
+            if (history.length === 0) {
+                historyContainer.innerHTML = `<div class="py-20 text-center opacity-40"><i class="fa-solid fa-box-open text-5xl mb-3 text-gray-400"></i><p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-gray-500">មិនទាន់មានប្រវត្តិកម្ម៉ង់ទេ</p><p class="text-[10px] font-bold text-gray-400 mt-1">No orders yet</p></div>`;
+            } else {
+                historyContainer.innerHTML = history.map(order => `
+                    <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm mb-4">
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-3">
+                            <div><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order ID</span><p class="font-black text-sm text-gray-800 font-mono">${order.id}</p></div>
+                            <div class="text-right"><span class="text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-100 px-2 py-1 rounded uppercase tracking-widest">${order.status}</span><p class="text-[9px] font-bold text-gray-400 mt-1">${new Date(order.date).toLocaleDateString()}</p></div>
+                        </div>
+                        <div class="space-y-3 mb-3">${order.items.map(item => `
+                            <div class="flex items-center gap-3">
+                                <img src="${item.image}" class="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 object-contain p-0.5 shrink-0" onerror="this.src='https://via.placeholder.com/100?text=Item'">
+                                <div class="flex-1 min-w-0"><p class="font-bold text-xs text-gray-900 truncate">${item.title}</p><p class="text-[9px] font-bold text-gray-400 truncate">Qty: ${item.qty} • ${item.style || ''}</p></div>
+                            </div>`).join('')}
+                        </div>
+                        <div class="flex justify-between items-center border-t border-gray-100 pt-3"><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">សរុប (Total)</span><span class="font-black text-sm text-[#ea580c]">${Math.round(order.totalKHR).toLocaleString()}៛</span></div>
+                    </div>`).join('');
+            }
+            document.getElementById('universal-history-modal').classList.remove('translate-x-full');
+        };
+        window.closeOrderHistory = function() { document.getElementById('universal-history-modal').classList.add('translate-x-full'); };
+
+        window.processUniversalFinalOrder = async function() {
+            syncCartFromStorage(); const selectedItems = globalStoreCart.filter(i => i.selected);
+            const name = document.getElementById('uni-cust-name').value.trim(); const phone = document.getElementById('uni-cust-phone').value.trim(); const address = document.getElementById('uni-cust-address').value.trim();
+            if(!name || !phone || !address) return alert("សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់! (Please fill all info!)");
+            if(phone.length < 8) return alert("លេខទូរស័ព្ទមិនត្រឹមត្រូវ! (Invalid phone number!)");
+
+            const btn = document.getElementById('uni-confirm-btn'); const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> កំពុងបញ្ជូន...`; btn.disabled = true;
+
+            let subtotalKHR = 0; const itemsPayload = [], charmCounts = {}, orderHistoryItems = [];
+            selectedItems.forEach((i, bIdx) => {
+                if (i.type === 'custom_bracelet') {
+                    const itemPriceKHR = i.baseTotal + i.pkgPrice; subtotalKHR += itemPriceKHR * i.qty;
+                    itemsPayload.push({ cartId: "custom-" + Date.now() + "-" + bIdx, title: "Custom DIY Bracelet", style: `Code: ${i.code} | Charms: ${i.charms.length} | Pkg: ${i.pkgName}`, price: itemPriceKHR / UNIVERSAL_CART_RATE, qty: i.qty, image: i.image, maxStock: 99 });
+                    orderHistoryItems.push({ title: "DIY Bracelet", style: `Code: ${i.code}`, qty: i.qty, image: i.image });
+                    i.charms.forEach(c => { const dbId = c.db_id || "0-0"; charmCounts[dbId] = (charmCounts[dbId] || 0) + (1 * i.qty); });
+                } else {
+                    subtotalKHR += Math.round(parseFloat(i.price) * UNIVERSAL_CART_RATE) * i.qty;
+                    itemsPayload.push({ cartId: i.variantId || i.id, title: i.name || i.title, style: i.style || "Standard Option", price: parseFloat(i.price), qty: i.qty, image: i.image, maxStock: i.stock || 99 });
+                    orderHistoryItems.push({ title: i.name || i.title, style: i.style, qty: i.qty, image: i.image });
+                }
+            });
+            for (const [id, count] of Object.entries(charmCounts)) { itemsPayload.push({ cartId: id, title: "DIY-Part", style: "Hidden stock component", price: 0, qty: count, image: "hidden", maxStock: 99 }); }
+
+            const delivery = calculateUniversalDelivery(subtotalKHR); const totalUSD = (subtotalKHR + delivery) / UNIVERSAL_CART_RATE;
+
+            const handleSuccess = () => {
+                const newOrder = { id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(), date: new Date().toISOString(), items: orderHistoryItems, totalKHR: subtotalKHR + delivery, status: "បានផ្ញើទៅ Telegram (Sent)" };
+                let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]'); history.unshift(newOrder); localStorage.setItem('sr_order_history', JSON.stringify(history));
+                alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");
+                globalStoreCart = globalStoreCart.filter(i => !i.selected); saveGlobalCart(); window.location.href = "https://t.me/Somphea_Reak";
+            };
+
+            try {
+                const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, address, items: itemsPayload, total: totalUSD }) });
+                if (res.ok) { handleSuccess(); } 
+                else { const errData = await res.json(); alert("Error: " + (errData.message || "Could not process order.")); btn.innerHTML = originalText; btn.disabled = false; }
+            } catch (e) { handleSuccess(); }
+        };
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            syncCartFromStorage(); applyLanguage(); updateCartBadge();
         });
-    }
-</script>
-{% endblock %}
+    </script>
+</body>
+</html>
+
 
