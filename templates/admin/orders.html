@@ -81,22 +81,22 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Total Orders</span>
-                <span class="block text-2xl font-black text-slate-800 mt-1">{{ global_orders|length }}</span>
+                <span class="block text-2xl font-black text-slate-800 mt-1">{{ orders|length }}</span>
             </div>
             <div class="bg-white p-4 rounded-2xl border border-orange-100 shadow-sm relative overflow-hidden">
                 <div class="absolute inset-0 bg-orange-50/50"></div>
                 <span class="text-[10px] font-black text-orange-400 uppercase tracking-wider relative z-10">New / Pending</span>
-                <span class="block text-2xl font-black text-[#ff5000] mt-1 relative z-10">{{ global_orders|selectattr("status", "equalto", "Pending")|list|length }}</span>
+                <span class="block text-2xl font-black text-[#ff5000] mt-1 relative z-10">{{ orders|selectattr("status", "equalto", "Pending")|list|length }}</span>
             </div>
             <div class="bg-white p-4 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
                 <div class="absolute inset-0 bg-blue-50/50"></div>
                 <span class="text-[10px] font-black text-blue-400 uppercase tracking-wider relative z-10">Processing</span>
-                <span class="block text-2xl font-black text-blue-600 mt-1 relative z-10">{{ global_orders|selectattr("status", "equalto", "Processing")|list|length }}</span>
+                <span class="block text-2xl font-black text-blue-600 mt-1 relative z-10">{{ orders|selectattr("status", "equalto", "Processing")|list|length }}</span>
             </div>
             <div class="bg-white p-4 rounded-2xl border border-emerald-100 shadow-sm relative overflow-hidden">
                 <div class="absolute inset-0 bg-emerald-50/50"></div>
                 <span class="text-[10px] font-black text-emerald-400 uppercase tracking-wider relative z-10">Completed</span>
-                <span class="block text-2xl font-black text-emerald-600 mt-1 relative z-10">{{ global_orders|selectattr("status", "equalto", "Completed")|list|length }}</span>
+                <span class="block text-2xl font-black text-emerald-600 mt-1 relative z-10">{{ orders|selectattr("status", "equalto", "Completed")|list|length }}</span>
             </div>
         </div>
     </div>
@@ -118,7 +118,7 @@
 
     <!-- ==================== ORDERS GRID ==================== -->
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-5" id="main-orders-list">
-        {% for order in global_orders %}
+        {% for order in orders %}
         
         <!-- Status Class Logic -->
         {% set status_class = 'status-pending' %}
@@ -126,7 +126,7 @@
         {% if order.status == 'Completed' %}{% set status_class = 'status-completed' %}{% endif %}
         {% if order.status == 'Cancelled' %}{% set status_class = 'status-cancelled' %}{% endif %}
 
-        <div class="order-item order-card bg-white rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden" data-status="{{ order.status }}" data-search="{{ order.id | lower }} {{ order.customer_name | lower }} {{ order.customer_phone }}" id="order-{{ order.id }}">
+        <div class="order-item order-card bg-white rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden" data-status="{{ order.status }}" data-search="{{ order.id | string | lower }} {{ order.customer_name | lower }} {{ order.customer_phone }}" id="order-{{ order.id }}">
             
             <!-- Side accent line for Pending orders -->
             {% if order.status == 'Pending' %}
@@ -150,8 +150,8 @@
                         <h3 class="font-black text-base text-slate-900 mt-2">{{ order.customer_name }}</h3>
                     </div>
                     <div class="text-right">
-                        <span class="text-[10px] font-bold text-slate-400 block">{{ order.created_at.strftime('%d %b %Y') }}</span>
-                        <span class="text-xs font-black text-slate-700 block">{{ order.created_at.strftime('%I:%M %p') }}</span>
+                        <span class="text-[10px] font-bold text-slate-400 block">{{ order.timestamp.strftime('%d %b %Y') }}</span>
+                        <span class="text-xs font-black text-slate-700 block">{{ order.timestamp.strftime('%I:%M %p') }}</span>
                     </div>
                 </div>
 
@@ -165,13 +165,20 @@
                         <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-location-dot text-[10px]"></i></div>
                         <span class="leading-relaxed">{{ order.customer_address }}</span>
                     </div>
+                    
+                    {% if order.promo_code_used %}
+                    <div class="flex items-start gap-3 text-xs font-bold text-emerald-600 pt-2 border-t border-slate-200/60">
+                        <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-500 flex items-center justify-center shrink-0"><i class="fa-solid fa-tag text-[10px]"></i></div>
+                        <span class="mt-1">Promo Used: <span class="uppercase">{{ order.promo_code_used }}</span></span>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <!-- Order Items (Mini List) -->
                 <div class="space-y-3 mb-5 flex-1">
-                    <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1.5 mb-2">Order Items ({{ order.items|length }})</h4>
+                    <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1.5 mb-2">Order Items ({{ order.parsed_items|length }})</h4>
                     <div class="max-h-[160px] overflow-y-auto pr-1 hide-scrollbar space-y-2">
-                        {% for item in order.items %}
+                        {% for item in order.parsed_items %}
                         <div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
                             <img src="{{ item.image }}" class="w-12 h-12 rounded-lg bg-slate-50 border border-slate-200 object-contain p-1 shrink-0" onerror="this.src='https://ui-avatars.com/api/?name=Item&background=f8fafc&color=64748b'">
                             <div class="flex-1 min-w-0">
@@ -189,31 +196,37 @@
                 <!-- Actions & Total -->
                 <div class="flex justify-between items-center border-t border-slate-100 pt-4 mt-auto">
                     <div class="flex gap-2">
-                        {% if order.status == 'Pending' %}
-                            <!-- Action: Confirm & Deduct Stock -->
-                            <form action="/admin/orders/confirm/{{ order.id }}" method="POST" class="m-0" onsubmit="return confirm('Confirm order and deduct item quantities from inventory?')">
+                        {% if order.status != 'Completed' and order.status != 'Cancelled' %}
+                            <!-- Maps directly to your app.py status route which handles the automatic stock deduction! -->
+                            <form action="/admin/order/status/{{ order.id }}/Completed" method="POST" class="m-0" onsubmit="return confirm('Confirm order and deduct item quantities from inventory?')">
                                 <button type="submit" class="bg-[#ff5000] text-white text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl shadow-md shadow-orange-500/20 hover:bg-orange-600 active:scale-95 transition-all flex items-center gap-1.5">
                                     <i class="fa-solid fa-check"></i> Confirm
                                 </button>
                             </form>
                         {% endif %}
                         
-                        <!-- Action: Edit Information -->
                         <button type="button" onclick="toggleEdit('{{ order.id }}')" class="bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl hover:bg-slate-200 hover:text-slate-900 active:scale-95 transition-all flex items-center gap-1.5">
                             <i class="fa-solid fa-pen"></i> Edit
                         </button>
+                        
+                        <form action="/admin/order/delete/{{ order.id }}" method="POST" class="m-0" onsubmit="return confirm('Permanently delete this order?')">
+                            <button type="submit" class="bg-white border border-red-100 text-red-500 text-[10px] font-black uppercase tracking-widest px-3 py-2.5 rounded-xl hover:bg-red-50 active:scale-95 transition-all flex items-center shadow-sm">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </form>
                     </div>
 
                     <div class="text-right">
                         <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Grand Total</span>
-                        <span class="font-black text-xl text-[#ff5000] leading-none block">{{ (order.total_amount * 4000) | int | format_currency }}៛</span>
+                        <span class="font-black text-xl text-[#ff5000] leading-none block">{{ "{:,.0f}".format(order.total_usd * 4000) }}៛</span>
                     </div>
                 </div>
             </div>
 
             <!-- ================= EDIT MODE (Slide Down) ================= -->
             <div class="edit-mode h-full">
-                <form action="/admin/orders/update/{{ order.id }}" method="POST" class="bg-slate-50 p-5 md:p-6 rounded-3xl border-2 border-[#ff5000] ring-4 ring-orange-500/10 shadow-2xl relative w-full h-full flex flex-col">
+                <!-- Needs a new Python route added to app.py (provided below) -->
+                <form action="/admin/order/update/{{ order.id }}" method="POST" class="bg-slate-50 p-5 md:p-6 rounded-3xl border-2 border-[#ff5000] ring-4 ring-orange-500/10 shadow-2xl relative w-full h-full flex flex-col">
                     
                     <!-- Header -->
                     <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-4">
@@ -253,7 +266,7 @@
                             <select name="status" class="input-field w-full font-bold cursor-pointer">
                                 <option value="Pending" {% if order.status == 'Pending' %}selected{% endif %}>🟠 Pending (New Order)</option>
                                 <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>🔵 Processing (Packing)</option>
-                                <option value="Completed" {% if order.status == 'Completed' %}selected{% endif %}>🟢 Completed (Delivered)</option>
+                                <option value="Completed" {% if order.status == 'Completed' %}selected{% endif %}>🟢 Completed (Delivered) - Deducts Stock!</option>
                                 <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>🔴 Cancelled</option>
                             </select>
                         </div>
@@ -261,16 +274,16 @@
 
                     <!-- Items Edit (Quantities) -->
                     <div class="flex-1 space-y-2 mb-4 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm overflow-y-auto hide-scrollbar max-h-[250px]">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1 mb-2">Adjust Items</label>
-                        {% for item in order.items %}
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider block border-b border-slate-100 pb-1 mb-2">Adjust Item Quantities</label>
+                        {% for item in order.parsed_items %}
                         <div class="flex items-center gap-3 p-1">
                             <img src="{{ item.image }}" class="w-10 h-10 rounded-lg border border-slate-200 object-contain p-0.5">
                             <div class="flex-1 min-w-0">
                                 <p class="font-bold text-xs text-slate-900 truncate">{{ item.title }}</p>
-                                <input type="hidden" name="item_ids[]" value="{{ item.id }}">
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="text-[9px] font-bold text-slate-400">Qty:</span>
+                                <!-- Using list inputs allows the Python backend to loop over them easily -->
                                 <input type="number" name="item_qtys[]" value="{{ item.qty }}" min="0" class="input-field w-16 text-center text-xs font-black p-1.5 h-8">
                             </div>
                         </div>
@@ -298,7 +311,6 @@
 
 {% block scripts %}
 <script>
-    // ================= 1. UI HELPERS & EDIT MODE ACTIONS =================
     function toggleEdit(id) { 
         const item = document.getElementById(`order-${id}`); 
         if(item) {
@@ -309,9 +321,7 @@
         }
     }
 
-    // ================= 2. FILTERING & LIVE SEARCH =================
     function filterStatus(status) {
-        // Update Buttons UI
         document.querySelectorAll('.status-flt').forEach(btn => { 
             btn.classList.remove('bg-slate-900', 'text-white', 'shadow-sm'); 
             btn.classList.add('text-slate-500', 'bg-slate-50'); 
@@ -321,8 +331,6 @@
             activeBtn.classList.add('bg-slate-900', 'text-white', 'shadow-sm');
             activeBtn.classList.remove('text-slate-500', 'bg-slate-50');
         }
-        
-        // Trigger generic filter logic
         filterOrders(status);
     }
 
@@ -335,19 +343,8 @@
             const mStatus = statusFlt === 'All' || item.dataset.status === statusFlt;
             const searchData = item.dataset.search || '';
             const mSearch = !searchTerm || searchData.includes(searchTerm);
-
-            if (mStatus && mSearch) {
-                item.style.display = 'block';
-            } else {
-                item.style.display = 'none';
-            }
+            item.style.display = (mStatus && mSearch) ? 'block' : 'none';
         });
     }
-
-    // Handle initial state rendering logic if needed
-    document.addEventListener("DOMContentLoaded", () => {
-        // Initialization code if required.
-    });
 </script>
 {% endblock %}
-
