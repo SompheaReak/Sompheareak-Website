@@ -87,6 +87,7 @@ class Order(db.Model):
     customer_address = db.Column(db.Text, nullable=False)
     items_json = db.Column(db.Text, nullable=False) 
     total_usd = db.Column(db.Float, nullable=False)
+    delivery_fee = db.Column(db.Float, default=0.0) # NEW FIELD
     status = db.Column(db.String(20), default="Pending")
     stock_deducted = db.Column(db.Boolean, default=False)
     promo_code_used = db.Column(db.String(50), nullable=True)
@@ -375,26 +376,32 @@ def admin_inventory():
 
 
 # =======================================================
-# NEW ORDER MANAGEMENT ROUTES (Confirm, Update, View)
+# UPDATED ORDER MANAGEMENT (CRASH PROOF + PRICE/DELIVERY EDITING)
 # =======================================================
 @app.route('/admin/orders')
 @login_required
 def admin_orders():
     orders = Order.query.order_by(Order.timestamp.desc()).all()
-    for o in orders: 
-        o.parsed_items = json.loads(o.items_json)
-        
-        # Format mapping so template doesn't break
+    valid_orders = []
+    
+    for o in orders:
+        # Error-Proofing: If JSON is broken, it won't crash the page anymore!
+        try:
+            o.parsed_items = json.loads(o.items_json) if o.items_json else []
+        except Exception as e:
+            print(f"Warning: Could not load items for order {o.id}")
+            o.parsed_items = []
+            
         o.items = o.parsed_items
         for item in o.items:
             if 'id' not in item:
-                # Map various ID formats to a standard 'id' for the template
                 item['id'] = item.get('cartId', item.get('variantId', str(uuid.uuid4())[:8]))
                 
         o.created_at = o.timestamp
         o.total_amount = o.total_usd
+        valid_orders.append(o)
         
-    return render_template('admin/orders.html', global_orders=orders)
+    return render_template('admin/orders.html', global_orders=valid_orders)
 
 @app.route('/admin/orders/confirm/<int:id>', methods=['POST'])
 @login_required
@@ -449,28 +456,32 @@ def update_admin_order(id):
         order.customer_address = request.form.get('customer_address', order.customer_address)
         order.status = request.form.get('status', order.status)
         
+        # New Feature: Manual Override Price and Delivery Fee
+        if 'total_usd' in request.form:
+            try: order.total_usd = float(request.form.get('total_usd'))
+            except ValueError: pass
+            
+        if 'delivery_fee' in request.form:
+            try: order.delivery_fee = float(request.form.get('delivery_fee'))
+            except ValueError: pass
+        
+        # Update Item Quantities
         item_ids = request.form.getlist('item_ids[]')
         item_qtys = request.form.getlist('item_qtys[]')
         
         if item_ids and item_qtys:
             try:
-                items = json.loads(order.items_json)
-                new_total = 0
+                items = json.loads(order.items_json) if order.items_json else []
                 for i, item_id in enumerate(item_ids):
                     for item in items:
                         if str(item.get('id', item.get('cartId', item.get('variantId', '')))) == str(item_id):
                             item['qty'] = int(item_qtys[i])
-                            
-                for item in items:
-                    new_total += float(item.get('price', 0)) * int(item.get('qty', 1))
-                
                 order.items_json = json.dumps(items)
-                order.total_usd = new_total
             except Exception as e:
                 print(f"Error updating items: {e}")
         
         db.session.commit()
-        flash('Order Information Updated!', 'success')
+        flash('Order Information Updated Successfully!', 'success')
     return redirect(url_for('admin_orders'))
 # =======================================================
 
@@ -1024,7 +1035,8 @@ with app.app_context():
         'ALTER TABLE "order" ADD COLUMN promo_code_used VARCHAR(50)',
         'ALTER TABLE product ADD COLUMN discount_percent FLOAT DEFAULT 0.0',
         'ALTER TABLE product ADD COLUMN use_custom_thumbnail BOOLEAN DEFAULT FALSE',
-        'ALTER TABLE product ADD COLUMN detail_images TEXT'
+        'ALTER TABLE product ADD COLUMN detail_images TEXT',
+        'ALTER TABLE "order" ADD COLUMN delivery_fee FLOAT DEFAULT 0.0'
     ]
     for q in queries:
         try:
