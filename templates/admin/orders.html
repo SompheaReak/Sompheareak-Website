@@ -180,30 +180,29 @@
 
                 <!-- Order Items (Filtered to exclude raw DIY-Part tokens) -->
                 <div class="space-y-3 mb-5 flex-1">
+                    <!-- MATHEMATICAL FIX: Dynamically count exactly how many 'DIY-Part' items are in this order -->
+                    {% set diy_charms_count = order.items | selectattr("title", "equalto", "DIY-Part") | list | length %}
+                    
+                    <!-- Hide the DIY-Part items from the visual receipt -->
                     {% set display_items = order.items | rejectattr("title", "equalto", "DIY-Part") | list %}
                     
                     <div class="space-y-3" id="items-container-{{ order.id }}">
                         {% for item in display_items %}
                         <div class="order-item-row {% if loop.index > 3 %}hidden-item hidden{% endif %} bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
                             
-                            <!-- Custom Italy Charm Bracelet (Rectangle Layout: 220px Height, Horizontal No Limit) -->
+                            <!-- Custom Italy Charm Bracelet -->
                             {% if 'Custom DIY Bracelet' in item.title or 'Custom Italy' in item.title or 'Charm' in item.style %}
-                                <div class="w-full h-[220px] bg-slate-50 rounded-xl border border-slate-200 overflow-x-auto overflow-y-hidden hide-scrollbar flex items-center justify-start shadow-inner p-2">
-                                    <img src="{{ item.image }}" class="h-full w-auto max-w-none object-contain select-none" onerror="this.src='https://via.placeholder.com/400x220?text=No+Image'">
+                                
+                                <!-- FULL SCREEN IMAGE FIX: Max-height 220px, object-contain allows entire wide image to fit without zooming/scrolling -->
+                                <div class="w-full h-[220px] bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center shadow-inner p-2 overflow-hidden">
+                                    <img src="{{ item.image }}" class="max-w-full max-h-full object-contain select-none" onerror="this.src='https://via.placeholder.com/400x220?text=No+Image'">
                                 </div>
                                 
-                                {% set style_parts = item.style.split('|') %}
-                                {% set charms_count = '0' %}
-                                {% set pkg_name = 'Standard' %}
-                                {% for part in style_parts %}
-                                    {% if 'Charms:' in part %}{% set charms_count = part.replace('Charms:', '').strip() %}{% endif %}
-                                    {% if 'Pkg:' in part %}{% set pkg_name = part.replace('Pkg:', '').strip() %}{% endif %}
-                                {% endfor %}
-
                                 <div class="flex justify-between items-center text-xs px-1 border-t border-slate-100 pt-2">
                                     <div>
                                         <p class="font-black text-slate-900">DIY Bracelet x{{ item.qty }}</p>
-                                        <p class="text-[10px] font-bold text-slate-500">Charm: {{ charms_count }} | Package: {{ pkg_name }}</p>
+                                        <!-- Displays the mathematically accurate charm count calculated above! -->
+                                        <p class="text-[10px] font-bold text-slate-500">Charm: <span class="text-[#ff5000]">{{ diy_charms_count }}</span> | Package: {{ item.style | default('Normal') }}</p>
                                     </div>
                                     <div class="text-right">
                                         <span class="text-slate-900 font-black text-sm block">${{ "%.2f"|format(item.price * item.qty) }}</span>
@@ -455,4 +454,5 @@
     }
 </script>
 {% endblock %}
+
 
