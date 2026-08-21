@@ -448,7 +448,6 @@
                                             <i class="fa-solid fa-grip-vertical text-sm"></i>
                                         </div>
                                         
-                                        <!-- NEW EYE HOVER BADGE APPLIED HERE -->
                                         <div class="relative w-11 h-11 bg-slate-50 border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:border-[#ff5000] transition-colors group flex items-center justify-center" onclick="openImageViewer('{{v.image}}')" title="Click to view image">
                                             <img src="{{v.image}}" class="max-w-full max-h-full object-contain mix-blend-multiply variant-image-preview">
                                             <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-[7px] transition-all">
@@ -511,11 +510,10 @@
                                 <input type="file" name="new_images" multiple class="block w-full text-[9px] text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:font-black file:bg-blue-600 file:text-white file:uppercase hover:file:bg-blue-700 cursor-pointer bg-white border border-slate-200 p-1 rounded-xl">
                             </div>
                             
-                            <!-- NEW: Detail Image Gallery Viewer Block -->
+                            <!-- Detail Image Gallery Viewer Block -->
                             <div class="bg-purple-50/50 p-3.5 rounded-2xl border border-purple-100 flex flex-col gap-3 h-full">
                                 <label class="text-[10px] font-black text-purple-600 uppercase tracking-wider"><i class="fa-regular fa-images mr-1"></i> View-Only Detail Images</label>
                                 
-                                <!-- Parses & Renders Safely Existing Gallery Images with Eye Icons -->
                                 {% set raw_details = [] %}
                                 {% if p.detail_images and p.detail_images != '[]' and p.detail_images != 'null' %}
                                     {% set cleaned = p.detail_images | replace('[', '') | replace(']', '') | replace('"', '') | replace(' ', '') %}
@@ -557,7 +555,7 @@
     </section>
 </div>
 
-<!-- ==================== CATEGORIES MODAL ==================== -->
+<!-- ==================== MANAGE CATEGORIES MODAL (WITH DRAG SORTING) ==================== -->
 <div id="cat-modal" class="fixed inset-0 z-[60] flex items-end md:items-center justify-center md:p-4 hidden overscroll-contain">
     <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" onclick="closeCatModal()"></div>
     <div class="bg-white w-full max-w-lg rounded-t-3xl md:rounded-3xl overflow-hidden relative shadow-2xl flex flex-col h-[75dvh] md:max-h-[85vh]">
@@ -566,29 +564,58 @@
                 <i class="fa-solid fa-folder-tree text-blue-500 text-lg"></i>
                 <h2 class="font-extrabold text-base text-slate-900">Manage Categories</h2>
             </div>
-            <button type="button" onclick="closeCatModal()" class="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 rounded-full text-slate-500 hover:text-red-500"><i class="fa-solid fa-xmark"></i></button>
+            <button type="button" onclick="closeCatModal()" class="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 rounded-full text-slate-500 hover:text-red-500 transition-colors"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
         <form action="/admin/categories/update" method="POST" enctype="multipart/form-data" class="p-4 flex flex-col overflow-hidden submit-form flex-1">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                <i class="fa-solid fa-arrows-up-down"></i> Drag buttons to sort order
+            </p>
+            
             <div id="category-sortable" class="overflow-y-auto space-y-2.5 pr-1 hide-scrollbar flex-1 pb-3 touch-pan-y">
                 {% for cat in global_categories %}
-                <div class="cat-modal-item flex gap-3 items-center bg-white p-2.5 rounded-2xl border border-slate-200 shadow-sm relative group hover:border-blue-300 transition-colors" data-store="{{cat.store}}">
-                    <i class="fa-solid fa-grip-vertical text-slate-300 handle px-1 text-base hover:text-slate-800 cursor-grab"></i>
+                
+                <!-- INDIVIDUAL CATEGORY ROW -->
+                <div class="cat-modal-item flex gap-3 items-center bg-white p-2.5 rounded-2xl border border-slate-200 shadow-sm relative group hover:border-blue-400 transition-colors" data-store="{{cat.store}}">
+                    
+                    <!-- DRAG HANDLE BUTTON -->
+                    <div class="handle cursor-grab flex items-center justify-center w-8 h-10 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-400 hover:text-blue-500 transition-colors shrink-0 shadow-sm" title="Drag to reorder">
+                        <i class="fa-solid fa-grip-vertical text-lg"></i>
+                    </div>
+                    
+                    <!-- POSITION NUMBER BADGE -->
+                    <div class="cat-order-badge w-6 h-6 shrink-0 flex items-center justify-center bg-slate-900 text-white font-black text-[10px] rounded-md shadow-sm">
+                        {{ loop.index }}
+                    </div>
+
                     <input type="hidden" name="cat_ids[]" value="{{cat.id}}">
-                    <div class="relative w-12 h-12 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 cursor-pointer flex items-center justify-center shrink-0" onclick="document.getElementById('cat-file-{{cat.id}}').click()" title="Click to replace image">
+                    
+                    <!-- IMAGE -->
+                    <div class="relative w-12 h-12 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 cursor-pointer flex items-center justify-center shrink-0 hover:border-blue-500 transition-colors" onclick="document.getElementById('cat-file-{{cat.id}}').click()" title="Click to replace image">
                         <img src="{{cat.image}}" class="max-w-full max-h-full object-cover">
+                        <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center transition-all">
+                            <i class="fa-solid fa-pen text-white text-[10px]"></i>
+                        </div>
                         <input type="file" name="cat_image_{{cat.id}}" id="cat-file-{{cat.id}}" accept="image/*" class="hidden">
                     </div>
+                    
+                    <!-- TEXT FIELDS -->
                     <div class="flex-1 min-w-0">
-                        <input type="text" name="cat_names[]" value="{{cat.name}}" class="text-xs font-black border-b border-slate-200 outline-none w-full pb-1 focus:border-[#ff5000] text-slate-900">
+                        <input type="text" name="cat_names[]" value="{{cat.name}}" class="text-xs font-black border-b border-slate-200 outline-none w-full pb-1 focus:border-[#ff5000] text-slate-900 transition-colors bg-transparent">
                         <span class="text-[8px] font-extrabold text-slate-400 uppercase block mt-1">{{cat.store}}</span>
                     </div>
-                    <button type="button" onclick="deleteCategory({{cat.id}})" class="w-8 h-8 shrink-0 flex items-center justify-center text-slate-400 bg-slate-50 border border-slate-200 rounded-xl hover:text-red-600 hover:bg-red-50"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                    
+                    <!-- DELETE BUTTON -->
+                    <button type="button" onclick="deleteCategory({{cat.id}})" class="w-8 h-8 shrink-0 flex items-center justify-center text-slate-400 bg-slate-50 border border-slate-200 rounded-xl hover:text-red-600 hover:bg-red-50 transition-colors shadow-sm"><i class="fa-solid fa-trash-can text-xs"></i></button>
                 </div>
+                
                 {% endfor %}
             </div>
-            <div class="pt-3 border-t border-slate-100">
-                <button type="submit" class="w-full btn-taobao py-3.5 rounded-xl text-xs font-black uppercase tracking-wider shadow-lg">Save Categories</button>
+            
+            <div class="pt-4 border-t border-slate-100">
+                <button type="submit" class="w-full btn-taobao py-3.5 rounded-xl text-xs font-black uppercase tracking-wider shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-floppy-disk text-[14px]"></i> Save Categories
+                </button>
             </div>
         </form>
     </div>
@@ -857,7 +884,6 @@
         }
     }
 
-    // Handles live UI previews for Quick Add "Detail Images" selection
     function handleDetailSelect(input) {
         const textEl = document.getElementById('detail-count-text');
         const container = document.getElementById('detail-preview-container');
@@ -890,7 +916,6 @@
         }
     }
 
-    // Handles live UI previews for Editing "Detail Images" selection
     function previewEditDetailImages(input, pid) {
         const container = document.getElementById(`edit-detail-preview-${pid}`);
         if(!container) return;
@@ -1041,7 +1066,27 @@
         });
 
         initializeSortableVariants();
+        initializeCategorySortable(); // NEW FUNCTION FOR CATEGORIES DRAG
     });
+
+    // ================= 7. CATEGORY DRAG & DROP INITIALIZATION =================
+    function initializeCategorySortable() {
+        const catSortable = document.getElementById('category-sortable');
+        if(catSortable && typeof Sortable !== 'undefined') {
+            new Sortable(catSortable, { 
+                handle: '.handle', 
+                animation: 150,
+                ghostClass: 'opacity-40', // Visual fading effect while dragging
+                onEnd: function() {
+                    // This recalculates the 1st, 2nd, 3rd, etc. badges after every drop!
+                    const badges = document.querySelectorAll('.cat-order-badge');
+                    badges.forEach((badge, index) => {
+                        badge.innerText = index + 1;
+                    });
+                }
+            });
+        }
+    }
 
     function initializeSortableVariants() {
         if (typeof Sortable !== 'undefined') {
@@ -1169,7 +1214,7 @@
         variantList.querySelectorAll('.tag-container').forEach(setupTagInput);
     }
 
-    // ================= 7. FORM & TAG LOGIC =================
+    // ================= 8. FORM & TAG LOGIC =================
     document.querySelectorAll('form.submit-form').forEach(form => {
         form.addEventListener('submit', () => {
             const overlay = document.getElementById('loading-overlay');
@@ -1247,11 +1292,6 @@
     }
 
     document.querySelectorAll('.tag-container').forEach(setupTagInput);
-
-    const catSortable = document.getElementById('category-sortable');
-    if(catSortable && typeof Sortable !== 'undefined') {
-        new Sortable(catSortable, { handle: '.handle', animation: 150 });
-    }
 </script>
 {% endblock %}
 
