@@ -164,7 +164,7 @@
                     </div>
                     <div class="flex items-center">
                         <span class="font-extrabold text-slate-400 w-28 shrink-0 uppercase tracking-wider text-[10px]">Phone :</span>
-                        <a href="tel:{{ order.customer_phone }}" class="font-black text-[#blue-500] hover:underline text-sm">{{ order.customer_phone }}</a>
+                        <a href="tel:{{ order.customer_phone }}" class="font-black text-blue-600 hover:underline text-sm">{{ order.customer_phone }}</a>
                     </div>
                     <div class="flex items-start">
                         <span class="font-extrabold text-slate-400 w-28 shrink-0 pt-0.5 uppercase tracking-wider text-[10px]">Address :</span>
@@ -181,7 +181,6 @@
                 <!-- Order Items -->
                 <div class="space-y-3 mb-5 flex-1">
                     
-                    <!-- Hide the raw "DIY-Part" tokens entirely so they don't clog up the receipt -->
                     {% set display_items = order.items | rejectattr("title", "equalto", "DIY-Part") | list %}
                     
                     <div class="space-y-3" id="items-container-{{ order.id }}">
@@ -191,26 +190,31 @@
                             <!-- ================= CUSTOM BRACELET DESIGN ================= -->
                             {% if 'Custom DIY Bracelet' in item.title or 'Custom Italy' in item.title or 'Charm' in item.style %}
                                 
-                                <!-- No more grey border/padding. Pure width adaptation. -->
-                                <div class="w-full bg-white rounded-xl border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
-                                    <img src="{{ item.image }}" class="w-full max-h-[160px] object-contain select-none" onerror="this.src='https://via.placeholder.com/400x220?text=No+Image'">
+                                <div class="w-full bg-white rounded-xl border border-slate-200 flex items-center justify-center p-2 shadow-sm">
+                                    <img src="{{ item.image }}" class="w-full max-h-[90px] object-contain select-none" onerror="this.src='https://via.placeholder.com/400x90?text=No+Image'">
                                 </div>
                                 
-                                <div class="flex justify-between items-start text-xs pt-1">
+                                <div class="flex justify-between items-start text-xs px-1">
                                     <div class="flex-1 pr-3">
                                         <p class="font-black text-slate-900">{{ item.title }} <span class="text-[#ff5000] ml-1">x{{ item.qty }}</span></p>
-                                        <!-- Displays the exact text saved in database (e.g. Code: 0Y0Y | Charms: 18) -->
-                                        <p class="text-[10px] font-bold text-slate-500 mt-1 whitespace-pre-wrap leading-relaxed">{{ item.style | default('') }}</p>
+                                        
+                                        <div class="text-[10px] font-bold text-slate-500 mt-1.5 space-y-0.5 leading-relaxed">
+                                            {% if item.style %}
+                                                {% for part in item.style.split('|') %}
+                                                    <p>{{ part.strip() }}</p>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
                                     </div>
                                     <div class="text-right shrink-0">
                                         <span class="text-slate-900 font-black text-sm block">${{ "%.2f"|format(item.price * item.qty) }}</span>
-                                        <span class="text-[10px] font-bold text-slate-400 block">{{ "{:,.0f}".format((item.price * item.qty * 4000)) }} ៛</span>
+                                        <span class="text-[9px] font-bold text-slate-400 block mt-0.5">{{ "{:,.0f}".format((item.price * item.qty * 4000)) }} ៛</span>
                                     </div>
                                 </div>
                             
                             <!-- ================= REGULAR PRODUCTS ================= -->
                             {% else %}
-                                <div class="flex items-center justify-between gap-3">
+                                <div class="flex items-center justify-between gap-3 px-1">
                                     <div class="flex items-center gap-3 min-w-0">
                                         <img src="{{ item.image }}" class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 object-contain p-1 shrink-0 shadow-sm" onerror="this.src='https://ui-avatars.com/api/?name=Item&background=f8fafc&color=64748b'">
                                         <div class="min-w-0">
@@ -221,7 +225,7 @@
                                     </div>
                                     <div class="text-right shrink-0">
                                         <span class="text-slate-900 font-black text-xs block">${{ "%.2f"|format(item.price * item.qty) }}</span>
-                                        <span class="text-[10px] font-bold text-slate-400 block">{{ "{:,.0f}".format((item.price * item.qty * 4000)) }} ៛</span>
+                                        <span class="text-[9px] font-bold text-slate-400 block mt-0.5">{{ "{:,.0f}".format((item.price * item.qty * 4000)) }} ៛</span>
                                     </div>
                                 </div>
                             {% endif %}
@@ -239,7 +243,7 @@
                 </div>
 
                 <!-- ================= FINANCIAL BREAKDOWN (ROBUST MATH FIX) ================= -->
-                {% set subtotal = order.total_amount | float %}
+                {% set subtotal = order.total_usd | default(0) | float %}
                 {% set delivery = order.delivery_fee | default(0) | float %}
                 {% set grand_total = subtotal + delivery %}
 
@@ -256,7 +260,7 @@
                             <span class="text-[#ff5000] font-black">${{ "%.2f"|format(delivery) }}</span>
                         </div>
                     </div>
-                    <div class="flex justify-between items-center pt-1">
+                    <div class="flex justify-between items-center pt-1.5">
                         <span class="text-xs font-black text-slate-900 uppercase tracking-wider">Total Due</span>
                         <div class="text-right">
                             <span class="font-black text-xl text-[#ff5000] leading-none block">${{ "%.2f"|format(grand_total) }}</span>
@@ -457,5 +461,4 @@
     }
 </script>
 {% endblock %}
-
 
