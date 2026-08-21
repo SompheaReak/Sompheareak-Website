@@ -164,7 +164,7 @@
                     </div>
                     <div class="flex items-center">
                         <span class="font-extrabold text-slate-400 w-28 shrink-0 uppercase tracking-wider text-[10px]">Phone :</span>
-                        <a href="tel:{{ order.customer_phone }}" class="font-black text-[#ff5000] hover:underline text-sm">{{ order.customer_phone }}</a>
+                        <a href="tel:{{ order.customer_phone }}" class="font-black text-[#blue-500] hover:underline text-sm">{{ order.customer_phone }}</a>
                     </div>
                     <div class="flex items-start">
                         <span class="font-extrabold text-slate-400 w-28 shrink-0 pt-0.5 uppercase tracking-wider text-[10px]">Address :</span>
@@ -178,46 +178,45 @@
                     <span>Amount</span>
                 </div>
 
-                <!-- Order Items (Filtered to exclude raw DIY-Part tokens) -->
+                <!-- Order Items -->
                 <div class="space-y-3 mb-5 flex-1">
-                    <!-- MATHEMATICAL FIX: Dynamically count exactly how many 'DIY-Part' items are in this order -->
-                    {% set diy_charms_count = order.items | selectattr("title", "equalto", "DIY-Part") | list | length %}
                     
-                    <!-- Hide the DIY-Part items from the visual receipt -->
+                    <!-- Hide the raw "DIY-Part" tokens entirely so they don't clog up the receipt -->
                     {% set display_items = order.items | rejectattr("title", "equalto", "DIY-Part") | list %}
                     
                     <div class="space-y-3" id="items-container-{{ order.id }}">
                         {% for item in display_items %}
                         <div class="order-item-row {% if loop.index > 3 %}hidden-item hidden{% endif %} bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
                             
-                            <!-- Custom Italy Charm Bracelet -->
+                            <!-- ================= CUSTOM BRACELET DESIGN ================= -->
                             {% if 'Custom DIY Bracelet' in item.title or 'Custom Italy' in item.title or 'Charm' in item.style %}
                                 
-                                <!-- FULL SCREEN IMAGE FIX: Max-height 220px, object-contain allows entire wide image to fit without zooming/scrolling -->
-                                <div class="w-full h-[220px] bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center shadow-inner p-2 overflow-hidden">
-                                    <img src="{{ item.image }}" class="max-w-full max-h-full object-contain select-none" onerror="this.src='https://via.placeholder.com/400x220?text=No+Image'">
+                                <!-- No more grey border/padding. Pure width adaptation. -->
+                                <div class="w-full bg-white rounded-xl border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
+                                    <img src="{{ item.image }}" class="w-full max-h-[160px] object-contain select-none" onerror="this.src='https://via.placeholder.com/400x220?text=No+Image'">
                                 </div>
                                 
-                                <div class="flex justify-between items-center text-xs px-1 border-t border-slate-100 pt-2">
-                                    <div>
-                                        <p class="font-black text-slate-900">DIY Bracelet x{{ item.qty }}</p>
-                                        <!-- Displays the mathematically accurate charm count calculated above! -->
-                                        <p class="text-[10px] font-bold text-slate-500">Charm: <span class="text-[#ff5000]">{{ diy_charms_count }}</span> | Package: {{ item.style | default('Normal') }}</p>
+                                <div class="flex justify-between items-start text-xs pt-1">
+                                    <div class="flex-1 pr-3">
+                                        <p class="font-black text-slate-900">{{ item.title }} <span class="text-[#ff5000] ml-1">x{{ item.qty }}</span></p>
+                                        <!-- Displays the exact text saved in database (e.g. Code: 0Y0Y | Charms: 18) -->
+                                        <p class="text-[10px] font-bold text-slate-500 mt-1 whitespace-pre-wrap leading-relaxed">{{ item.style | default('') }}</p>
                                     </div>
-                                    <div class="text-right">
+                                    <div class="text-right shrink-0">
                                         <span class="text-slate-900 font-black text-sm block">${{ "%.2f"|format(item.price * item.qty) }}</span>
                                         <span class="text-[10px] font-bold text-slate-400 block">{{ "{:,.0f}".format((item.price * item.qty * 4000)) }} ៛</span>
                                     </div>
                                 </div>
                             
-                            <!-- Regular Products -->
+                            <!-- ================= REGULAR PRODUCTS ================= -->
                             {% else %}
                                 <div class="flex items-center justify-between gap-3">
                                     <div class="flex items-center gap-3 min-w-0">
                                         <img src="{{ item.image }}" class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 object-contain p-1 shrink-0 shadow-sm" onerror="this.src='https://ui-avatars.com/api/?name=Item&background=f8fafc&color=64748b'">
                                         <div class="min-w-0">
                                             <p class="font-black text-xs text-slate-900 truncate">{{ item.title }}</p>
-                                            <p class="text-[10px] font-bold text-slate-500 truncate mt-0.5">{{ item.style | default('Standard') }} (Qty: {{ item.qty }})</p>
+                                            <p class="text-[10px] font-bold text-slate-500 truncate mt-0.5">{{ item.style | default('Standard') }}</p>
+                                            <p class="text-[10px] font-black text-[#ff5000] mt-0.5">Qty: {{ item.qty }}</p>
                                         </div>
                                     </div>
                                     <div class="text-right shrink-0">
@@ -239,25 +238,29 @@
                     {% endif %}
                 </div>
 
-                <!-- Financial Breakdown Summary matching Receipt style -->
+                <!-- ================= FINANCIAL BREAKDOWN (ROBUST MATH FIX) ================= -->
+                {% set subtotal = order.total_amount | float %}
+                {% set delivery = order.delivery_fee | default(0) | float %}
+                {% set grand_total = subtotal + delivery %}
+
                 <div class="bg-slate-50/90 rounded-2xl p-4 border border-slate-200/80 mb-4 space-y-2 text-xs font-bold text-slate-600">
                     <div class="flex justify-between items-center">
                         <span class="uppercase text-[10px] tracking-wider text-slate-400 font-black">Subtotal</span>
                         <div class="text-right">
-                            <span class="text-slate-800 font-black">${{ "%.2f"|format(order.total_amount) }}</span>
+                            <span class="text-slate-800 font-black">${{ "%.2f"|format(subtotal) }}</span>
                         </div>
                     </div>
                     <div class="flex justify-between items-center border-b border-slate-200/60 pb-2">
                         <span class="uppercase text-[10px] tracking-wider text-slate-400 font-black">Delivery Charge</span>
                         <div class="text-right">
-                            <span class="text-[#ff5000] font-black">${{ "%.2f"|format(order.delivery_fee or 0) }}</span>
+                            <span class="text-[#ff5000] font-black">${{ "%.2f"|format(delivery) }}</span>
                         </div>
                     </div>
                     <div class="flex justify-between items-center pt-1">
                         <span class="text-xs font-black text-slate-900 uppercase tracking-wider">Total Due</span>
                         <div class="text-right">
-                            <span class="font-black text-xl text-[#ff5000] leading-none block">${{ "%.2f"|format(order.total_amount + (order.delivery_fee or 0)) }}</span>
-                            <span class="text-[10px] font-bold text-slate-400 mt-1 block">{{ "{:,.0f}".format(((order.total_amount + (order.delivery_fee or 0)) * 4000)) }} ៛</span>
+                            <span class="font-black text-xl text-[#ff5000] leading-none block">${{ "%.2f"|format(grand_total) }}</span>
+                            <span class="text-[10px] font-bold text-slate-400 mt-1 block">{{ "{:,.0f}".format(grand_total * 4000) }} ៛</span>
                         </div>
                     </div>
                 </div>
@@ -333,13 +336,13 @@
                             </div>
                             
                             <div class="space-y-1">
-                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Total Price (USD)</label>
-                                <input type="number" step="any" name="total_usd" value="{{ order.total_usd }}" class="input-field w-full text-[#ff5000] font-black h-[42px]" required>
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Subtotal (USD)</label>
+                                <input type="number" step="any" name="total_usd" value="{{ order.total_usd }}" class="input-field w-full text-slate-900 font-black h-[42px]" required>
                             </div>
                             
                             <div class="space-y-1">
                                 <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Delivery Fee (USD)</label>
-                                <input type="number" step="any" name="delivery_fee" value="{{ order.delivery_fee or 0 }}" class="input-field w-full font-black h-[42px]" required>
+                                <input type="number" step="any" name="delivery_fee" value="{{ order.delivery_fee or 0 }}" class="input-field w-full text-[#ff5000] font-black h-[42px]" required>
                             </div>
                         </div>
                     </div>
