@@ -56,7 +56,7 @@
             border: 1px solid rgba(255, 255, 255, 0.6); 
             box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05);
         }
-        
+
         .glass-dark {
             background: rgba(20, 20, 20, 0.6); 
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -68,7 +68,6 @@
         .delay-100 { animation-delay: 100ms; }
         .delay-200 { animation-delay: 200ms; }
         .delay-300 { animation-delay: 300ms; }
-        
         @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
         
         .pulse-ring { animation: pulseRing 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
@@ -78,7 +77,6 @@
             100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
         }
 
-        /* Universal Cart Checkbox */
         .universal-cart-checkbox { 
             appearance: none; width: 22px; height: 22px; border: 2px solid #cbd5e1; border-radius: 50%; 
             outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
@@ -98,26 +96,52 @@
     <div class="premium-bg"></div>
 
     <!-- 🌟 FLOATING PILL APP HEADER 🌟 -->
-    <header class="fixed top-4 left-4 right-4 sm:left-auto sm:right-auto sm:w-[480px] sm:left-1/2 sm:-translate-x-1/2 z-[100] glass-panel rounded-full px-2 py-2 flex items-center justify-between transition-all">
-        <button onclick="toggleLang()" class="w-11 h-11 flex items-center justify-center bg-white rounded-full text-xs font-black text-slate-600 border border-slate-100 active:scale-90 transition-transform shadow-sm hover:text-[#ea580c]">
-            <span id="lang-btn-text">KH</span>
-        </button>
+    <header class="fixed top-4 left-4 right-4 sm:left-auto sm:right-auto sm:w-[480px] sm:left-1/2 sm:-translate-x-1/2 z-[100] glass-panel rounded-full px-3 py-2 flex items-center justify-between transition-all">
         
-        <div class="flex items-center justify-center flex-1 px-2 gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center shadow-lg shrink-0 overflow-hidden relative">
+        <!-- Left: Telegram Profile / Login Area -->
+        <div id="tg-auth-container" class="shrink-0 flex items-center justify-center relative min-w-[40px]">
+            <div id="tg-widget-placeholder" class="overflow-hidden rounded-full transform scale-[0.8]">
+                <script async src="https://telegram.org/js/telegram-widget.js?22" 
+                        data-telegram-login="YOUR_BOT_USERNAME_HERE" 
+                        data-size="medium" 
+                        data-radius="20" 
+                        data-onauth="onTelegramAuth(user)" 
+                        data-request-access="write"></script>
+            </div>
+            
+            <button id="tg-user-profile" onclick="toggleProfileMenu()" class="hidden w-10 h-10 relative rounded-full border-2 border-[#ea580c] p-[1px] active:scale-95 transition-transform">
+                <img id="tg-user-avatar" src="" class="w-full h-full rounded-full object-cover">
+                <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center">
+                    <i class="fa-solid fa-check text-[5px] text-white"></i>
+                </div>
+            </button>
+            
+            <div id="tg-profile-menu" class="absolute top-12 left-0 bg-white border border-slate-100 shadow-xl rounded-2xl p-3 hidden flex-col w-48 transition-all z-50">
+                <p id="tg-user-name" class="font-bold text-sm text-slate-800 truncate"></p>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Verified Telegram</p>
+                <button onclick="logoutTelegram()" class="text-xs font-black text-red-500 bg-red-50 rounded-xl py-2 w-full text-center hover:bg-red-100 transition-colors">
+                    <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> ចាកចេញ (Logout)
+                </button>
+            </div>
+        </div>
+        
+        <!-- Center: Logo + Title -->
+        <div class="flex items-center justify-center gap-2.5 min-w-0 mx-auto">
+            <div class="w-9 h-9 rounded-full bg-slate-900 flex items-center justify-center shadow-md shrink-0 overflow-hidden relative">
                 <img src="static/images/logo.png" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=000&color=fff&rounded=true'" class="w-full h-full object-cover">
                 <div class="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-full"></div>
             </div>
             <div class="flex flex-col justify-center text-left pt-0.5">
-                <h1 class="text-[14px] sm:text-[16px] font-black text-slate-900 leading-none tracking-tight font-['Moul']">
-                    សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs sm:text-sm text-slate-700">- Somphea Reak</span>
+                <h1 class="text-[13px] sm:text-[15px] font-black text-slate-900 leading-none tracking-tight font-['Moul'] whitespace-nowrap">
+                    សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs text-slate-700">- Somphea Reak</span>
                 </h1>
-                <p class="text-[8px] font-black text-[#ea580c] uppercase tracking-[0.25em] leading-none mt-1.5">Premium Studio</p>
+                <p class="text-[7px] font-black text-[#ea580c] uppercase tracking-[0.2em] leading-none mt-1">Premium Studio</p>
             </div>
         </div>
         
-        <button onclick="openUniversalCart()" class="relative w-11 h-11 flex items-center justify-center bg-white border border-slate-100 rounded-full text-slate-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]">
-            <i class="fa-solid fa-cart-shopping"></i>
+        <!-- Right: Cart Button -->
+        <button onclick="openUniversalCart()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-slate-100 rounded-full text-slate-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]">
+            <i class="fa-solid fa-cart-shopping text-sm"></i>
             <span class="cart-badge-count absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden border border-white">0</span>
         </button>
     </header>
@@ -133,11 +157,14 @@
                 
                 <div class="relative z-10">
                     <div class="inline-flex items-center gap-1.5 bg-white/10 text-white text-[9px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-white/20 backdrop-blur-md mb-5 shadow-inner">
-                        <i class="fa-solid fa-crown text-yellow-400"></i> <span data-en="Welcome to Studio" data-kh="សូមស្វាគមន៍">Welcome to Studio</span>
+                        <i class="fa-solid fa-crown text-yellow-400"></i> <span>សូមស្វាគមន៍ • WELCOME</span>
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-black leading-tight font-['Moul'] tracking-wide drop-shadow-lg" data-en="Discover Our Latest Collections" data-kh="ស្វែងរកកូឡិកសិនថ្មីៗរបស់យើង">
-                        Discover Our<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-[#ea580c] to-yellow-400 font-['Plus_Jakarta_Sans'] italic">Latest</span> Collections
+                    <h2 class="text-2xl sm:text-4xl font-black leading-tight font-['Moul'] tracking-wide drop-shadow-lg mb-2">
+                        ស្វែងរកកូឡិកសិនថ្មីៗ<br>របស់យើង
                     </h2>
+                    <h3 class="text-sm sm:text-lg font-bold text-slate-300 font-['Plus_Jakarta_Sans']">
+                        Discover Our <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#ea580c] to-yellow-400 italic">Latest</span> Collections
+                    </h3>
                 </div>
             </div>
         </section>
@@ -145,7 +172,7 @@
         <!-- BENTO BOX STORE GRID -->
         <section class="space-y-4">
             <div class="flex items-center justify-between px-2 mb-3 animate-fade-up delay-100">
-                <h2 class="font-black text-[11px] uppercase tracking-[0.25em] text-slate-400" data-en="Explore Categories" data-kh="រុករកស្ទូឌីយោ">Explore Categories</h2>
+                <h2 class="font-black text-[11px] uppercase tracking-[0.25em] text-slate-400">រុករកស្ទូឌីយោ • EXPLORE CATEGORIES</h2>
                 <div class="h-px flex-grow ml-4 bg-gradient-to-r from-slate-200 to-transparent"></div>
             </div>
 
@@ -160,8 +187,9 @@
                             <span class="bg-[#ea580c] text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-lg shadow-[0_0_15px_rgba(234,88,12,0.6)] flex items-center gap-1 animate-pulse border border-orange-400"><i class="fa-solid fa-fire"></i> Hot</span>
                             <span class="glass-dark text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-lg">DIY Studio</span>
                         </div>
-                        <h3 class="text-white font-black text-2xl sm:text-3xl uppercase italic leading-none drop-shadow-xl relative z-10" data-en="Customize Italy Charm Bracelet" data-kh="Custom Italy Bracelet">Customize Italy<br>Charm</h3>
-                        <p class="text-orange-300 text-[10px] font-extrabold uppercase mt-2.5 tracking-[0.2em] relative z-10 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles"></i> Design Your Own <i class="fa-solid fa-arrow-right ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all"></i></p>
+                        <h3 class="text-white font-black text-xl sm:text-3xl uppercase italic leading-none drop-shadow-xl relative z-10 font-['Moul'] mb-1">រចនាខ្សែដៃផ្ទាល់ខ្លួន</h3>
+                        <h4 class="text-orange-100 font-bold text-sm sm:text-base uppercase tracking-widest drop-shadow-md relative z-10">Customize Italy Charm</h4>
+                        <p class="text-orange-400 text-[10px] font-extrabold uppercase mt-2.5 tracking-[0.2em] relative z-10 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles"></i> Design Your Own <i class="fa-solid fa-arrow-right ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all"></i></p>
                     </div>
                 </a>
 
@@ -169,14 +197,15 @@
                 <a href="/minifigure" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-slate-900 group ring-1 ring-black/5 hover:shadow-xl">
                     <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
                     <img src="static/images/lego.jpg" onerror="this.src='https://images.unsplash.com/photo-1518331647614-7a1f04cd34ce?auto=format&fit=crop&q=80&w=600'" class="absolute inset-0 w-full h-full object-cover opacity-70">
-                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-5 sm:p-6">
+                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-4 sm:p-6">
                         <div class="mb-1.5 ml-1">
                             <div class="relative inline-flex items-center justify-center bg-[#E3000B] border-[2px] border-black rounded px-3 py-1 shadow-xl transform -rotate-2">
                                 <div class="absolute inset-[1px] border border-[#FFCF00] rounded-[2px] pointer-events-none"></div>
                                 <span class="font-black italic text-white text-lg tracking-tighter leading-none relative z-10 drop-shadow-md" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">LEGO</span>
                             </div>
                         </div>
-                        <h3 class="text-white font-black text-[13px] sm:text-sm uppercase tracking-[0.25em] drop-shadow-lg mt-2 ml-1.5 font-['Moul']" data-en="Minifigures" data-kh="យូនីវើស">Minifigures</h3>
+                        <h3 class="text-white font-black text-sm uppercase tracking-[0.1em] drop-shadow-lg mt-2 ml-1 font-['Moul']">យូនីវើស</h3>
+                        <p class="text-slate-300 text-[9px] font-bold tracking-widest uppercase ml-1 mt-0.5">Minifigures</p>
                     </div>
                 </a>
 
@@ -184,9 +213,10 @@
                 <a href="/toy-universe" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-white group ring-1 ring-black/5 hover:shadow-xl">
                     <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
                     <img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&q=80&w=600" class="absolute inset-0 w-full h-full object-cover">
-                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-5 sm:p-6">
+                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-4 sm:p-6">
                         <span class="text-orange-300 text-[8px] font-black uppercase tracking-widest mb-1 drop-shadow-md">Premium</span>
-                        <h3 class="text-white font-black text-xl sm:text-2xl uppercase leading-none font-['Moul'] drop-shadow-xl" data-en="Toy Universe" data-kh="ពិភពប្រដាប់ក្មេងលេង">Toy<br>Universe</h3>
+                        <h3 class="text-white font-black text-lg uppercase leading-none font-['Moul'] drop-shadow-xl mb-1">ពិភពប្រដាប់ក្មេងលេង</h3>
+                        <p class="text-slate-200 text-[10px] font-bold tracking-widest uppercase mt-0.5">Toy Universe</p>
                     </div>
                 </a>
 
@@ -196,8 +226,8 @@
                     <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover">
                     <div class="gradient-side absolute inset-0 flex flex-col justify-center p-6 sm:p-8">
                         <span class="glass-dark text-white text-[8px] font-black uppercase px-2.5 py-1 rounded-lg w-fit mb-2.5">Ready to Wear</span>
-                        <h3 class="text-white font-black text-2xl sm:text-3xl uppercase leading-none font-['Moul'] drop-shadow-xl" data-en="Ready-Made Bracelets" data-kh="ខ្សែក និងខ្សែដៃ">Ready-Made<br>Bracelets</h3>
-                        <p class="text-slate-200 text-[10px] font-extrabold uppercase mt-2 tracking-[0.2em] drop-shadow-md">Jade & Premium Gems</p>
+                        <h3 class="text-white font-black text-xl sm:text-2xl uppercase leading-none font-['Moul'] drop-shadow-xl mb-1.5">ខ្សែក និងខ្សែដៃ</h3>
+                        <h4 class="text-slate-100 font-bold text-sm tracking-widest uppercase">Ready-Made Bracelets</h4>
                     </div>
                 </a>
                 
@@ -209,8 +239,8 @@
                         <span class="bg-gradient-to-r from-[#ea580c] to-orange-400 text-white text-[9px] font-black uppercase px-3 py-1.5 rounded-full mb-2 shadow-[0_0_15px_rgba(234,88,12,0.5)] border border-orange-300 animate-pulse tracking-widest">
                             <i class="fa-solid fa-bolt text-yellow-300 mr-1"></i> Try Your Luck
                         </span>
-                        <h3 class="text-white font-black text-2xl md:text-3xl uppercase tracking-widest drop-shadow-lg font-['Moul']" data-en="Mystery Box" data-kh="ចាប់យករង្វាន់">Mystery Box</h3>
-                        <p class="text-orange-200 text-[10px] font-bold uppercase mt-1.5 tracking-[0.2em]">Premium Minifigures</p>
+                        <h3 class="text-white font-black text-2xl uppercase tracking-widest drop-shadow-lg font-['Moul'] mb-1">ចាប់យករង្វាន់</h3>
+                        <p class="text-orange-200 text-xs font-bold uppercase tracking-[0.3em]">Mystery Box</p>
                     </div>
                 </a>
 
@@ -221,13 +251,11 @@
 
     <!-- 🌟 APP-STYLE BOTTOM NAVIGATION 🌟 -->
     <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[380px] h-16 glass-panel rounded-[24px] flex items-center justify-around px-2 z-40">
-        <!-- Home (Active) -->
         <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-14 h-full flex items-center justify-center text-[#ea580c] flex-col gap-1 active:scale-90 transition-transform">
             <i class="fa-solid fa-house text-lg drop-shadow-sm"></i>
             <span class="text-[8px] font-black uppercase tracking-[0.2em]">Home</span>
         </button>
         
-        <!-- Big Magic Button (Links to Builder) -->
         <div class="relative w-16 h-16 -translate-y-5 flex items-center justify-center">
             <div class="absolute inset-0 rounded-full pulse-ring bg-[#ea580c]"></div>
             <a href="/custom-bracelet" class="relative w-14 h-14 bg-slate-900 rounded-full flex items-center justify-center text-white border-[3px] border-white shadow-2xl active:scale-90 transition-all hover:bg-[#ea580c] group z-10">
@@ -235,7 +263,6 @@
             </a>
         </div>
         
-        <!-- My Orders / Connects to global cart logic! -->
         <button onclick="openOrderHistory()" class="w-14 h-full flex items-center justify-center text-slate-400 hover:text-[#ea580c] flex-col gap-1 active:scale-90 transition-colors">
             <i class="fa-solid fa-receipt text-lg"></i>
             <span class="text-[8px] font-black uppercase tracking-[0.2em]">Orders</span>
@@ -252,7 +279,7 @@
         <div class="relative w-full h-[85vh] bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
             <div class="bg-white px-5 sm:px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10">
                 <div>
-                    <h2 class="text-xl font-black text-gray-900 font-['Moul']" data-en="Your Cart" data-kh="កន្ត្រករបស់អ្នក">កន្ត្រករបស់អ្នក</h2>
+                    <h2 class="text-xl font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2>
                     <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Your Shopping Cart</p>
                 </div>
                 <div class="flex items-center gap-2">
@@ -283,7 +310,7 @@
     <div id="universal-history-modal" class="fixed inset-0 z-[9500] bg-gray-50 flex flex-col translate-x-full transition-transform duration-300 ease-in-out">
         <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
             <div>
-                <h2 class="text-lg font-black font-['Moul'] text-gray-900" data-en="Order History" data-kh="ប្រវត្តិកម្ម៉ង់របស់អ្នក">ប្រវត្តិកម្ម៉ង់របស់អ្នក</h2>
+                <h2 class="text-lg font-black font-['Moul'] text-gray-900">ប្រវត្តិកម្ម៉ង់របស់អ្នក</h2>
                 <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">My Orders</p>
             </div>
             <button onclick="closeOrderHistory()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-arrow-right text-lg"></i></button>
@@ -294,10 +321,14 @@
     <!-- CHECKOUT MODAL -->
     <div id="universal-checkout-modal" class="fixed inset-0 z-[9000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
         <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
-            <h2 class="text-xl font-black font-['Moul']" data-en="Checkout" data-kh="ព័ត៌មានដឹកជញ្ជូន">ព័ត៌មានដឹកជញ្ជូន</h2>
+            <div>
+                <h2 class="text-xl font-black font-['Moul']">ព័ត៌មានដឹកជញ្ជូន</h2>
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Secure Checkout</p>
+            </div>
             <button onclick="closeUniversalCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
         <div class="flex-1 overflow-y-auto p-5 sm:p-6 pb-32 bg-gray-50">
+            
             <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm max-w-lg mx-auto">
                 <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
                 <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប (Subtotal):</span><span id="uni-check-subtotal">0៛</span></div>
@@ -306,12 +337,24 @@
                     <span class="text-sm">សរុបត្រូវបង់ (Total):</span><span id="uni-check-total-khr" class="text-[#ea580c] text-xl leading-none">0៛</span>
                 </div>
             </div>
+            
             <div class="space-y-4 max-w-lg mx-auto">
+                <div id="checkout-tg-badge" class="hidden flex items-center gap-3 bg-blue-50 border border-blue-100 p-3 rounded-xl mb-4">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden shrink-0">
+                        <img id="checkout-tg-avatar" src="" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-blue-900 leading-tight">Connected as <span id="checkout-tg-name"></span></p>
+                        <p class="text-[9px] font-bold text-blue-600 uppercase tracking-widest mt-0.5">Telegram Verified</p>
+                    </div>
+                </div>
+
                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង (Contact Info)</label>
                 <input type="text" id="uni-cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Full Name)">
                 <input type="tel" id="uni-cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone Number)">
+                
                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន (Address)</label>
-                <textarea id="uni-cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ..."></textarea>
+                <textarea id="uni-cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ (Full Delivery Address)"></textarea>
             </div>
         </div>
         <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:pb-5">
@@ -323,18 +366,82 @@
     <!-- JAVASCRIPT LOGIC                                                          -->
     <!-- ========================================================================= -->
     <script>
-        // Language System
-        let currentLang = localStorage.getItem('app_lang') || 'kh';
-        function applyLanguage() {
-            document.getElementById('lang-btn-text').innerText = currentLang === 'en' ? 'KH' : 'EN';
-            document.querySelectorAll('[data-en]').forEach(el => { el.innerHTML = currentLang === 'kh' ? el.getAttribute('data-kh') : el.getAttribute('data-en'); });
+        let tgUser = null;
+
+        function onTelegramAuth(user) {
+            tgUser = user;
+            localStorage.setItem('tg_user', JSON.stringify(user));
+            renderTelegramAuthUI();
         }
-        function toggleLang() {
-            currentLang = currentLang === 'en' ? 'kh' : 'en';
-            localStorage.setItem('app_lang', currentLang); applyLanguage();
+
+        function loadSavedTelegramUser() {
+            try {
+                const saved = localStorage.getItem('tg_user');
+                if (saved) {
+                    tgUser = JSON.parse(saved);
+                    renderTelegramAuthUI();
+                }
+            } catch (e) {}
         }
-        
-        // BUG FIX: Added Missing ImageViewer function that the cart relies on
+
+        function logoutTelegram() {
+            tgUser = null;
+            localStorage.removeItem('tg_user');
+            renderTelegramAuthUI();
+            document.getElementById('tg-profile-menu').classList.add('hidden');
+            document.getElementById('tg-profile-menu').classList.remove('flex');
+        }
+
+        function toggleProfileMenu() {
+            const menu = document.getElementById('tg-profile-menu');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                menu.classList.add('flex');
+            } else {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+            }
+        }
+
+        function renderTelegramAuthUI() {
+            const widgetPlaceholder = document.getElementById('tg-widget-placeholder');
+            const profileBtn = document.getElementById('tg-user-profile');
+            const avatarImg = document.getElementById('tg-user-avatar');
+            const nameText = document.getElementById('tg-user-name');
+            const checkoutBadge = document.getElementById('checkout-tg-badge');
+            
+            if (tgUser) {
+                widgetPlaceholder.classList.add('hidden');
+                profileBtn.classList.remove('hidden');
+                
+                const fullName = (tgUser.first_name + ' ' + (tgUser.last_name || '')).trim();
+                avatarImg.src = tgUser.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0284c7&color=fff`;
+                nameText.innerText = fullName;
+
+                if (document.getElementById('uni-cust-name') && !document.getElementById('uni-cust-name').value) {
+                    document.getElementById('uni-cust-name').value = fullName;
+                }
+                if (checkoutBadge) {
+                    checkoutBadge.classList.remove('hidden');
+                    document.getElementById('checkout-tg-avatar').src = avatarImg.src;
+                    document.getElementById('checkout-tg-name').innerText = fullName;
+                }
+            } else {
+                widgetPlaceholder.classList.remove('hidden');
+                profileBtn.classList.add('hidden');
+                if (checkoutBadge) checkoutBadge.classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('tg-auth-container');
+            const menu = document.getElementById('tg-profile-menu');
+            if (container && !container.contains(e.target) && menu && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
+            }
+        });
+
         window.openImageViewer = function(url) {
             if (!url || url === 'hidden') return;
             const viewer = document.createElement('div');
@@ -346,21 +453,13 @@
                 </button>
             `;
             document.body.appendChild(viewer);
-            
-            // Trigger animation
-            requestAnimationFrame(() => {
-                viewer.classList.remove('opacity-0');
-                viewer.querySelector('img').classList.remove('scale-95');
-            });
-
+            requestAnimationFrame(() => { viewer.classList.remove('opacity-0'); viewer.querySelector('img').classList.remove('scale-95'); });
             viewer.onclick = () => {
-                viewer.classList.add('opacity-0');
-                viewer.querySelector('img').classList.add('scale-95');
+                viewer.classList.add('opacity-0'); viewer.querySelector('img').classList.add('scale-95');
                 setTimeout(() => viewer.remove(), 300);
             };
         };
 
-        // Global Cart Logic
         const UNIVERSAL_CART_RATE = 4000;
         let globalStoreCart = [];
 
@@ -498,6 +597,7 @@
             document.getElementById('uni-check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ" : Math.round(delivery).toLocaleString() + "៛";
             document.getElementById('uni-check-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
             closeUniversalCart(); document.getElementById('universal-checkout-modal').classList.remove('translate-y-full');
+            renderTelegramAuthUI();
         };
         window.closeUniversalCheckout = function() { document.getElementById('universal-checkout-modal').classList.add('translate-y-full'); };
 
@@ -526,10 +626,6 @@
         };
         window.closeOrderHistory = function() { document.getElementById('universal-history-modal').classList.add('translate-x-full'); };
 
-
-        /* =========================================================================
-           UPDATED SECURITY: PROCESS UNIVERSAL FINAL ORDER (DATABASE INTEGRATED)
-           ========================================================================= */
         window.processUniversalFinalOrder = async function() {
             syncCartFromStorage(); 
             const selectedItems = globalStoreCart.filter(i => i.selected);
@@ -566,27 +662,29 @@
 
             const delivery = calculateUniversalDelivery(subtotalKHR); 
             const totalUSD = (subtotalKHR + delivery) / UNIVERSAL_CART_RATE;
-            const deliveryFeeUSD = delivery / UNIVERSAL_CART_RATE; // FIX: Calculate delivery fee for DB
+            const deliveryFeeUSD = delivery / UNIVERSAL_CART_RATE;
+
+            let finalName = name;
+            if (tgUser) {
+                finalName = `${name} (TG: @${tgUser.username || tgUser.id})`;
+            }
 
             try {
-                // 1. Send data securely to the Python Database First!
                 const res = await fetch('/api/checkout', { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify({ 
-                        name, 
+                        name: finalName, 
                         phone, 
                         address, 
                         items: itemsPayload, 
                         total: totalUSD,
-                        deliveryFee: deliveryFeeUSD // FIX: Send to backend API
+                        deliveryFee: deliveryFeeUSD 
                     }) 
                 });
                 
                 if (res.ok) { 
                     const dbResponse = await res.json();
-                    
-                    // 2. Database save was successful, now save locally to order history
                     const newOrder = { 
                         id: dbResponse.order_id || "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(), 
                         date: new Date().toISOString(), 
@@ -598,31 +696,28 @@
                     history.unshift(newOrder); 
                     localStorage.setItem('sr_order_history', JSON.stringify(history));
                     
-                    // 3. Inform the User and redirect
                     alert(`ការបញ្ជាទិញបានជោគជ័យ! (Order Success!)\nលេខកូដ: #${newOrder.id}\n\nទំនិញត្រូវបានបញ្ជូនទៅកន្លែងគ្រប់គ្រងហើយ។`);
                     
                     globalStoreCart = globalStoreCart.filter(i => !i.selected); 
                     saveGlobalCart(); 
                     
-                    // Navigate to Telegram for them to chat with you
                     window.location.href = "https://t.me/Somphea_Reak"; 
                 } 
                 else { 
-                    // Server threw a specific error
                     const errData = await res.json(); 
                     alert("Database Error: " + (errData.message || "Could not process order.")); 
                     btn.innerHTML = originalText; btn.disabled = false; 
                 }
             } catch (e) { 
-                // CRUCIAL: IF THE APP IS NOT RUNNING ON LOCALHOST:5000, WARN THE USER
                 alert("🚨 ការភ្ជាប់ទៅប្រព័ន្ធទិន្នន័យមានបញ្ហា!\n\nអ្នកត្រូវបើកវេបសាយនេះតាមរយៈ Server (http://localhost:5000) ទើបអាចរក្សាទុកទិន្នន័យបាន។\n\nError: " + e.message);
                 btn.innerHTML = originalText; btn.disabled = false;
             }
         };
 
-        // Initialize App
         document.addEventListener('DOMContentLoaded', () => {
-            syncCartFromStorage(); applyLanguage(); updateCartBadge();
+            syncCartFromStorage(); 
+            updateCartBadge();
+            loadSavedTelegramUser();
         });
     </script>
 </body>
