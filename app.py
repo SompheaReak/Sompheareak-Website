@@ -144,15 +144,18 @@ REWARD_CONFIG_FILE = 'spin_rewards.json'
 
 def get_reward_config():
     if os.path.exists(REWARD_CONFIG_FILE):
-        with open(REWARD_CONFIG_FILE, 'r') as f: return json.load(f)
+        with open(REWARD_CONFIG_FILE, 'r') as f: 
+            return json.load(f)
     return {"0": 50.0, "500": 20.0, "1000": 15.0, "2000": 10.0, "5000": 3.0, "10000": 1.5, "50000": 0.5}
 
 def save_reward_config(data):
-    with open(REWARD_CONFIG_FILE, 'w') as f: json.dump(data, f)
+    with open(REWARD_CONFIG_FILE, 'w') as f: 
+        json.dump(data, f)
 
 def _sync_product_to_pool(product_id, variant_index, new_stock):
     linked_prize = MinifigurePool.query.filter_by(linked_product_id=product_id, linked_variant_index=variant_index).first()
-    if linked_prize: linked_prize.stock = new_stock
+    if linked_prize: 
+        linked_prize.stock = new_stock
     else:
         product = Product.query.get(product_id)
         if product:
@@ -160,8 +163,11 @@ def _sync_product_to_pool(product_id, variant_index, new_stock):
             if variant_index != -1 and product.variants:
                 try:
                     variants = json.loads(product.variants)
-                    if 0 <= variant_index < len(variants): target_image = variants[variant_index].get('image', target_image)
-                except: pass
+                    if 0 <= variant_index < len(variants): 
+                        target_image = variants[variant_index].get('image', target_image)
+                except Exception as e: 
+                    print(f"Error parsing variants: {e}")
+            
             prize = MinifigurePool.query.filter_by(image=target_image).first()
             if prize:
                 prize.stock = new_stock
@@ -179,8 +185,10 @@ def _sync_pool_to_product(pool_item):
                         variants[pool_item.linked_variant_index]['stock'] = pool_item.stock
                         product.variants = json.dumps(variants)
                         product.stock = sum(int(v.get('stock', 0)) for v in variants)
-                except: pass
-            else: product.stock = pool_item.stock
+                except Exception as e: 
+                    print(f"Error updating product variants: {e}")
+            else: 
+                product.stock = pool_item.stock
     else:
         products = Product.query.all()
         for p in products:
@@ -198,7 +206,8 @@ def _sync_pool_to_product(pool_item):
                         p.variants = json.dumps(variants)
                         p.stock = sum(int(v.get('stock', 0)) for v in variants)
                         break
-                except: pass
+                except Exception: 
+                    pass
             elif p.image == pool_item.image:
                 p.stock = pool_item.stock
                 pool_item.linked_product_id = p.id
@@ -209,7 +218,8 @@ def _sync_pool_to_product(pool_item):
 def inject_global_data():
     if request.path.startswith('/admin') and session.get('admin'):
         products = Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
-        for p in products: p.parsed_variants = json.loads(p.variants) if p.variants else []
+        for p in products: 
+            p.parsed_variants = json.loads(p.variants) if p.variants else []
         categories = Category.query.order_by(Category.sort_order).all()
         promo_codes = PromoCode.query.order_by(PromoCode.timestamp.desc()).all()
         pending_count = Order.query.filter_by(status='Pending').count()
@@ -238,18 +248,27 @@ def mystery_box(): return render_template('lucky_draw.html')
 def checkout_page():
     cart_data_raw = request.form.get('cart_data', '[]')
     redeem_code = request.form.get('applied_redeem_code', '').strip().upper()
-    try: cart_items = json.loads(cart_data_raw)
-    except: cart_items = []
-    if not cart_items: return redirect(url_for('index'))
+    try: 
+        cart_items = json.loads(cart_data_raw)
+    except: 
+        cart_items = []
+        
+    if not cart_items: 
+        return redirect(url_for('index'))
+        
     subtotal = sum(float(item.get('price', 0)) * int(item.get('qty', 1)) for item in cart_items)
     discount_amount = 0
     if redeem_code:
         promo = PromoCode.query.filter_by(code=redeem_code, is_active=True).first()
         if promo and (promo.max_uses == 0 or promo.current_uses < promo.max_uses):
             if subtotal >= promo.min_order_value:
-                if promo.discount_type == 'percent': discount_amount = subtotal * (promo.discount_value / 100.0)
-                elif promo.discount_type == 'flat': discount_amount = promo.discount_value
+                if promo.discount_type == 'percent': 
+                    discount_amount = subtotal * (promo.discount_value / 100.0)
+                elif promo.discount_type == 'flat': 
+                    discount_amount = promo.discount_value
+                    
     final_total = max(0, subtotal - discount_amount)
+    
     checkout_html = """
     <!DOCTYPE html>
     <html lang="en">
@@ -291,24 +310,34 @@ def checkout_page():
 @app.route('/place_order', methods=['POST'])
 def place_order():
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    if client_ip and ',' in client_ip: client_ip = client_ip.split(',')[0].strip()
+    if client_ip and ',' in client_ip: 
+        client_ip = client_ip.split(',')[0].strip()
+        
     current_time = time.time()
     if client_ip in spam_tracker:
         last_time, count = spam_tracker[client_ip]
         if current_time - last_time < 300:
-            if count >= 2: return "Too many orders. Please try again in 5 minutes.", 429
+            if count >= 2: 
+                return "Too many orders. Please try again in 5 minutes.", 429
             spam_tracker[client_ip] = (last_time, count + 1)
-        else: spam_tracker[client_ip] = (current_time, 1)
-    else: spam_tracker[client_ip] = (current_time, 1)
+        else: 
+            spam_tracker[client_ip] = (current_time, 1)
+    else: 
+        spam_tracker[client_ip] = (current_time, 1)
 
     try:
         new_order = Order(
-            customer_name=request.form.get('name'), customer_phone=request.form.get('phone'), customer_address=request.form.get('address'),
-            items_json=request.form.get('cart_data'), total_usd=float(request.form.get('final_total', 0)), status="Pending",
+            customer_name=request.form.get('name'), 
+            customer_phone=request.form.get('phone'), 
+            customer_address=request.form.get('address'),
+            items_json=request.form.get('cart_data'), 
+            total_usd=float(request.form.get('final_total', 0)), 
+            status="Pending",
             promo_code_used=request.form.get('promo_code_used')
         )
         db.session.add(new_order)
         db.session.commit()
+        
         success_html = """
         <!DOCTYPE html><html lang="en"><head><title>Success</title><script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet"></head>
         <body class="bg-slate-50 flex items-center justify-center min-h-screen text-center p-4 font-['Plus_Jakarta_Sans']">
@@ -321,20 +350,30 @@ def place_order():
         </body></html>
         """
         return render_template_string(success_html, order_id=new_order.id)
-    except Exception as e: return f"Error: {str(e)}", 400
+    except Exception as e: 
+        db.session.rollback()
+        return f"Error: {str(e)}", 400
 
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
     data = request.json
     try:
         new_order = Order(
-            customer_name=data['name'], customer_phone=data['phone'], customer_address=data['address'],
-            items_json=json.dumps(data['items']), total_usd=float(data['total']), status="Pending"
+            customer_name=data.get('name'), 
+            customer_phone=data.get('phone'), 
+            customer_address=data.get('address'),
+            items_json=json.dumps(data.get('items', [])), 
+            total_usd=float(data.get('total', 0)), 
+            delivery_fee=float(data.get('deliveryFee', 0)), # FIX: Capturing delivery fee
+            status="Pending"
         )
         db.session.add(new_order)
         db.session.commit()
         return jsonify({'status': 'success', 'order_id': new_order.id})
-    except Exception as e: return jsonify({'status': 'error', 'message': str(e)}), 400
+    except Exception as e: 
+        db.session.rollback()
+        print(f"API Checkout Error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 400
 
 # --- ADMIN ROUTES ---
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -353,7 +392,8 @@ def logout():
 
 @app.route('/admin/panel')
 @login_required
-def admin_panel(): return redirect(url_for('admin_dashboard'))
+def admin_panel(): 
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/dashboard')
 @login_required
@@ -374,10 +414,6 @@ def admin_inventory():
     db.session.commit()
     return render_template('admin/inventory.html', products=Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all(), categories=Category.query.order_by(Category.sort_order).all())
 
-
-# =======================================================
-# UPDATED ORDER MANAGEMENT (CRASH PROOF + PRICE/DELIVERY EDITING)
-# =======================================================
 @app.route('/admin/orders')
 @login_required
 def admin_orders():
@@ -385,11 +421,10 @@ def admin_orders():
     valid_orders = []
     
     for o in orders:
-        # Error-Proofing: If JSON is broken, it won't crash the page anymore!
         try:
             o.parsed_items = json.loads(o.items_json) if o.items_json else []
         except Exception as e:
-            print(f"Warning: Could not load items for order {o.id}")
+            print(f"Warning: Could not load items for order {o.id}: {e}")
             o.parsed_items = []
             
         o.items = o.parsed_items
@@ -438,7 +473,8 @@ def confirm_admin_order(id):
             
             if order.promo_code_used:
                 promo = PromoCode.query.filter_by(code=order.promo_code_used).first()
-                if promo: promo.current_uses += 1
+                if promo: 
+                    promo.current_uses += 1
             order.stock_deducted = True
         
         order.status = 'Processing'
@@ -456,16 +492,18 @@ def update_admin_order(id):
         order.customer_address = request.form.get('customer_address', order.customer_address)
         order.status = request.form.get('status', order.status)
         
-        # New Feature: Manual Override Price and Delivery Fee
         if 'total_usd' in request.form:
-            try: order.total_usd = float(request.form.get('total_usd'))
-            except ValueError: pass
+            try: 
+                order.total_usd = float(request.form.get('total_usd'))
+            except ValueError: 
+                pass
             
         if 'delivery_fee' in request.form:
-            try: order.delivery_fee = float(request.form.get('delivery_fee'))
-            except ValueError: pass
+            try: 
+                order.delivery_fee = float(request.form.get('delivery_fee'))
+            except ValueError: 
+                pass
         
-        # Update Item Quantities
         item_ids = request.form.getlist('item_ids[]')
         item_qtys = request.form.getlist('item_qtys[]')
         
@@ -483,8 +521,6 @@ def update_admin_order(id):
         db.session.commit()
         flash('Order Information Updated Successfully!', 'success')
     return redirect(url_for('admin_orders'))
-# =======================================================
-
 
 @app.route('/admin/spin')
 @login_required
@@ -493,13 +529,15 @@ def admin_spin():
 
 @app.route('/admin/redeem')
 @login_required
-def admin_redeem(): return render_template('admin/redeem.html')
+def admin_redeem(): 
+    return render_template('admin/redeem.html')
 
 @app.route('/admin/redeem/add', methods=['POST'])
 @login_required
 def add_promo_code():
     code = request.form.get('code', '').strip().upper()
-    if PromoCode.query.filter_by(code=code).first(): flash('Code already exists!', 'error')
+    if PromoCode.query.filter_by(code=code).first(): 
+        flash('Code already exists!', 'error')
     else:
         db.session.add(PromoCode(code=code, discount_type=request.form.get('discount_type'), discount_value=float(request.form.get('discount_value', 0)), min_order_value=float(request.form.get('min_order_value', 0)), max_uses=int(request.form.get('max_uses', 0))))
         db.session.commit()
@@ -509,14 +547,18 @@ def add_promo_code():
 @login_required
 def toggle_promo_code(id):
     code = PromoCode.query.get(id)
-    if code: code.is_active = not code.is_active; db.session.commit()
+    if code: 
+        code.is_active = not code.is_active
+        db.session.commit()
     return redirect(url_for('admin_redeem'))
 
 @app.route('/admin/redeem/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_promo_code(id):
     code = PromoCode.query.get(id)
-    if code: db.session.delete(code); db.session.commit()
+    if code: 
+        db.session.delete(code)
+        db.session.commit()
     return redirect(url_for('admin_redeem'))
 
 @app.route('/admin/product/quick_stock', methods=['POST'])
@@ -528,7 +570,8 @@ def quick_update_stock():
     new_stock = int(data.get('stock', 0))
 
     product = Product.query.get(p_id)
-    if not product: return jsonify({'success': False})
+    if not product: 
+        return jsonify({'success': False})
 
     if v_idx != -1 and product.variants:
         variants = json.loads(product.variants)
@@ -536,7 +579,8 @@ def quick_update_stock():
             variants[v_idx]['stock'] = new_stock
             product.variants = json.dumps(variants)
             product.stock = sum(int(v.get('stock', 0)) for v in variants)
-    else: product.stock = new_stock
+    else: 
+        product.stock = new_stock
 
     _sync_product_to_pool(p_id, v_idx, new_stock)
     db.session.commit()
@@ -545,7 +589,6 @@ def quick_update_stock():
 @app.route('/admin/order/status/<int:id>/<string:status>', methods=['POST'])
 @login_required
 def update_order_status(id, status):
-    # Retained as a fallback for other views that might use it
     order = Order.query.get(id)
     if order:
         if status == 'Completed' and not order.stock_deducted:
@@ -566,19 +609,25 @@ def update_order_status(id, status):
                             else: 
                                 product.stock = max(0, product.stock - qty)
                                 _sync_product_to_pool(p_id, -1, product.stock)
-            except: pass
+            except Exception as e: 
+                print(f"Error completing order stock sync: {e}")
+                
             if order.promo_code_used:
                 promo = PromoCode.query.filter_by(code=order.promo_code_used).first()
                 if promo: promo.current_uses += 1
             order.stock_deducted = True
-        order.status = status; db.session.commit()
+            
+        order.status = status
+        db.session.commit()
     return redirect(url_for('admin_orders'))
 
 @app.route('/admin/order/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_order(id):
     order = Order.query.get(id)
-    if order: db.session.delete(order); db.session.commit()
+    if order: 
+        db.session.delete(order)
+        db.session.commit()
     return redirect(url_for('admin_orders'))
 
 @app.route('/admin/order/bulk_delete', methods=['POST'])
@@ -587,7 +636,9 @@ def bulk_delete_orders():
     raw_ids = request.form.get('order_ids', '')
     if raw_ids:
         ids_to_delete = [int(x) for x in raw_ids.split(',') if x.isdigit()]
-        if ids_to_delete: Order.query.filter(Order.id.in_(ids_to_delete)).delete(synchronize_session=False); db.session.commit()
+        if ids_to_delete: 
+            Order.query.filter(Order.id.in_(ids_to_delete)).delete(synchronize_session=False)
+            db.session.commit()
     return redirect(url_for('admin_orders'))
 
 @app.route('/admin/categories/update', methods=['POST'])
@@ -599,11 +650,15 @@ def update_categories():
         for i, cid in enumerate(cat_ids):
             cat = Category.query.get(int(cid))
             if cat:
-                cat.name = cat_names[i]; cat.sort_order = i
+                cat.name = cat_names[i]
+                cat.sort_order = i
                 file = request.files.get(f'cat_image_{cid}')
-                if file and file.filename != '': cat.image = optimize_and_upload(file)['secure_url']
+                if file and file.filename != '': 
+                    cat.image = optimize_and_upload(file)['secure_url']
         db.session.commit()
-    except: pass
+    except Exception as e: 
+        db.session.rollback()
+        print(f"Update Category error: {e}")
     return redirect(url_for('admin_inventory'))
 
 @app.route('/admin/category/delete/<int:id>', methods=['POST'])
@@ -612,8 +667,10 @@ def delete_category(id):
     c = Category.query.get(id)
     if c:
         products = Product.query.filter_by(category=c.name).all()
-        for p in products: p.category = "Other"
-        db.session.delete(c); db.session.commit()
+        for p in products: 
+            p.category = "Other"
+        db.session.delete(c)
+        db.session.commit()
     return redirect(url_for('admin_inventory'))
 
 @app.route('/admin/product/reorder', methods=['POST'])
@@ -629,14 +686,18 @@ def reorder_products():
 @login_required
 def toggle_product(id):
     p = Product.query.get(id)
-    if p: p.is_visible = not p.is_visible; db.session.commit()
+    if p: 
+        p.is_visible = not p.is_visible
+        db.session.commit()
     return redirect(url_for('admin_inventory'))
 
 @app.route('/admin/product/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_product(id):
     p = Product.query.get(id)
-    if p: db.session.delete(p); db.session.commit()
+    if p: 
+        db.session.delete(p)
+        db.session.commit()
     return redirect(url_for('admin_inventory'))
 
 @app.route('/admin/product/update/<int:id>', methods=['POST'])
@@ -695,11 +756,13 @@ def update_product(id):
                         "stock": 1, "image": res['secure_url'], "category": p.category, "discount_percent": 0.0
                     })
                     total_stock += 1
-                except: pass
+                except Exception as e: 
+                    print(f"Error adding new variant image: {e}")
     
     d_list = []
     try: 
-        if getattr(p, 'detail_images', None): d_list = json.loads(p.detail_images)
+        if getattr(p, 'detail_images', None): 
+            d_list = json.loads(p.detail_images)
     except: pass
 
     new_detail_files = request.files.getlist('new_detail_images')
@@ -736,12 +799,14 @@ def add_product():
     use_custom_thumb = str(request.form.get('use_custom_thumbnail')).lower() == 'true'
     thumb_file = request.files.get('thumbnail')
     thumbnail_url = ""
+    
     if use_custom_thumb and thumb_file and thumb_file.filename != '':
         try:
             res = optimize_and_upload(thumb_file)
             if res and 'secure_url' in res:
                 thumbnail_url = res['secure_url']
-        except: pass
+        except Exception as e: 
+            print(f"Upload error: {e}")
     
     v_names = request.form.getlist('variant_names[]')
     v_prices = request.form.getlist('variant_prices[]')
@@ -753,16 +818,20 @@ def add_product():
     uploaded_urls = []
     for f in files:
         if f and f.filename != '': 
-            try: uploaded_urls.append(optimize_and_upload(f)['secure_url'])
-            except: pass
+            try: 
+                uploaded_urls.append(optimize_and_upload(f)['secure_url'])
+            except: 
+                pass
     
     detail_files = request.files.getlist('detail_images')
     detail_urls = []
     if detail_files and detail_files[0].filename != '':
         for df in detail_files:
             if df and df.filename != '': 
-                try: detail_urls.append(optimize_and_upload(df)['secure_url'])
-                except: pass
+                try: 
+                    detail_urls.append(optimize_and_upload(df)['secure_url'])
+                except: 
+                    pass
 
     if uploaded_urls:
         vars_json = []
@@ -805,12 +874,14 @@ def get_api(store_name):
             
             v_list = []
             try:
-                if p.variants: v_list = json.loads(p.variants)
+                if p.variants: 
+                    v_list = json.loads(p.variants)
             except: pass
             
             d_list = []
             try:
-                if getattr(p, 'detail_images', None): d_list = json.loads(p.detail_images)
+                if getattr(p, 'detail_images', None): 
+                    d_list = json.loads(p.detail_images)
             except: pass
             
             product_list.append({
@@ -835,75 +906,7 @@ def get_api(store_name):
         print(f"CRITICAL API ERROR: {str(e)}")
         return jsonify({"products": [], "categories": [], "error": str(e)}), 200
 
-@app.route('/api/spin/redeem', methods=['POST'])
-def redeem_riel_code():
-    player = get_player()
-    code_input = request.json.get('code', '').strip().upper()
-    code_entry = RedeemCode.query.filter_by(code=code_input).first()
-    
-    if not code_entry: return jsonify({"error": "Invalid Code"}), 400
-    if code_entry.status == "Redeemed": return jsonify({"error": "Code already used"}), 400
-        
-    code_entry.status = "Redeemed"
-    code_entry.redeemed_by = player.player_id
-    player.balance += code_entry.value
-    db.session.commit()
-    return jsonify({"success": True, "new_balance": player.balance, "value": code_entry.value})
-
-@app.route('/api/spin/play', methods=['POST'])
-def execute_spin():
-    player = get_player()
-    count = int(request.json.get('count', 1)) 
-    cost = 1000 if count == 1 else 5000
-    
-    if player.balance < cost: return jsonify({"error": "Insufficient Riel."}), 400
-
-    available_items = MinifigurePool.query.filter(MinifigurePool.stock > 0).all()
-    if not available_items or sum([item.stock for item in available_items]) < count:
-        return jsonify({"error": "Not enough stock!"}), 400
-
-    pool = []
-    for item in available_items:
-        if item.rarity == 'Legendary': weight = 2
-        elif item.rarity == 'Epic': weight = 10
-        elif item.rarity == 'Rare': weight = 30
-        else: weight = 58 
-        pool.extend([item] * weight)
-
-    if not pool: return jsonify({"error": "Error building prize pool"}), 400
-
-    prizes = []
-    for _ in range(count):
-        winner = random.choice(pool)
-        winner.stock -= 1 
-        _sync_pool_to_product(winner)
-        db.session.add(DrawHistory(player_id=player.player_id, item_name=winner.name, rarity=winner.rarity, stock_remaining=winner.stock))
-        prizes.append({"id": winner.id, "name": winner.name, "image": winner.image, "rarity": winner.rarity})
-        pool = [i for i in pool if i.stock > 0]
-        if not pool and _ < count - 1: break
-
-    player.balance -= cost 
-
-    extra_reward_amount = 0
-    if count == 5:
-        cfg = get_reward_config()
-        amounts = [0, 500, 1000, 2000, 5000, 10000, 50000]
-        try:
-            weights = [float(cfg.get(str(a), 0)) for a in amounts]
-            if sum(weights) <= 0: weights = [100, 0, 0, 0, 0, 0, 0]
-            extra_reward_amount = random.choices(amounts, weights=weights, k=1)[0]
-            if extra_reward_amount > 0:
-                player.balance += extra_reward_amount
-        except Exception as e: pass
-
-    db.session.commit()
-    return jsonify({"success": True, "new_balance": player.balance, "prizes": prizes, "extra_reward": extra_reward_amount})
-
-@app.route('/api/spin/pool', methods=['GET'])
-def get_live_pool():
-    items = MinifigurePool.query.all()
-    return jsonify({"pool": [{"id": i.id, "name": i.name, "image": i.image, "rarity": i.rarity, "stock": i.stock} for i in items]})
-
+# ----- REST OF YOUR GAMIFICATION ROUTES (SPIN) -----
 @app.route('/admin/spin/update_rewards', methods=['POST'])
 @login_required
 def update_spin_rewards():
@@ -917,7 +920,8 @@ def update_spin_rewards():
 def generate_codes():
     quantity = int(request.form.get('quantity', 5))
     value = int(request.form.get('value', 1000))
-    for _ in range(quantity): db.session.add(RedeemCode(code=''.join(random.choice(string.ascii_uppercase + string.digits) for i in range(8)), value=value))
+    for _ in range(quantity): 
+        db.session.add(RedeemCode(code=''.join(random.choice(string.ascii_uppercase + string.digits) for i in range(8)), value=value))
     db.session.commit()
     return redirect(url_for('admin_spin'))
 
@@ -950,7 +954,8 @@ def add_spin_pool():
     rarity = request.form.get('rarity')
     stock = int(request.form.get('stock', 1))
     for file in request.files.getlist('images'):
-        if file and file.filename != '': db.session.add(MinifigurePool(name=request.form.get('name', '').strip() or f"Mystery {rarity} Prize", rarity=rarity, stock=stock, image=optimize_and_upload(file)['secure_url']))
+        if file and file.filename != '': 
+            db.session.add(MinifigurePool(name=request.form.get('name', '').strip() or f"Mystery {rarity} Prize", rarity=rarity, stock=stock, image=optimize_and_upload(file)['secure_url']))
     db.session.commit()
     return redirect(url_for('admin_spin'))
 
@@ -969,7 +974,9 @@ def update_spin_stock(id):
 def admin_spin_update_bulk():
     item = MinifigurePool.query.get(request.json.get('id'))
     if item:
-        item.rarity, item.sort_order, item.stock = request.json.get('rarity', item.rarity), int(request.json.get('sort_order', item.sort_order)), int(request.json.get('stock', item.stock))
+        item.rarity = request.json.get('rarity', item.rarity)
+        item.sort_order = int(request.json.get('sort_order', item.sort_order))
+        item.stock = int(request.json.get('stock', item.stock))
         _sync_pool_to_product(item)
         db.session.commit()
     return jsonify({"status": "success"})
@@ -1027,7 +1034,8 @@ def admin_spin_delete_history(draw_id):
     return redirect(url_for('admin_spin'))
 
 @app.errorhandler(413)
-def request_entity_too_large(error): return redirect(request.referrer)
+def request_entity_too_large(error): 
+    return redirect(request.referrer)
 
 with app.app_context():
     db.create_all()
@@ -1047,5 +1055,3 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
-
