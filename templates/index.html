@@ -6,6 +6,9 @@
     <meta name="theme-color" content="#f6f5f3">
     <title>Somphea Reak | Premium Studio</title>
     
+    <!-- Telegram Web App API -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <!-- Tailwind & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -89,12 +92,6 @@
         }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Fix for telegram iframe */
-        #tg-widget-placeholder iframe {
-            margin: 0 !important;
-            display: block !important;
-        }
     </style>
 </head>
 <body class="text-slate-900 pb-32 select-none antialiased">
@@ -107,18 +104,12 @@
         <!-- Left: Telegram Profile / Login Area -->
         <div id="tg-auth-container" class="shrink-0 flex items-center justify-center relative min-w-[40px] h-10">
             
-            <!-- REAL TELEGRAM WIDGET -->
-            <div id="tg-widget-placeholder" class="overflow-hidden rounded-full transform scale-[0.8] origin-left flex items-center justify-center">
-                <!-- IMPORTANT: REPLACE "YOUR_BOT_USERNAME" WITH YOUR ACTUAL BOT (e.g., "SompheaReakBot") -->
-                <script async src="https://telegram.org/js/telegram-widget.js?22" 
-                        data-telegram-login="YOUR_BOT_USERNAME" 
-                        data-size="medium" 
-                        data-radius="20" 
-                        data-onauth="onTelegramAuth(user)" 
-                        data-request-access="write"></script>
-            </div>
+            <!-- Fallback Login Button (Only shows if opened outside Telegram Mini App) -->
+            <button id="tg-login-btn" onclick="openTgLoginModal()" class="flex items-center gap-1 bg-[#2AABEE] text-white w-9 h-9 rounded-full shadow-sm hover:bg-[#229ED9] transition-all items-center justify-center active:scale-95 hidden">
+                <i class="fa-solid fa-user text-sm"></i>
+            </button>
             
-            <!-- Active Profile Image (Hides widget once logged in) -->
+            <!-- Active Telegram Profile Avatar (Displays automatically inside Telegram Mini App) -->
             <button id="tg-user-profile" onclick="toggleProfileMenu()" class="hidden w-10 h-10 relative rounded-full border-2 border-[#ea580c] p-[1px] active:scale-95 transition-transform bg-white shadow-sm">
                 <img id="tg-user-avatar" src="" class="w-full h-full rounded-full object-cover">
                 <div class="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center shadow-md">
@@ -126,13 +117,10 @@
                 </div>
             </button>
             
-            <!-- Profile Dropdown -->
+            <!-- Profile Dropdown Menu -->
             <div id="tg-profile-menu" class="absolute top-12 left-0 bg-white border border-slate-100 shadow-xl rounded-2xl p-3 hidden flex-col w-48 transition-all z-50">
                 <p id="tg-user-name" class="font-bold text-sm text-slate-800 truncate"></p>
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">Verified Telegram</p>
-                <button onclick="logoutTelegram()" class="text-xs font-black text-red-500 bg-red-50 rounded-xl py-2 w-full text-center hover:bg-red-100 transition-colors">
-                    <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> ចាកចេញ (Logout)
-                </button>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Telegram Connected</p>
             </div>
         </div>
         
@@ -354,11 +342,6 @@
                     </div>
                 </div>
 
-                <!-- Missing info warning if user is NOT logged in -->
-                <p id="checkout-login-warning" class="text-xs text-orange-600 font-bold bg-orange-50 p-3 rounded-xl border border-orange-200 mb-4">
-                    <i class="fa-solid fa-circle-exclamation mr-1"></i> You are checking out as a Guest. Log in with Telegram to save your order history!
-                </p>
-
                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង (Contact Info)</label>
                 <input type="text" id="uni-cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Full Name)">
                 <input type="tel" id="uni-cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone Number)">
@@ -372,6 +355,34 @@
         </div>
     </div>
 
+
+    <!-- SIMULATION MODAL (For testing outside Telegram App) -->
+    <div id="sim-tg-modal" class="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-sm hidden flex-col justify-end sm:justify-center p-0 sm:p-4 transition-all">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm mx-auto p-6 shadow-2xl relative animate-fade-up">
+            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden"></div>
+            <button onclick="closeTgLoginModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-slate-700">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-full bg-[#2AABEE]/10 text-[#2AABEE] flex items-center justify-center text-3xl mx-auto mb-4 border border-[#2AABEE]/20">
+                    <i class="fa-brands fa-telegram"></i>
+                </div>
+                <h3 class="font-black text-xl text-slate-900 mb-1">ភ្ជាប់គណនី Telegram</h3>
+                <p class="text-xs text-slate-500 mb-6 px-4">Simulate login for testing outside the Telegram mobile app.</p>
+                
+                <div class="space-y-3 text-left mb-6">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Your Name</label>
+                        <input type="text" id="sim-tg-name" value="Julie Smith" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#2AABEE] focus:ring-2 focus:ring-[#2AABEE]/20 outline-none transition-all">
+                    </div>
+                </div>
+
+                <button onclick="executeSimulatedLogin()" class="w-full bg-[#2AABEE] text-white font-black py-3.5 rounded-xl shadow-lg hover:bg-[#229ED9] active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-telegram"></i> បញ្ជាក់ (Authorize)
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- ADMIN BANNER EDITOR -->
     <div id="admin-banner-modal" class="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-sm hidden flex-col justify-end sm:justify-center p-0 sm:p-4 transition-all">
@@ -406,17 +417,44 @@
     <!-- JAVASCRIPT LOGIC                                                          -->
     <!-- ========================================================================= -->
     <script>
-        // --- 1. REAL TELEGRAM LOGIN LOGIC ---
         let tgUser = null;
 
-        // This function is called AUTOMATICALLY by the Telegram script tag when a user logs in
-        // or if they visit the page and already have an active Telegram session connected to your bot!
-        window.onTelegramAuth = function(user) {
-            tgUser = user;
-            // Save their real Telegram payload to local storage so they stay logged in
-            localStorage.setItem('tg_user', JSON.stringify(user));
+        function initializeTelegramAuth() {
+            // Check if running inside Telegram Mini App
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand(); 
+                
+                const webAppUser = window.Telegram.WebApp.initDataUnsafe.user;
+                tgUser = {
+                    id: webAppUser.id,
+                    first_name: webAppUser.first_name,
+                    last_name: webAppUser.last_name || '',
+                    username: webAppUser.username || '',
+                    photo_url: webAppUser.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(webAppUser.first_name)}&background=0284c7&color=fff`
+                };
+                
+                localStorage.setItem('tg_user', JSON.stringify(tgUser));
+                renderTelegramAuthUI();
+            } else {
+                loadSavedTelegramUser();
+            }
+        }
+
+        function openTgLoginModal() { document.getElementById('sim-tg-modal').classList.remove('hidden'); document.getElementById('sim-tg-modal').classList.add('flex'); }
+        function closeTgLoginModal() { document.getElementById('sim-tg-modal').classList.add('hidden'); document.getElementById('sim-tg-modal').classList.remove('flex'); }
+
+        function executeSimulatedLogin() {
+            const name = document.getElementById('sim-tg-name').value || "Julie Smith";
+            tgUser = {
+                id: Math.floor(Math.random() * 1000000000),
+                first_name: name,
+                photo_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2AABEE&color=fff&rounded=true`
+            };
+            localStorage.setItem('tg_user', JSON.stringify(tgUser));
             renderTelegramAuthUI();
-        };
+            closeTgLoginModal();
+        }
 
         function loadSavedTelegramUser() {
             try {
@@ -424,17 +462,12 @@
                 if (saved) {
                     tgUser = JSON.parse(saved);
                     renderTelegramAuthUI();
+                } else {
+                    document.getElementById('tg-login-btn').classList.remove('hidden');
                 }
-            } catch (e) {}
-        }
-
-        function logoutTelegram() {
-            tgUser = null;
-            localStorage.removeItem('tg_user');
-            renderTelegramAuthUI();
-            document.getElementById('tg-profile-menu').classList.add('hidden');
-            document.getElementById('tg-profile-menu').classList.remove('flex');
-            // Note: to fully log out of the Telegram Widget, the user would need to log out of Telegram Web.
+            } catch (e) {
+                document.getElementById('tg-login-btn').classList.remove('hidden');
+            }
         }
 
         function toggleProfileMenu() {
@@ -449,50 +482,35 @@
         }
 
         function renderTelegramAuthUI() {
-            const widgetContainer = document.getElementById('tg-widget-placeholder');
+            const loginBtn = document.getElementById('tg-login-btn');
             const profileBtn = document.getElementById('tg-user-profile');
             const avatarImg = document.getElementById('tg-user-avatar');
             const nameText = document.getElementById('tg-user-name');
             const checkoutBadge = document.getElementById('checkout-tg-badge');
-            const checkoutWarning = document.getElementById('checkout-login-warning');
             
             if (tgUser) {
-                // If logged in, HIDE the Telegram Widget and SHOW the custom profile circle
-                widgetContainer.classList.add('hidden');
+                loginBtn.classList.add('hidden');
                 profileBtn.classList.remove('hidden');
                 
                 const fullName = (tgUser.first_name + ' ' + (tgUser.last_name || '')).trim();
-                
-                // Telegram provides a direct photo_url
                 avatarImg.src = tgUser.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0284c7&color=fff`;
                 nameText.innerText = fullName;
 
-                // Pre-fill the checkout form if it exists and is empty
-                const nameInput = document.getElementById('uni-cust-name');
-                if (nameInput && !nameInput.value) {
-                    nameInput.value = fullName;
+                if (document.getElementById('uni-cust-name') && !document.getElementById('uni-cust-name').value) {
+                    document.getElementById('uni-cust-name').value = fullName;
                 }
-                
-                // Update Checkout Modal UI
                 if (checkoutBadge) {
                     checkoutBadge.classList.remove('hidden');
-                    if (checkoutWarning) checkoutWarning.classList.add('hidden');
                     document.getElementById('checkout-tg-avatar').src = avatarImg.src;
                     document.getElementById('checkout-tg-name').innerText = fullName;
                 }
             } else {
-                // Not logged in: SHOW the real Telegram Widget button, HIDE profile circle
-                widgetContainer.classList.remove('hidden');
+                loginBtn.classList.remove('hidden');
                 profileBtn.classList.add('hidden');
-                
-                if (checkoutBadge) {
-                    checkoutBadge.classList.add('hidden');
-                    if (checkoutWarning) checkoutWarning.classList.remove('hidden');
-                }
+                if (checkoutBadge) checkoutBadge.classList.add('hidden');
             }
         }
 
-        // Close profile dropdown when clicking outside
         document.addEventListener('click', (e) => {
             const container = document.getElementById('tg-auth-container');
             const menu = document.getElementById('tg-profile-menu');
@@ -503,12 +521,10 @@
         });
 
 
-        // --- 2. ADMIN BANNER LOGIC ---
+        // --- ADMIN BANNER LOGIC ---
         function openAdminBannerModal() {
             document.getElementById('admin-banner-modal').classList.remove('hidden');
             document.getElementById('admin-banner-modal').classList.add('flex');
-            
-            // Prefill current data
             document.getElementById('admin-title').value = document.getElementById('promo-title').innerText.trim();
             const currentBg = document.getElementById('promo-banner-bg').style.backgroundImage;
             if(currentBg && currentBg !== 'none') {
@@ -547,7 +563,7 @@
         }
 
 
-        // --- 3. UNIVERSAL CART/STORE LOGIC ---
+        // --- UNIVERSAL CART/STORE LOGIC ---
         window.openImageViewer = function(url) {
             if (!url || url === 'hidden') return;
             const viewer = document.createElement('div');
@@ -751,7 +767,7 @@
             let subtotalKHR = 0; 
             const orderHistoryItems = [];
             
-            selectedItems.forEach((i, bIdx) => {
+            selectedItems.forEach((i) => {
                 if (i.type === 'custom_bracelet') {
                     const itemPriceKHR = i.baseTotal + i.pkgPrice; 
                     subtotalKHR += itemPriceKHR * i.qty;
@@ -764,38 +780,36 @@
 
             const delivery = calculateUniversalDelivery(subtotalKHR); 
 
-            // Save to Mock Order History
+            // Save order history tied to the Telegram User ID if logged in
             const newOrder = { 
                 id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(), 
                 date: new Date().toISOString(), 
                 items: orderHistoryItems, 
                 totalKHR: subtotalKHR + delivery, 
-                status: "Pending (រង់ចាំ)" 
+                status: "Pending (រង់ចាំ)",
+                telegramUser: tgUser ? tgUser.first_name : "Guest"
             };
             let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]'); 
             history.unshift(newOrder); 
             localStorage.setItem('sr_order_history', JSON.stringify(history));
             
-            // Clean up Cart
             globalStoreCart = globalStoreCart.filter(i => !i.selected); 
             saveGlobalCart(); 
             
-            // Revert Button
             btn.innerHTML = originalText; btn.disabled = false;
             
-            // UX transition
             closeUniversalCheckout();
             openOrderHistory();
             setTimeout(() => {
-                alert(`ការបញ្ជាទិញបានជោគជ័យ! (Order Success!)\nលេខកូដ: #${newOrder.id}\n\nSince this is running without your backend, this is a simulated success!`);
+                alert(`ការបញ្ជាទិញបានជោគជ័យ! (Order Success!)\nលេខកូដ: #${newOrder.id}`);
             }, 300);
         };
 
         // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
+            initializeTelegramAuth();
             syncCartFromStorage(); 
             updateCartBadge();
-            loadSavedTelegramUser(); // Automatically checks if user is logged into the site's local storage
             loadAdminSettings();
         });
     </script>
