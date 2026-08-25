@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f6f5f3">
     <title>Somphea Reak | Premium Studio</title>
     
     <!-- Tailwind & FontAwesome -->
@@ -141,7 +142,7 @@
             </div>
         </section>
 
-        <!-- BENTO BOX STORE GRID (FIXED RELATIVE FILE LINKS) -->
+        <!-- BENTO BOX STORE GRID -->
         <section class="space-y-4">
             <div class="flex items-center justify-between px-2 mb-3 animate-fade-up delay-100">
                 <h2 class="font-black text-[11px] uppercase tracking-[0.25em] text-slate-400" data-en="Explore Categories" data-kh="រុករកស្ទូឌីយោ">Explore Categories</h2>
@@ -332,6 +333,32 @@
             currentLang = currentLang === 'en' ? 'kh' : 'en';
             localStorage.setItem('app_lang', currentLang); applyLanguage();
         }
+        
+        // BUG FIX: Added Missing ImageViewer function that the cart relies on
+        window.openImageViewer = function(url) {
+            if (!url || url === 'hidden') return;
+            const viewer = document.createElement('div');
+            viewer.className = 'fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4 cursor-pointer backdrop-blur-sm transition-opacity opacity-0';
+            viewer.innerHTML = `
+                <img src="${url}" class="max-w-full max-h-full object-contain rounded-xl shadow-2xl transform scale-95 transition-transform duration-300">
+                <button class="absolute top-6 right-6 w-10 h-10 bg-white/10 rounded-full text-white hover:bg-white/20 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            `;
+            document.body.appendChild(viewer);
+            
+            // Trigger animation
+            requestAnimationFrame(() => {
+                viewer.classList.remove('opacity-0');
+                viewer.querySelector('img').classList.remove('scale-95');
+            });
+
+            viewer.onclick = () => {
+                viewer.classList.add('opacity-0');
+                viewer.querySelector('img').classList.add('scale-95');
+                setTimeout(() => viewer.remove(), 300);
+            };
+        };
 
         // Global Cart Logic
         const UNIVERSAL_CART_RATE = 4000;
@@ -401,7 +428,7 @@
                             </label>
                             <button onclick="removeUniCartItem('${item.id}')" class="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
-                        <div class="w-full h-[220px] bg-slate-50 rounded-2xl border border-slate-100 overflow-x-auto overflow-y-hidden hide-scrollbar mb-4 relative" onclick="if(typeof openImageViewer === 'function') openImageViewer('${item.image}')">
+                        <div class="w-full h-[220px] bg-slate-50 rounded-2xl border border-slate-100 overflow-x-auto overflow-y-hidden hide-scrollbar mb-4 relative" onclick="window.openImageViewer('${item.image}')">
                             <div class="h-full w-max min-w-full flex items-center justify-center px-4">
                                 <img src="${item.image}" class="h-full w-auto max-w-none object-contain mix-blend-multiply cursor-pointer py-2">
                             </div>
@@ -539,13 +566,21 @@
 
             const delivery = calculateUniversalDelivery(subtotalKHR); 
             const totalUSD = (subtotalKHR + delivery) / UNIVERSAL_CART_RATE;
+            const deliveryFeeUSD = delivery / UNIVERSAL_CART_RATE; // FIX: Calculate delivery fee for DB
 
             try {
                 // 1. Send data securely to the Python Database First!
                 const res = await fetch('/api/checkout', { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ name, phone, address, items: itemsPayload, total: totalUSD }) 
+                    body: JSON.stringify({ 
+                        name, 
+                        phone, 
+                        address, 
+                        items: itemsPayload, 
+                        total: totalUSD,
+                        deliveryFee: deliveryFeeUSD // FIX: Send to backend API
+                    }) 
                 });
                 
                 if (res.ok) { 
@@ -592,5 +627,3 @@
     </script>
 </body>
 </html>
-
-
