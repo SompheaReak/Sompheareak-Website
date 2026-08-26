@@ -673,14 +673,37 @@ def delete_category(id):
         db.session.commit()
     return redirect(url_for('admin_inventory'))
 
+
+# ==============================================================
+# NEW: PRODUCT DRAG-AND-DROP SORTING BACKEND ENDPOINT
+# ==============================================================
 @app.route('/admin/product/reorder', methods=['POST'])
+@app.route('/admin/products/reorder', methods=['POST'])
 @login_required
-def reorder_products():
-    for i, pid in enumerate(request.json.get('ids', [])):
-        p = Product.query.get(int(pid))
-        if p: p.sort_order = i
-    db.session.commit()
-    return jsonify({'status': 'success'})
+def admin_reorder_products():
+    """
+    Receives an ordered list of product IDs from the drag-and-drop inventory interface
+    and updates their sort_order sequence in the database.
+    """
+    data = request.get_json()
+    
+    # We check for both 'product_ids' and 'ids' so it is compatible with old and new JS
+    product_ids = data.get('product_ids', data.get('ids', []))
+    
+    try:
+        # Loop through the array and assign the new rank index 
+        for index, prod_id in enumerate(product_ids):
+            product = Product.query.get(int(prod_id))
+            if product:
+                product.sort_order = index
+                
+        db.session.commit()
+        return jsonify({"status": "success", "message": "Product sort order updated successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500
+# ==============================================================
+
 
 @app.route('/admin/product/toggle/<int:id>', methods=['POST'])
 @login_required
