@@ -87,10 +87,15 @@ class Order(db.Model):
     customer_address = db.Column(db.Text, nullable=False)
     items_json = db.Column(db.Text, nullable=False) 
     total_usd = db.Column(db.Float, nullable=False)
-    delivery_fee = db.Column(db.Float, default=0.0) # NEW FIELD
+    delivery_fee = db.Column(db.Float, default=0.0)
     status = db.Column(db.String(20), default="Pending")
     stock_deducted = db.Column(db.Boolean, default=False)
     promo_code_used = db.Column(db.String(50), nullable=True)
+    
+    # NEW TELEGRAM COLUMNS FOR CART SYNC
+    telegram_id = db.Column(db.String(100), nullable=True)
+    telegram_name = db.Column(db.String(200), nullable=True)
+    
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 class PromoCode(db.Model):
@@ -354,17 +359,34 @@ def place_order():
         db.session.rollback()
         return f"Error: {str(e)}", 400
 
+# =======================================================
+# NEW: UPDATED CHECKOUT API ROUTE FOR UNIVERSAL CART
+# =======================================================
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
     data = request.json
     try:
+        # 1. Parse Telegram details if sent from frontend
+        tg_user = data.get('telegram_user')
+        tg_id = str(tg_user.get('id')) if tg_user and tg_user.get('id') else None
+        
+        tg_name = None
+        if tg_user:
+            tg_name = tg_user.get('first_name', '')
+            last_name = tg_user.get('last_name')
+            if last_name:
+                tg_name += f" {last_name}"
+
+        # 2. Build the order
         new_order = Order(
             customer_name=data.get('name'), 
             customer_phone=data.get('phone'), 
             customer_address=data.get('address'),
             items_json=json.dumps(data.get('items', [])), 
-            total_usd=float(data.get('total', 0)), 
-            delivery_fee=float(data.get('deliveryFee', 0)), # FIX: Capturing delivery fee
+            total_usd=float(data.get('total', 0) or 0), 
+            delivery_fee=float(data.get('deliveryFee', 0) or 0),
+            telegram_id=tg_id,           # <-- Storing Telegram ID
+            telegram_name=tg_name,       # <-- Storing Telegram Name
             status="Pending"
         )
         db.session.add(new_order)
@@ -673,25 +695,13 @@ def delete_category(id):
         db.session.commit()
     return redirect(url_for('admin_inventory'))
 
-
-# ==============================================================
-# NEW: PRODUCT DRAG-AND-DROP SORTING BACKEND ENDPOINT
-# ==============================================================
 @app.route('/admin/product/reorder', methods=['POST'])
 @app.route('/admin/products/reorder', methods=['POST'])
 @login_required
 def admin_reorder_products():
-    """
-    Receives an ordered list of product IDs from the drag-and-drop inventory interface
-    and updates their sort_order sequence in the database.
-    """
     data = request.get_json()
-    
-    # We check for both 'product_ids' and 'ids' so it is compatible with old and new JS
     product_ids = data.get('product_ids', data.get('ids', []))
-    
     try:
-        # Loop through the array and assign the new rank index 
         for index, prod_id in enumerate(product_ids):
             product = Product.query.get(int(prod_id))
             if product:
@@ -702,8 +712,6 @@ def admin_reorder_products():
     except Exception as e:
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 500
-# ==============================================================
-
 
 @app.route('/admin/product/toggle/<int:id>', methods=['POST'])
 @login_required
@@ -929,7 +937,6 @@ def get_api(store_name):
         print(f"CRITICAL API ERROR: {str(e)}")
         return jsonify({"products": [], "categories": [], "error": str(e)}), 200
 
-# ----- REST OF YOUR GAMIFICATION ROUTES (SPIN) -----
 @app.route('/admin/spin/update_rewards', methods=['POST'])
 @login_required
 def update_spin_rewards():
@@ -1060,6 +1067,9 @@ def admin_spin_delete_history(draw_id):
 def request_entity_too_large(error): 
     return redirect(request.referrer)
 
+# ==============================================================
+# AUTO DATABASE MIGRATION FOR TELEGRAM COLUMNS
+# ==============================================================
 with app.app_context():
     db.create_all()
     queries = [
@@ -1067,7 +1077,11 @@ with app.app_context():
         'ALTER TABLE product ADD COLUMN discount_percent FLOAT DEFAULT 0.0',
         'ALTER TABLE product ADD COLUMN use_custom_thumbnail BOOLEAN DEFAULT FALSE',
         'ALTER TABLE product ADD COLUMN detail_images TEXT',
-        'ALTER TABLE "order" ADD COLUMN delivery_fee FLOAT DEFAULT 0.0'
+        'ALTER TABLE "order" ADD COLUMN delivery_fee FLOAT DEFAULT 0.0',
+        
+        # <-- NEW COLUMNS ADDED HERE -->
+        'ALTER TABLE "order" ADD COLUMN telegram_id VARCHAR(100)',
+        'ALTER TABLE "order" ADD COLUMN telegram_name VARCHAR(200)'
     ]
     for q in queries:
         try:
