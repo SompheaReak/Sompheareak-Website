@@ -28,7 +28,7 @@
                 <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Your Shopping Cart</p>
             </div>
             <div class="flex items-center gap-2">
-                <!-- Order History Button (Also available inside the cart) -->
+                <!-- Order History Button -->
                 <button onclick="openOrderHistory()" class="w-9 h-9 flex items-center justify-center bg-orange-50 border border-orange-100 rounded-full text-[#ea580c] hover:bg-orange-100 active:scale-90 transition-all shadow-sm">
                     <i class="fa-solid fa-receipt"></i>
                 </button>
@@ -83,12 +83,15 @@
 <!-- ==================== UNIFIED CHECKOUT MODAL ==================== -->
 <div id="universal-checkout-modal" class="fixed inset-0 z-[9000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
     <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
-        <h2 class="text-xl font-black font-['Moul']">ព័ត៌មានដឹកជញ្ជូន</h2>
+        <div>
+            <h2 class="text-xl font-black font-['Moul']">ព័ត៌មានដឹកជញ្ជូន</h2>
+            <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Secure Checkout</p>
+        </div>
         <button onclick="closeUniversalCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
     </div>
     
     <div class="flex-1 overflow-y-auto p-5 sm:p-6 pb-32 bg-gray-50">
-        <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
+        <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm max-w-lg mx-auto">
             <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
             <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប (Subtotal):</span><span id="uni-check-subtotal">0៛</span></div>
             <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន (Delivery):</span><span id="uni-check-delivery">0៛</span></div>
@@ -99,11 +102,24 @@
         </div>
         
         <div class="space-y-4 max-w-lg mx-auto">
+            
+            <!-- Telegram Verified Badge (Auto displays if logged in) -->
+            <div id="checkout-tg-badge" class="hidden flex items-center gap-3 bg-blue-50 border border-blue-100 p-3 rounded-xl mb-4 shadow-sm">
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden shrink-0 border border-blue-200">
+                    <img id="checkout-tg-avatar" src="" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <p class="text-xs font-black text-blue-900 leading-tight">Connected as <span id="checkout-tg-name"></span></p>
+                    <p class="text-[9px] font-bold text-blue-600 uppercase tracking-widest mt-0.5"><i class="fa-brands fa-telegram mr-0.5"></i> Telegram Verified</p>
+                </div>
+            </div>
+
             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង (Contact Info)</label>
             <input type="text" id="uni-cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Full Name)">
             <input type="tel" id="uni-cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone Number)">
+            
             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន (Address)</label>
-            <textarea id="uni-cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ..."></textarea>
+            <textarea id="uni-cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ (Full Delivery Address)"></textarea>
         </div>
     </div>
     
@@ -116,7 +132,7 @@
     const UNIVERSAL_CART_RATE = 4000;
     let globalStoreCart = [];
 
-    // 1. CRITICAL SYNC FUNCTION
+    // --- 1. CRITICAL SYNC FUNCTION ---
     function syncCartFromStorage() {
         try {
             let oldBraceletCart = JSON.parse(localStorage.getItem('sr_cart') || '[]');
@@ -200,7 +216,7 @@
         return 0;
     }
 
-    // --- 3. RENDER THE CART UI ---
+    // --- 2. RENDER THE CART UI ---
     function renderUniversalCartUI() {
         const container = document.getElementById('universal-cart-items-container');
         if (!container) return;
@@ -226,9 +242,6 @@
             
             if(item.selected) subtotalKHR += itemTotalKHR;
             
-            // ============================================
-            // ⭐️ NEW 220PX HEIGHT HORIZONTAL BRACELET
-            // ============================================
             if (item.type === 'custom_bracelet') {
                 return `
                 <div class="bg-white p-4 rounded-[2rem] shadow-sm border ${item.selected ? 'border-[#ea580c] ring-4 ring-orange-50' : 'border-gray-100'} flex flex-col relative transition-all">
@@ -248,7 +261,6 @@
                         </div>
                     </div>
 
-                    <!-- Details & Qty -->
                     <div class="flex justify-between items-end">
                         <div class="flex flex-col gap-1.5">
                             <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Code: <span class="text-gray-900 font-mono tracking-wider">${item.code || 'N/A'}</span></span>
@@ -266,9 +278,6 @@
                     </div>
                 </div>`;
             } else {
-                // ============================================
-                // STANDARD ITEM TEMPLATE (Toys/LEGO)
-                // ============================================
                 return `
                 <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-50' : 'border-gray-100'} flex gap-3 relative transition-all items-center">
                     <label class="flex items-center justify-center cursor-pointer h-full">
@@ -338,7 +347,26 @@
         } 
     }
 
-    // --- 5. CHECKOUT MODAL LOGIC ---
+    // --- 3. CHECKOUT MODAL LOGIC WITH TELEGRAM DETECTION ---
+    function renderCheckoutTgBadge() {
+        try {
+            const savedUser = localStorage.getItem('tg_user');
+            const badge = document.getElementById('checkout-tg-badge');
+            if (savedUser && badge) {
+                const tgUser = JSON.parse(savedUser);
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+                
+                const fullName = (tgUser.first_name + ' ' + (tgUser.last_name || '')).trim();
+                document.getElementById('checkout-tg-avatar').src = tgUser.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0284c7&color=fff`;
+                document.getElementById('checkout-tg-name').innerText = fullName;
+                
+                const nameInput = document.getElementById('uni-cust-name');
+                if (nameInput && !nameInput.value) nameInput.value = fullName;
+            }
+        } catch(e) {}
+    }
+
     function openUniversalCheckout() {
         syncCartFromStorage();
         const selectedItems = globalStoreCart.filter(i => i.selected);
@@ -358,6 +386,8 @@
         document.getElementById('uni-check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ" : Math.round(delivery).toLocaleString() + "៛";
         document.getElementById('uni-check-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
         
+        renderCheckoutTgBadge(); // <--- Loads the Telegram Profile UI
+        
         closeUniversalCart(); 
         document.getElementById('universal-checkout-modal').classList.remove('translate-y-full');
     }
@@ -366,7 +396,7 @@
         document.getElementById('universal-checkout-modal').classList.add('translate-y-full'); 
     }
 
-    // --- 6. ORDER HISTORY (MY ORDERS) LOGIC ---
+    // --- 4. ORDER HISTORY (MY ORDERS) LOGIC ---
     function openOrderHistory() {
         closeUniversalCart();
         const historyContainer = document.getElementById('universal-history-container');
@@ -419,6 +449,7 @@
         document.getElementById('universal-history-modal').classList.add('translate-x-full');
     }
 
+    // --- 5. PROCESS FINAL ORDER WITH API & TELEGRAM SYNC ---
     async function processUniversalFinalOrder() {
         syncCartFromStorage();
         const selectedItems = globalStoreCart.filter(i => i.selected);
@@ -436,7 +467,6 @@
 
         let subtotalKHR = 0; 
         const itemsPayload = [], charmCounts = {};
-        
         const orderHistoryItems = [];
 
         selectedItems.forEach((i, bIdx) => {
@@ -485,21 +515,35 @@
         const delivery = calculateUniversalDelivery(subtotalKHR);
         const totalUSD = (subtotalKHR + delivery) / UNIVERSAL_CART_RATE;
 
+        // Fetch Telegram User to send to backend
+        let tgUserPayload = null;
+        try { 
+            const savedUser = localStorage.getItem('tg_user');
+            if(savedUser) tgUserPayload = JSON.parse(savedUser);
+        } catch(e) {}
+
         try {
+            // Include telegram_user in the fetch payload
             const res = await fetch('/api/checkout', { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ name, phone, address, items: itemsPayload, total: totalUSD }) 
+                body: JSON.stringify({ 
+                    name, 
+                    phone, 
+                    address, 
+                    items: itemsPayload, 
+                    total: totalUSD,
+                    telegram_user: tgUserPayload // <--- Now your backend knows who ordered!
+                }) 
             });
             
             if (res.ok) {
-                // SAVE ORDER TO HISTORY
                 const newOrder = {
                     id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
                     date: new Date().toISOString(),
                     items: orderHistoryItems,
                     totalKHR: subtotalKHR + delivery,
-                    status: "កំពុងរៀបចំ (Pending)"
+                    status: "រង់ចាំ (Pending)"
                 };
                 let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
                 history.unshift(newOrder); 
@@ -515,7 +559,7 @@
                 btn.innerHTML = originalText; btn.disabled = false;
             }
         } catch (e) { 
-            // Fallback save
+            // Fallback save if backend fails
             const newOrder = {
                 id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
                 date: new Date().toISOString(),
@@ -534,5 +578,3 @@
         }
     }
 </script>
-
-
