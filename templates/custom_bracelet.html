@@ -149,14 +149,14 @@
       </div>
   </div>
 
-  <!-- HEADER -->
+  <!-- 🌟 UNIFIED STICKY HEADER (STORE - BACK BUTTON ON LEFT) 🌟 -->
   <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 sm:px-4 py-3 flex items-center justify-between shadow-sm">
-      <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0">
+      <a href="/" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0 hover:bg-gray-100">
           <i class="fa-solid fa-arrow-left text-sm"></i>
       </a>
       
       <div class="flex items-center justify-center flex-1 px-2 gap-2.5 min-w-0">
-          <img src="static/images/logo.png" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=000&color=fff&rounded=true'" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-sm shrink-0" alt="Logo">
+          <img src="/static/images/logo.jpg" onerror="this.src='/static/images/logo.png'" class="w-10 h-10 sm:w-12 sm:h-12 object-cover drop-shadow-sm shrink-0 rounded-full border border-gray-100" alt="Logo">
           
           <div class="flex flex-col justify-center text-left">
               <h1 class="text-[15px] sm:text-lg font-black text-gray-900 leading-normal tracking-tight font-['Moul'] pb-0.5">
@@ -172,7 +172,7 @@
           </button>
            
           <!-- Calls window.openUniversalCart from global cart component -->
-          <button onclick="if(typeof window.openUniversalCart === 'function') window.openUniversalCart(); else if (typeof window.openCartDrawer === 'function') window.openCartDrawer();" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0">
+          <button onclick="if(typeof window.openUniversalCart === 'function') window.openUniversalCart(); else if (typeof window.openCartDrawer === 'function') window.openCartDrawer();" class="relative w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]">
               <i class="fa-solid fa-cart-shopping"></i>
               <span id="cart-badge" class="cart-badge-count absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden border border-white">0</span>
           </button>
@@ -480,6 +480,10 @@
     let dragItem = null, dragStartX = 0, dragCurrentX = 0, dragStartIndex = -1, hasMoved = false;
     let longPressTimeout = null, longPressActive = false;
 
+    // Focus Listener to ensure cart badge updates when returning from other tabs
+    window.addEventListener('focus', () => { if(typeof window.updateCartBadge === 'function') window.updateCartBadge(); });
+    window.addEventListener('pageshow', () => { if(typeof window.updateCartBadge === 'function') window.updateCartBadge(); });
+
     function t(key) { return translations[currentLang][key] || key; }
     function formatNumber(num) { return Math.round(num).toLocaleString('en-US'); }
 
@@ -532,7 +536,6 @@
         updateUI(); 
     }
 
-    // BUG FIX: Cancels long-press zoom if user's finger moves to scroll or drag
     function cancelLongPress() {
         if (longPressTimeout) {
             clearTimeout(longPressTimeout);
@@ -550,11 +553,7 @@
         }, 500);
     }
 
-    function handleImageTouchEnd() {
-        cancelLongPress();
-    }
-    
-    // Cancel touch on move to prevent false positives when scrolling
+    function handleImageTouchEnd() { cancelLongPress(); }
     document.addEventListener('touchmove', cancelLongPress, { passive: true });
 
     async function init() {
@@ -581,7 +580,7 @@
                             ui_id: `p${p.id}_v${idx}`,
                             product_id: p.id,
                             variant_index: idx,
-                            price: Math.round(parseFloat(v.price || 0) * RATE),
+                            price: Math.round(parseFloat(v.price || 0) * RATE), // Keep KHR internally
                             image: v.image || p.image || p.thumbnail,
                             categories: vCats,
                             stock: v.stock !== undefined ? parseInt(v.stock) : 99,
@@ -594,7 +593,7 @@
                         ui_id: `p${p.id}_main`,
                         product_id: p.id,
                         variant_index: 0,
-                        price: Math.round(parseFloat(p.price || 0) * RATE),
+                        price: Math.round(parseFloat(p.price || 0) * RATE), // Keep KHR internally
                         image: p.image || p.thumbnail || 'https://via.placeholder.com/150?text=No+Image',
                         categories: pCats,
                         stock: p.stock !== undefined ? parseInt(p.stock) : 99,
@@ -613,12 +612,9 @@
         }
         
         updateLanguageUI();
-        
-        // Update Cart badge if the global cart script is available
         if (typeof window.updateCartBadge === 'function') window.updateCartBadge();
         
         startBannerSlideshow();
-
         setTimeout(() => {
             const modal = document.getElementById('tutorialModal');
             if (modal) { modal.classList.remove('modal-hidden'); modal.classList.add('modal-active'); }
@@ -811,7 +807,7 @@
 
     function handlePointerMove(e) {
         if (!dragItem) return;
-        cancelLongPress(); // Crucial for preventing zoom during drag
+        cancelLongPress(); 
         
         const deltaX = e.clientX - dragStartX;
         if (Math.abs(deltaX) > 10) hasMoved = true;
@@ -972,10 +968,7 @@
 
             selectedCharms.forEach(c => {
                 const img = document.createElement('img'); 
-                
-                // BUG FIX: Prevents html2canvas from failing when loading external images from Cloudinary
                 img.crossOrigin = "anonymous"; 
-                
                 img.src = c.image; 
                 img.style.cssText = 'width:55px;height:70px;object-fit:contain;';
                 tempDiv.appendChild(img);
@@ -989,7 +982,6 @@
                 document.getElementById('initialPreviewImg').src = canvas.toDataURL("image/jpeg", 0.6);
             } catch (canvasErr) {
                 console.error("Canvas rendering failed due to CORS/Taint error. Using fallback image.", canvasErr);
-                // Fallback: If canvas fails, just use the first charm's image so the app doesn't break
                 document.getElementById('initialPreviewImg').src = selectedCharms[0]?.image || '';
             } finally {
                 document.body.removeChild(tempDiv);
@@ -1009,45 +1001,35 @@
         document.getElementById('resultModal').classList.add('hidden'); 
     }
 
-    // BUG FIX: Bulletproof cart saving that doesn't rely on external missing functions
+    /* 🔥 PUSHES DIRECTLY TO THE GLOBAL CART.HTML COMPONENT 🔥 */
     function saveToCart(pkgName, pkgImgUrl, pkgPrice) {
         let charmsTotal = 0; 
-        selectedCharms.forEach(c => charmsTotal += c.price);
+        selectedCharms.forEach(c => charmsTotal += c.price); // KHR
         
         const newItem = {
             id: 'cart_' + Date.now() + Math.random().toString(36).substr(2, 5),
             type: 'custom_bracelet',
             charms: [...selectedCharms],
-            pkgName, pkgPrice, baseTotal: charmsTotal,
+            pkgName: pkgName, 
+            pkgPrice: pkgPrice, // KHR
+            baseTotal: charmsTotal, // KHR
             image: document.getElementById('initialPreviewImg').src,
             code: getDesignCode(),
-            qty: 1, selected: true 
+            qty: 1, 
+            selected: true 
         };
         
-        // Save to global localStorage safely
-        try {
-            let cart = JSON.parse(localStorage.getItem('universal_store_cart') || '[]');
-            cart.unshift(newItem);
-            localStorage.setItem('universal_store_cart', JSON.stringify(cart));
-            
-            // Update the cart icon number if the component is loaded
-            if (typeof window.updateCartBadge === 'function') {
-                window.updateCartBadge();
-            }
-        } catch (e) {
-            console.error("Failed to save to cart storage", e);
+        if (typeof window.addToGlobalCart === 'function') {
+            window.addToGlobalCart(newItem);
         }
-
-        closeResult(); 
         
-        // Clear local workspace after sending to cart
+        closeResult(); 
         selectedCharms = []; 
         selectedCharmUids = []; 
         updateUI();
         
         showToast('Saved to Cart', 'text-green-400', 'fa-cart-shopping'); 
         
-        // Safely open the global cart drawer if it exists
         if (typeof window.openUniversalCart === 'function') {
             window.openUniversalCart();
         } else if (typeof window.openCartDrawer === 'function') {
