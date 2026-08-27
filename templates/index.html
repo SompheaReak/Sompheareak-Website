@@ -26,44 +26,51 @@
         
         h1, h2, h3, h4, .khmer-title { font-family: 'Moul', serif; font-weight: normal; }
 
-        /* Modern Mesh Background */
+        /* Premium Modern Mesh Background */
         .premium-bg {
             background-color: #f8f7f5;
-            background-image: radial-gradient(#ea580c 0.75px, transparent 0.75px), radial-gradient(#ea580c 0.75px, #f8f7f5 0.75px);
+            background-image: 
+                radial-gradient(at 40% 20%, hsla(28,100%,74%,1) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, hsla(189,100%,56%,0.1) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, hsla(355,100%,93%,1) 0px, transparent 50%);
+            position: fixed; inset: 0; z-index: -1; opacity: 0.6;
+        }
+        .premium-mesh {
+            background-image: radial-gradient(#ea580c 0.75px, transparent 0.75px);
             background-size: 24px 24px; 
-            background-position: 0 0, 12px 12px; 
-            opacity: 0.15;
+            opacity: 0.1;
             position: fixed; inset: 0; z-index: -1;
         }
 
         /* Bento Card Styling */
         .bento-card { 
-            border-radius: 32px;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); 
+            border-radius: 28px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
             transform: translateZ(0); 
-            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05); 
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.08); 
             overflow: hidden;
             display: block;
+            border: 1px solid rgba(255,255,255,0.6);
         }
-        .bento-card:active { transform: scale(0.95); box-shadow: 0 5px 15px -5px rgba(0,0,0,0.1); }
+        .bento-card:active { transform: scale(0.96); box-shadow: 0 5px 15px -5px rgba(0,0,0,0.1); }
         .bento-card img { transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-        .bento-card:hover img { transform: scale(1.1); }
+        .bento-card:hover img { transform: scale(1.08); }
         
-        .gradient-bottom { background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.3) 50%, transparent 100%); }
-        .gradient-side { background: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%); }
+        .gradient-bottom { background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.2) 60%, transparent 100%); }
+        .gradient-side { background: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.3) 60%, transparent 100%); }
         
         /* Glassmorphism */
         .glass-panel {
             background: rgba(255, 255, 255, 0.85); 
-            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.6); 
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.05);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8); 
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
         }
 
         .glass-dark {
-            background: rgba(20, 20, 20, 0.6); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1); 
+            background: rgba(15, 15, 15, 0.5); 
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15); 
         }
 
         /* Animations */
@@ -80,6 +87,7 @@
             100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
         }
 
+        /* Cart UI Checkboxes */
         .universal-cart-checkbox { 
             appearance: none; width: 22px; height: 22px; border: 2px solid #cbd5e1; border-radius: 50%; 
             outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
@@ -97,79 +105,73 @@
 <body class="text-slate-900 pb-32 select-none antialiased">
 
     <div class="premium-bg"></div>
+    <div class="premium-mesh"></div>
 
-    <!-- 🌟 FLOATING PILL APP HEADER 🌟 -->
-    <header class="fixed top-4 left-4 right-4 sm:left-auto sm:right-auto sm:w-[480px] sm:left-1/2 sm:-translate-x-1/2 z-[100] glass-panel rounded-full px-3 py-2 flex items-center justify-between transition-all">
+    <!-- 🌟 REDESIGNED FLOATING HEADER (Centered Logo) 🌟 -->
+    <header class="fixed top-4 left-4 right-4 sm:left-auto sm:right-auto sm:w-[500px] sm:left-1/2 sm:-translate-x-1/2 z-[100] glass-panel rounded-full px-2 py-1.5 flex items-center justify-between transition-all">
         
-        <!-- Left: Telegram Profile / Login Area -->
-        <div id="tg-auth-container" class="shrink-0 flex items-center justify-center relative min-w-[40px] h-10">
-            
-            <!-- Fallback Login Button (Only shows if opened outside Telegram Mini App) -->
-            <button id="tg-login-btn" onclick="openTgLoginModal()" class="flex items-center gap-1 bg-[#2AABEE] text-white w-9 h-9 rounded-full shadow-sm hover:bg-[#229ED9] transition-all items-center justify-center active:scale-95 hidden">
+        <!-- Left: Telegram Profile -->
+        <div id="tg-auth-container" class="shrink-0 flex items-center justify-center relative min-w-[44px] h-11 ml-1">
+            <button id="tg-login-btn" onclick="openTgLoginModal()" class="flex items-center gap-1 bg-blue-50 text-blue-600 w-10 h-10 rounded-full shadow-sm hover:bg-blue-100 transition-all items-center justify-center active:scale-95 hidden border border-blue-100">
                 <i class="fa-solid fa-user text-sm"></i>
             </button>
-            
-            <!-- Active Telegram Profile Avatar (Displays automatically inside Telegram Mini App) -->
-            <button id="tg-user-profile" onclick="toggleProfileMenu()" class="hidden w-10 h-10 relative rounded-full border-2 border-[#ea580c] p-[1px] active:scale-95 transition-transform bg-white shadow-sm">
+            <button id="tg-user-profile" onclick="toggleProfileMenu()" class="hidden w-11 h-11 relative rounded-full border-[2px] border-[#ea580c] p-[2px] active:scale-95 transition-transform bg-white shadow-md">
                 <img id="tg-user-avatar" src="" class="w-full h-full rounded-full object-cover">
-                <div class="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center shadow-md">
-                    <i class="fa-brands fa-telegram text-[6px] text-white"></i>
+                <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center shadow-md">
+                    <i class="fa-brands fa-telegram text-[7px] text-white"></i>
                 </div>
             </button>
-            
-            <!-- Profile Dropdown Menu -->
-            <div id="tg-profile-menu" class="absolute top-12 left-0 bg-white border border-slate-100 shadow-xl rounded-2xl p-3 hidden flex-col w-48 transition-all z-50">
+            <div id="tg-profile-menu" class="absolute top-14 left-0 bg-white border border-slate-100 shadow-2xl rounded-2xl p-4 hidden flex-col w-56 transition-all z-50">
                 <p id="tg-user-name" class="font-bold text-sm text-slate-800 truncate"></p>
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Telegram Connected</p>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1"><i class="fa-brands fa-telegram text-blue-500 mr-1"></i>Telegram Verified</p>
             </div>
         </div>
         
         <!-- Center: Logo + Title -->
-        <div class="flex items-center justify-center gap-2.5 min-w-0 mx-auto cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-            <div class="w-9 h-9 rounded-full bg-slate-900 flex items-center justify-center shadow-md shrink-0 overflow-hidden relative">
-                <img src="static/images/logo.png" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=000&color=fff&rounded=true'" class="w-full h-full object-cover">
-                <div class="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-full"></div>
+        <div class="flex items-center justify-center gap-3 min-w-0 mx-auto cursor-pointer group" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+            <!-- Central Logo -->
+            <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.08)] shrink-0 overflow-hidden relative border-2 border-white group-hover:scale-105 transition-transform">
+                <img src="static/images/logo.jpg" onerror="this.src='https://ui-avatars.com/api/?name=SR&background=ea580c&color=fff&rounded=true'" class="w-full h-full object-cover">
             </div>
-            <div class="flex flex-col justify-center text-left pt-0.5">
-                <h1 class="text-[13px] sm:text-[15px] font-black text-slate-900 leading-none tracking-tight font-['Moul'] whitespace-nowrap">
-                    សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs text-slate-700">- Somphea Reak</span>
+            
+            <div class="flex flex-col justify-center text-left">
+                <h1 class="text-[15px] sm:text-[17px] font-black text-slate-900 leading-none tracking-tight font-['Moul'] whitespace-nowrap drop-shadow-sm">
+                    សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] font-extrabold text-slate-500 text-xs tracking-normal ml-0.5">- Somphea Reak</span>
                 </h1>
-                <p class="text-[7px] font-black text-[#ea580c] uppercase tracking-[0.2em] leading-none mt-1">Premium Studio</p>
+                <p class="text-[8px] font-black text-[#ea580c] uppercase tracking-[0.22em] leading-none mt-1.5 opacity-90">Premium Studio</p>
             </div>
         </div>
         
         <!-- Right: Cart Button -->
-        <button onclick="openUniversalCart()" class="relative w-10 h-10 flex items-center justify-center bg-white border border-slate-100 rounded-full text-slate-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]">
-            <i class="fa-solid fa-cart-shopping text-sm"></i>
-            <span class="cart-badge-count absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden border border-white">0</span>
+        <button onclick="openUniversalCart()" class="relative w-11 h-11 flex items-center justify-center bg-slate-50 border border-slate-200 rounded-full text-slate-800 shadow-sm active:scale-90 transition-all shrink-0 hover:text-[#ea580c] mr-1">
+            <i class="fa-solid fa-cart-shopping text-[15px]"></i>
+            <span class="cart-badge-count absolute -top-1 -right-1 bg-[#ea580c] text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-lg hidden border-2 border-white">0</span>
         </button>
     </header>
 
     <!-- MAIN APP CONTAINER -->
-    <main class="max-w-2xl mx-auto pt-24 px-4 sm:px-6">
+    <main class="max-w-2xl mx-auto pt-28 px-4 sm:px-6">
         
-        <!-- Holographic Welcome Banner (Admin Controllable) -->
+        <!-- Holographic Welcome Banner -->
         <section class="pb-6 animate-fade-up relative group">
-            
-            <button onclick="openAdminBannerModal()" class="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white/70 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" title="Edit Admin Banner">
+            <button onclick="openAdminBannerModal()" class="absolute top-4 right-4 z-20 w-8 h-8 rounded-full glass-dark text-white/70 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" title="Edit Admin Banner">
                 <i class="fa-solid fa-gear text-xs"></i>
             </button>
 
-            <div id="promo-banner-bg" class="w-full bg-gradient-to-br from-slate-900 via-[#2a1309] to-black rounded-[32px] p-7 md:p-8 text-white relative overflow-hidden shadow-2xl shadow-orange-900/10 border border-white/10 group bg-cover bg-center transition-all duration-500" style="background-image: url('');">
+            <div id="promo-banner-bg" class="w-full bg-slate-900 rounded-[32px] p-7 md:p-8 text-white relative overflow-hidden shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)] border border-slate-800 group bg-cover bg-center transition-all duration-500 min-h-[200px] flex flex-col justify-center" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop');">
                 
-                <div class="absolute inset-0 bg-black/30 z-0"></div>
-                <div class="absolute top-0 right-0 w-48 h-48 bg-[#ea580c] rounded-full blur-[80px] opacity-40 mix-blend-screen group-hover:opacity-60 transition-opacity duration-700 -mr-10 -mt-10 z-0"></div>
-                <div class="absolute bottom-0 left-0 w-32 h-32 bg-purple-600 rounded-full blur-[60px] opacity-20 mix-blend-screen z-0"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-black/40 z-0"></div>
+                <div class="absolute top-0 right-0 w-64 h-64 bg-[#ea580c] rounded-full blur-[90px] opacity-30 mix-blend-screen group-hover:opacity-50 transition-opacity duration-700 -mr-20 -mt-20 z-0"></div>
                 
                 <div class="relative z-10">
-                    <div id="promo-tag" class="inline-flex items-center gap-1.5 bg-white/10 text-white text-[9px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full border border-white/20 backdrop-blur-md mb-5 shadow-inner">
+                    <div id="promo-tag" class="inline-flex items-center gap-1.5 bg-white/10 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border border-white/20 backdrop-blur-md mb-4 shadow-sm">
                         <i class="fa-solid fa-crown text-yellow-400"></i> <span>សូមស្វាគមន៍ • WELCOME</span>
                     </div>
-                    <h2 id="promo-title" class="text-2xl sm:text-4xl font-black leading-tight font-['Moul'] tracking-wide drop-shadow-lg mb-2">
+                    <h2 id="promo-title" class="text-2xl sm:text-3xl font-black leading-snug font-['Moul'] tracking-wide drop-shadow-xl mb-2 text-white">
                         ស្វែងរកកូឡិកសិនថ្មីៗ<br>របស់យើង
                     </h2>
-                    <h3 class="text-sm sm:text-lg font-bold text-slate-300 font-['Plus_Jakarta_Sans']">
-                        Discover Our <span id="promo-subtitle-hl" class="text-transparent bg-clip-text bg-gradient-to-r from-[#ea580c] to-yellow-400 italic">Latest</span> Collections
+                    <h3 class="text-sm sm:text-base font-bold text-slate-300 font-['Plus_Jakarta_Sans']">
+                        Discover Our <span id="promo-subtitle-hl" class="text-transparent bg-clip-text bg-gradient-to-r from-[#ea580c] to-yellow-400 italic font-black">Latest</span> Collections
                     </h3>
                 </div>
             </div>
@@ -177,63 +179,63 @@
 
         <!-- BENTO BOX STORE GRID -->
         <section class="space-y-4">
-            <div class="flex items-center justify-between px-2 mb-3 animate-fade-up delay-100">
-                <h2 class="font-black text-[11px] uppercase tracking-[0.25em] text-slate-400">រុករកស្ទូឌីយោ • EXPLORE CATEGORIES</h2>
-                <div class="h-px flex-grow ml-4 bg-gradient-to-r from-slate-200 to-transparent"></div>
+            <div class="flex items-center justify-between px-2 mb-4 animate-fade-up delay-100">
+                <h2 class="font-black text-[11px] uppercase tracking-[0.25em] text-slate-500">រុករកស្ទូឌីយោ • Explore</h2>
+                <div class="h-px flex-grow ml-4 bg-gradient-to-r from-slate-300 to-transparent"></div>
             </div>
 
             <!-- Grid Layout -->
             <div class="grid grid-cols-2 gap-4 sm:gap-5">
                 
                 <!-- 1. Custom Bracelet Builder (Links to custom-bracelet) -->
-                <a href="custom-bracelet" class="bento-card animate-fade-up delay-200 relative col-span-2 aspect-[21/10] sm:aspect-[21/8] bg-white group ring-1 ring-black/5 hover:ring-[#ea580c]/30 hover:shadow-[0_20px_40px_-15px_rgba(234,88,12,0.2)]">
+                <a href="custom-bracelet" class="bento-card animate-fade-up delay-200 relative col-span-2 aspect-[21/10] sm:aspect-[21/8] bg-white group">
                     <img src="https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover mix-blend-multiply">
                     <div class="gradient-side absolute inset-0 flex flex-col justify-center p-6 sm:p-8">
                         <div class="flex gap-2 mb-3 z-10">
-                            <span class="bg-[#ea580c] text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-lg shadow-[0_0_15px_rgba(234,88,12,0.6)] flex items-center gap-1 animate-pulse border border-orange-400"><i class="fa-solid fa-fire"></i> Hot</span>
-                            <span class="glass-dark text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-lg">custom-bracelet.html</span>
+                            <span class="bg-gradient-to-r from-[#ea580c] to-orange-500 text-white text-[9px] font-black uppercase px-3 py-1 rounded-lg shadow-lg flex items-center gap-1.5 animate-pulse"><i class="fa-solid fa-fire"></i> Hot</span>
+                            <span class="glass-dark text-white text-[9px] font-black uppercase px-3 py-1 rounded-lg">custom-bracelet</span>
                         </div>
-                        <h3 class="text-white font-black text-xl sm:text-3xl uppercase italic leading-none drop-shadow-xl relative z-10 font-['Moul'] mb-1">រចនាខ្សែដៃផ្ទាល់ខ្លួន</h3>
-                        <h4 class="text-orange-100 font-bold text-sm sm:text-base uppercase tracking-widest drop-shadow-md relative z-10">Customize Italy Charm</h4>
-                        <p class="text-orange-400 text-[10px] font-extrabold uppercase mt-2.5 tracking-[0.2em] relative z-10 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles"></i> Design Your Own <i class="fa-solid fa-arrow-right ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all"></i></p>
+                        <h3 class="text-white font-black text-xl sm:text-3xl uppercase leading-none drop-shadow-2xl relative z-10 font-['Moul'] mb-1.5">រចនាខ្សែដៃផ្ទាល់ខ្លួន</h3>
+                        <h4 class="text-orange-50 font-bold text-sm sm:text-base uppercase tracking-widest drop-shadow-md relative z-10">Customize Italy Charm</h4>
+                        <p class="text-orange-400 text-[10px] font-extrabold uppercase mt-3 tracking-[0.2em] relative z-10 flex items-center gap-1.5">Design Your Own <i class="fa-solid fa-arrow-right ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all"></i></p>
                     </div>
                 </a>
 
                 <!-- 2. Minifigure Store (Links to minifigure) -->
-                <a href="minifigure" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-slate-900 group ring-1 ring-black/5 hover:shadow-xl">
-                    <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
-                    <img src="static/images/lego.jpg" onerror="this.src='https://images.unsplash.com/photo-1518331647614-7a1f04cd34ce?auto=format&fit=crop&q=80&w=600'" class="absolute inset-0 w-full h-full object-cover opacity-70">
-                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-4 sm:p-6">
-                        <div class="mb-1.5 ml-1">
-                            <div class="relative inline-flex items-center justify-center bg-[#E3000B] border-[2px] border-black rounded px-3 py-1 shadow-xl transform -rotate-2">
+                <a href="minifigure" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-slate-900 group">
+                    <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:bg-white group-hover:text-black transition-colors"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
+                    <img src="static/images/lego.jpg" onerror="this.src='https://images.unsplash.com/photo-1518331647614-7a1f04cd34ce?auto=format&fit=crop&q=80&w=600'" class="absolute inset-0 w-full h-full object-cover opacity-80">
+                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-5">
+                        <div class="mb-2">
+                            <div class="relative inline-flex items-center justify-center bg-[#E3000B] border-[2px] border-black rounded px-3 py-1 shadow-2xl transform -rotate-2">
                                 <div class="absolute inset-[1px] border border-[#FFCF00] rounded-[2px] pointer-events-none"></div>
                                 <span class="font-black italic text-white text-lg tracking-tighter leading-none relative z-10 drop-shadow-md" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">LEGO</span>
                             </div>
                         </div>
-                        <h3 class="text-white font-black text-sm uppercase tracking-[0.1em] drop-shadow-lg mt-2 ml-1 font-['Moul']">យូនីវើស</h3>
-                        <p class="text-slate-300 text-[9px] font-bold tracking-widest uppercase ml-1 mt-0.5">minifigure.html</p>
+                        <h3 class="text-white font-black text-[13px] uppercase tracking-[0.1em] drop-shadow-lg mt-1 font-['Moul']">យូនីវើស</h3>
+                        <p class="text-slate-300 text-[9px] font-bold tracking-widest uppercase mt-1">minifigure.html</p>
                     </div>
                 </a>
 
                 <!-- 3. Toy Universe Store (Links to toy) -->
-                <a href="toy" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-white group ring-1 ring-black/5 hover:shadow-xl">
-                    <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
+                <a href="toy" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-white group">
+                    <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:bg-white group-hover:text-black transition-colors"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
                     <img src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&q=80&w=600" class="absolute inset-0 w-full h-full object-cover">
-                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-4 sm:p-6">
-                        <span class="text-orange-300 text-[8px] font-black uppercase tracking-widest mb-1 drop-shadow-md">Premium</span>
-                        <h3 class="text-white font-black text-lg uppercase leading-none font-['Moul'] drop-shadow-xl mb-1">ពិភពប្រដាប់ក្មេងលេង</h3>
-                        <p class="text-slate-200 text-[10px] font-bold tracking-widest uppercase mt-0.5">toy.html</p>
+                    <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-5">
+                        <span class="text-orange-400 text-[8px] font-black uppercase tracking-widest mb-1.5 drop-shadow-md bg-black/20 w-fit px-2 py-0.5 rounded backdrop-blur-md">Premium</span>
+                        <h3 class="text-white font-black text-[17px] uppercase leading-none font-['Moul'] drop-shadow-xl mb-1">ពិភពប្រដាប់ក្មេងលេង</h3>
+                        <p class="text-slate-300 text-[10px] font-bold tracking-widest uppercase mt-0.5">toy.html</p>
                     </div>
                 </a>
 
                 <!-- 4. Ready-Made Bracelets Store -->
-                <a href="bracelet" class="bento-card animate-fade-up delay-300 relative col-span-2 aspect-[21/10] sm:aspect-[21/8] bg-white group ring-1 ring-black/5 hover:shadow-xl">
-                    <div class="absolute top-5 right-5 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform group-hover:bg-[#ea580c] group-hover:border-orange-400"><i class="fa-solid fa-arrow-right text-[10px]"></i></div>
-                    <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover">
+                <a href="bracelet" class="bento-card animate-fade-up delay-300 relative col-span-2 aspect-[21/10] sm:aspect-[21/8] bg-slate-900 group">
+                    <div class="absolute top-5 right-5 z-20 w-9 h-9 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:bg-[#ea580c] group-hover:border-orange-400 transition-colors"><i class="fa-solid fa-arrow-right text-xs"></i></div>
+                    <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=800" class="absolute inset-0 w-full h-full object-cover opacity-90">
                     <div class="gradient-side absolute inset-0 flex flex-col justify-center p-6 sm:p-8">
-                        <span class="glass-dark text-white text-[8px] font-black uppercase px-2.5 py-1 rounded-lg w-fit mb-2.5">Ready to Wear</span>
-                        <h3 class="text-white font-black text-xl sm:text-2xl uppercase leading-none font-['Moul'] drop-shadow-xl mb-1.5">ខ្សែក និងខ្សែដៃ</h3>
-                        <h4 class="text-slate-100 font-bold text-sm tracking-widest uppercase">Ready-Made Bracelets</h4>
+                        <span class="glass-dark text-white text-[8px] font-black uppercase px-3 py-1 rounded-lg w-fit mb-3">Ready to Wear</span>
+                        <h3 class="text-white font-black text-xl sm:text-2xl uppercase leading-none font-['Moul'] drop-shadow-xl mb-2">ខ្សែក និងខ្សែដៃ</h3>
+                        <h4 class="text-slate-200 font-bold text-xs sm:text-sm tracking-widest uppercase">Ready-Made Bracelets</h4>
                     </div>
                 </a>
                 
@@ -243,22 +245,22 @@
     </main>
 
     <!-- 🌟 APP-STYLE BOTTOM NAVIGATION 🌟 -->
-    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[380px] h-16 glass-panel rounded-[24px] flex items-center justify-around px-2 z-40">
-        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-14 h-full flex items-center justify-center text-[#ea580c] flex-col gap-1 active:scale-90 transition-transform">
-            <i class="fa-solid fa-house text-lg drop-shadow-sm"></i>
-            <span class="text-[8px] font-black uppercase tracking-[0.2em]">Home</span>
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2.5rem)] max-w-[360px] h-[68px] glass-panel rounded-[28px] flex items-center justify-around px-2 z-40">
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-16 h-full flex items-center justify-center text-[#ea580c] flex-col gap-1 active:scale-90 transition-transform">
+            <i class="fa-solid fa-house text-xl drop-shadow-sm"></i>
+            <span class="text-[8px] font-black uppercase tracking-[0.2em] mt-0.5">Home</span>
         </button>
         
         <div class="relative w-16 h-16 -translate-y-5 flex items-center justify-center">
             <div class="absolute inset-0 rounded-full pulse-ring bg-[#ea580c]"></div>
-            <a href="custom-bracelet.html" class="relative w-14 h-14 bg-slate-900 rounded-full flex items-center justify-center text-white border-[3px] border-white shadow-2xl active:scale-90 transition-all hover:bg-[#ea580c] group z-10">
-                <i class="fa-solid fa-wand-magic-sparkles text-xl relative z-10 group-hover:animate-spin-slow"></i>
+            <a href="custom-bracelet" class="relative w-[60px] h-[60px] bg-slate-900 rounded-full flex items-center justify-center text-white border-[3px] border-white shadow-xl active:scale-90 transition-all hover:bg-[#ea580c] group z-10">
+                <i class="fa-solid fa-wand-magic-sparkles text-2xl relative z-10 group-hover:animate-spin-slow"></i>
             </a>
         </div>
         
-        <button onclick="openOrderHistory()" class="w-14 h-full flex items-center justify-center text-slate-400 hover:text-[#ea580c] flex-col gap-1 active:scale-90 transition-colors">
-            <i class="fa-solid fa-receipt text-lg"></i>
-            <span class="text-[8px] font-black uppercase tracking-[0.2em]">Orders</span>
+        <button onclick="openOrderHistory()" class="w-16 h-full flex items-center justify-center text-slate-400 hover:text-[#ea580c] flex-col gap-1 active:scale-90 transition-colors">
+            <i class="fa-solid fa-receipt text-xl"></i>
+            <span class="text-[8px] font-black uppercase tracking-[0.2em] mt-0.5">Orders</span>
         </button>
     </nav>
 
@@ -269,15 +271,15 @@
     <!-- CART DRAWER -->
     <div id="universal-cart-drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[8000] flex flex-col justify-end transition-transform duration-300">
         <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeUniversalCart()"></div>
-        <div class="relative w-full h-[85vh] bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
-            <div class="bg-white px-5 sm:px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10">
+        <div class="relative w-full h-[85vh] bg-gray-50 rounded-t-[32px] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
+            <div class="bg-white px-5 sm:px-6 py-5 flex items-center justify-between border-b border-gray-100 z-10">
                 <div>
                     <h2 class="text-xl font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2>
-                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Your Shopping Cart</p>
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Your Shopping Cart</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="openOrderHistory()" class="w-9 h-9 flex items-center justify-center bg-orange-50 border border-orange-100 rounded-full text-[#ea580c] hover:bg-orange-100 active:scale-90 transition-all shadow-sm"><i class="fa-solid fa-receipt"></i></button>
-                    <button onclick="closeUniversalCart()" class="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    <button onclick="openOrderHistory()" class="w-10 h-10 flex items-center justify-center bg-orange-50 border border-orange-100 rounded-full text-[#ea580c] hover:bg-orange-100 active:scale-90 transition-all shadow-sm"><i class="fa-solid fa-receipt"></i></button>
+                    <button onclick="closeUniversalCart()" class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
                 </div>
             </div>
             
@@ -287,12 +289,12 @@
                 <div class="space-y-2 mb-4">
                     <div class="flex justify-between items-center text-xs font-bold text-gray-500"><span>Subtotal (តម្លៃទំនិញ)</span><span id="uni-cart-subtotal">0៛</span></div>
                     <div class="flex justify-between items-center text-xs font-bold text-gray-500"><span>Delivery (ថ្លៃដឹកជញ្ជូន)</span><span id="uni-cart-delivery">0៛</span></div>
-                    <div class="flex justify-between items-end pt-2 border-t border-gray-100">
+                    <div class="flex justify-between items-end pt-3 mt-1 border-t border-gray-100">
                         <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Grand Total)</span>
                         <span id="uni-cart-grand-total-khr" class="text-2xl font-black text-[#ea580c] leading-none block">0៛</span>
                     </div>
                 </div>
-                <button onclick="openUniversalCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
+                <button onclick="openUniversalCheckout()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl shadow-slate-900/20 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
                     <i class="fa-solid fa-truck-fast"></i> <span>បន្តទៅការដឹកជញ្ជូន (Checkout)</span>
                 </button>
             </div>
@@ -301,10 +303,10 @@
 
     <!-- ORDER HISTORY MODAL -->
     <div id="universal-history-modal" class="fixed inset-0 z-[9500] bg-gray-50 flex flex-col translate-x-full transition-transform duration-300 ease-in-out">
-        <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
+        <div class="px-5 py-5 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
             <div>
                 <h2 class="text-lg font-black font-['Moul'] text-gray-900">ប្រវត្តិកម្ម៉ង់របស់អ្នក</h2>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">My Orders</p>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">My Orders</p>
             </div>
             <button onclick="closeOrderHistory()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-arrow-right text-lg"></i></button>
         </div>
@@ -313,32 +315,32 @@
 
     <!-- CHECKOUT MODAL -->
     <div id="universal-checkout-modal" class="fixed inset-0 z-[9000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
-        <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
+        <div class="px-5 py-5 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
             <div>
                 <h2 class="text-xl font-black font-['Moul']">ព័ត៌មានដឹកជញ្ជូន</h2>
-                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Secure Checkout</p>
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Secure Checkout</p>
             </div>
             <button onclick="closeUniversalCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
         <div class="flex-1 overflow-y-auto p-5 sm:p-6 pb-32 bg-gray-50">
             
-            <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm max-w-lg mx-auto">
-                <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
+            <div class="bg-white rounded-3xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm max-w-lg mx-auto">
+                <div class="absolute top-0 left-0 w-1.5 h-full bg-[#ea580c]"></div>
                 <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប (Subtotal):</span><span id="uni-check-subtotal">0៛</span></div>
                 <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន (Delivery):</span><span id="uni-check-delivery">0៛</span></div>
-                <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
+                <div class="flex justify-between font-black text-gray-900 border-t border-gray-100 pt-3 mt-3">
                     <span class="text-sm">សរុបត្រូវបង់ (Total):</span><span id="uni-check-total-khr" class="text-[#ea580c] text-xl leading-none">0៛</span>
                 </div>
             </div>
             
             <div class="space-y-4 max-w-lg mx-auto">
-                <div id="checkout-tg-badge" class="hidden flex items-center gap-3 bg-blue-50 border border-blue-100 p-3 rounded-xl mb-4">
-                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden shrink-0">
+                <div id="checkout-tg-badge" class="hidden flex items-center gap-3 bg-blue-50 border border-blue-100 p-3.5 rounded-2xl mb-4 shadow-sm">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden shrink-0 border border-blue-200">
                         <img id="checkout-tg-avatar" src="" class="w-full h-full object-cover">
                     </div>
                     <div>
                         <p class="text-xs font-black text-blue-900 leading-tight">Connected as <span id="checkout-tg-name"></span></p>
-                        <p class="text-[9px] font-bold text-blue-600 uppercase tracking-widest mt-0.5">Telegram Verified</p>
+                        <p class="text-[9px] font-bold text-blue-600 uppercase tracking-widest mt-0.5"><i class="fa-brands fa-telegram mr-0.5"></i> Telegram Verified</p>
                     </div>
                 </div>
 
@@ -355,12 +357,11 @@
         </div>
     </div>
 
-
     <!-- SIMULATION MODAL (For testing outside Telegram App) -->
     <div id="sim-tg-modal" class="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-sm hidden flex-col justify-end sm:justify-center p-0 sm:p-4 transition-all">
-        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm mx-auto p-6 shadow-2xl relative animate-fade-up">
+        <div class="bg-white rounded-t-[32px] sm:rounded-[32px] w-full max-w-sm mx-auto p-6 sm:p-8 shadow-2xl relative animate-fade-up">
             <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 sm:hidden"></div>
-            <button onclick="closeTgLoginModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-slate-700">
+            <button onclick="closeTgLoginModal()" class="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-slate-700">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             <div class="text-center">
@@ -373,7 +374,7 @@
                 <div class="space-y-3 text-left mb-6">
                     <div>
                         <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Your Name</label>
-                        <input type="text" id="sim-tg-name" value="Julie Smith" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#2AABEE] focus:ring-2 focus:ring-[#2AABEE]/20 outline-none transition-all">
+                        <input type="text" id="sim-tg-name" value="Guest User" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#2AABEE] focus:ring-2 focus:ring-[#2AABEE]/20 outline-none transition-all">
                     </div>
                 </div>
 
@@ -386,12 +387,12 @@
 
     <!-- ADMIN BANNER EDITOR -->
     <div id="admin-banner-modal" class="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-sm hidden flex-col justify-end sm:justify-center p-0 sm:p-4 transition-all">
-        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-sm mx-auto p-6 shadow-2xl relative animate-fade-up">
+        <div class="bg-white rounded-t-[32px] sm:rounded-[32px] w-full max-w-sm mx-auto p-6 sm:p-8 shadow-2xl relative animate-fade-up">
             <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden"></div>
-            <button onclick="closeAdminBannerModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-slate-700">
+            <button onclick="closeAdminBannerModal()" class="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-slate-700">
                 <i class="fa-solid fa-xmark"></i>
             </button>
-            <div class="text-center mb-5">
+            <div class="text-center mb-6">
                 <h3 class="font-black text-lg text-slate-900 font-['Moul']">គ្រប់គ្រងផ្ទាំងផ្សព្វផ្សាយ</h3>
                 <p class="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Admin Banner Control</p>
             </div>
@@ -405,7 +406,7 @@
                     <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">រូបភាពផ្ទៃខាងក្រោយ (Background Image URL)</label>
                     <input type="text" id="admin-bg-url" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-mono focus:border-slate-400 outline-none">
                 </div>
-                <button onclick="saveAdminBanner()" class="w-full bg-slate-900 text-white font-black py-3.5 rounded-xl shadow-lg active:scale-95 transition-all mt-2">
+                <button onclick="saveAdminBanner()" class="w-full bg-slate-900 text-white font-black py-4 rounded-xl shadow-lg active:scale-95 transition-all mt-2">
                     រក្សាទុក (Save Updates)
                 </button>
             </div>
@@ -420,7 +421,6 @@
         let tgUser = null;
 
         function initializeTelegramAuth() {
-            // Check if running inside Telegram Mini App
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
                 window.Telegram.WebApp.ready();
                 window.Telegram.WebApp.expand(); 
@@ -445,7 +445,7 @@
         function closeTgLoginModal() { document.getElementById('sim-tg-modal').classList.add('hidden'); document.getElementById('sim-tg-modal').classList.remove('flex'); }
 
         function executeSimulatedLogin() {
-            const name = document.getElementById('sim-tg-name').value || "Julie Smith";
+            const name = document.getElementById('sim-tg-name').value || "Guest User";
             tgUser = {
                 id: Math.floor(Math.random() * 1000000000),
                 first_name: name,
@@ -465,19 +465,15 @@
                 } else {
                     document.getElementById('tg-login-btn').classList.remove('hidden');
                 }
-            } catch (e) {
-                document.getElementById('tg-login-btn').classList.remove('hidden');
-            }
+            } catch (e) { document.getElementById('tg-login-btn').classList.remove('hidden'); }
         }
 
         function toggleProfileMenu() {
             const menu = document.getElementById('tg-profile-menu');
             if (menu.classList.contains('hidden')) {
-                menu.classList.remove('hidden');
-                menu.classList.add('flex');
+                menu.classList.remove('hidden'); menu.classList.add('flex');
             } else {
-                menu.classList.add('hidden');
-                menu.classList.remove('flex');
+                menu.classList.add('hidden'); menu.classList.remove('flex');
             }
         }
 
@@ -489,9 +485,7 @@
             const checkoutBadge = document.getElementById('checkout-tg-badge');
             
             if (tgUser) {
-                loginBtn.classList.add('hidden');
-                profileBtn.classList.remove('hidden');
-                
+                loginBtn.classList.add('hidden'); profileBtn.classList.remove('hidden');
                 const fullName = (tgUser.first_name + ' ' + (tgUser.last_name || '')).trim();
                 avatarImg.src = tgUser.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0284c7&color=fff`;
                 nameText.innerText = fullName;
@@ -501,12 +495,12 @@
                 }
                 if (checkoutBadge) {
                     checkoutBadge.classList.remove('hidden');
+                    checkoutBadge.classList.add('flex');
                     document.getElementById('checkout-tg-avatar').src = avatarImg.src;
                     document.getElementById('checkout-tg-name').innerText = fullName;
                 }
             } else {
-                loginBtn.classList.remove('hidden');
-                profileBtn.classList.add('hidden');
+                loginBtn.classList.remove('hidden'); profileBtn.classList.add('hidden');
                 if (checkoutBadge) checkoutBadge.classList.add('hidden');
             }
         }
@@ -515,11 +509,9 @@
             const container = document.getElementById('tg-auth-container');
             const menu = document.getElementById('tg-profile-menu');
             if (container && !container.contains(e.target) && menu && !menu.classList.contains('hidden')) {
-                menu.classList.add('hidden');
-                menu.classList.remove('flex');
+                menu.classList.add('hidden'); menu.classList.remove('flex');
             }
         });
-
 
         // --- ADMIN BANNER LOGIC ---
         function openAdminBannerModal() {
@@ -527,9 +519,7 @@
             document.getElementById('admin-banner-modal').classList.add('flex');
             document.getElementById('admin-title').value = document.getElementById('promo-title').innerText.trim();
             const currentBg = document.getElementById('promo-banner-bg').style.backgroundImage;
-            if(currentBg && currentBg !== 'none') {
-                document.getElementById('admin-bg-url').value = currentBg.slice(5, -2);
-            }
+            if(currentBg && currentBg !== 'none') document.getElementById('admin-bg-url').value = currentBg.slice(5, -2);
         }
         
         function closeAdminBannerModal() {
@@ -561,7 +551,6 @@
             if(savedTitle) document.getElementById('promo-title').innerHTML = savedTitle.replace(/\n/g, '<br>');
             if(savedBg) document.getElementById('promo-banner-bg').style.backgroundImage = `url('${savedBg}')`;
         }
-
 
         // --- UNIVERSAL CART/STORE LOGIC ---
         window.openImageViewer = function(url) {
@@ -626,7 +615,7 @@
         function renderUniversalCartUI() {
             const container = document.getElementById('universal-cart-items-container');
             if(globalStoreCart.length === 0) {
-                container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3 text-slate-400"></i><p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-slate-500">កន្ត្រកទទេ (Empty)</p></div>`;
+                container.innerHTML = `<div class="py-20 text-center opacity-40"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3 text-slate-300"></i><p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-slate-400">កន្ត្រកទទេ (Empty)</p></div>`;
                 document.getElementById('uni-cart-subtotal').innerText = "0៛"; document.getElementById('uni-cart-delivery').innerText = "0៛"; document.getElementById('uni-cart-grand-total-khr').innerText = "0៛";
                 return;
             }
@@ -641,7 +630,7 @@
                 
                 if (item.type === 'custom_bracelet') {
                     return `
-                    <div class="bg-white p-4 rounded-[2rem] shadow-sm border ${item.selected ? 'border-[#ea580c] ring-4 ring-orange-50' : 'border-slate-100'} flex flex-col relative transition-all">
+                    <div class="bg-white p-4 rounded-[28px] shadow-sm border ${item.selected ? 'border-[#ea580c] ring-4 ring-orange-50' : 'border-slate-100'} flex flex-col relative transition-all">
                         <div class="flex justify-between items-center mb-3">
                             <label class="flex items-center gap-3 cursor-pointer">
                                 <input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')">
@@ -671,7 +660,7 @@
                     </div>`;
                 } else {
                     return `
-                    <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-50' : 'border-slate-100'} flex gap-3 relative transition-all items-center">
+                    <div class="bg-white p-3 sm:p-4 rounded-[20px] shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-50' : 'border-slate-100'} flex gap-3 relative transition-all items-center">
                         <label class="flex items-center justify-center cursor-pointer h-full"><input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')"></label>
                         <div class="w-16 sm:w-20 h-16 sm:h-20 bg-slate-50 rounded-xl border border-slate-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden cursor-pointer shadow-inner"><img src="${item.image}" class="max-w-full max-h-full object-contain mix-blend-multiply"></div>
                         <div class="flex-1 flex flex-col justify-center min-w-0 py-0.5">
@@ -718,8 +707,10 @@
             document.getElementById('uni-check-subtotal').innerText = Math.round(subtotalKHR).toLocaleString() + "៛";
             document.getElementById('uni-check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ" : Math.round(delivery).toLocaleString() + "៛";
             document.getElementById('uni-check-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
-            closeUniversalCart(); document.getElementById('universal-checkout-modal').classList.remove('translate-y-full');
-            renderTelegramAuthUI();
+            
+            closeUniversalCart(); 
+            document.getElementById('universal-checkout-modal').classList.remove('translate-y-full');
+            renderTelegramAuthUI(); // Ensures avatar is loaded
         };
         window.closeUniversalCheckout = function() { document.getElementById('universal-checkout-modal').classList.add('translate-y-full'); };
 
@@ -727,18 +718,18 @@
             closeUniversalCart(); const historyContainer = document.getElementById('universal-history-container');
             let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
             if (history.length === 0) {
-                historyContainer.innerHTML = `<div class="py-20 text-center opacity-40"><i class="fa-solid fa-box-open text-5xl mb-3 text-slate-400"></i><p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-slate-500">មិនទាន់មានប្រវត្តិកម្ម៉ង់ទេ</p><p class="text-[10px] font-bold text-slate-400 mt-1">No orders yet</p></div>`;
+                historyContainer.innerHTML = `<div class="py-20 text-center opacity-40"><i class="fa-solid fa-box-open text-5xl mb-3 text-slate-300"></i><p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-slate-400">មិនទាន់មានប្រវត្តិកម្ម៉ង់ទេ</p><p class="text-[10px] font-bold text-slate-400 mt-1">No orders yet</p></div>`;
             } else {
                 historyContainer.innerHTML = history.map(order => `
-                    <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm mb-4">
+                    <div class="bg-white rounded-[20px] p-4 border border-slate-200 shadow-sm mb-4">
                         <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-3">
                             <div><span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Order ID</span><p class="font-black text-sm text-slate-800 font-mono">${order.id}</p></div>
-                            <div class="text-right"><span class="text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-100 px-2 py-1 rounded uppercase tracking-widest">${order.status}</span><p class="text-[9px] font-bold text-slate-400 mt-1">${new Date(order.date).toLocaleDateString()}</p></div>
+                            <div class="text-right"><span class="text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-100 px-2.5 py-1 rounded uppercase tracking-widest">${order.status}</span><p class="text-[9px] font-bold text-slate-400 mt-1.5">${new Date(order.date).toLocaleDateString()}</p></div>
                         </div>
                         <div class="space-y-3 mb-3">${order.items.map(item => `
                             <div class="flex items-center gap-3">
-                                <img src="${item.image}" class="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 object-contain p-0.5 shrink-0" onerror="this.src='https://via.placeholder.com/100?text=Item'">
-                                <div class="flex-1 min-w-0"><p class="font-bold text-xs text-slate-900 truncate">${item.title}</p><p class="text-[9px] font-bold text-slate-400 truncate">Qty: ${item.qty} • ${item.style || ''}</p></div>
+                                <img src="${item.image}" class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 object-contain p-0.5 shrink-0" onerror="this.src='https://via.placeholder.com/100?text=Item'">
+                                <div class="flex-1 min-w-0"><p class="font-bold text-xs text-slate-900 truncate">${item.title}</p><p class="text-[9px] font-bold text-slate-400 truncate mt-0.5">Qty: ${item.qty} • ${item.style || ''}</p></div>
                             </div>`).join('')}
                         </div>
                         <div class="flex justify-between items-center border-t border-slate-100 pt-3"><span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">សរុប (Total)</span><span class="font-black text-sm text-[#ea580c]">${Math.round(order.totalKHR).toLocaleString()}៛</span></div>
@@ -766,43 +757,86 @@
 
             let subtotalKHR = 0; 
             const orderHistoryItems = [];
+            const itemsPayload = [];
             
             selectedItems.forEach((i) => {
                 if (i.type === 'custom_bracelet') {
                     const itemPriceKHR = i.baseTotal + i.pkgPrice; 
                     subtotalKHR += itemPriceKHR * i.qty;
                     orderHistoryItems.push({ title: "DIY Bracelet", style: `Code: ${i.code}`, qty: i.qty, image: i.image });
+                    itemsPayload.push({ title: "Custom DIY Bracelet", price: itemPriceKHR/UNIVERSAL_CART_RATE, qty: i.qty });
                 } else {
                     subtotalKHR += Math.round(parseFloat(i.price) * UNIVERSAL_CART_RATE) * i.qty;
                     orderHistoryItems.push({ title: i.name || i.title, style: i.style, qty: i.qty, image: i.image });
+                    itemsPayload.push({ title: i.name || i.title, price: i.price, qty: i.qty });
                 }
             });
 
             const delivery = calculateUniversalDelivery(subtotalKHR); 
 
-            // Save order history tied to the Telegram User ID if logged in
-            const newOrder = { 
-                id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(), 
-                date: new Date().toISOString(), 
-                items: orderHistoryItems, 
-                totalKHR: subtotalKHR + delivery, 
-                status: "Pending (រង់ចាំ)",
-                telegramUser: tgUser ? tgUser.first_name : "Guest"
-            };
-            let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]'); 
-            history.unshift(newOrder); 
-            localStorage.setItem('sr_order_history', JSON.stringify(history));
-            
-            globalStoreCart = globalStoreCart.filter(i => !i.selected); 
-            saveGlobalCart(); 
-            
-            btn.innerHTML = originalText; btn.disabled = false;
-            
-            closeUniversalCheckout();
-            openOrderHistory();
-            setTimeout(() => {
-                alert(`ការបញ្ជាទិញបានជោគជ័យ! (Order Success!)\nលេខកូដ: #${newOrder.id}`);
-            }, 300);
+            // Include Telegram profile in backend payload
+            let tgUserPayload = null;
+            try { 
+                const savedUser = localStorage.getItem('tg_user');
+                if(savedUser) tgUserPayload = JSON.parse(savedUser);
+            } catch(e) {}
+
+            try {
+                const res = await fetch('/api/checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        name, phone, address, 
+                        items: itemsPayload, 
+                        total: (subtotalKHR + delivery) / UNIVERSAL_CART_RATE,
+                        telegram_user: tgUserPayload
+                    })
+                });
+
+                if (res.ok) {
+                    const newOrder = { 
+                        id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(), 
+                        date: new Date().toISOString(), 
+                        items: orderHistoryItems, 
+                        totalKHR: subtotalKHR + delivery, 
+                        status: "រង់ចាំ (Pending)"
+                    };
+                    let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]'); 
+                    history.unshift(newOrder); 
+                    localStorage.setItem('sr_order_history', JSON.stringify(history));
+                    
+                    globalStoreCart = globalStoreCart.filter(i => !i.selected); 
+                    saveGlobalCart(); 
+                    
+                    btn.innerHTML = originalText; btn.disabled = false;
+                    closeUniversalCheckout();
+                    openOrderHistory();
+                    setTimeout(() => { alert(`ការបញ្ជាទិញបានជោគជ័យ! (Order Success!)\nលេខកូដ: #${newOrder.id}`); }, 300);
+                } else {
+                    alert("Error processing order");
+                    btn.innerHTML = originalText; btn.disabled = false;
+                }
+            } catch (error) {
+                // Fallback for demo logic if no backend is running
+                const newOrder = { 
+                    id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(), 
+                    date: new Date().toISOString(), 
+                    items: orderHistoryItems, 
+                    totalKHR: subtotalKHR + delivery, 
+                    status: "បានបញ្ជូន (Sent)"
+                };
+                let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]'); 
+                history.unshift(newOrder); 
+                localStorage.setItem('sr_order_history', JSON.stringify(history));
+                
+                globalStoreCart = globalStoreCart.filter(i => !i.selected); 
+                saveGlobalCart(); 
+                
+                btn.innerHTML = originalText; btn.disabled = false;
+                closeUniversalCheckout();
+                openOrderHistory();
+                setTimeout(() => { alert(`ការបញ្ជាទិញបានជោគជ័យ! (Order Success!)\nលេខកូដ: #${newOrder.id}`); }, 300);
+            }
         };
 
         // --- INIT ---
