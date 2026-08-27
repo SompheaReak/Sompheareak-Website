@@ -23,21 +23,6 @@
     }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     
-    .cart-checkbox { 
-        appearance: none; width: 24px; height: 24px; border: 2.5px solid #cbd5e1; border-radius: 50%; 
-        outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-        background: white; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .cart-checkbox:checked { 
-        background-color: #ea580c; border-color: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
-    }
-    .cart-checkbox:checked::after { 
-        content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
-        width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
-    }
-
-    #cart-drawer, #checkout-modal { transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
-    
     .search-input {
         background: #f8fafc;
         border: 1.5px solid #e2e8f0;
@@ -73,30 +58,31 @@
       <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl">
   </div>
 
-  <!-- HEADER -->
+  <!-- 🌟 UNIFIED STICKY HEADER (STORE - BACK BUTTON ON LEFT) 🌟 -->
   <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 py-2.5 flex items-center justify-between shadow-sm">
-    <a href="/" class="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0">
-        <i class="fa-solid fa-arrow-left text-xs"></i>
-    </a>
-    
-    <div class="flex items-center justify-center flex-1 px-2 gap-2 min-w-0">
-        <img src="/static/images/logo.png" onerror="this.src='/static/images/logo.jpg'" class="w-9 h-9 object-contain drop-shadow-sm shrink-0" alt="Logo">
-        <div class="flex flex-col justify-center text-left">
-            <h1 class="text-[13px] sm:text-base font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5">
-                សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs whitespace-nowrap">- Somphea Reak</span>
-            </h1>
-            <p class="text-[8px] font-extrabold text-[#ea580c] uppercase tracking-widest leading-none">Minifigure Vault</p>
-        </div>
-    </div>
-    
-    <button onclick="openCartDrawer()" class="relative w-9 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0">
-        <i class="fa-solid fa-cart-shopping text-xs"></i>
-        <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden">0</span>
-    </button>
+      <a href="/" class="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0 hover:bg-gray-100">
+          <i class="fa-solid fa-arrow-left text-xs"></i>
+      </a>
+      
+      <div class="flex items-center justify-center flex-1 px-2 gap-2 min-w-0">
+          <img src="/static/images/logo.jpg" onerror="this.src='/static/images/logo.png'" class="w-9 h-9 object-cover drop-shadow-sm shrink-0 rounded-full border border-gray-100" alt="Logo">
+          <div class="flex flex-col justify-center text-left">
+              <h1 class="text-[13px] sm:text-base font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5">
+                  សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs whitespace-nowrap text-slate-600">- Somphea Reak</span>
+              </h1>
+              <p class="text-[8px] font-extrabold text-[#ea580c] uppercase tracking-widest leading-none">Minifigure Vault</p>
+          </div>
+      </div>
+      
+      <!-- Right: Universal Cart Button -->
+      <button onclick="if(typeof window.openUniversalCart === 'function') window.openUniversalCart(); else if (typeof window.openCartDrawer === 'function') window.openCartDrawer();" class="relative w-9 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]">
+          <i class="fa-solid fa-cart-shopping text-xs"></i>
+          <span id="cart-badge" class="cart-badge-count absolute -top-1 -right-1 bg-[#ea580c] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden border border-white">0</span>
+      </button>
   </header>
 
   <!-- SEARCH & CATEGORY PILLS -->
-  <section class="bg-white border-b border-gray-100 sticky top-[57px] z-[95] px-2.5 py-2 space-y-2 shadow-sm">
+  <section class="bg-white/95 backdrop-blur-xl border-b border-gray-100 sticky top-[57px] z-[95] px-2.5 py-2 space-y-2 shadow-sm">
       <div class="max-w-6xl mx-auto flex items-center gap-2">
           <div class="relative flex-1">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
@@ -127,90 +113,20 @@
       </div>
   </main>
 
-  <!-- CART DRAWER -->
-  <div id="cart-drawer" class="fixed inset-0 z-[2000] flex flex-col justify-end translate-y-full">
-    <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeCartDrawer()"></div>
-    <div class="relative w-full h-[85vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
-        
-        <div class="bg-white px-5 py-3.5 flex items-center justify-between border-b border-gray-100 z-10">
-            <div>
-                <h2 class="text-lg font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2>
-                <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Your Shopping Cart</p>
-            </div>
-            <button onclick="closeCartDrawer()" class="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all">
-                <i class="fa-solid fa-xmark text-base"></i>
-            </button>
-        </div>
-
-        <div id="cart-items-container" class="flex-1 overflow-y-auto p-3.5 space-y-3"></div>
-
-        <div class="bg-white border-t border-gray-100 p-4 z-10">
-            <div class="flex justify-between items-end mb-3">
-                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">សរុប (Total)</span>
-                <span id="cart-grand-total" class="text-xl font-black text-[#ea580c] leading-none">0៛</span>
-            </div>
-            <button onclick="openCheckout()" class="w-full bg-black text-white font-black py-3.5 rounded-xl shadow-lg uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
-                <i class="fa-solid fa-truck-fast"></i> បន្តទៅការដឹកជញ្ជូន
-            </button>
-        </div>
-    </div>
-  </div>
-
-  <!-- CHECKOUT MODAL -->
-  <div id="checkout-modal" class="fixed inset-0 z-[3000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
-      <div class="px-4 py-3.5 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm md:max-w-md md:mx-auto md:w-full">
-          <h2 class="text-lg font-black font-['Moul']">ព័ត៌មានដឹកជញ្ជូន</h2>
-          <button onclick="closeCheckout()" class="w-9 h-9 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-base"></i></button>
-      </div>
-      
-      <div class="flex-1 overflow-y-auto p-5 pb-32 bg-gray-50 md:max-w-md md:mx-auto md:w-full md:border-x md:border-gray-100">
-          <div class="bg-white rounded-2xl p-4 border border-gray-100 space-y-2.5 mb-5 relative overflow-hidden shadow-sm">
-              <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
-              <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប:</span><span id="check-subtotal">៛0</span></div>
-              <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">៛0</span></div>
-              <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-2.5 mt-2">
-                  <span class="text-xs">សរុបត្រូវបង់:</span>
-                  <span id="check-total-khr" class="text-[#ea580c] text-lg leading-none">៛0</span>
-              </div>
-          </div>
-
-          <div class="space-y-3">
-              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">ព័ត៌មានទំនាក់ទំនង</label>
-              <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-xl p-3.5 font-bold text-xs outline-none focus:border-[#ea580c] transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក">
-              <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-xl p-3.5 font-bold text-xs outline-none focus:border-[#ea580c] transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (ឧ. 012345678)">
-              
-              <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mt-3">ទីតាំងដឹកជញ្ជូន</label>
-              <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-xl p-3.5 font-bold text-xs outline-none focus:border-[#ea580c] transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ"></textarea>
-          </div>
-      </div>
-
-      <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-4 pb-6 md:max-w-md md:left-1/2 md:-translate-x-1/2 md:border-x">
-          <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-[#ea580c] text-white font-black py-3.5 rounded-xl shadow-lg uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro']">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
-      </div>
-  </div>
+  <!-- INCLUDE THE UNIFIED GLOBAL CART COMPONENT -->
+  {% include 'components/cart.html' ignore missing %}
 
   <script>
     const RATE = 4000;
     let rawProducts = [];
     let unpackedFigures = [];
-    let userCart = [];
     
     let activeCategory = 'All';
     let activeSearchTerm = '';
 
-    try {
-        const savedCart = localStorage.getItem('sr_cart');
-        if (savedCart) userCart = JSON.parse(savedCart);
-    } catch(e) {}
-
-    function updateCartBadge() {
-        const badge = document.getElementById('cart-badge');
-        if(userCart.length > 0) {
-            badge.innerText = userCart.length; badge.classList.remove('hidden');
-        } else {
-            badge.classList.add('hidden');
-        }
-    }
+    // Focus Listener to ensure cart badge updates when returning from other tabs
+    window.addEventListener('focus', () => { if(typeof window.updateCartBadge === 'function') window.updateCartBadge(); });
+    window.addEventListener('pageshow', () => { if(typeof window.updateCartBadge === 'function') window.updateCartBadge(); });
 
     async function fetchProducts() {
         document.getElementById('loadingOverlay').style.display = 'flex';
@@ -219,9 +135,7 @@
             const data = await res.json();
             rawProducts = data.products || [];
             
-            // UNPACK PRODUCT GROUPS INTO INDIVIDUAL SINGLE FIGURES
             unpackMinifigureGroups();
-            
             renderCategoryFilters();
             applyFilters();
         } catch (e) {
@@ -229,7 +143,7 @@
         } finally {
             document.getElementById('loadingOverlay').style.display = 'none';
         }
-        updateCartBadge();
+        if(typeof window.updateCartBadge === 'function') window.updateCartBadge();
     }
 
     /* AUTOMATIC UNPACKING OF GROUP UPLOADS INTO SINGLE BOXES */
@@ -242,7 +156,6 @@
                 try { variants = typeof product.variants === 'string' ? JSON.parse(product.variants) : product.variants; } catch(e){}
             }
 
-            // MAGIC DISCOUNT MATH
             let discountPercent = parseFloat(product.discount_percent) || 0;
 
             if (variants && variants.length > 0) {
@@ -252,17 +165,18 @@
 
                     let figureCategory = v.category || product.category || 'General';
                     
-                    let basePrice = (parseFloat(v.price) || parseFloat(product.price) || 0) * RATE;
-                    let finalPrice = basePrice;
-                    if(discountPercent > 0) { finalPrice = basePrice - (basePrice * discountPercent / 100); }
+                    let basePriceUSD = (parseFloat(v.price) || parseFloat(product.price) || 0);
+                    let finalPriceUSD = basePriceUSD;
+                    if(discountPercent > 0) { finalPriceUSD = basePriceUSD - (basePriceUSD * discountPercent / 100); }
 
                     unpackedFigures.push({
                         cartId: `${product.id}-${vIdx}`,
                         productId: product.id,
                         variantIndex: vIdx,
                         title: figureName,
-                        originalPrice: basePrice,
-                        price: finalPrice,
+                        originalPriceKHR: basePriceUSD * RATE,
+                        priceKHR: finalPriceUSD * RATE,
+                        priceUSD: finalPriceUSD, // Saved in USD for Universal Cart System
                         discountPercent: discountPercent,
                         stock: parseInt(v.stock) || 0,
                         image: v.image || product.thumbnail || product.image,
@@ -270,17 +184,18 @@
                     });
                 });
             } else {
-                let basePrice = (parseFloat(product.price) || 0) * RATE;
-                let finalPrice = basePrice;
-                if(discountPercent > 0) { finalPrice = basePrice - (basePrice * discountPercent / 100); }
+                let basePriceUSD = (parseFloat(product.price) || 0);
+                let finalPriceUSD = basePriceUSD;
+                if(discountPercent > 0) { finalPriceUSD = basePriceUSD - (basePriceUSD * discountPercent / 100); }
 
                 unpackedFigures.push({
                     cartId: `${product.id}-0`,
                     productId: product.id,
                     variantIndex: 0,
                     title: product.title || `Minifigure #${product.id}`,
-                    originalPrice: basePrice,
-                    price: finalPrice,
+                    originalPriceKHR: basePriceUSD * RATE,
+                    priceKHR: finalPriceUSD * RATE,
+                    priceUSD: finalPriceUSD,
                     discountPercent: discountPercent,
                     stock: parseInt(product.stock) || 0,
                     image: product.image || product.thumbnail,
@@ -364,7 +279,6 @@
         grid.innerHTML = figures.map((fig) => {
             const isSoldOut = fig.stock <= 0;
             
-            // RENDERING PRICE & DISCOUNT BADGE
             let badgeHtml = '';
             let priceHtml = '';
             
@@ -372,12 +286,12 @@
                 badgeHtml = `<div class="absolute top-1 left-1 z-10 bg-red-600 text-white text-[8px] font-black px-1 py-0.5 rounded shadow-sm leading-none">SALE -${Math.round(fig.discountPercent)}%</div>`;
                 priceHtml = `
                     <div class="flex flex-col">
-                        <span class="text-[9px] font-bold text-gray-400 line-through leading-none mb-0.5">${fig.originalPrice.toLocaleString()}៛</span>
-                        <span class="font-black text-[11px] text-red-600 leading-none">${fig.price.toLocaleString()}៛</span>
+                        <span class="text-[9px] font-bold text-gray-400 line-through leading-none mb-0.5">${fig.originalPriceKHR.toLocaleString()}៛</span>
+                        <span class="font-black text-[11px] text-red-600 leading-none">${fig.priceKHR.toLocaleString()}៛</span>
                     </div>
                 `;
             } else {
-                priceHtml = `<span class="font-black text-[11px] text-[#ea580c] block mt-0.5">${fig.price.toLocaleString()}៛</span>`;
+                priceHtml = `<span class="font-black text-[11px] text-[#ea580c] block mt-0.5">${fig.priceKHR.toLocaleString()}៛</span>`;
             }
 
             return `
@@ -396,7 +310,7 @@
                         ${priceHtml}
                     </div>
 
-                    <!-- DIRECT 1-TAP ADD BUTTON -->
+                    <!-- HOOKED UP TO UNIVERSAL CART COMPONENT -->
                     <button onclick="addToCartUnpacked('${fig.cartId}')" ${isSoldOut ? 'disabled' : ''} class="w-full mt-1.5 py-1 bg-gray-900 text-white hover:bg-[#ea580c] ${isSoldOut ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'active:scale-95'} rounded-lg text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center justify-center gap-1 shadow-sm">
                         <i class="fa-solid fa-plus text-[8px]"></i> Add
                     </button>
@@ -405,30 +319,26 @@
         }).join('');
     }
 
-    /* DIRECT ADD TO CART BY UNPACKED CART ID */
+    /* 🔥 PUSHES DIRECTLY TO THE GLOBAL CART.HTML COMPONENT 🔥 */
     function addToCartUnpacked(cartId) {
         const figure = unpackedFigures.find(f => f.cartId === cartId);
         if(!figure) return;
-
         if(figure.stock <= 0) return alert("Sorry, this minifigure is sold out!");
 
-        const existing = userCart.find(i => i.id === cartId);
-        if(existing) { existing.qty += 1; } 
-        else {
-            userCart.push({
-                id: figure.cartId,
-                type: 'standard',
-                title: figure.title,
+        // Route to cart.html logic
+        if (typeof window.addToGlobalCart === 'function') {
+            window.addToGlobalCart({
+                productId: figure.productId,
+                variantId: figure.cartId,
+                name: figure.title,
                 style: 'Single Figure',
-                price: figure.price, // Uses the discounted final price calculated above!
+                price: figure.priceUSD, // Must be USD for global cart Math
                 image: figure.image,
-                maxStock: figure.stock,
-                qty: 1,
-                selected: true
+                stock: figure.stock,
+                type: 'option',
+                qty: 1
             });
         }
-        
-        saveCart(); updateCartBadge();
         
         const toast = document.getElementById('toast');
         document.getElementById('toast-text').innerText = "Added to Cart";
@@ -436,156 +346,10 @@
         setTimeout(() => toast.classList.add('opacity-0', 'scale-90'), 1200);
     }
 
-    function openCartDrawer() { renderCartUI(); document.getElementById('cart-drawer').classList.remove('translate-y-full'); }
-    function closeCartDrawer() { document.getElementById('cart-drawer').classList.add('translate-y-full'); }
-
-    function renderCartUI() {
-        const container = document.getElementById('cart-items-container');
-        if(userCart.length === 0) {
-            container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-sm uppercase tracking-widest mt-2">កន្ត្រកទទេ</p></div>`;
-            document.getElementById('cart-grand-total').innerText = "0៛";
-            return;
-        }
-
-        let grandTotal = 0; let customIndex = 1;
-
-        container.innerHTML = userCart.map((item) => {
-            let itemTotal = 0;
-            if(item.type === 'custom_bracelet') {
-                itemTotal = (item.baseTotal + item.pkgPrice) * item.qty;
-                if(item.selected) grandTotal += itemTotal;
-                
-                return `
-                <div class="bg-white rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col relative transition-all overflow-hidden mb-3">
-                    <div class="w-full h-32 bg-gray-50 border-b border-gray-100 relative cursor-pointer group" onclick="openImageViewer('${item.image}')">
-                        <img src="${item.image}" class="w-full h-full object-contain p-2">
-                    </div>
-                    <div class="p-3">
-                        <div class="flex justify-between items-start mb-1">
-                            <label class="flex items-start gap-2.5 cursor-pointer flex-1">
-                                <input type="checkbox" class="cart-checkbox mt-0.5" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
-                                <div>
-                                    <h4 class="font-black text-xs text-gray-900 leading-tight">Custom Bracelet #${customIndex++}</h4>
-                                </div>
-                            </label>
-                            <button type="button" onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-1 -mt-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
-                        </div>
-                    </div>
-                </div>`;
-            } else {
-                itemTotal = (item.price || 0) * item.qty;
-                if(item.selected) grandTotal += itemTotal;
-
-                return `
-                <div class="bg-white p-2.5 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-3">
-                    <label class="flex items-start gap-2 cursor-pointer">
-                        <input type="checkbox" class="cart-checkbox mt-2 ml-0.5" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
-                    </label>
-                    <div class="w-16 h-20 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden cursor-pointer" onclick="openImageViewer('${item.image}')">
-                        <img src="${item.image}" class="max-w-full max-h-full object-contain">
-                    </div>
-                    <div class="flex-1 flex flex-col justify-between py-0.5 min-w-0">
-                        <div>
-                            <div class="flex justify-between items-start">
-                                <h4 class="font-black text-xs text-gray-900 leading-tight truncate pr-2">${item.title}</h4>
-                                <button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-1"><i class="fa-solid fa-trash-can text-xs"></i></button>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-end mt-1.5">
-                            <span class="font-black text-xs text-[#ea580c]">${itemTotal.toLocaleString()}៛</span>
-                            <div class="flex items-center gap-2 bg-gray-50 rounded-lg p-0.5 border border-gray-100">
-                                <button onclick="updateCartQty('${item.id}', -1)" class="w-5 h-5 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[9px]"></i></button>
-                                <span class="font-black text-xs w-2 text-center">${item.qty}</span>
-                                <button onclick="updateCartQty('${item.id}', 1)" class="w-5 h-5 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[9px]"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-            }
-        }).join('');
-        document.getElementById('cart-grand-total').innerText = grandTotal.toLocaleString() + "៛";
-    }
-
     function openImageViewer(src) { document.getElementById('viewer-img').src = src; document.getElementById('image-viewer-modal').classList.remove('hidden'); document.getElementById('image-viewer-modal').classList.add('flex'); }
     function closeImageViewer() { document.getElementById('image-viewer-modal').classList.add('hidden'); document.getElementById('image-viewer-modal').classList.remove('flex'); }
-    function toggleCartItem(id) { const item = userCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveCart(); renderCartUI(); } }
-    function updateCartQty(id, delta) { const item = userCart.find(i => i.id === id); if(item) { item.qty += delta; if(item.qty < 1) item.qty = 1; if(item.qty > 10) item.qty = 10; saveCart(); renderCartUI(); } }
-    function removeCartItem(id) { if(confirm("លុបចេញពីកន្ត្រក?")) { userCart = userCart.filter(i => i.id !== id); saveCart(); renderCartUI(); updateCartBadge(); } }
-    function saveCart() { localStorage.setItem('sr_cart', JSON.stringify(userCart)); }
-
-    function calculateDelivery(subtotalKHR) {
-        if (subtotalKHR === 0) return 0;
-        if (subtotalKHR < 20000) return 8000;
-        if (subtotalKHR < 40000) return 6000;
-        if (subtotalKHR < 60000) return 4000;
-        if (subtotalKHR < 80000) return 2000;
-        return 0;
-    }
-
-    function openCheckout() {
-        const selectedItems = userCart.filter(i => i.selected);
-        if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយដើម្បីបន្ត!");
-
-        let subtotal = 0;
-        selectedItems.forEach(item => {
-            if(item.type === 'custom_bracelet') subtotal += ((item.baseTotal + item.pkgPrice) * item.qty);
-            else subtotal += (item.price * item.qty);
-        });
-        
-        const delivery = calculateDelivery(subtotal);
-        document.getElementById('check-subtotal').innerText = subtotal.toLocaleString() + "៛";
-        document.getElementById('check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ" : delivery.toLocaleString() + "៛";
-        document.getElementById('check-total-khr').innerText = (subtotal + delivery).toLocaleString() + "៛";
-
-        closeCartDrawer();
-        document.getElementById('checkout-modal').classList.remove('translate-y-full');
-    }
-
-    function closeCheckout() { document.getElementById('checkout-modal').classList.add('translate-y-full'); }
-
-    async function processFinalOrder() {
-        const selectedItems = userCart.filter(i => i.selected);
-        if(selectedItems.length === 0) return;
-
-        const name = document.getElementById('cust-name').value.trim(); 
-        const phone = document.getElementById('cust-phone').value.trim(); 
-        const address = document.getElementById('cust-address').value.trim();
-        if(!name || !phone || !address) return alert("សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់!"); 
-        if(phone.length < 8) return alert("លេខទូរស័ព្ទមិនត្រឹមត្រូវ!");
-
-        const btn = document.getElementById('confirm-btn'); btn.innerText = "កំពុងបញ្ជូន..."; btn.disabled = true;
-
-        let subtotal = 0; const orderItemsPayload = []; const charmCounts = {}; 
-
-        selectedItems.forEach((cartItem, bIdx) => {
-            if(cartItem.type === 'custom_bracelet') {
-                const itemPrice = cartItem.baseTotal + cartItem.pkgPrice; subtotal += (itemPrice * cartItem.qty);
-                const styleText = `Bracelet #${bIdx+1} | Code: ${cartItem.code} | Charms: ${cartItem.charms.length} | Pkg: ${cartItem.pkgName}`;
-                orderItemsPayload.push({ cartId: "custom-" + Date.now() + "-" + bIdx, title: "Custom DIY Bracelet", style: styleText, price: itemPrice / RATE, qty: cartItem.qty, image: cartItem.image, maxStock: 99 });
-                cartItem.charms.forEach(c => { charmCounts[c.db_id] = (charmCounts[c.db_id] || 0) + (1 * cartItem.qty); });
-            } else {
-                subtotal += (cartItem.price * cartItem.qty);
-                orderItemsPayload.push({ cartId: cartItem.id, title: cartItem.title, style: cartItem.style, price: cartItem.price / RATE, qty: cartItem.qty, image: cartItem.image, maxStock: cartItem.maxStock });
-            }
-        });
-
-        for (const [id, count] of Object.entries(charmCounts)) { 
-            orderItemsPayload.push({ cartId: id, title: "DIY-Part", style: "Hidden stock component", price: 0, qty: count, image: "hidden", maxStock: 99 }); 
-        }
-
-        const delivery = calculateDelivery(subtotal); 
-        const totalUSD = (subtotal + delivery) / RATE;
-
-        try {
-            const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD }) });
-            if(res.ok) { alert("Order Successful! We will contact you on Telegram soon."); userCart = userCart.filter(i => !i.selected); saveCart(); window.location.reload(); }
-        } catch (e) { alert("Error sending order"); }
-        btn.innerText = "បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)"; btn.disabled = false;
-    }
 
     fetchProducts();
   </script>
 </body>
 </html>
-
-
