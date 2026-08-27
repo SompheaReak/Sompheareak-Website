@@ -263,16 +263,13 @@
             </div>
         </div>
 
-        <div class="flex items-center justify-between px-1 mb-2">
-            <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <i class="fa-solid fa-arrows-up-down text-[#ff5000]"></i> Drag cards to reorder (#104, #102...)
-            </span>
+        <div class="flex items-center justify-between px-1">
             <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
                 Showing <span id="visible-item-count" class="text-slate-900 font-black">{{ global_products|length }}</span> Catalog Item(s)
             </span>
         </div>
 
-        <!-- Product Cards Grid (Sortable Target) -->
+        <!-- Product Cards Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4" id="main-inventory-list">
             {% for p in global_products %}
             
@@ -302,14 +299,8 @@
                             {% endif %}
                         </div>
 
-                        <!-- ⭐️ DRAG HANDLE FOR REORDERING CATALOG ITEMS ⭐️ -->
-                        <div class="absolute top-2 right-2 flex flex-col gap-1 items-end z-20">
-                            <div class="product-drag-handle w-7 h-7 bg-white/95 backdrop-blur-md rounded-lg border border-slate-200/80 shadow-sm flex items-center justify-center cursor-grab text-slate-500 hover:text-[#ff5000] hover:bg-orange-50 transition-colors" title="Drag to reorder card" onclick="event.stopPropagation()">
-                                <i class="fa-solid fa-grip-vertical text-xs"></i>
-                            </div>
-                            <div class="font-mono text-[9px] font-bold text-slate-400 bg-white/95 backdrop-blur-md px-1.5 py-0.5 rounded border border-slate-200/60 shadow-sm pointer-events-none">
-                                #{{ p.id }}
-                            </div>
+                        <div class="absolute top-2.5 right-2.5 font-mono text-[9px] font-bold text-slate-400 bg-white/90 backdrop-blur px-1.5 py-0.5 rounded border border-slate-200/60 shadow-sm z-10">
+                            #{{ p.id }}
                         </div>
                     </div>
 
@@ -1074,54 +1065,11 @@
             });
         });
 
-        // Initialize all sorting layers
-        initializeMainInventorySortable(); // PRODUCTS DRAG (New!)
-        initializeSortableVariants();      // VARIANTS DRAG
-        initializeCategorySortable();      // CATEGORIES DRAG
+        initializeSortableVariants();
+        initializeCategorySortable(); // NEW FUNCTION FOR CATEGORIES DRAG
     });
 
-    // ================= 7. PRODUCT, VARIANT, & CATEGORY DRAG SYSTEM =================
-    
-    // ⭐️ NEW: Drag sorting for main products! ⭐️
-    function initializeMainInventorySortable() {
-        const gridContainer = document.getElementById('main-inventory-list');
-        if (gridContainer && typeof Sortable !== 'undefined') {
-            new Sortable(gridContainer, {
-                handle: '.product-drag-handle', // Triggers on the new grip icon added to cards
-                animation: 200,
-                ghostClass: 'opacity-30',
-                onEnd: function() {
-                    saveMainInventoryOrder(); // Auto-saves when dropped
-                }
-            });
-        }
-    }
-
-    // Sends the new order to the Python Backend silently
-    async function saveMainInventoryOrder() {
-        const itemElements = document.querySelectorAll('.product-item');
-        const sortedIds = Array.from(itemElements).map(el => el.dataset.id);
-
-        const countEl = document.getElementById('visible-item-count');
-        const originalText = countEl.innerText;
-        countEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-[#ff5000]"></i> Saving Order...`;
-
-        try {
-            const response = await fetch('/admin/products/reorder', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ product_ids: sortedIds })
-            });
-            
-            if (response.ok) {
-                setTimeout(() => { countEl.innerText = originalText; }, 600);
-            }
-        } catch (err) {
-            console.error("Failed to save product sort order:", err);
-            countEl.innerText = originalText;
-        }
-    }
-
+    // ================= 7. CATEGORY DRAG & DROP INITIALIZATION =================
     function initializeCategorySortable() {
         const catSortable = document.getElementById('category-sortable');
         if(catSortable && typeof Sortable !== 'undefined') {
