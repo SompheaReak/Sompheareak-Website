@@ -147,11 +147,9 @@
             globalStoreCart = [];
         }
     }
-
-    syncCartFromStorage();
     
     window.updateCartBadge = function() {
-        syncCartFromStorage();
+        syncCartFromStorage(); // Forces a refresh from storage before calculating
         const count = globalStoreCart.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
         document.querySelectorAll('.cart-badge-count, #cart-badge').forEach(badge => {
             if (count > 0) {
@@ -162,6 +160,37 @@
             }
         });
     };
+
+    // Initialize immediately
+    syncCartFromStorage();
+    window.updateCartBadge();
+
+    // =========================================================================
+    // THE FIX: Listeners to force sync when you click "Back" or change tabs
+    // =========================================================================
+    window.addEventListener('pageshow', function(event) {
+        // Runs when page is loaded from bfcache (Back/Forward Cache)
+        window.updateCartBadge();
+    });
+
+    document.addEventListener('visibilitychange', function() {
+        // Runs when you switch back to this tab/app
+        if (document.visibilityState === 'visible') {
+            window.updateCartBadge();
+        }
+    });
+
+    window.addEventListener('storage', function(e) {
+        // Runs instantly if the cart is updated in a different tab/window
+        if (e.key === 'universal_store_cart' || e.key === 'sr_cart') {
+            window.updateCartBadge();
+            // If the cart drawer happens to be open, re-render the list visually
+            if (document.getElementById('universal-cart-drawer').style.transform === 'translateY(0%)') {
+                renderUniversalCartUI();
+            }
+        }
+    });
+    // =========================================================================
 
     window.addToGlobalCart = function(item) {
         syncCartFromStorage(); 
@@ -386,7 +415,7 @@
         document.getElementById('uni-check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ" : Math.round(delivery).toLocaleString() + "៛";
         document.getElementById('uni-check-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
         
-        renderCheckoutTgBadge(); // <--- Loads the Telegram Profile UI
+        renderCheckoutTgBadge(); 
         
         closeUniversalCart(); 
         document.getElementById('universal-checkout-modal').classList.remove('translate-y-full');
@@ -507,7 +536,6 @@
             }
         });
         
-        // Push hidden stock-deduction rows for DIY charms
         for (const [id, count] of Object.entries(charmCounts)) { 
             itemsPayload.push({ cartId: id, title: "DIY-Part", style: "Hidden stock component", price: 0, qty: count, image: "hidden", maxStock: 99 }); 
         }
@@ -515,7 +543,6 @@
         const delivery = calculateUniversalDelivery(subtotalKHR);
         const totalUSD = (subtotalKHR + delivery) / UNIVERSAL_CART_RATE;
 
-        // Fetch Telegram User to send to backend
         let tgUserPayload = null;
         try { 
             const savedUser = localStorage.getItem('tg_user');
@@ -523,7 +550,6 @@
         } catch(e) {}
 
         try {
-            // Include telegram_user in the fetch payload
             const res = await fetch('/api/checkout', { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
@@ -533,7 +559,7 @@
                     address, 
                     items: itemsPayload, 
                     total: totalUSD,
-                    telegram_user: tgUserPayload // <--- Now your backend knows who ordered!
+                    telegram_user: tgUserPayload 
                 }) 
             });
             
@@ -559,7 +585,6 @@
                 btn.innerHTML = originalText; btn.disabled = false;
             }
         } catch (e) { 
-            // Fallback save if backend fails
             const newOrder = {
                 id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
                 date: new Date().toISOString(),
