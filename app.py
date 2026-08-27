@@ -95,6 +95,7 @@ class Order(db.Model):
     # NEW TELEGRAM COLUMNS FOR CART SYNC
     telegram_id = db.Column(db.String(100), nullable=True)
     telegram_name = db.Column(db.String(200), nullable=True)
+    telegram_user_payload = db.Column(db.Text, nullable=True) # <-- Stores full Telegram info (username, photo)
     
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -377,6 +378,9 @@ def checkout():
             if last_name:
                 tg_name += f" {last_name}"
 
+        # Convert the entire Telegram User object into a JSON string to save in the database
+        tg_payload = json.dumps(tg_user) if tg_user else None
+
         # 2. Build the order
         new_order = Order(
             customer_name=data.get('name'), 
@@ -385,8 +389,9 @@ def checkout():
             items_json=json.dumps(data.get('items', [])), 
             total_usd=float(data.get('total', 0) or 0), 
             delivery_fee=float(data.get('deliveryFee', 0) or 0),
-            telegram_id=tg_id,           # <-- Storing Telegram ID
-            telegram_name=tg_name,       # <-- Storing Telegram Name
+            telegram_id=tg_id,           
+            telegram_name=tg_name,       
+            telegram_user_payload=tg_payload, # <-- FULL TELEGRAM INFO SAVED HERE
             status="Pending"
         )
         db.session.add(new_order)
@@ -456,6 +461,13 @@ def admin_orders():
                 
         o.created_at = o.timestamp
         o.total_amount = o.total_usd
+        
+        # EXTRACT THE TELEGRAM PROFILE FOR THE ADMIN TEMPLATE
+        try:
+            o.telegram_user = json.loads(o.telegram_user_payload) if o.telegram_user_payload else None
+        except Exception:
+            o.telegram_user = None
+
         valid_orders.append(o)
         
     return render_template('admin/orders.html', global_orders=valid_orders)
@@ -1081,7 +1093,8 @@ with app.app_context():
         
         # <-- NEW COLUMNS ADDED HERE -->
         'ALTER TABLE "order" ADD COLUMN telegram_id VARCHAR(100)',
-        'ALTER TABLE "order" ADD COLUMN telegram_name VARCHAR(200)'
+        'ALTER TABLE "order" ADD COLUMN telegram_name VARCHAR(200)',
+        'ALTER TABLE "order" ADD COLUMN telegram_user_payload TEXT'
     ]
     for q in queries:
         try:
