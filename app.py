@@ -707,13 +707,25 @@ def delete_category(id):
         db.session.commit()
     return redirect(url_for('admin_inventory'))
 
+# =======================================================
+# UPDATED: FIXED REORDER ROUTE
+# =======================================================
 @app.route('/admin/product/reorder', methods=['POST'])
 @app.route('/admin/products/reorder', methods=['POST'])
 @login_required
 def admin_reorder_products():
-    data = request.get_json()
-    product_ids = data.get('product_ids', data.get('ids', []))
     try:
+        # Handle both JSON payloads and Form Data payloads to prevent bugs
+        if request.is_json:
+            data = request.get_json()
+            product_ids = data.get('product_ids', data.get('ids', []))
+        else:
+            order_data = request.form.get('product_order')
+            if not order_data:
+                return jsonify({"status": "error", "message": "No data provided"}), 400
+            product_ids = json.loads(order_data)
+
+        # Loop through the IDs and save their new order ranking
         for index, prod_id in enumerate(product_ids):
             product = Product.query.get(int(prod_id))
             if product:
@@ -721,8 +733,10 @@ def admin_reorder_products():
                 
         db.session.commit()
         return jsonify({"status": "success", "message": "Product sort order updated successfully"}), 200
+        
     except Exception as e:
         db.session.rollback()
+        print(f"Reorder Error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/admin/product/toggle/<int:id>', methods=['POST'])
