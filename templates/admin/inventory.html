@@ -267,9 +267,10 @@
             <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
                 Showing <span id="visible-item-count" class="text-slate-900 font-black">{{ global_products|length }}</span> Catalog Item(s)
             </span>
+            <span class="text-[9px] font-bold text-slate-400"><i class="fa-solid fa-arrows-up-down"></i> Drag cards to reorder</span>
         </div>
 
-        <!-- Product Cards Grid -->
+        <!-- Product Cards Grid (DRAGGABLE) -->
         <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4" id="main-inventory-list">
             {% for p in global_products %}
             
@@ -299,8 +300,10 @@
                             {% endif %}
                         </div>
 
-                        <div class="absolute top-2.5 right-2.5 font-mono text-[9px] font-bold text-slate-400 bg-white/90 backdrop-blur px-1.5 py-0.5 rounded border border-slate-200/60 shadow-sm z-10">
-                            #{{ p.id }}
+                        <!-- ✨ NEW PRODUCT DRAG HANDLE ✨ -->
+                        <div class="product-drag-handle absolute top-2 right-2 bg-white/95 backdrop-blur px-2 py-1 rounded-lg border border-slate-200/80 shadow-sm z-10 cursor-grab hover:bg-[#ff5000] hover:text-white hover:border-[#ff5000] transition-colors flex items-center gap-1.5 text-slate-500" title="Drag to reorder catalog" onclick="event.stopPropagation()">
+                            <i class="fa-solid fa-grip-vertical text-[10px]"></i>
+                            <span class="font-mono text-[9px] font-bold">#{{ p.id }}</span>
                         </div>
                     </div>
 
@@ -624,13 +627,18 @@
 <!-- ==================== STICKY GLOBAL SAVE BAR ==================== -->
 <div id="global-save-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[55] bg-slate-900/95 backdrop-blur-md border border-slate-800 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-6 transition-all duration-300 translate-y-28 opacity-0 pointer-events-none max-w-md w-[calc(100%-2rem)]">
     <div class="flex-1">
-        <p class="text-[9px] font-black uppercase tracking-wider text-[#ff5000]">Unsaved Edits Detected</p>
-        <p class="text-xs text-slate-300 font-bold" id="unsaved-count-text">You are editing 0 products.</p>
+        <p class="text-[9px] font-black uppercase tracking-wider text-[#ff5000]">Unsaved Changes Detected</p>
+        <p class="text-xs text-slate-300 font-bold" id="unsaved-count-text">You are editing products.</p>
     </div>
     <div class="flex gap-2 shrink-0">
         <button type="button" onclick="cancelAllEdits()" class="px-3 py-2 border border-slate-700 hover:bg-slate-800 rounded-xl text-[10px] font-extrabold uppercase transition-colors">Discard</button>
-        <button type="button" onclick="saveAllProductEdits()" class="px-4 py-2 bg-[#ff5000] hover:bg-orange-600 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-lg shadow-orange-950/20">
-            <i class="fa-solid fa-cloud-arrow-up text-xs"></i> Save All
+        <!-- Save Changes Button (Multiple Uses) -->
+        <button type="button" id="save-all-btn" onclick="saveAllProductEdits()" class="hidden px-4 py-2 bg-[#ff5000] hover:bg-orange-600 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-lg shadow-orange-950/20">
+            <i class="fa-solid fa-cloud-arrow-up text-xs"></i> Save Edits
+        </button>
+        <!-- Save Reorder Button -->
+        <button type="button" id="save-order-btn" onclick="saveProductOrder()" class="hidden px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-lg shadow-blue-950/20">
+            <i class="fa-solid fa-sort text-xs"></i> Save New Order
         </button>
     </div>
 </div>
@@ -642,7 +650,7 @@
             <i class="fa-solid fa-spinner animate-spin text-xl"></i>
         </div>
         <div class="space-y-1">
-            <h3 class="font-extrabold text-base text-slate-900">Saving Product Batch</h3>
+            <h3 class="font-extrabold text-base text-slate-900">Saving Changes</h3>
             <p class="text-xs text-slate-500" id="bulk-save-status">Updating database records...</p>
         </div>
         
@@ -663,6 +671,9 @@
 
 {% block scripts %}
 <script>
+    // State Tracking
+    let productOrderChanged = false;
+
     // ================= 1. UI HELPERS & EDIT MODE ACTIONS =================
     function toggleEdit(id) { 
         const item = document.getElementById(`item-${id}`); 
@@ -938,15 +949,40 @@
         updateGlobalSaveBar();
     }
 
-    // ================= 4. GLOBAL BATCH SAVE SYSTEM =================
+    // ================= 4. GLOBAL BATCH SAVE SYSTEM & REORDERING =================
     function updateGlobalSaveBar() {
         const bar = document.getElementById('global-save-bar');
         const countText = document.getElementById('unsaved-count-text');
+        
+        const saveAllBtn = document.getElementById('save-all-btn');
+        const saveOrderBtn = document.getElementById('save-order-btn');
+        
         const editingItems = document.querySelectorAll('.product-item.is-editing');
         const count = editingItems.length;
 
+        let isVisible = false;
+        let messages = [];
+
+        // Check if any product forms are being edited
         if (count > 0) {
-            countText.innerText = `You have modified ${count} product group(s).`;
+            messages.push(`Editing ${count} product(s).`);
+            saveAllBtn.classList.remove('hidden');
+            isVisible = true;
+        } else {
+            saveAllBtn.classList.add('hidden');
+        }
+
+        // Check if product order was changed
+        if (productOrderChanged) {
+            messages.push(`New display order.`);
+            saveOrderBtn.classList.remove('hidden');
+            isVisible = true;
+        } else {
+            saveOrderBtn.classList.add('hidden');
+        }
+
+        if (isVisible) {
+            countText.innerText = messages.join(' | ');
             bar.classList.remove('translate-y-28', 'opacity-0', 'pointer-events-none');
             bar.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
         } else {
@@ -957,10 +993,63 @@
 
     function cancelAllEdits() {
         if (confirm("Discard all unsaved edits?")) {
+            // Revert product edits
             document.querySelectorAll('.product-item.is-editing').forEach(item => {
                 item.classList.remove('is-editing');
             });
+            // Revert order if changed by just refreshing
+            if(productOrderChanged) {
+                window.location.reload();
+                return;
+            }
             updateGlobalSaveBar();
+        }
+    }
+
+    // Send the new sequence of Product IDs to the backend
+    async function saveProductOrder() {
+        const items = document.querySelectorAll('.product-item');
+        const orderedIds = Array.from(items).map(item => item.dataset.id);
+        
+        if(orderedIds.length === 0) return;
+        
+        const overlay = document.getElementById('bulk-save-overlay');
+        const statusText = document.getElementById('bulk-save-status');
+        const fractionText = document.getElementById('bulk-save-fraction');
+        const percentageText = document.getElementById('bulk-save-percentage');
+        const progressBar = document.getElementById('bulk-save-progress-bar');
+        
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+        
+        statusText.innerText = `Saving New Order...`;
+        fractionText.innerText = `1 / 1 SAVED`;
+        percentageText.innerText = `50%`;
+        progressBar.style.width = `50%`;
+        
+        try {
+            const formData = new FormData();
+            formData.append('product_order', JSON.stringify(orderedIds));
+            
+            // Send to app.py
+            const response = await fetch('/admin/product/reorder', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if(!response.ok) throw new Error("Failed to save order");
+            
+            progressBar.style.width = `100%`;
+            percentageText.innerText = `100%`;
+            statusText.innerHTML = `<span class="text-emerald-600 font-extrabold"><i class="fa-solid fa-check-double mr-1"></i> Order Saved!</span>`;
+            
+            setTimeout(() => { window.location.reload(); }, 800);
+            
+        } catch (e) {
+            console.error(e);
+            alert("Failed to save the new order. Please check your app.py implementation.");
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
         }
     }
 
@@ -1065,20 +1154,37 @@
             });
         });
 
+        initializeProductSortable(); // NEW FUNCTION FOR PRODUCT REORDER
         initializeSortableVariants();
-        initializeCategorySortable(); // NEW FUNCTION FOR CATEGORIES DRAG
+        initializeCategorySortable(); 
     });
 
-    // ================= 7. CATEGORY DRAG & DROP INITIALIZATION =================
+    // ================= 7. DRAG & DROP INITIALIZATIONS =================
+    
+    // NEW: Product Reordering
+    function initializeProductSortable() {
+        const productList = document.getElementById('main-inventory-list');
+        if (productList && typeof Sortable !== 'undefined') {
+            new Sortable(productList, {
+                handle: '.product-drag-handle',
+                animation: 250,
+                ghostClass: 'opacity-40', // Fades the card you are dragging
+                onEnd: function() {
+                    productOrderChanged = true;
+                    updateGlobalSaveBar(); // Prompts the Save Order button
+                }
+            });
+        }
+    }
+
     function initializeCategorySortable() {
         const catSortable = document.getElementById('category-sortable');
         if(catSortable && typeof Sortable !== 'undefined') {
             new Sortable(catSortable, { 
                 handle: '.handle', 
                 animation: 150,
-                ghostClass: 'opacity-40', // Visual fading effect while dragging
+                ghostClass: 'opacity-40', 
                 onEnd: function() {
-                    // This recalculates the 1st, 2nd, 3rd, etc. badges after every drop!
                     const badges = document.querySelectorAll('.cat-order-badge');
                     badges.forEach((badge, index) => {
                         badge.innerText = index + 1;
