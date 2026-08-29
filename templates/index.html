@@ -81,10 +81,14 @@
         
         .pulse-ring { animation: pulseRing 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulseRing {
-            0% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(234, 88, 12, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(42, 171, 238, 0.4); } /* Blue pulse for telegram */
+            70% { box-shadow: 0 0 0 15px rgba(42, 171, 238, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(42, 171, 238, 0); }
         }
+
+        /* Marquee Animation */
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        .animate-marquee { display: inline-block; animation: marquee 12s linear infinite; white-space: nowrap; }
 
         /* Cart UI Checkboxes */
         .universal-cart-checkbox { 
@@ -126,14 +130,14 @@
             </div>
         </div>
         
-        <!-- Center: Logo + Title -->
-        <div class="flex items-center justify-center flex-1 px-2 gap-2 min-w-0 cursor-pointer group" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-            <img src="/static/images/logo.jpg" onerror="this.src='/static/images/logo.png'" class="w-9 h-9 object-cover drop-shadow-sm shrink-0 rounded-full bg-white shadow-sm border border-slate-100 group-hover:scale-105 transition-transform" alt="Logo">
+        <!-- Center: Logo + Title (NO BORDERS OR SHADOWS ON LOGO) -->
+        <div class="flex items-center justify-center flex-1 px-2 gap-2.5 min-w-0 cursor-pointer group" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+            <img src="/static/images/logo.png" onerror="this.src='/static/images/logo.jpg'" class="w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0 group-hover:scale-105 transition-transform" alt="Logo">
             <div class="flex flex-col justify-center text-left">
-                <h1 class="text-[13px] sm:text-base font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5">
-                    សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs whitespace-nowrap text-slate-600">- Somphea Reak</span>
+                <h1 class="text-[15px] sm:text-lg font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5">
+                    សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] whitespace-nowrap text-slate-600">- Somphea Reak</span>
                 </h1>
-                <p class="text-[8px] font-extrabold text-[#ea580c] uppercase tracking-widest leading-none">Premium Studio</p>
+                <p class="text-[9px] font-extrabold text-[#ea580c] uppercase tracking-widest leading-none mt-0.5">Premium Studio</p>
             </div>
         </div>
         
@@ -144,31 +148,32 @@
         </button>
     </header>
 
-    <!-- MAIN APP CONTAINER -->
-    <main class="max-w-2xl mx-auto pt-6 px-4 sm:px-6">
-        
-        <!-- Holographic Welcome Banner -->
-        <section class="pb-6 animate-fade-up relative group">
-            <button onclick="openAdminBannerModal()" class="absolute top-4 right-4 z-20 w-8 h-8 rounded-full glass-dark text-white/70 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" title="Edit Admin Banner">
-                <i class="fa-solid fa-gear text-xs"></i>
-            </button>
+    <!-- 🌟 RUNNING LETTER (MARQUEE) 🌟 -->
+    <div class="bg-[#ea580c] text-white overflow-hidden py-1.5 px-4 shadow-inner relative z-50">
+        <div class="animate-marquee font-['Kantumruy_Pro'] text-[10px] sm:text-xs font-bold tracking-wide flex items-center gap-2">
+            <i class="fa-solid fa-bullhorn text-yellow-300"></i>
+            សូមស្វាគមន៍មកកាន់ សម្ភារៈ - Somphea Reak! ជាហាងដែលគ្រប់គ្រងនិងបង្កើតដោយកូនខ្មែរ (Welcome to Somphea Reak!Enjoy shopping!)
+        </div>
+    </div>
 
-            <!-- Banner Image from GitHub storage -->
-            <div id="promo-banner-bg" class="w-full bg-slate-900 rounded-[32px] p-7 md:p-8 text-white relative overflow-hidden shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)] border border-slate-800 group bg-cover bg-center transition-all duration-500 min-h-[200px] flex flex-col justify-center" style="background-image: url('/static/images/banner.jpg');">
+    <!-- MAIN APP CONTAINER -->
+    <main class="max-w-2xl mx-auto pt-4 px-4 sm:px-6">
+        
+        <!-- 🌟 AUTO-SLIDING BANNER (1800x900px Aspect Ratio) 🌟 -->
+        <section class="pb-6 animate-fade-up relative">
+            <div class="w-full relative rounded-[20px] sm:rounded-[32px] overflow-hidden shadow-xl aspect-[2/1] bg-slate-900 border border-slate-200/50">
+                <!-- Slide 1 -->
+                <div id="banner-slide-0" class="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-100" style="background-image: url('/static/images/banner1.png');"></div>
+                <!-- Slide 2 -->
+                <div id="banner-slide-1" class="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-0" style="background-image: url('/static/images/banner2.png');"></div>
+                <!-- Slide 3 -->
+                <div id="banner-slide-2" class="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-0" style="background-image: url('/static/images/banner3.png');"></div>
                 
-                <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-black/40 z-0"></div>
-                <div class="absolute top-0 right-0 w-64 h-64 bg-[#ea580c] rounded-full blur-[90px] opacity-30 mix-blend-screen group-hover:opacity-50 transition-opacity duration-700 -mr-20 -mt-20 z-0"></div>
-                
-                <div class="relative z-10">
-                    <div id="promo-tag" class="inline-flex items-center gap-1.5 bg-white/10 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border border-white/20 backdrop-blur-md mb-4 shadow-sm">
-                        <i class="fa-solid fa-crown text-yellow-400"></i> <span>សូមស្វាគមន៍ • WELCOME</span>
-                    </div>
-                    <h2 id="promo-title" class="text-2xl sm:text-3xl font-black leading-snug font-['Moul'] tracking-wide drop-shadow-xl mb-2 text-white">
-                        ស្វែងរកកូឡិកសិនថ្មីៗ<br>របស់យើង
-                    </h2>
-                    <h3 class="text-sm sm:text-base font-bold text-slate-300 font-['Plus_Jakarta_Sans']">
-                        Discover Our <span id="promo-subtitle-hl" class="text-transparent bg-clip-text bg-gradient-to-r from-[#ea580c] to-yellow-400 italic font-black">Latest</span> Collections
-                    </h3>
+                <!-- Dot Navigation Overlay -->
+                <div class="absolute bottom-3 sm:bottom-4 left-0 right-0 flex justify-center gap-1.5 z-20">
+                    <div id="dot-0" class="w-4 h-1.5 rounded-full bg-white transition-all shadow-sm"></div>
+                    <div id="dot-1" class="w-1.5 h-1.5 rounded-full bg-white/40 transition-all shadow-sm"></div>
+                    <div id="dot-2" class="w-1.5 h-1.5 rounded-full bg-white/40 transition-all shadow-sm"></div>
                 </div>
             </div>
         </section>
@@ -176,28 +181,28 @@
         <!-- BENTO BOX STORE GRID -->
         <section class="space-y-4">
             <div class="flex items-center justify-between px-2 mb-4 animate-fade-up delay-100">
-                <h2 class="font-black text-[11px] uppercase tracking-[0.25em] text-slate-500">រុករកស្ទូឌីយោ • Explore</h2>
+                <h2 class="font-black text-[11px] uppercase tracking-[0.25em] text-slate-500"> • Cambodia Kingdom of Wonder</h2>
                 <div class="h-px flex-grow ml-4 bg-gradient-to-r from-slate-300 to-transparent"></div>
             </div>
 
             <!-- Grid Layout -->
             <div class="grid grid-cols-2 gap-4 sm:gap-5">
                 
-                <!-- 1. Custom Bracelet Builder (Links to custom-bracelet) -->
-                <a href="custom-bracelet" class="bento-card animate-fade-up delay-200 relative col-span-2 aspect-[21/10] sm:aspect-[21/8] bg-white group">
+                <!-- 1. Custom Bracelet Builder (RATIO 3:2 RECTANGLE) -->
+                <a href="custom-bracelet" class="bento-card animate-fade-up delay-200 relative col-span-2 aspect-[3/2] bg-white group">
                     <img src="/static/images/custom-bracelet.jpg" class="absolute inset-0 w-full h-full object-cover mix-blend-multiply">
                     <div class="gradient-side absolute inset-0 flex flex-col justify-center p-6 sm:p-8">
                         <div class="flex gap-2 mb-3 z-10">
                             <span class="bg-gradient-to-r from-[#ea580c] to-orange-500 text-white text-[9px] font-black uppercase px-3 py-1 rounded-lg shadow-lg flex items-center gap-1.5 animate-pulse"><i class="fa-solid fa-fire"></i> Hot</span>
                             <span class="glass-dark text-white text-[9px] font-black uppercase px-3 py-1 rounded-lg">custom-bracelet</span>
                         </div>
-                        <h3 class="text-white font-black text-xl sm:text-3xl uppercase leading-none drop-shadow-2xl relative z-10 font-['Moul'] mb-1.5">រចនាខ្សែដៃផ្ទាល់ខ្លួន</h3>
+                        <h3 class="text-white font-black text-2xl sm:text-3xl uppercase leading-none drop-shadow-2xl relative z-10 font-['Moul'] mb-1.5"> </h3>
                         <h4 class="text-orange-50 font-bold text-sm sm:text-base uppercase tracking-widest drop-shadow-md relative z-10">Customize Italy Charm</h4>
                         <p class="text-orange-400 text-[10px] font-extrabold uppercase mt-3 tracking-[0.2em] relative z-10 flex items-center gap-1.5">Design Your Own <i class="fa-solid fa-arrow-right ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all"></i></p>
                     </div>
                 </a>
 
-                <!-- 2. Minifigure Store (Links to minifigure) -->
+                <!-- 2. Minifigure Store (KEPT ORIGINAL SIZE 4:5) -->
                 <a href="minifigure" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-slate-900 group">
                     <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:bg-white group-hover:text-black transition-colors"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
                     <img src="/static/images/lego.jpg" onerror="this.src='/static/images/lego-fallback.jpg'" class="absolute inset-0 w-full h-full object-cover opacity-80">
@@ -205,32 +210,32 @@
                         <div class="mb-2">
                             <div class="relative inline-flex items-center justify-center bg-[#E3000B] border-[2px] border-black rounded px-3 py-1 shadow-2xl transform -rotate-2">
                                 <div class="absolute inset-[1px] border border-[#FFCF00] rounded-[2px] pointer-events-none"></div>
-                                <span class="font-black italic text-white text-lg tracking-tighter leading-none relative z-10 drop-shadow-md" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">LEGO</span>
+                                <span class="font-black italic text-white text-lg tracking-tighter leading-none relative z-10 drop-shadow-md" style="text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;"></span>
                             </div>
                         </div>
                         <h3 class="text-white font-black text-[13px] uppercase tracking-[0.1em] drop-shadow-lg mt-1 font-['Moul']">យូនីវើស</h3>
-                        <p class="text-slate-300 text-[9px] font-bold tracking-widest uppercase mt-1">minifigure.html</p>
+                        <p class="text-slate-300 text-[9px] font-bold tracking-widest uppercase mt-1"></p>
                     </div>
                 </a>
 
-                <!-- 3. Toy Universe Store (Links to toy) -->
+                <!-- 3. Toy Universe Store (KEPT ORIGINAL SIZE 4:5) -->
                 <a href="toy" class="bento-card animate-fade-up delay-300 relative col-span-1 aspect-[4/5] bg-white group">
                     <div class="absolute top-4 right-4 z-20 w-8 h-8 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:bg-white group-hover:text-black transition-colors"><i class="fa-solid fa-arrow-up-right text-[10px]"></i></div>
                     <img src="/static/images/toy.jpg" class="absolute inset-0 w-full h-full object-cover">
                     <div class="gradient-bottom absolute inset-0 flex flex-col justify-end p-5">
                         <span class="text-orange-400 text-[8px] font-black uppercase tracking-widest mb-1.5 drop-shadow-md bg-black/20 w-fit px-2 py-0.5 rounded backdrop-blur-md">Premium</span>
-                        <h3 class="text-white font-black text-[17px] uppercase leading-none font-['Moul'] drop-shadow-xl mb-1">ពិភពប្រដាប់ក្មេងលេង</h3>
-                        <p class="text-slate-300 text-[10px] font-bold tracking-widest uppercase mt-0.5">toy.html</p>
+                        <h3 class="text-white font-black text-[17px] uppercase leading-none font-['Moul'] drop-shadow-xl mb-1"></h3>
+                        <p class="text-slate-300 text-[10px] font-bold tracking-widest uppercase mt-0.5"></p>
                     </div>
                 </a>
 
-                <!-- 4. Ready-Made Bracelets Store -->
-                <a href="bracelet" class="bento-card animate-fade-up delay-300 relative col-span-2 aspect-[21/10] sm:aspect-[21/8] bg-slate-900 group">
+                <!-- 4. Ready-Made Bracelets Store (RATIO 3:2 RECTANGLE) -->
+                <a href="bracelet" class="bento-card animate-fade-up delay-300 relative col-span-2 aspect-[3/2] bg-slate-900 group">
                     <div class="absolute top-5 right-5 z-20 w-9 h-9 glass-dark rounded-full flex items-center justify-center text-white shadow-lg group-hover:bg-[#ea580c] group-hover:border-orange-400 transition-colors"><i class="fa-solid fa-arrow-right text-xs"></i></div>
                     <img src="/static/images/bracelet.jpg" class="absolute inset-0 w-full h-full object-cover opacity-90">
                     <div class="gradient-side absolute inset-0 flex flex-col justify-center p-6 sm:p-8">
                         <span class="glass-dark text-white text-[8px] font-black uppercase px-3 py-1 rounded-lg w-fit mb-3">Ready to Wear</span>
-                        <h3 class="text-white font-black text-xl sm:text-2xl uppercase leading-none font-['Moul'] drop-shadow-xl mb-2">ខ្សែក និងខ្សែដៃ</h3>
+                        <h3 class="text-white font-black text-2xl sm:text-3xl uppercase leading-none font-['Moul'] drop-shadow-xl mb-2">ខ្សែក និងខ្សែដៃ</h3>
                         <h4 class="text-slate-200 font-bold text-xs sm:text-sm tracking-widest uppercase">Ready-Made Bracelets</h4>
                     </div>
                 </a>
@@ -240,34 +245,40 @@
 
     </main>
 
-    <!-- 🌟 APP-STYLE BOTTOM NAVIGATION 🌟 -->
+    <!-- 🌟 APP-STYLE BOTTOM NAVIGATION (NEW: Cart / Telegram / Order History) 🌟 -->
     <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2.5rem)] max-w-[360px] h-[68px] glass-panel rounded-[28px] flex items-center justify-around px-2 z-40">
-        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-16 h-full flex items-center justify-center text-[#ea580c] flex-col gap-1 active:scale-90 transition-transform">
-            <i class="fa-solid fa-house text-xl drop-shadow-sm"></i>
-            <span class="text-[8px] font-black uppercase tracking-[0.2em] mt-0.5">Home</span>
+        
+        <!-- Left: Open Cart -->
+        <button onclick="openUniversalCart()" class="w-16 h-full flex items-center justify-center text-slate-400 hover:text-[#ea580c] flex-col gap-1 active:scale-90 transition-transform relative">
+            <i class="fa-solid fa-cart-shopping text-xl"></i>
+            <span class="text-[9px] font-black tracking-widest mt-0.5 font-['Kantumruy_Pro']">គិតលុយ</span>
+            <span id="nav-cart-badge" class="absolute top-2 right-2 bg-[#ea580c] text-white text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center shadow-md hidden cart-badge-count">0</span>
         </button>
         
+        <!-- Middle: Telegram Link -->
         <div class="relative w-16 h-16 -translate-y-5 flex items-center justify-center">
-            <div class="absolute inset-0 rounded-full pulse-ring bg-[#ea580c]"></div>
-            <a href="custom-bracelet" class="relative w-[60px] h-[60px] bg-slate-900 rounded-full flex items-center justify-center text-white border-[3px] border-white shadow-xl active:scale-90 transition-all hover:bg-[#ea580c] group z-10">
-                <i class="fa-solid fa-wand-magic-sparkles text-2xl relative z-10 group-hover:animate-spin-slow"></i>
+            <div class="absolute inset-0 rounded-full pulse-ring bg-[#2AABEE]"></div>
+            <a href="https://t.me/somphea_reak" target="_blank" class="relative w-[60px] h-[60px] bg-white rounded-full flex items-center justify-center text-[#2AABEE] border-[3px] border-white shadow-xl active:scale-90 transition-all hover:bg-slate-50 group z-10">
+                <i class="fa-brands fa-telegram text-[32px] relative z-10 -ml-0.5 mt-0.5 group-hover:scale-110 transition-transform"></i>
             </a>
         </div>
         
+        <!-- Right: Order History -->
         <button onclick="openOrderHistory()" class="w-16 h-full flex items-center justify-center text-slate-400 hover:text-[#ea580c] flex-col gap-1 active:scale-90 transition-colors">
-            <i class="fa-solid fa-receipt text-xl"></i>
-            <span class="text-[8px] font-black uppercase tracking-[0.2em] mt-0.5">Orders</span>
+            <i class="fa-solid fa-clock-rotate-left text-xl"></i>
+            <span class="text-[9px] font-black tracking-wide mt-0.5 font-['Kantumruy_Pro']">ប្រវត្តិនៃការទិញ</span>
         </button>
     </nav>
 
     <!-- ========================================================================= -->
-    <!-- UNIFIED CART & CHECKOUT UI                                                -->
+    <!-- UNIFIED CART & CHECKOUT UI (REDESIGNED RECTANGLE BOXES & ACTIONS)         -->
     <!-- ========================================================================= -->
     
     <!-- CART DRAWER -->
     <div id="universal-cart-drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[8000] flex flex-col justify-end transition-transform duration-300">
         <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeUniversalCart()"></div>
         <div class="relative w-full h-[85vh] bg-gray-50 rounded-t-[32px] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
+            
             <div class="bg-white px-5 sm:px-6 py-5 flex items-center justify-between border-b border-gray-100 z-10">
                 <div>
                     <h2 class="text-xl font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2>
@@ -279,20 +290,31 @@
                 </div>
             </div>
             
-            <div id="universal-cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+            <!-- DYNAMIC RECTANGLE CART ITEMS CONTAINER -->
+            <div id="universal-cart-items-container" class="flex-1 overflow-y-auto p-4 md:p-5 space-y-3"></div>
             
-            <div class="bg-white border-t border-gray-100 p-5 z-10 pb-8 md:pb-5 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-                <div class="space-y-2 mb-4">
-                    <div class="flex justify-between items-center text-xs font-bold text-gray-500"><span>Subtotal (តម្លៃទំនិញ)</span><span id="uni-cart-subtotal">0៛</span></div>
-                    <div class="flex justify-between items-center text-xs font-bold text-gray-500"><span>Delivery (ថ្លៃដឹកជញ្ជូន)</span><span id="uni-cart-delivery">0៛</span></div>
-                    <div class="flex justify-between items-end pt-3 mt-1 border-t border-gray-100">
-                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Grand Total)</span>
-                        <span id="uni-cart-grand-total-khr" class="text-2xl font-black text-[#ea580c] leading-none block">0៛</span>
+            <!-- 🌟 NEW: UNIFIED STICKY FOOTER (SELECT ALL, DELETE, CHECKOUT) 🌟 -->
+            <div class="bg-white border-t border-gray-100 p-4 sm:p-5 z-10 pb-8 md:pb-5 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] rounded-t-2xl relative">
+                <div class="flex items-center justify-between mb-4">
+                    <label class="flex items-center gap-2.5 cursor-pointer text-xs font-black text-slate-700">
+                        <input type="checkbox" id="select-all-cart" class="universal-cart-checkbox" onchange="toggleSelectAllCart(this)">
+                        <span>ទាំងអស់ <span class="text-[9px] text-slate-400 uppercase block leading-none mt-1">Select All</span></span>
+                    </label>
+                    <div class="text-right">
+                        <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">សរុប (Total)</span>
+                        <span id="uni-cart-grand-total-khr" class="text-xl font-black text-[#ea580c] leading-none block">0៛</span>
                     </div>
                 </div>
-                <button onclick="openUniversalCheckout()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl shadow-slate-900/20 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
-                    <i class="fa-solid fa-truck-fast"></i> <span>បន្តទៅការដឹកជញ្ជូន (Checkout)</span>
-                </button>
+                <div class="flex gap-2">
+                    <!-- Batch Delete Button -->
+                    <button onclick="deleteSelectedCartItems()" class="w-[30%] bg-red-50 text-red-500 hover:bg-red-100 font-black py-3.5 rounded-xl uppercase text-[10px] tracking-widest active:scale-95 transition-all border border-red-100 flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-trash-can"></i> លុប
+                    </button>
+                    <!-- Batch Checkout Button -->
+                    <button onclick="openUniversalCheckout()" class="w-[70%] bg-slate-900 hover:bg-slate-800 text-white font-black py-3.5 rounded-xl shadow-xl shadow-slate-900/20 uppercase text-[10px] tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
+                        <i class="fa-solid fa-cart-shopping"></i> បន្តទៅការទូទាត់
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -381,41 +403,47 @@
         </div>
     </div>
 
-    <!-- ADMIN BANNER EDITOR -->
-    <div id="admin-banner-modal" class="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-sm hidden flex-col justify-end sm:justify-center p-0 sm:p-4 transition-all">
-        <div class="bg-white rounded-t-[32px] sm:rounded-[32px] w-full max-w-sm mx-auto p-6 sm:p-8 shadow-2xl relative animate-fade-up">
-            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden"></div>
-            <button onclick="closeAdminBannerModal()" class="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-slate-700">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <div class="text-center mb-6">
-                <h3 class="font-black text-lg text-slate-900 font-['Moul']">គ្រប់គ្រងផ្ទាំងផ្សព្វផ្សាយ</h3>
-                <p class="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Admin Banner Control</p>
-            </div>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">ចំណងជើង (Title)</label>
-                    <input type="text" id="admin-title" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-slate-400 outline-none font-['Moul']">
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">រូបភាពផ្ទៃខាងក្រោយ (Background Image URL)</label>
-                    <input type="text" id="admin-bg-url" placeholder="/static/images/..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-mono focus:border-slate-400 outline-none">
-                </div>
-                <button onclick="saveAdminBanner()" class="w-full bg-slate-900 text-white font-black py-4 rounded-xl shadow-lg active:scale-95 transition-all mt-2">
-                    រក្សាទុក (Save Updates)
-                </button>
-            </div>
-        </div>
-    </div>
-
-
     <!-- ========================================================================= -->
     <!-- JAVASCRIPT LOGIC                                                          -->
     <!-- ========================================================================= -->
     <script>
         let tgUser = null;
 
+        // --- BANNER SLIDER LOGIC ---
+        let currentSlide = 0;
+        const totalSlides = 3;
+        function switchBannerSlide() {
+            const slides = [
+                document.getElementById('banner-slide-0'),
+                document.getElementById('banner-slide-1'),
+                document.getElementById('banner-slide-2')
+            ];
+            const dots = [
+                document.getElementById('dot-0'),
+                document.getElementById('dot-1'),
+                document.getElementById('dot-2')
+            ];
+
+            if(!slides[0]) return; // Failsafe
+
+            // Hide previous
+            slides[currentSlide].classList.remove('opacity-100');
+            slides[currentSlide].classList.add('opacity-0');
+            dots[currentSlide].classList.remove('bg-white', 'w-4');
+            dots[currentSlide].classList.add('bg-white/40', 'w-1.5');
+
+            // Move to next
+            currentSlide = (currentSlide + 1) % totalSlides;
+
+            // Show new
+            slides[currentSlide].classList.remove('opacity-0');
+            slides[currentSlide].classList.add('opacity-100');
+            dots[currentSlide].classList.remove('bg-white/40', 'w-1.5');
+            dots[currentSlide].classList.add('bg-white', 'w-4');
+        }
+        setInterval(switchBannerSlide, 4000); // Change slide every 4 seconds
+
+        // --- TELEGRAM LOGIC ---
         function initializeTelegramAuth() {
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
                 window.Telegram.WebApp.ready();
@@ -509,46 +537,7 @@
             }
         });
 
-        // --- ADMIN BANNER LOGIC ---
-        function openAdminBannerModal() {
-            document.getElementById('admin-banner-modal').classList.remove('hidden');
-            document.getElementById('admin-banner-modal').classList.add('flex');
-            document.getElementById('admin-title').value = document.getElementById('promo-title').innerText.trim();
-            const currentBg = document.getElementById('promo-banner-bg').style.backgroundImage;
-            if(currentBg && currentBg !== 'none') document.getElementById('admin-bg-url').value = currentBg.slice(5, -2);
-        }
-        
-        function closeAdminBannerModal() {
-            document.getElementById('admin-banner-modal').classList.add('hidden');
-            document.getElementById('admin-banner-modal').classList.remove('flex');
-        }
-
-        function saveAdminBanner() {
-            const title = document.getElementById('admin-title').value;
-            const bgUrl = document.getElementById('admin-bg-url').value;
-            
-            if(title) {
-                document.getElementById('promo-title').innerHTML = title.replace(/\n/g, '<br>');
-                localStorage.setItem('admin_banner_title', title);
-            }
-            if(bgUrl) {
-                document.getElementById('promo-banner-bg').style.backgroundImage = `url('${bgUrl}')`;
-                localStorage.setItem('admin_banner_bg', bgUrl);
-            } else {
-                document.getElementById('promo-banner-bg').style.backgroundImage = `none`;
-                localStorage.setItem('admin_banner_bg', '');
-            }
-            closeAdminBannerModal();
-        }
-
-        function loadAdminSettings() {
-            const savedTitle = localStorage.getItem('admin_banner_title');
-            const savedBg = localStorage.getItem('admin_banner_bg');
-            if(savedTitle) document.getElementById('promo-title').innerHTML = savedTitle.replace(/\n/g, '<br>');
-            if(savedBg) document.getElementById('promo-banner-bg').style.backgroundImage = `url('${savedBg}')`;
-        }
-
-        // --- UNIVERSAL CART LOGIC & PERSISTENCE FIX ---
+        // --- UNIVERSAL CART LOGIC ---
         const UNIVERSAL_CART_RATE = 4000;
         let globalStoreCart = [];
 
@@ -570,7 +559,6 @@
             };
         };
 
-        // Forces Local Storage to Sync EVERY TIME you look at the page
         function syncCartFromStorage() {
             try {
                 let oldCart = JSON.parse(localStorage.getItem('sr_cart') || '[]');
@@ -583,14 +571,13 @@
         window.updateCartBadge = function() {
             syncCartFromStorage();
             const count = globalStoreCart.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
-            const badges = document.querySelectorAll('#cart-badge, .cart-badge-count');
+            const badges = document.querySelectorAll('#cart-badge, #nav-cart-badge, .cart-badge-count');
             badges.forEach(badge => {
                 if (count > 0) { badge.innerText = count; badge.classList.remove('hidden'); } 
                 else { badge.classList.add('hidden'); }
             });
         };
 
-        // Listen for user returning to the tab/window to force sync the cart items
         window.addEventListener('focus', window.updateCartBadge);
         window.addEventListener('pageshow', window.updateCartBadge);
 
@@ -616,13 +603,19 @@
 
         function renderUniversalCartUI() {
             const container = document.getElementById('universal-cart-items-container');
+            const selectAllCb = document.getElementById('select-all-cart');
+
             if(globalStoreCart.length === 0) {
                 container.innerHTML = `<div class="py-20 text-center opacity-40"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3 text-slate-300"></i><p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-slate-400">កន្ត្រកទទេ (Empty)</p></div>`;
-                document.getElementById('uni-cart-subtotal').innerText = "0៛"; document.getElementById('uni-cart-delivery').innerText = "0៛"; document.getElementById('uni-cart-grand-total-khr').innerText = "0៛";
+                document.getElementById('uni-cart-grand-total-khr').innerText = "0៛";
+                if(selectAllCb) selectAllCb.checked = false;
                 return;
             }
 
+            if(selectAllCb) selectAllCb.checked = globalStoreCart.every(i => i.selected);
+
             let subtotalKHR = 0; let customIndex = 1;
+            
             container.innerHTML = globalStoreCart.map((item) => {
                 let itemTotalKHR = 0;
                 if (item.type === 'custom_bracelet') itemTotalKHR = (item.baseTotal + item.pkgPrice) * item.qty;
@@ -632,48 +625,52 @@
                 
                 if (item.type === 'custom_bracelet') {
                     return `
-                    <div class="bg-white p-4 rounded-[28px] shadow-sm border ${item.selected ? 'border-[#ea580c] ring-4 ring-orange-50' : 'border-slate-100'} flex flex-col relative transition-all">
-                        <div class="flex justify-between items-center mb-3">
-                            <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')">
-                                <span class="font-black text-sm text-slate-900">Custom DIY Bracelet #${customIndex++}</span>
-                            </label>
-                            <button onclick="removeUniCartItem('${item.id}')" class="w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                    <div class="bg-white p-3 rounded-[16px] shadow-sm border ${item.selected ? 'border-[#ea580c] ring-1 ring-[#ea580c]' : 'border-gray-200'} flex gap-3 relative items-stretch transition-all">
+                        <div class="flex items-center justify-center">
+                            <input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')">
                         </div>
-                        <div class="w-full h-[220px] bg-slate-50 rounded-2xl border border-slate-100 overflow-x-auto overflow-y-hidden hide-scrollbar mb-4 relative" onclick="window.openImageViewer('${item.image}')">
-                            <div class="h-full w-max min-w-full flex items-center justify-center px-4">
-                                <img src="${item.image}" class="h-full w-auto max-w-none object-contain mix-blend-multiply cursor-pointer py-2">
-                            </div>
+                        <div class="w-20 h-24 bg-slate-50 rounded-xl border border-slate-100 flex-shrink-0 flex items-center justify-center cursor-pointer overflow-hidden p-1" onclick="window.openImageViewer('${item.image}')">
+                            <img src="${item.image}" class="w-full h-full object-contain mix-blend-multiply">
                         </div>
-                        <div class="flex justify-between items-end">
-                            <div class="flex flex-col gap-1.5">
-                                <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Code: <span class="text-slate-900 font-mono tracking-wider">${item.code || 'N/A'}</span></span>
-                                <span class="text-[9px] font-black text-orange-600 bg-orange-50 px-2 py-1 rounded border border-orange-100 uppercase tracking-widest w-max">${item.pkgName} • ${item.charms.length} Charms</span>
+                        <div class="flex-1 flex flex-col justify-between py-0.5 min-w-0">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-black text-[11px] sm:text-xs text-slate-900 leading-tight">Custom DIY Bracelet</h4>
+                                </div>
+                                <div class="flex flex-col gap-0.5 mt-1">
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase truncate">Code: ${item.code || 'N/A'}</span>
+                                    <span class="text-[9px] font-bold text-orange-500 uppercase truncate">${item.pkgName} • ${item.charms.length} Charms</span>
+                                </div>
                             </div>
-                            <div class="flex flex-col items-end gap-2">
-                                <span class="font-black text-[15px] sm:text-base text-[#ea580c] leading-none">${Math.round(itemTotalKHR).toLocaleString()}៛</span>
-                                <div class="flex items-center gap-3 bg-slate-50 rounded-xl p-0.5 border border-slate-200">
-                                    <button onclick="updateUniCartQty('${item.id}', -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ea580c]">-</button>
-                                    <span class="font-black text-xs w-4 text-center text-slate-800">${item.qty}</span>
-                                    <button onclick="updateUniCartQty('${item.id}', 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ea580c]">+</button>
+                            <div class="flex justify-between items-end mt-2">
+                                <span class="font-black text-sm text-[#ea580c] leading-none">${Math.round(itemTotalKHR).toLocaleString()}៛</span>
+                                <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-0.5 border border-slate-200 shadow-sm">
+                                    <button onclick="updateUniCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ea580c]">-</button>
+                                    <span class="font-black text-[11px] w-4 text-center text-slate-800">${item.qty}</span>
+                                    <button onclick="updateUniCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ea580c]">+</button>
                                 </div>
                             </div>
                         </div>
                     </div>`;
                 } else {
                     return `
-                    <div class="bg-white p-3 sm:p-4 rounded-[20px] shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-50' : 'border-slate-100'} flex gap-3 relative transition-all items-center">
-                        <label class="flex items-center justify-center cursor-pointer h-full"><input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')"></label>
-                        <div class="w-16 sm:w-20 h-16 sm:h-20 bg-slate-50 rounded-xl border border-slate-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden cursor-pointer shadow-inner"><img src="${item.image}" class="max-w-full max-h-full object-contain mix-blend-multiply"></div>
-                        <div class="flex-1 flex flex-col justify-center min-w-0 py-0.5">
-                            <div class="flex justify-between items-start">
-                                <h4 class="font-black text-[11px] sm:text-xs text-slate-900 leading-tight truncate pr-2">${item.name || item.title}</h4>
-                                <button onclick="removeUniCartItem('${item.id}')" class="text-slate-300 hover:text-red-500 p-1.5 -mt-1 -mr-1 transition-colors active:scale-90"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                    <div class="bg-white p-3 rounded-[16px] shadow-sm border ${item.selected ? 'border-[#ea580c] ring-1 ring-[#ea580c]' : 'border-gray-200'} flex gap-3 relative items-stretch transition-all">
+                        <div class="flex items-center justify-center">
+                            <input type="checkbox" class="universal-cart-checkbox" ${item.selected ? 'checked' : ''} onchange="toggleUniCartItem('${item.id}')">
+                        </div>
+                        <div class="w-20 h-24 bg-slate-50 rounded-xl border border-slate-100 flex-shrink-0 flex items-center justify-center cursor-pointer overflow-hidden p-1" onclick="window.openImageViewer('${item.image}')">
+                            <img src="${item.image}" class="w-full h-full object-contain mix-blend-multiply">
+                        </div>
+                        <div class="flex-1 flex flex-col justify-between py-0.5 min-w-0">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-black text-[11px] sm:text-xs text-slate-900 leading-tight truncate pr-2">${item.name || item.title}</h4>
+                                </div>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1 truncate">${item.style || "Standard Option"}</p>
                             </div>
-                            <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-widest truncate mb-2.5">${item.style || "Standard Option"}</p>
-                            <div class="flex justify-between items-end">
-                                <span class="font-black text-[13px] sm:text-sm text-[#ea580c] leading-none">${Math.round(itemTotalKHR).toLocaleString()}៛</span>
-                                <div class="flex items-center gap-2 sm:gap-3 bg-slate-50 rounded-lg p-0.5 border border-slate-200 shadow-sm">
+                            <div class="flex justify-between items-end mt-2">
+                                <span class="font-black text-sm text-[#ea580c] leading-none">${Math.round(itemTotalKHR).toLocaleString()}៛</span>
+                                <div class="flex items-center gap-2 bg-slate-50 rounded-lg p-0.5 border border-slate-200 shadow-sm">
                                     <button onclick="updateUniCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ea580c]">-</button>
                                     <span class="font-black text-[11px] w-4 text-center text-slate-800">${item.qty}</span>
                                     <button onclick="updateUniCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ea580c]">+</button>
@@ -685,17 +682,29 @@
             }).join('');
             
             const delivery = calculateUniversalDelivery(subtotalKHR);
-            document.getElementById('uni-cart-subtotal').innerText = Math.round(subtotalKHR).toLocaleString() + "៛";
-            const deliveryEl = document.getElementById('uni-cart-delivery');
-            if (delivery === 0 && subtotalKHR > 0) { deliveryEl.innerText = "ឥតគិតថ្លៃ (Free)"; deliveryEl.className = "text-emerald-500 font-black"; } 
-            else if (subtotalKHR > 0) { deliveryEl.innerText = Math.round(delivery).toLocaleString() + "៛"; deliveryEl.className = "text-[#ea580c] font-black"; } 
-            else { deliveryEl.innerText = "0៛"; deliveryEl.className = "text-slate-500 font-bold"; }
             document.getElementById('uni-cart-grand-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
         }
 
         window.toggleUniCartItem = function(id) { syncCartFromStorage(); const item = globalStoreCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveGlobalCart(); renderUniversalCartUI(); } }
         window.updateUniCartQty = function(id, delta) { syncCartFromStorage(); const item = globalStoreCart.find(i => i.id === id); if(item) { item.qty = Math.max(1, Math.min(20, item.qty + delta)); saveGlobalCart(); renderUniversalCartUI(); } }
-        window.removeUniCartItem = function(id) { if(confirm("លុបចេញពីកន្ត្រក? (Remove item?)")) { syncCartFromStorage(); globalStoreCart = globalStoreCart.filter(i => i.id !== id); saveGlobalCart(); renderUniversalCartUI(); } }
+        
+        window.toggleSelectAllCart = function(checkbox) {
+            syncCartFromStorage();
+            globalStoreCart.forEach(item => item.selected = checkbox.checked);
+            saveGlobalCart();
+            renderUniversalCartUI();
+        };
+
+        window.deleteSelectedCartItems = function() {
+            syncCartFromStorage();
+            const hasSelected = globalStoreCart.some(i => i.selected);
+            if (!hasSelected) return alert("សូមជ្រើសរើសទំនិញដើម្បីលុប! (Please select items to delete!)");
+            if (confirm("តើអ្នកពិតជាចង់លុបទំនិញដែលបានជ្រើសរើសមែនទេ? (Are you sure you want to delete selected items?)")) {
+                globalStoreCart = globalStoreCart.filter(i => !i.selected);
+                saveGlobalCart();
+                renderUniversalCartUI();
+            }
+        };
 
         window.openUniversalCheckout = function() {
             syncCartFromStorage(); const selectedItems = globalStoreCart.filter(i => i.selected);
@@ -846,7 +855,6 @@
             initializeTelegramAuth();
             syncCartFromStorage(); 
             updateCartBadge();
-            loadAdminSettings();
         });
     </script>
 </body>
