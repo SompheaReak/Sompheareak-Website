@@ -10,10 +10,6 @@
         content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
         width: 5px; height: 10px; border: solid white; border-width: 0 2px 2px 0; border-radius: 1px;
     }
-    
-    /* Hide scrollbar for horizontal bracelet image */
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 
 <!-- ==================== UNIFIED CART DRAWER ==================== -->
@@ -43,6 +39,18 @@
         
         <!-- Footer / Checkout Summary -->
         <div class="bg-white border-t border-gray-100 p-5 z-10 pb-8 md:pb-5 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+            
+            <!-- Select All & Delete Actions -->
+            <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-4">
+                <label class="flex items-center gap-2.5 cursor-pointer text-xs font-black text-slate-700">
+                    <input type="checkbox" id="select-all-cart" class="universal-cart-checkbox" onchange="toggleSelectAllCart(this)">
+                    <span>ទាំងអស់ <span class="text-[9px] text-gray-400 uppercase leading-none mt-0.5 ml-1">(Select All)</span></span>
+                </label>
+                <button onclick="deleteSelectedCartItems()" class="text-red-500 bg-red-50 border border-red-100 hover:bg-red-100 px-3.5 py-2 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center gap-1.5 active:scale-95 shadow-sm">
+                    <i class="fa-solid fa-trash-can"></i> លុប (Delete)
+                </button>
+            </div>
+
             <div class="space-y-2 mb-4">
                 <div class="flex justify-between items-center text-xs font-bold text-gray-500">
                     <span>Subtotal (តម្លៃទំនិញ)</span>
@@ -52,14 +60,14 @@
                     <span>Delivery (ថ្លៃដឹកជញ្ជូន)</span>
                     <span id="uni-cart-delivery">0៛</span>
                 </div>
-                <div class="flex justify-between items-end pt-2 border-t border-gray-100">
+                <div class="flex justify-between items-end pt-2 border-t border-gray-100 mt-2">
                     <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Grand Total)</span>
                     <div class="text-right">
                         <span id="uni-cart-grand-total-khr" class="text-2xl font-black text-[#ea580c] leading-none block">0៛</span>
                     </div>
                 </div>
             </div>
-            <button onclick="openUniversalCheckout()" class="w-full bg-black text-white font-black py-4 rounded-2xl shadow-xl shadow-gray-300 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
+            <button onclick="openUniversalCheckout()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl shadow-slate-900/20 uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro']">
                 <i class="fa-solid fa-truck-fast"></i> <span>បន្តទៅការដឹកជញ្ជូន (Checkout)</span>
             </button>
         </div>
@@ -71,7 +79,7 @@
     <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm">
         <div>
             <h2 class="text-lg font-black font-['Moul'] text-gray-900">ប្រវត្តិកម្ម៉ង់របស់អ្នក</h2>
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order History</p>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Order History</p>
         </div>
         <button onclick="closeOrderHistory()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-arrow-right text-lg"></i></button>
     </div>
@@ -91,9 +99,22 @@
     </div>
     
     <div class="flex-1 overflow-y-auto p-5 sm:p-6 pb-32 bg-gray-50">
+        
+        <!-- REDEEM CODE SECTION -->
+        <div class="max-w-lg mx-auto mb-6 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 pl-2">Redeem Code (លេខកូដបញ្ចុះតម្លៃ)</label>
+            <div class="flex gap-2 pl-2">
+                <input type="text" id="uni-redeem-code" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-bold text-sm outline-none focus:border-[#ea580c] transition-all uppercase placeholder-gray-400" placeholder="ENTER CODE">
+                <button onclick="applyRedeemCode()" class="bg-slate-900 text-white px-5 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#ea580c] active:scale-95 transition-all">Apply</button>
+            </div>
+            <p id="redeem-message" class="text-[10px] font-bold mt-2 pl-2 hidden transition-all"></p>
+        </div>
+
         <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm max-w-lg mx-auto">
             <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
             <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញសរុប (Subtotal):</span><span id="uni-check-subtotal">0៛</span></div>
+            <div id="discount-row" class="hidden justify-between text-xs font-bold text-green-600"><span>បញ្ចុះតម្លៃ (Discount):</span><span id="uni-check-discount">-0៛</span></div>
             <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន (Delivery):</span><span id="uni-check-delivery">0៛</span></div>
             <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3">
                 <span class="text-sm">សរុបត្រូវបង់ (Total):</span>
@@ -131,6 +152,11 @@
 <script>
     const UNIVERSAL_CART_RATE = 4000;
     let globalStoreCart = [];
+    
+    // Redeem Code State
+    let activeDiscountAmount = 0;
+    let activeDiscountPercent = 0;
+    let appliedPromoCode = "";
 
     // --- 1. CRITICAL SYNC FUNCTION ---
     function syncCartFromStorage() {
@@ -149,7 +175,7 @@
     }
     
     window.updateCartBadge = function() {
-        syncCartFromStorage(); // Forces a refresh from storage before calculating
+        syncCartFromStorage(); 
         const count = globalStoreCart.reduce((sum, item) => sum + (parseInt(item.qty) || 1), 0);
         document.querySelectorAll('.cart-badge-count, #cart-badge').forEach(badge => {
             if (count > 0) {
@@ -161,36 +187,20 @@
         });
     };
 
-    // Initialize immediately
     syncCartFromStorage();
     window.updateCartBadge();
 
-    // =========================================================================
-    // THE FIX: Listeners to force sync when you click "Back" or change tabs
-    // =========================================================================
-    window.addEventListener('pageshow', function(event) {
-        // Runs when page is loaded from bfcache (Back/Forward Cache)
-        window.updateCartBadge();
-    });
-
-    document.addEventListener('visibilitychange', function() {
-        // Runs when you switch back to this tab/app
-        if (document.visibilityState === 'visible') {
-            window.updateCartBadge();
-        }
-    });
+    window.addEventListener('pageshow', function(event) { window.updateCartBadge(); });
+    document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible') window.updateCartBadge(); });
 
     window.addEventListener('storage', function(e) {
-        // Runs instantly if the cart is updated in a different tab/window
         if (e.key === 'universal_store_cart' || e.key === 'sr_cart') {
             window.updateCartBadge();
-            // If the cart drawer happens to be open, re-render the list visually
-            if (document.getElementById('universal-cart-drawer').style.transform === 'translateY(0%)') {
+            if (document.getElementById('universal-cart-drawer') && document.getElementById('universal-cart-drawer').style.transform === 'translateY(0%)') {
                 renderUniversalCartUI();
             }
         }
     });
-    // =========================================================================
 
     window.addToGlobalCart = function(item) {
         syncCartFromStorage(); 
@@ -213,7 +223,7 @@
         window.updateCartBadge();
     };
 
-    window.openCart = window.openCartDrawer = function() {
+    window.openCart = window.openCartDrawer = window.openUniversalCart = function() {
         syncCartFromStorage();
         renderUniversalCartUI();
         const drawer = document.getElementById('universal-cart-drawer');
@@ -248,6 +258,7 @@
     // --- 2. RENDER THE CART UI ---
     function renderUniversalCartUI() {
         const container = document.getElementById('universal-cart-items-container');
+        const selectAllCb = document.getElementById('select-all-cart');
         if (!container) return;
 
         if(globalStoreCart.length === 0) {
@@ -255,7 +266,12 @@
             document.getElementById('uni-cart-subtotal').innerText = "0៛";
             document.getElementById('uni-cart-delivery').innerText = "0៛";
             document.getElementById('uni-cart-grand-total-khr').innerText = "0៛";
+            if(selectAllCb) selectAllCb.checked = false;
             return;
+        }
+
+        if(selectAllCb) {
+            selectAllCb.checked = globalStoreCart.every(i => i.selected);
         }
 
         let subtotalKHR = 0;
@@ -273,7 +289,7 @@
             
             if (item.type === 'custom_bracelet') {
                 return `
-                <div class="bg-white p-4 rounded-[2rem] shadow-sm border ${item.selected ? 'border-[#ea580c] ring-4 ring-orange-50' : 'border-gray-100'} flex flex-col relative transition-all">
+                <div class="bg-white p-4 rounded-[2rem] shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-50' : 'border-gray-100'} flex flex-col relative transition-all">
                     
                     <div class="flex justify-between items-center mb-3">
                         <label class="flex items-center gap-3 cursor-pointer">
@@ -283,11 +299,9 @@
                         <button onclick="removeUniCartItem('${item.id}')" class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
 
-                    <!-- 220px Height with Infinite Horizontal Scroll -->
-                    <div class="w-full h-[220px] bg-slate-50 rounded-2xl border border-gray-100 overflow-x-auto overflow-y-hidden hide-scrollbar mb-4 relative" onclick="if(typeof openImageViewer === 'function') openImageViewer('${item.image}')">
-                        <div class="h-full w-max min-w-full flex items-center justify-center px-4">
-                            <img src="${item.image}" class="h-full w-auto max-w-none object-contain mix-blend-multiply cursor-pointer py-2">
-                        </div>
+                    <!-- FIXED BRACELET IMAGE: No scrolling, full design contained -->
+                    <div class="w-full h-[220px] bg-slate-50 rounded-2xl border border-gray-100 mb-4 relative flex items-center justify-center p-2" onclick="if(typeof openImageViewer === 'function') openImageViewer('${item.image}')">
+                        <img src="${item.image}" class="max-w-full max-h-full object-contain mix-blend-multiply cursor-pointer drop-shadow-sm">
                     </div>
 
                     <div class="flex justify-between items-end">
@@ -298,7 +312,7 @@
                         
                         <div class="flex flex-col items-end gap-2">
                             <span class="font-black text-[15px] sm:text-base text-[#ea580c] leading-none">${Math.round(itemTotalKHR).toLocaleString()}៛</span>
-                            <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-0.5 border border-gray-200">
+                            <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-0.5 border border-gray-200 shadow-sm">
                                 <button onclick="updateUniCartQty('${item.id}', -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-gray-500 hover:text-[#ea580c] active:scale-95 transition-all">-</button>
                                 <span class="font-black text-xs w-4 text-center text-gray-800">${item.qty}</span>
                                 <button onclick="updateUniCartQty('${item.id}', 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-gray-500 hover:text-[#ea580c] active:scale-95 transition-all">+</button>
@@ -353,6 +367,26 @@
         document.getElementById('uni-cart-grand-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
     }
 
+    // Cart Actions
+    window.toggleSelectAllCart = function(checkbox) {
+        syncCartFromStorage();
+        globalStoreCart.forEach(item => item.selected = checkbox.checked);
+        saveGlobalCart();
+        renderUniversalCartUI();
+    };
+
+    window.deleteSelectedCartItems = function() {
+        syncCartFromStorage();
+        const hasSelected = globalStoreCart.some(i => i.selected);
+        if (!hasSelected) return alert("សូមជ្រើសរើសទំនិញដើម្បីលុប! (Please select items to delete!)");
+        
+        if (confirm("តើអ្នកពិតជាចង់លុបទំនិញដែលបានជ្រើសរើសមែនទេ? (Are you sure you want to delete selected items?)")) {
+            globalStoreCart = globalStoreCart.filter(i => !i.selected);
+            saveGlobalCart();
+            renderUniversalCartUI();
+        }
+    };
+
     function toggleUniCartItem(id) { 
         syncCartFromStorage();
         const item = globalStoreCart.find(i => i.id === id); 
@@ -376,7 +410,7 @@
         } 
     }
 
-    // --- 3. CHECKOUT MODAL LOGIC WITH TELEGRAM DETECTION ---
+    // --- 3. CHECKOUT MODAL LOGIC & REDEEM CODE ---
     function renderCheckoutTgBadge() {
         try {
             const savedUser = localStorage.getItem('tg_user');
@@ -396,10 +430,58 @@
         } catch(e) {}
     }
 
-    function openUniversalCheckout() {
+    window.applyRedeemCode = async function() {
+        const codeInput = document.getElementById('uni-redeem-code').value.trim().toUpperCase();
+        const msgEl = document.getElementById('redeem-message');
+        
+        if (!codeInput) {
+            msgEl.innerText = "សូមបញ្ចូលលេខកូដ (Please enter a code)";
+            msgEl.className = "text-[10px] font-bold mt-2 pl-2 text-red-500 block";
+            return;
+        }
+
+        msgEl.innerText = "កំពុងផ្ទៀងផ្ទាត់... (Checking...)";
+        msgEl.className = "text-[10px] font-bold mt-2 pl-2 text-blue-500 block animate-pulse";
+
+        try {
+            // Frontend validation example (Will map to backend)
+            // You can control these codes in your admin panel via the API
+            const res = await fetch('/api/check-promo?code=' + codeInput);
+            if (res.ok) {
+                const data = await res.json();
+                activeDiscountPercent = data.discountPercent || 0;
+                activeDiscountAmount = data.discountAmount || 0; 
+                appliedPromoCode = codeInput;
+                
+                msgEl.innerText = "កូដត្រូវបានទទួលយក! (Code Applied!)";
+                msgEl.className = "text-[10px] font-bold mt-2 pl-2 text-green-500 block";
+                updateCheckoutTotals();
+            } else {
+                throw new Error("Invalid");
+            }
+        } catch (e) {
+            // Mock logic for Demo (If no backend available)
+            if (codeInput === 'SOMPHEA' || codeInput === 'SALE10') {
+                activeDiscountPercent = 10; // 10% off
+                activeDiscountAmount = 0;
+                appliedPromoCode = codeInput;
+                msgEl.innerText = `ជោគជ័យ! បញ្ចុះតម្លៃ 10% (Applied: 10% OFF)`;
+                msgEl.className = "text-[10px] font-bold mt-2 pl-2 text-green-500 block";
+                updateCheckoutTotals();
+            } else {
+                activeDiscountPercent = 0;
+                activeDiscountAmount = 0;
+                appliedPromoCode = "";
+                msgEl.innerText = "លេខកូដមិនត្រឹមត្រូវ ឬផុតកំណត់ (Invalid or Expired)";
+                msgEl.className = "text-[10px] font-bold mt-2 pl-2 text-red-500 block";
+                updateCheckoutTotals();
+            }
+        }
+    };
+
+    function updateCheckoutTotals() {
         syncCartFromStorage();
         const selectedItems = globalStoreCart.filter(i => i.selected);
-        if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយ! (Select an item first!)");
         
         let subtotalKHR = 0; 
         selectedItems.forEach(i => {
@@ -410,11 +492,38 @@
             }
         });
         
-        const delivery = calculateUniversalDelivery(subtotalKHR);
-        document.getElementById('uni-check-subtotal').innerText = Math.round(subtotalKHR).toLocaleString() + "៛";
-        document.getElementById('uni-check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ" : Math.round(delivery).toLocaleString() + "៛";
-        document.getElementById('uni-check-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
+        // Calculate Discount
+        let discountKHR = activeDiscountAmount;
+        if (activeDiscountPercent > 0) {
+            discountKHR = subtotalKHR * (activeDiscountPercent / 100);
+        }
         
+        let subtotalAfterDiscount = subtotalKHR - discountKHR;
+        if (subtotalAfterDiscount < 0) subtotalAfterDiscount = 0;
+
+        const delivery = calculateUniversalDelivery(subtotalAfterDiscount);
+        
+        // Update DOM
+        document.getElementById('uni-check-subtotal').innerText = Math.round(subtotalKHR).toLocaleString() + "៛";
+        
+        const discountRow = document.getElementById('discount-row');
+        if (discountKHR > 0) {
+            discountRow.style.display = 'flex';
+            document.getElementById('uni-check-discount').innerText = "-" + Math.round(discountKHR).toLocaleString() + "៛";
+        } else {
+            discountRow.style.display = 'none';
+        }
+
+        document.getElementById('uni-check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ" : Math.round(delivery).toLocaleString() + "៛";
+        document.getElementById('uni-check-total-khr').innerText = Math.round(subtotalAfterDiscount + delivery).toLocaleString() + "៛";
+    }
+
+    function openUniversalCheckout() {
+        syncCartFromStorage();
+        const selectedItems = globalStoreCart.filter(i => i.selected);
+        if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយ! (Select an item first!)");
+        
+        updateCheckoutTotals();
         renderCheckoutTgBadge(); 
         
         closeUniversalCart(); 
@@ -540,8 +649,16 @@
             itemsPayload.push({ cartId: id, title: "DIY-Part", style: "Hidden stock component", price: 0, qty: count, image: "hidden", maxStock: 99 }); 
         }
 
-        const delivery = calculateUniversalDelivery(subtotalKHR);
-        const totalUSD = (subtotalKHR + delivery) / UNIVERSAL_CART_RATE;
+        let discountKHR = activeDiscountAmount;
+        if (activeDiscountPercent > 0) {
+            discountKHR = subtotalKHR * (activeDiscountPercent / 100);
+        }
+        
+        let subtotalAfterDiscount = subtotalKHR - discountKHR;
+        if (subtotalAfterDiscount < 0) subtotalAfterDiscount = 0;
+
+        const delivery = calculateUniversalDelivery(subtotalAfterDiscount);
+        const totalUSD = (subtotalAfterDiscount + delivery) / UNIVERSAL_CART_RATE;
 
         let tgUserPayload = null;
         try { 
@@ -559,6 +676,7 @@
                     address, 
                     items: itemsPayload, 
                     total: totalUSD,
+                    redeemCode: appliedPromoCode, // Included Redeem Code for API
                     telegram_user: tgUserPayload 
                 }) 
             });
@@ -568,7 +686,7 @@
                     id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
                     date: new Date().toISOString(),
                     items: orderHistoryItems,
-                    totalKHR: subtotalKHR + delivery,
+                    totalKHR: subtotalAfterDiscount + delivery,
                     status: "រង់ចាំ (Pending)"
                 };
                 let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
@@ -589,7 +707,7 @@
                 id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
                 date: new Date().toISOString(),
                 items: orderHistoryItems,
-                totalKHR: subtotalKHR + delivery,
+                totalKHR: subtotalAfterDiscount + delivery,
                 status: "បានផ្ញើទៅ Telegram (Sent)"
             };
             let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
