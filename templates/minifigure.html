@@ -166,17 +166,22 @@
 
   <!-- 🌟 UNIFIED STICKY HEADER (STORE - BACK BUTTON ON LEFT) 🌟 -->
   <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 py-2.5 flex items-center justify-between shadow-sm">
-      <a href="/" class="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0 hover:bg-gray-100">
-          <i class="fa-solid fa-arrow-left text-xs"></i>
-      </a>
       
-      <div class="flex items-center justify-center flex-1 px-2 gap-2 min-w-0">
-          <img src="/static/images/logo.jpg" onerror="this.src='/static/images/logo.png'" class="w-9 h-9 object-cover drop-shadow-sm shrink-0 rounded-full border border-gray-100" alt="Logo">
+      <!-- Left: Back Button (Matched size to Telegram icon in index.html) -->
+      <div class="w-9 h-9 flex items-center justify-center relative shrink-0">
+          <a href="/" class="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform hover:bg-gray-100">
+              <i class="fa-solid fa-arrow-left text-xs"></i>
+          </a>
+      </div>
+      
+      <!-- Center: Logo + Title -->
+      <div class="flex items-center justify-center flex-1 px-2 gap-2.5 min-w-0 cursor-pointer group" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+          <img src="/static/images/logo.png" onerror="this.src='/static/images/logo.jpg'" class="w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0 group-hover:scale-105 transition-transform" alt="Logo">
           <div class="flex flex-col justify-center text-left">
-              <h1 class="text-[13px] sm:text-base font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5">
-                  សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs whitespace-nowrap text-slate-600">- Somphea Reak</span>
+              <h1 class="text-[15px] sm:text-lg font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5">
+                  សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] whitespace-nowrap text-slate-600">- Somphea Reak</span>
               </h1>
-              <p class="text-[8px] font-extrabold text-[#ea580c] uppercase tracking-widest leading-none">Minifigure Vault</p>
+              <p class="text-[9px] font-extrabold text-[#ea580c] uppercase tracking-widest leading-none mt-0.5">Minifigure Vault</p>
           </div>
       </div>
       
@@ -200,8 +205,8 @@
       </div>
 
       <div class="max-w-6xl mx-auto">
-          <div id="category-filters" class="flex overflow-x-auto gap-1.5 scrollbar-hide">
-              <!-- Dynamically populated by JS -->
+          <div id="category-filters" class="flex overflow-x-auto gap-1.5 scrollbar-hide py-1">
+              <!-- Dynamically populated by JS (including the new Filter button) -->
           </div>
       </div>
   </section>
@@ -241,12 +246,23 @@
     document.addEventListener('DOMContentLoaded', () => {
         // Only show if they haven't completed it this session
         if (!sessionStorage.getItem('surveyDone')) {
-            document.body.style.overflow = 'hidden';
-            document.getElementById('survey-modal').classList.remove('survey-hidden');
+            openSurveyModal();
         } else {
             document.getElementById('survey-modal').classList.add('survey-hidden');
+            document.getElementById('survey-modal').style.display = 'none';
         }
     });
+
+    // NEW: Function to manually open the survey modal
+    function openSurveyModal() {
+        document.body.style.overflow = 'hidden';
+        const modal = document.getElementById('survey-modal');
+        modal.style.display = 'flex';
+        // Request animation frame allows display:flex to apply before opacity changes
+        requestAnimationFrame(() => {
+            modal.classList.remove('survey-hidden');
+        });
+    }
 
     function toggleSurveyCategory(cat) {
         const btn = document.getElementById(`cat-btn-${cat}`);
@@ -323,7 +339,7 @@
         document.body.style.overflow = '';
         const modal = document.getElementById('survey-modal');
         modal.classList.add('survey-hidden');
-        setTimeout(() => { modal.style.display = 'none'; }, 400);
+        setTimeout(() => { modal.style.display = 'none'; }, 400); // Wait for transition
     }
 
     // ==========================================================
@@ -426,8 +442,13 @@
 
         const container = document.getElementById('category-filters');
         
+        // NEW: Add the Survey Pop-up Button on the far left
+        let htmlString = `<button onclick="openSurveyModal()" class="px-3 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 flex items-center justify-center shadow-sm shrink-0 transition-all active:scale-95" title="Filter Minifigures">
+            <i class="fa-solid fa-sliders text-[11px]"></i>
+        </button>`;
+
         // Special render for "All"
-        let htmlString = `<button onclick="toggleTopCategory('All')" class="px-3.5 py-1.5 rounded-full ${activeCategories.has('All') ? 'bg-gray-900 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'} text-[9px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all">All <span class="opacity-60 text-[8px]">(${catCounts['All']})</span></button>`;
+        htmlString += `<button onclick="toggleTopCategory('All')" class="px-3.5 py-1.5 rounded-full ${activeCategories.has('All') ? 'bg-gray-900 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'} text-[9px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all flex items-center shrink-0">All <span class="opacity-60 text-[8px] ml-1">(${catCounts['All']})</span></button>`;
 
         htmlString += Object.keys(catCounts).map(c => {
             if (c === 'All') return ''; // Handled above
@@ -435,7 +456,7 @@
             if(catCounts[c] === 0 && !surveyCats.includes(c) && !activeCategories.has(c)) return '';
             
             const isSelected = activeCategories.has(c);
-            return `<button onclick="toggleTopCategory('${c}')" class="px-3.5 py-1.5 rounded-full ${isSelected ? 'bg-[#ea580c] text-white shadow-md shadow-orange-500/20 border-[#ea580c]' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'} border text-[9px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-1.5">
+            return `<button onclick="toggleTopCategory('${c}')" class="px-3.5 py-1.5 rounded-full ${isSelected ? 'bg-[#ea580c] text-white shadow-md shadow-orange-500/20 border-[#ea580c]' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'} border text-[9px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0">
                 ${isSelected ? '<i class="fa-solid fa-check text-[8px]"></i>' : ''} ${c} <span class="opacity-70 text-[8px]">(${catCounts[c]})</span>
             </button>`;
         }).join('');
@@ -565,7 +586,8 @@
                 <!-- Box Details -->
                 <div class="p-2 flex flex-col flex-grow bg-white justify-between">
                     <div>
-                        <h3 class="font-extrabold text-[9px] sm:text-[10px] text-gray-900 line-clamp-1 leading-tight mb-0.5" title="${fig.title}">${fig.title}</h3>
+                        <!-- UPDATED FONT & SIZE FOR CLASSIC/MODERN LOOK -->
+                        <h3 class="font-bold text-[10px] sm:text-[11px] text-gray-800 line-clamp-2 leading-tight mb-1 font-['Plus_Jakarta_Sans'] tracking-wide" title="${fig.title}">${fig.title}</h3>
                         ${priceHtml}
                     </div>
 
