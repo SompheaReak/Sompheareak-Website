@@ -35,14 +35,20 @@
         box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
     }
 
-    /* Survey Modal Animations */
-    #survey-modal { transition: opacity 0.3s ease; }
-    #survey-content { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease; }
-    .survey-hidden { opacity: 0; pointer-events: none; }
-    .survey-hidden #survey-content { transform: scale(0.95) translateY(20px); opacity: 0; }
+    /* FULL SCREEN Survey Modal Animations */
+    #survey-modal { 
+        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease; 
+        transform: translateY(0);
+        opacity: 1;
+    }
+    .survey-hidden { 
+        transform: translateY(100%) !important; 
+        opacity: 0 !important; 
+        pointer-events: none; 
+    }
     
-    .step-transition { transition: all 0.3s ease; }
-    .step-out { opacity: 0; transform: translateX(-20px); pointer-events: none; position: absolute; width: 100%; }
+    .step-transition { transition: all 0.4s ease; }
+    .step-out { opacity: 0; transform: translateX(-30px); pointer-events: none; position: absolute; width: 100%; top: 0; left: 0; }
     .step-in { opacity: 1; transform: translateX(0); position: relative; }
   </style>
 </head>
@@ -50,99 +56,126 @@
 
   <div class="pka-chan-bg"></div>
 
-  <!-- ==================== SURVEY MODAL (MULTI-SELECT) ==================== -->
-  <div id="survey-modal" class="fixed inset-0 z-[8500] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div id="survey-content" class="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative overflow-hidden">
-          
-          <button onclick="closeSurvey()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gray-50 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors z-20">
-              <i class="fa-solid fa-xmark text-sm"></i>
-          </button>
+  <!-- ==================== FULL SCREEN SURVEY MODAL ==================== -->
+  <div id="survey-modal" class="fixed inset-0 z-[8500] bg-white flex flex-col overflow-hidden survey-hidden">
+      
+      <!-- Close Button -->
+      <button onclick="closeSurvey()" class="absolute top-5 right-5 w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors z-50 shadow-sm border border-gray-100">
+          <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
 
+      <div class="flex-1 overflow-y-auto px-5 pt-16 pb-32 relative">
+          
           <!-- Step 1: Category Selection -->
-          <div id="survey-step-1" class="step-transition step-in">
-              <h2 class="text-xl font-black text-center mb-1 font-['Moul'] text-slate-800 mt-2">តើអ្នកចង់ទិញអ្វីខ្លះ?</h2>
-              <p class="text-center text-[10px] text-gray-400 font-extrabold mb-5 uppercase tracking-widest">Select one or more options</p>
+          <div id="survey-step-1" class="step-transition step-in max-w-lg mx-auto">
+              <h2 class="text-2xl sm:text-3xl font-black text-center mb-2 font-['Moul'] text-slate-800">ជ្រើសរើសប្រភេទMinifigure</h2>
+              <p class="text-center text-[11px] sm:text-xs text-gray-400 font-extrabold mb-8 uppercase tracking-widest">Select one or more options</p>
               
-              <div class="grid grid-cols-2 gap-3">
+              <!-- 6 Categories Grid -->
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                  
                   <!-- Ninjago -->
-                  <button id="cat-btn-Ninjago" onclick="toggleSurveyCategory('Ninjago')" class="survey-cat-btn group relative aspect-square rounded-2xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                      <img src="/static/images/ninjago.jpg" onerror="this.src='https://ui-avatars.com/api/?name=Ninjago&background=ea580c&color=fff&size=200'" class="w-full h-full object-cover">
-                      <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-3 transition-colors duration-300">
-                          <span class="text-white font-black text-sm uppercase tracking-widest group-hover:scale-110 transition-transform">Ninjago</span>
+                  <button id="cat-btn-Ninjago" onclick="toggleSurveyCategory('Ninjago')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
+                      <img src="/static/images/ninjago.jpg" onerror="this.src='https://ui-avatars.com/api/?name=Ninjago&background=ea580c&color=fff&size=300'" class="w-full h-full object-cover">
+                      <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                          <span class="text-white font-black text-xs sm:text-sm uppercase tracking-widest group-hover:scale-110 transition-transform">Ninjago</span>
                       </div>
-                      <div id="check-Ninjago" class="absolute top-2 right-2 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                          <i class="fa-solid fa-circle-check text-xl"></i>
+                      <div id="check-Ninjago" class="absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-8 h-8">
+                          <i class="fa-solid fa-circle-check text-2xl"></i>
                       </div>
                   </button>
                   
                   <!-- Marvel -->
-                  <button id="cat-btn-Marvel" onclick="toggleSurveyCategory('Marvel')" class="survey-cat-btn group relative aspect-square rounded-2xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                      <img src="/static/images/marvel.jpg" onerror="this.src='https://ui-avatars.com/api/?name=Marvel&background=ef4444&color=fff&size=200'" class="w-full h-full object-cover">
-                      <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-3 transition-colors duration-300">
-                          <span class="text-white font-black text-sm uppercase tracking-widest group-hover:scale-110 transition-transform">Marvel</span>
+                  <button id="cat-btn-Marvel" onclick="toggleSurveyCategory('Marvel')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
+                      <img src="/static/images/marvel.jpg" onerror="this.src='https://ui-avatars.com/api/?name=Marvel&background=ef4444&color=fff&size=300'" class="w-full h-full object-cover">
+                      <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                          <span class="text-white font-black text-xs sm:text-sm uppercase tracking-widest group-hover:scale-110 transition-transform">Marvel</span>
                       </div>
-                      <div id="check-Marvel" class="absolute top-2 right-2 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                          <i class="fa-solid fa-circle-check text-xl"></i>
+                      <div id="check-Marvel" class="absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-8 h-8">
+                          <i class="fa-solid fa-circle-check text-2xl"></i>
                       </div>
                   </button>
                   
                   <!-- Anime -->
-                  <button id="cat-btn-Anime" onclick="toggleSurveyCategory('Anime')" class="survey-cat-btn group relative aspect-square rounded-2xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                      <img src="/static/images/anime.jpg" onerror="this.src='https://ui-avatars.com/api/?name=Anime&background=3b82f6&color=fff&size=200'" class="w-full h-full object-cover">
-                      <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-3 transition-colors duration-300">
-                          <span class="text-white font-black text-sm uppercase tracking-widest group-hover:scale-110 transition-transform">Anime</span>
+                  <button id="cat-btn-Anime" onclick="toggleSurveyCategory('Anime')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
+                      <img src="/static/images/anime.jpg" onerror="this.src='https://ui-avatars.com/api/?name=Anime&background=3b82f6&color=fff&size=300'" class="w-full h-full object-cover">
+                      <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                          <span class="text-white font-black text-xs sm:text-sm uppercase tracking-widest group-hover:scale-110 transition-transform">Anime</span>
                       </div>
-                      <div id="check-Anime" class="absolute top-2 right-2 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                          <i class="fa-solid fa-circle-check text-xl"></i>
+                      <div id="check-Anime" class="absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-8 h-8">
+                          <i class="fa-solid fa-circle-check text-2xl"></i>
+                      </div>
+                  </button>
+
+                  <!-- Military -->
+                  <button id="cat-btn-Military" onclick="toggleSurveyCategory('Military')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
+                      <img src="/static/images/military.jpg" onerror="this.src='https://ui-avatars.com/api/?name=Military&background=4b5320&color=fff&size=300'" class="w-full h-full object-cover">
+                      <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                          <span class="text-white font-black text-xs sm:text-sm uppercase tracking-widest group-hover:scale-110 transition-transform">Military</span>
+                      </div>
+                      <div id="check-Military" class="absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-8 h-8">
+                          <i class="fa-solid fa-circle-check text-2xl"></i>
+                      </div>
+                  </button>
+
+                  <!-- Chinese Myth -->
+                  <button id="cat-btn-Chinese-Myth" onclick="toggleSurveyCategory('Chinese Myth')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
+                      <img src="/static/images/chinese-myth.jpg" onerror="this.src='https://ui-avatars.com/api/?name=Chinese+Myth&background=b91c1c&color=fff&size=300'" class="w-full h-full object-cover">
+                      <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                          <span class="text-white font-black text-[11px] sm:text-sm uppercase tracking-widest group-hover:scale-110 transition-transform leading-tight text-center">Chinese Myth</span>
+                      </div>
+                      <div id="check-Chinese-Myth" class="absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-8 h-8">
+                          <i class="fa-solid fa-circle-check text-2xl"></i>
                       </div>
                   </button>
                   
                   <!-- Others -->
-                  <button id="cat-btn-Others" onclick="toggleSurveyCategory('Others')" class="survey-cat-btn group relative aspect-square rounded-2xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                      <img src="/static/images/others.jpg" onerror="this.src='https://ui-avatars.com/api/?name=Others&background=10b981&color=fff&size=200'" class="w-full h-full object-cover">
-                      <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-3 transition-colors duration-300">
-                          <span class="text-white font-black text-sm uppercase tracking-widest group-hover:scale-110 transition-transform">Others</span>
+                  <button id="cat-btn-Others" onclick="toggleSurveyCategory('Others')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
+                      <img src="/static/images/others.jpg" onerror="this.src='https://ui-avatars.com/api/?name=Others&background=10b981&color=fff&size=300'" class="w-full h-full object-cover">
+                      <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                          <span class="text-white font-black text-xs sm:text-sm uppercase tracking-widest group-hover:scale-110 transition-transform">Others</span>
                       </div>
-                      <div id="check-Others" class="absolute top-2 right-2 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                          <i class="fa-solid fa-circle-check text-xl"></i>
+                      <div id="check-Others" class="absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-8 h-8">
+                          <i class="fa-solid fa-circle-check text-2xl"></i>
                       </div>
-                  </button>
-              </div>
-
-              <div class="mt-5 h-[50px]">
-                  <button id="confirm-category-btn" onclick="confirmSurveyCategories()" class="w-full h-full bg-slate-900 text-white font-black rounded-2xl shadow-lg hover:bg-[#ea580c] hover:shadow-orange-500/30 transition-all uppercase text-[11px] tracking-wider hidden flex items-center justify-center gap-2">
-                      <i class="fa-solid fa-check-double"></i> Confirm Selection
                   </button>
               </div>
           </div>
 
           <!-- Step 2: Grade Selection -->
-          <div id="survey-step-2" class="step-transition step-out">
-              <button onclick="backToSurveyStep1()" class="absolute top-4 left-4 w-8 h-8 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors z-20">
-                  <i class="fa-solid fa-arrow-left text-xs"></i>
+          <div id="survey-step-2" class="step-transition step-out max-w-lg mx-auto h-full flex flex-col justify-center pb-20">
+              <button onclick="backToSurveyStep1()" class="absolute top-0 left-0 w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors z-20 shadow-sm">
+                  <i class="fa-solid fa-arrow-left text-sm"></i>
               </button>
               
-              <h2 class="text-xl font-black text-center mb-1 font-['Moul'] text-slate-800 mt-2">ជ្រើសរើសប្រភេទ Grade</h2>
-              <p class="text-center text-[10px] text-gray-400 font-extrabold mb-6 uppercase tracking-widest">Select Quality Grade</p>
+              <h2 class="text-2xl sm:text-3xl font-black text-center mb-2 font-['Moul'] text-slate-800 mt-6">ជ្រើសរើសប្រភេទ Grade</h2>
+              <p class="text-center text-[11px] sm:text-xs text-gray-400 font-extrabold mb-8 uppercase tracking-widest">Select Quality Grade</p>
               
-              <div class="grid grid-cols-2 gap-3 pb-2">
+              <div class="grid grid-cols-2 gap-4">
                   <!-- Grade A -->
-                  <button onclick="selectSurveyGrade('A')" class="relative flex flex-col items-center justify-center p-5 bg-gradient-to-b from-orange-50 to-white border-2 border-orange-200 rounded-3xl hover:border-[#ea580c] hover:shadow-lg hover:shadow-orange-500/10 transition-all group overflow-hidden">
-                      <div class="absolute top-0 right-0 bg-orange-500 text-white text-[8px] font-black px-2 py-1 rounded-bl-lg uppercase tracking-widest shadow-sm">Premium</div>
-                      <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center text-[#ea580c] text-2xl font-black mb-3 shadow-md border border-orange-100 group-hover:scale-110 group-hover:bg-[#ea580c] group-hover:text-white transition-all">A</div>
-                      <span class="font-black text-slate-800 text-sm mb-1 uppercase tracking-wider">Grade A</span>
-                      <span class="text-[9px] font-bold text-slate-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">តម្លៃ 1000 - 8000៛</span>
+                  <button onclick="selectSurveyGrade('A')" class="relative flex flex-col items-center justify-center p-8 bg-gradient-to-b from-orange-50 to-white border-2 border-orange-200 rounded-[2rem] hover:border-[#ea580c] hover:shadow-xl hover:shadow-orange-500/10 transition-all group overflow-hidden">
+                      <div class="absolute top-0 right-0 bg-orange-500 text-white text-[9px] font-black px-3 py-1.5 rounded-bl-xl uppercase tracking-widest shadow-sm">Premium</div>
+                      <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center text-[#ea580c] text-3xl font-black mb-4 shadow-md border border-orange-100 group-hover:scale-110 group-hover:bg-[#ea580c] group-hover:text-white transition-all">A</div>
+                      <span class="font-black text-slate-800 text-lg mb-2 uppercase tracking-wider">Grade A</span>
+                      <span class="text-[10px] font-bold text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">តម្លៃ 1000 - 8000៛</span>
                   </button>
                   
                   <!-- Grade B -->
-                  <button onclick="selectSurveyGrade('B')" class="flex flex-col items-center justify-center p-5 bg-gradient-to-b from-blue-50 to-white border-2 border-blue-200 rounded-3xl hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10 transition-all group">
-                      <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center text-blue-500 text-2xl font-black mb-3 shadow-md border border-blue-100 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all">B</div>
-                      <span class="font-black text-slate-800 text-sm mb-1 uppercase tracking-wider">Grade B</span>
-                      <span class="text-[9px] font-bold text-slate-500 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">តម្លៃ 1000៛</span>
+                  <button onclick="selectSurveyGrade('B')" class="flex flex-col items-center justify-center p-8 bg-gradient-to-b from-blue-50 to-white border-2 border-blue-200 rounded-[2rem] hover:border-blue-500 hover:shadow-xl hover:shadow-blue-500/10 transition-all group">
+                      <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center text-blue-500 text-3xl font-black mb-4 shadow-md border border-blue-100 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all">B</div>
+                      <span class="font-black text-slate-800 text-lg mb-2 uppercase tracking-wider">Grade B</span>
+                      <span class="text-[10px] font-bold text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-gray-100 shadow-sm">តម្លៃ 1000៛</span>
                   </button>
               </div>
           </div>
 
+      </div>
+
+      <!-- Sticky Bottom Footer for Confirm Button -->
+      <div id="survey-footer" class="absolute bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-gray-100 p-5 shadow-[0_-15px_30px_rgba(0,0,0,0.05)] hidden z-20">
+          <button id="confirm-category-btn" onclick="confirmSurveyCategories()" class="w-full max-w-lg mx-auto h-14 bg-slate-900 text-white font-black rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-[#ea580c] hover:shadow-orange-500/30 transition-all uppercase text-xs tracking-wider flex items-center justify-center gap-2">
+              <i class="fa-solid fa-check-double text-lg"></i> បន្តទៅមុខ (Confirm Selection)
+          </button>
       </div>
   </div>
 
@@ -167,7 +200,7 @@
   <!-- 🌟 UNIFIED STICKY HEADER (STORE - BACK BUTTON ON LEFT) 🌟 -->
   <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 py-2.5 flex items-center justify-between shadow-sm">
       
-      <!-- Left: Back Button (Matched size to Telegram icon in index.html) -->
+      <!-- Left: Back Button -->
       <div class="w-9 h-9 flex items-center justify-center relative shrink-0">
           <a href="/" class="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform hover:bg-gray-100">
               <i class="fa-solid fa-arrow-left text-xs"></i>
@@ -239,6 +272,7 @@
     
     // Survey State
     let surveySelectedCategories = new Set();
+    const surveyCats = ['Ninjago', 'Marvel', 'Anime', 'Military', 'Chinese Myth', 'Others'];
 
     // ==========================================================
     // 1. SURVEY MODAL LOGIC (MULTI-SELECT)
@@ -253,21 +287,32 @@
         }
     });
 
-    // NEW: Function to manually open the survey modal
     function openSurveyModal() {
         document.body.style.overflow = 'hidden';
         const modal = document.getElementById('survey-modal');
         modal.style.display = 'flex';
-        // Request animation frame allows display:flex to apply before opacity changes
+        // Request animation frame allows display:flex to apply before opacity/transform changes
         requestAnimationFrame(() => {
             modal.classList.remove('survey-hidden');
         });
+        
+        // Ensure we reset to step 1
+        document.getElementById('survey-step-2').classList.replace('step-in', 'step-out');
+        document.getElementById('survey-step-1').classList.replace('step-out', 'step-in');
+        
+        if (surveySelectedCategories.size > 0) {
+            document.getElementById('survey-footer').classList.remove('hidden');
+        } else {
+            document.getElementById('survey-footer').classList.add('hidden');
+        }
     }
 
     function toggleSurveyCategory(cat) {
-        const btn = document.getElementById(`cat-btn-${cat}`);
-        const check = document.getElementById(`check-${cat}`);
-        const confirmBtn = document.getElementById('confirm-category-btn');
+        // Format ID string to handle spaces (e.g. 'Chinese Myth' -> 'Chinese-Myth')
+        const catId = cat.replace(/\s+/g, '-');
+        const btn = document.getElementById(`cat-btn-${catId}`);
+        const check = document.getElementById(`check-${catId}`);
+        const footer = document.getElementById('survey-footer');
 
         if (surveySelectedCategories.has(cat)) {
             // Remove selection
@@ -289,14 +334,17 @@
 
         // Show/Hide Confirm Button based on selections
         if (surveySelectedCategories.size > 0) {
-            confirmBtn.classList.remove('hidden');
+            footer.classList.remove('hidden');
         } else {
-            confirmBtn.classList.add('hidden');
+            footer.classList.add('hidden');
         }
     }
 
     function confirmSurveyCategories() {
         if (surveySelectedCategories.size === 0) return;
+        
+        // Hide the footer in step 2
+        document.getElementById('survey-footer').classList.add('hidden');
         
         // Slide out Step 1, Slide in Step 2
         const s1 = document.getElementById('survey-step-1');
@@ -314,7 +362,10 @@
         const s2 = document.getElementById('survey-step-2');
         s2.classList.remove('step-in');
         s2.classList.add('step-out');
+        
+        // Show footer again
         setTimeout(() => {
+            document.getElementById('survey-footer').classList.remove('hidden');
             s1.classList.remove('step-out');
             s1.classList.add('step-in');
         }, 100);
@@ -339,7 +390,7 @@
         document.body.style.overflow = '';
         const modal = document.getElementById('survey-modal');
         modal.classList.add('survey-hidden');
-        setTimeout(() => { modal.style.display = 'none'; }, 400); // Wait for transition
+        setTimeout(() => { modal.style.display = 'none'; }, 500); // Wait for transition
     }
 
     // ==========================================================
@@ -427,8 +478,6 @@
     function renderCategoryFilters() {
         let catCounts = { 'All': unpackedFigures.length };
         
-        // Survey primary categories
-        const surveyCats = ['Ninjago', 'Marvel', 'Anime', 'Others'];
         surveyCats.forEach(c => catCounts[c] = 0);
 
         unpackedFigures.forEach(fig => {
@@ -442,17 +491,14 @@
 
         const container = document.getElementById('category-filters');
         
-        // NEW: Add the Survey Pop-up Button on the far left
         let htmlString = `<button onclick="openSurveyModal()" class="px-3 py-1.5 rounded-full bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 flex items-center justify-center shadow-sm shrink-0 transition-all active:scale-95" title="Filter Minifigures">
             <i class="fa-solid fa-sliders text-[11px]"></i>
         </button>`;
 
-        // Special render for "All"
         htmlString += `<button onclick="toggleTopCategory('All')" class="px-3.5 py-1.5 rounded-full ${activeCategories.has('All') ? 'bg-gray-900 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'} text-[9px] font-extrabold uppercase tracking-wider whitespace-nowrap transition-all flex items-center shrink-0">All <span class="opacity-60 text-[8px] ml-1">(${catCounts['All']})</span></button>`;
 
         htmlString += Object.keys(catCounts).map(c => {
-            if (c === 'All') return ''; // Handled above
-            // Hide empty categories unless they are primary or currently selected
+            if (c === 'All') return ''; 
             if(catCounts[c] === 0 && !surveyCats.includes(c) && !activeCategories.has(c)) return '';
             
             const isSelected = activeCategories.has(c);
@@ -473,14 +519,12 @@
             
             if (activeCategories.has(cat)) {
                 activeCategories.delete(cat);
-                // If everything is unchecked, default back to 'All'
                 if (activeCategories.size === 0) activeCategories.add('All');
             } else {
                 activeCategories.add(cat);
             }
         }
         
-        // Reset Grade Filter when user changes categories manually so they see everything
         activeGradeFilter = 'All'; 
         
         renderCategoryFilters();
@@ -511,10 +555,9 @@
             if (activeCategories.has('All')) {
                 matchesCat = true;
             } else {
-                // If figure has AT LEAST ONE of the selected categories, show it (OR logic)
                 activeCategories.forEach(cat => {
                     if (cat === 'Others') {
-                        if (!['Ninjago', 'Marvel', 'Anime'].some(c => (fig.category || '').includes(c))) {
+                        if (!['Ninjago', 'Marvel', 'Anime', 'Military', 'Chinese Myth'].some(c => (fig.category || '').includes(c))) {
                             matchesCat = true;
                         }
                     } else {
