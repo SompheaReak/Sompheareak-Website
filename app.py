@@ -250,6 +250,29 @@ def minifigure_store(): return render_template('minifigure.html')
 @app.route('/spin')
 def mystery_box(): return render_template('lucky_draw.html')
 
+# =======================================================
+# NEW: CHECK-PROMO API ROUTE FOR CART REDEEM CODES
+# =======================================================
+@app.route('/api/check-promo', methods=['GET'])
+def check_promo():
+    code = request.args.get('code', '').strip().upper()
+    if not code:
+        return jsonify({'error': 'No code provided'}), 400
+        
+    promo = PromoCode.query.filter_by(code=code, is_active=True).first()
+    if not promo:
+        return jsonify({'error': 'Invalid or expired promo code'}), 404
+        
+    if promo.max_uses > 0 and promo.current_uses >= promo.max_uses:
+        return jsonify({'error': 'Promo code usage limit reached'}), 400
+        
+    return jsonify({
+        'success': True,
+        'code': promo.code,
+        'discountPercent': promo.discount_value if promo.discount_type == 'percent' else 0,
+        'discountAmount': promo.discount_value if promo.discount_type == 'flat' else 0
+    })
+
 @app.route('/checkout', methods=['POST'])
 def checkout_page():
     cart_data_raw = request.form.get('cart_data', '[]')
@@ -367,7 +390,6 @@ def place_order():
 def checkout():
     data = request.json
     try:
-        # 1. Parse Telegram details if sent from frontend
         tg_user = data.get('telegram_user')
         tg_id = str(tg_user.get('id')) if tg_user and tg_user.get('id') else None
         
@@ -378,10 +400,8 @@ def checkout():
             if last_name:
                 tg_name += f" {last_name}"
 
-        # Convert the entire Telegram User object into a JSON string to save in the database
         tg_payload = json.dumps(tg_user) if tg_user else None
 
-        # 2. Build the order
         new_order = Order(
             customer_name=data.get('name'), 
             customer_phone=data.get('phone'), 
@@ -389,9 +409,10 @@ def checkout():
             items_json=json.dumps(data.get('items', [])), 
             total_usd=float(data.get('total', 0) or 0), 
             delivery_fee=float(data.get('deliveryFee', 0) or 0),
+            promo_code_used=data.get('redeemCode'), # <-- Added redeem code handling
             telegram_id=tg_id,           
             telegram_name=tg_name,       
-            telegram_user_payload=tg_payload, # <-- FULL TELEGRAM INFO SAVED HERE
+            telegram_user_payload=tg_payload, 
             status="Pending"
         )
         db.session.add(new_order)
@@ -462,7 +483,6 @@ def admin_orders():
         o.created_at = o.timestamp
         o.total_amount = o.total_usd
         
-        # EXTRACT THE TELEGRAM PROFILE FOR THE ADMIN TEMPLATE
         try:
             o.telegram_user = json.loads(o.telegram_user_payload) if o.telegram_user_payload else None
         except Exception:
@@ -707,15 +727,11 @@ def delete_category(id):
         db.session.commit()
     return redirect(url_for('admin_inventory'))
 
-# =======================================================
-# UPDATED: FIXED REORDER ROUTE
-# =======================================================
 @app.route('/admin/product/reorder', methods=['POST'])
 @app.route('/admin/products/reorder', methods=['POST'])
 @login_required
 def admin_reorder_products():
     try:
-        # Handle both JSON payloads and Form Data payloads to prevent bugs
         if request.is_json:
             data = request.get_json()
             product_ids = data.get('product_ids', data.get('ids', []))
@@ -725,7 +741,6 @@ def admin_reorder_products():
                 return jsonify({"status": "error", "message": "No data provided"}), 400
             product_ids = json.loads(order_data)
 
-        # Loop through the IDs and save their new order ranking
         for index, prod_id in enumerate(product_ids):
             product = Product.query.get(int(prod_id))
             if product:
@@ -1093,9 +1108,6 @@ def admin_spin_delete_history(draw_id):
 def request_entity_too_large(error): 
     return redirect(request.referrer)
 
-# ==============================================================
-# AUTO DATABASE MIGRATION FOR TELEGRAM COLUMNS
-# ==============================================================
 with app.app_context():
     db.create_all()
     queries = [
@@ -1104,8 +1116,6 @@ with app.app_context():
         'ALTER TABLE product ADD COLUMN use_custom_thumbnail BOOLEAN DEFAULT FALSE',
         'ALTER TABLE product ADD COLUMN detail_images TEXT',
         'ALTER TABLE "order" ADD COLUMN delivery_fee FLOAT DEFAULT 0.0',
-        
-        # <-- NEW COLUMNS ADDED HERE -->
         'ALTER TABLE "order" ADD COLUMN telegram_id VARCHAR(100)',
         'ALTER TABLE "order" ADD COLUMN telegram_name VARCHAR(200)',
         'ALTER TABLE "order" ADD COLUMN telegram_user_payload TEXT'
