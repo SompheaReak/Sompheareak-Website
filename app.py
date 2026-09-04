@@ -60,6 +60,7 @@ spam_tracker = {}
 # --- 3. STORE MODELS ---
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    product_code = db.Column(db.String(50), nullable=True) # ✨ NEW: Product SKU Code
     title = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, default=0) 
@@ -409,7 +410,7 @@ def checkout():
             items_json=json.dumps(data.get('items', [])), 
             total_usd=float(data.get('total', 0) or 0), 
             delivery_fee=float(data.get('deliveryFee', 0) or 0),
-            promo_code_used=data.get('redeemCode'), # <-- Added redeem code handling
+            promo_code_used=data.get('redeemCode'), 
             telegram_id=tg_id,           
             telegram_name=tg_name,       
             telegram_user_payload=tg_payload, 
@@ -776,6 +777,10 @@ def delete_product(id):
 @login_required
 def update_product(id):
     p = Product.query.get_or_404(id)
+    
+    # ✨ NEW: Handle Product Code Update
+    p.product_code = request.form.get('product_code', '').strip().upper()
+    
     p.title = request.form.get('title')
     p.category = request.form.get('category')
     stores = request.form.getlist('stores[]')
@@ -862,6 +867,9 @@ def update_product(id):
 @app.route('/admin/product/add', methods=['POST'])
 @login_required
 def add_product():
+    # ✨ NEW: Handle Product Code Creation
+    product_code_raw = request.form.get('product_code', '').strip().upper()
+    
     title = request.form.get('title')
     category = request.form.get('category')
     stores = request.form.getlist('stores[]')
@@ -923,6 +931,7 @@ def add_product():
             thumbnail_url = uploaded_urls[0]
             
         new_p = Product(
+            product_code=product_code_raw, # ✨ INJECTED CODE HERE
             title=title, price=vars_json[0]['price'], stock=total_stock, 
             image=thumbnail_url, category=category, store=store_str, 
             discount_percent=discount_percent, variants=json.dumps(vars_json), 
@@ -958,6 +967,7 @@ def get_api(store_name):
             
             product_list.append({
                 "id": p.id,
+                "product_code": getattr(p, 'product_code', '') or '', # ✨ NEW: Add to API so frontend can read it
                 "title": p.title,
                 "price": p.price,
                 "stock": p.stock,
@@ -1111,6 +1121,7 @@ def request_entity_too_large(error):
 with app.app_context():
     db.create_all()
     queries = [
+        'ALTER TABLE product ADD COLUMN product_code VARCHAR(50)', # ✨ NEW: Ensure database updates cleanly!
         'ALTER TABLE "order" ADD COLUMN promo_code_used VARCHAR(50)',
         'ALTER TABLE product ADD COLUMN discount_percent FLOAT DEFAULT 0.0',
         'ALTER TABLE product ADD COLUMN use_custom_thumbnail BOOLEAN DEFAULT FALSE',
