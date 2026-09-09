@@ -60,7 +60,7 @@ spam_tracker = {}
 # --- 3. STORE MODELS ---
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    product_code = db.Column(db.String(50), nullable=True) # ✨ NEW: Product SKU Code
+    product_code = db.Column(db.String(50), nullable=True) # Product SKU Code
     title = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, default=0) 
@@ -96,7 +96,7 @@ class Order(db.Model):
     # NEW TELEGRAM COLUMNS FOR CART SYNC
     telegram_id = db.Column(db.String(100), nullable=True)
     telegram_name = db.Column(db.String(200), nullable=True)
-    telegram_user_payload = db.Column(db.Text, nullable=True) # <-- Stores full Telegram info (username, photo)
+    telegram_user_payload = db.Column(db.Text, nullable=True) 
     
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -251,9 +251,6 @@ def minifigure_store(): return render_template('minifigure.html')
 @app.route('/spin')
 def mystery_box(): return render_template('lucky_draw.html')
 
-# =======================================================
-# NEW: CHECK-PROMO API ROUTE FOR CART REDEEM CODES
-# =======================================================
 @app.route('/api/check-promo', methods=['GET'])
 def check_promo():
     code = request.args.get('code', '').strip().upper()
@@ -384,9 +381,6 @@ def place_order():
         db.session.rollback()
         return f"Error: {str(e)}", 400
 
-# =======================================================
-# NEW: UPDATED CHECKOUT API ROUTE FOR UNIVERSAL CART
-# =======================================================
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
     data = request.json
@@ -463,6 +457,48 @@ def admin_inventory():
     db.session.commit()
     return render_template('admin/inventory.html', products=Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all(), categories=Category.query.order_by(Category.sort_order).all())
 
+
+# ✨ NEW: API ROUTE FOR SEARCHING PRODUCT CODES IN ORDERS ✨
+@app.route('/admin/api/search_code', methods=['GET'])
+@login_required
+def admin_api_search_code():
+    code = request.args.get('code', '').strip().upper()
+    if not code: 
+        return jsonify({'success': False})
+    
+    # Ignore hash in search logic
+    clean_code = code.replace('#', '')
+    
+    # 1. Search main products table first
+    p = Product.query.filter(Product.product_code.ilike(f"%{clean_code}%")).first()
+    if p:
+        return jsonify({
+            'success': True, 'id': p.id, 'title': p.title, 
+            'price': p.price, 'image': p.image, 'code': p.product_code
+        })
+        
+    # 2. Search variants JSON
+    products = Product.query.all()
+    for prod in products:
+        if prod.variants:
+            try:
+                variants = json.loads(prod.variants)
+                for idx, v in enumerate(variants):
+                    v_code = str(v.get('code', '')).upper().replace('#', '')
+                    if v_code == clean_code:
+                        return jsonify({
+                            'success': True, 'id': f"{prod.id}-{idx}", 
+                            'title': f"{prod.title} ({v.get('name', '')})", 
+                            'price': float(v.get('price', 0)), 
+                            'image': v.get('image', prod.image), 
+                            'code': v.get('code')
+                        })
+            except Exception: 
+                pass
+            
+    return jsonify({'success': False})
+
+
 @app.route('/admin/orders')
 @login_required
 def admin_orders():
@@ -501,7 +537,7 @@ def confirm_admin_order(id):
         if not order.stock_deducted:
             try:
                 for item in json.loads(order.items_json):
-                    parts = str(item.get('variantId', item.get('cartId', ''))).split('-')
+                    parts = str(item.get('variantId', item.get('cartId', item.get('id', '')))).split('-')
                     if len(parts) >= 2 and parts[0].isdigit():
                         p_id = int(parts[0])
                         v_idx = int(parts[1]) if parts[1].isdigit() else -1
@@ -548,31 +584,38 @@ def update_admin_order(id):
         order.status = request.form.get('status', order.status)
         
         if 'total_usd' in request.form:
-            try: 
-                order.total_usd = float(request.form.get('total_usd'))
-            except ValueError: 
-                pass
+            try: order.total_usd = float(request.form.get('total_usd'))
+            except ValueError: pass
             
         if 'delivery_fee' in request.form:
-            try: 
-                order.delivery_fee = float(request.form.get('delivery_fee'))
-            except ValueError: 
-                pass
+            try: order.delivery_fee = float(request.form.get('delivery_fee'))
+            except ValueError: pass
         
+        # ✨ REBUILT: Pull fully editable item data arrays from order edit form ✨
         item_ids = request.form.getlist('item_ids[]')
         item_qtys = request.form.getlist('item_qtys[]')
+        item_prices = request.form.getlist('item_prices[]')
+        item_titles = request.form.getlist('item_titles[]')
+        item_images = request.form.getlist('item_images[]')
+        item_styles = request.form.getlist('item_styles[]')
+        item_codes = request.form.getlist('item_codes[]')
         
-        if item_ids and item_qtys:
-            try:
-                items = json.loads(order.items_json) if order.items_json else []
-                for i, item_id in enumerate(item_ids):
-                    for item in items:
-                        if str(item.get('id', item.get('cartId', item.get('variantId', '')))) == str(item_id):
-                            item['qty'] = int(item_qtys[i])
-                order.items_json = json.dumps(items)
-            except Exception as e:
-                print(f"Error updating items: {e}")
-        
+        if item_ids:
+            rebuilt_items = []
+            for i in range(len(item_ids)):
+                rebuilt_items.append({
+                    'id': item_ids[i],
+                    'cartId': item_ids[i], 
+                    'variantId': item_ids[i],
+                    'title': item_titles[i] if i < len(item_titles) else 'Item',
+                    'image': item_images[i] if i < len(item_images) else '',
+                    'qty': int(item_qtys[i]) if (i < len(item_qtys) and str(item_qtys[i]).isdigit()) else 1,
+                    'price': float(item_prices[i]) if (i < len(item_prices) and item_prices[i]) else 0.0,
+                    'style': item_styles[i] if i < len(item_styles) else '',
+                    'code': item_codes[i] if i < len(item_codes) else ''
+                })
+            order.items_json = json.dumps(rebuilt_items)
+            
         db.session.commit()
         flash('Order Information Updated Successfully!', 'success')
     return redirect(url_for('admin_orders'))
@@ -649,7 +692,7 @@ def update_order_status(id, status):
         if status == 'Completed' and not order.stock_deducted:
             try:
                 for item in json.loads(order.items_json):
-                    parts = str(item.get('variantId', item.get('cartId', ''))).split('-')
+                    parts = str(item.get('variantId', item.get('cartId', item.get('id', '')))).split('-')
                     if len(parts) >= 2:
                         p_id, v_idx, qty = int(parts[0]), int(parts[1]), int(item.get('qty', 1))
                         product = Product.query.get(p_id)
@@ -778,7 +821,6 @@ def delete_product(id):
 def update_product(id):
     p = Product.query.get_or_404(id)
     
-    # ✨ NEW: Handle Product Code Update
     p.product_code = request.form.get('product_code', '').strip().upper()
     
     p.title = request.form.get('title')
@@ -807,15 +849,22 @@ def update_product(id):
     v_cats = request.form.getlist('v_categories[]')
     v_discounts = request.form.getlist('v_discounts[]') 
     
+    # ✨ NEW: GRAB VARIANT CODES ✨
+    v_codes = request.form.getlist('v_codes[]')
+    
     updated_variants = []
     total_stock = 0
     for i in range(len(v_ids)):
         stock = int(v_stocks[i])
         updated_variants.append({
-            "id": int(v_ids[i]), "image": v_images[i], "name": v_names[i],
-            "price": float(v_prices[i]), "stock": stock, 
+            "id": int(v_ids[i]), 
+            "image": v_images[i], 
+            "name": v_names[i],
+            "price": float(v_prices[i]), 
+            "stock": stock, 
             "category": v_cats[i] if i < len(v_cats) else p.category,
-            "discount_percent": float(v_discounts[i]) if i < len(v_discounts) else 0.0 
+            "discount_percent": float(v_discounts[i]) if i < len(v_discounts) else 0.0,
+            "code": v_codes[i] if i < len(v_codes) else '' # ✨ Add to dict ✨
         })
         total_stock += stock
         _sync_product_to_pool(p.id, int(v_ids[i]), stock)
@@ -830,7 +879,8 @@ def update_product(id):
                     last_id += 1
                     updated_variants.append({
                         "id": last_id, "name": f"New Style {last_id}", "price": updated_variants[0]['price'] if updated_variants else 0, 
-                        "stock": 1, "image": res['secure_url'], "category": p.category, "discount_percent": 0.0
+                        "stock": 1, "image": res['secure_url'], "category": p.category, "discount_percent": 0.0,
+                        "code": ""
                     })
                     total_stock += 1
                 except Exception as e: 
@@ -867,7 +917,6 @@ def update_product(id):
 @app.route('/admin/product/add', methods=['POST'])
 @login_required
 def add_product():
-    # ✨ NEW: Handle Product Code Creation
     product_code_raw = request.form.get('product_code', '').strip().upper()
     
     title = request.form.get('title')
@@ -893,6 +942,9 @@ def add_product():
     v_stocks = request.form.getlist('variant_stocks[]')
     v_categories = request.form.getlist('variant_categories[]')
     v_discounts = request.form.getlist('variant_discounts[]')
+    
+    # ✨ NEW: GRAB VARIANT CODES ✨
+    v_codes = request.form.getlist('variant_codes[]')
     
     files = request.files.getlist('images')
     uploaded_urls = []
@@ -921,9 +973,12 @@ def add_product():
             stock = int(v_stocks[i]) if i < len(v_stocks) else 0
             cat_str = v_categories[i] if i < len(v_categories) else category
             v_disc = float(v_discounts[i]) if i < len(v_discounts) else 0.0
+            v_code = v_codes[i] if i < len(v_codes) else '' # ✨
+            
             vars_json.append({
                 "id": i, "name": v_names[i] if i < len(v_names) else f"Style {i+1}", 
-                "price": price, "stock": stock, "image": url, "category": cat_str, "discount_percent": v_disc
+                "price": price, "stock": stock, "image": url, 
+                "category": cat_str, "discount_percent": v_disc, "code": v_code
             })
             total_stock += stock
             
@@ -931,7 +986,7 @@ def add_product():
             thumbnail_url = uploaded_urls[0]
             
         new_p = Product(
-            product_code=product_code_raw, # ✨ INJECTED CODE HERE
+            product_code=product_code_raw,
             title=title, price=vars_json[0]['price'], stock=total_stock, 
             image=thumbnail_url, category=category, store=store_str, 
             discount_percent=discount_percent, variants=json.dumps(vars_json), 
@@ -967,7 +1022,7 @@ def get_api(store_name):
             
             product_list.append({
                 "id": p.id,
-                "product_code": getattr(p, 'product_code', '') or '', # ✨ NEW: Add to API so frontend can read it
+                "product_code": getattr(p, 'product_code', '') or '',
                 "title": p.title,
                 "price": p.price,
                 "stock": p.stock,
@@ -1121,7 +1176,7 @@ def request_entity_too_large(error):
 with app.app_context():
     db.create_all()
     queries = [
-        'ALTER TABLE product ADD COLUMN product_code VARCHAR(50)', # ✨ NEW: Ensure database updates cleanly!
+        'ALTER TABLE product ADD COLUMN product_code VARCHAR(50)',
         'ALTER TABLE "order" ADD COLUMN promo_code_used VARCHAR(50)',
         'ALTER TABLE product ADD COLUMN discount_percent FLOAT DEFAULT 0.0',
         'ALTER TABLE product ADD COLUMN use_custom_thumbnail BOOLEAN DEFAULT FALSE',
