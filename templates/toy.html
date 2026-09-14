@@ -112,7 +112,7 @@
                 
                 <div class="grid grid-cols-2 gap-3 sm:gap-4 content-start">
                     <!-- Option 1: Minifigures -->
-                    <button onclick="goToStep('survey-step-minifigures')" class="group relative aspect-square rounded-[1.25rem] overflow-hidden border-[3px] border-transparent hover:border-[#ea580c] active:scale-95 transition-all shadow-sm">
+                    <button onclick="selectMainCategory('minifigure', 'survey-step-minifigures')" class="group relative aspect-square rounded-[1.25rem] overflow-hidden border-[3px] border-transparent hover:border-[#ea580c] active:scale-95 transition-all shadow-sm">
                         <img src="/static/images/cat_minifigure.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Mini+Fig&background=f8fafc&color=ea580c&size=300'">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/90 transition-colors flex items-end justify-center p-4">
                             <div class="flex flex-col items-center justify-center translate-y-2 group-hover:translate-y-0 transition-transform">
@@ -123,7 +123,7 @@
                     </button>
                     
                     <!-- Option 2: Building Set -->
-                    <button onclick="goToStep('survey-step-building')" class="group relative aspect-square rounded-[1.25rem] overflow-hidden border-[3px] border-transparent hover:border-[#ea580c] active:scale-95 transition-all shadow-sm">
+                    <button onclick="selectMainCategory('building', 'survey-step-building')" class="group relative aspect-square rounded-[1.25rem] overflow-hidden border-[3px] border-transparent hover:border-[#ea580c] active:scale-95 transition-all shadow-sm">
                         <img src="/static/images/cat_building.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Build+Set&background=f8fafc&color=ea580c&size=300'">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/90 transition-colors flex items-end justify-center p-4">
                             <div class="flex flex-col items-center justify-center translate-y-2 group-hover:translate-y-0 transition-transform">
@@ -344,7 +344,7 @@
         <div class="px-4 pt-3 pb-3">
             <div class="relative flex items-center w-full max-w-5xl mx-auto">
                 <i class="fa-solid fa-magnifying-glass absolute left-4 text-gray-400 text-sm"></i>
-                <input type="text" id="searchInput" placeholder="Search toys, categories, or variants..." 
+                <input type="text" id="searchInput" placeholder="Search toys, categories, or #codes..." 
                     class="w-full bg-white border-2 border-gray-100 rounded-full py-3 pl-10 pr-10 text-sm font-bold text-gray-800 outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all placeholder-gray-400 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
                 <button id="clearSearchBtn" onclick="clearSearch()" class="absolute right-3 text-gray-300 hover:text-gray-600 hidden transition-colors active:scale-90 p-1">
                     <i class="fa-solid fa-circle-xmark text-lg"></i>
@@ -416,7 +416,10 @@
                             <div class="text-xs text-gray-400 font-extrabold mb-1" id="sheet-price-khr">0៛</div>
                             <div class="text-[10px] text-gray-400 font-bold mb-2">Est. Price: <span id="sheet-est-price">--</span></div>
                         </div>
-                        <div id="stock-label" class="text-[10px] font-black px-2 py-1 bg-gray-100 text-gray-500 rounded uppercase tracking-widest mt-1">In Stock</div>
+                        <div class="flex flex-col items-end">
+                            <div id="stock-label" class="text-[10px] font-black px-2 py-1 bg-gray-100 text-gray-500 rounded uppercase tracking-widest mt-1">In Stock</div>
+                            <div id="sku-label" class="text-[9px] font-mono font-bold text-gray-400 mt-2 hidden">#CODE</div>
+                        </div>
                     </div>
                     <h2 class="text-sm font-black text-gray-900 leading-snug font-['Plus_Jakarta_Sans'] line-clamp-2" id="sheet-title">Product Title</h2>
                 </div>
@@ -474,6 +477,7 @@
         let activeCategory = 'All'; 
         let currentSearchQuery = '';
         
+        let currentSurveyMainCat = '';
         let selectedSurveyThemes = [];
 
         // 🌟 SURVEY MODAL LOGIC 🌟
@@ -482,6 +486,11 @@
             setTimeout(() => {
                 document.getElementById('survey-modal').style.display = 'none';
             }, 500);
+        }
+        
+        function selectMainCategory(mainCat, nextStepId) {
+            currentSurveyMainCat = mainCat;
+            goToStep(nextStepId);
         }
 
         function goToStep(stepId) {
@@ -571,7 +580,7 @@
 
         function confirmSurveyThemes() {
             if (selectedSurveyThemes.length > 0) {
-                setCategory(selectedSurveyThemes);
+                setCategory({ main: currentSurveyMainCat, themes: selectedSurveyThemes });
                 closeSurvey();
             }
         }
@@ -620,11 +629,19 @@
         }
 
         function setCategory(cat) {
-            activeCategory = cat; // Can be a string or an Array of strings
+            activeCategory = cat; // Can be string, Array of strings, or Object {main: string, themes: array}
             
             document.querySelectorAll('.strip-btn').forEach(b => {
                 const btnCat = b.dataset.cat;
-                const isActive = Array.isArray(activeCategory) ? activeCategory.includes(btnCat) : (btnCat === activeCategory);
+                let isActive = false;
+                
+                if (typeof activeCategory === 'object' && activeCategory !== null && !Array.isArray(activeCategory)) {
+                    isActive = activeCategory.themes.includes(btnCat) || activeCategory.main.toLowerCase() === btnCat.toLowerCase();
+                } else if (Array.isArray(activeCategory)) {
+                    isActive = activeCategory.includes(btnCat);
+                } else {
+                    isActive = (btnCat === activeCategory);
+                }
                 
                 if(isActive) {
                     b.classList.add('bg-gray-900', 'text-white', 'border-gray-900');
@@ -664,12 +681,24 @@
             });
 
             document.getElementById('category-filters').innerHTML = catArray.map(c => {
-                const isActive = Array.isArray(activeCategory) ? activeCategory.includes(c) : (c === activeCategory);
+                let isActive = false;
+                if (typeof activeCategory === 'object' && activeCategory !== null && !Array.isArray(activeCategory)) {
+                    isActive = activeCategory.themes.includes(c) || activeCategory.main.toLowerCase() === c.toLowerCase();
+                } else {
+                    isActive = Array.isArray(activeCategory) ? activeCategory.includes(c) : (c === activeCategory);
+                }
+
                 return `<button data-cat="${c}" onclick="setCategory('${c}')" class="strip-btn px-4 py-1.5 rounded-full border ${isActive ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'} text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors shadow-sm flex-shrink-0">${c}</button>`
             }).join('');
 
             document.getElementById('full-category-grid').innerHTML = catArray.map(c => {
-                const isActive = Array.isArray(activeCategory) ? activeCategory.includes(c) : (c === activeCategory);
+                let isActive = false;
+                if (typeof activeCategory === 'object' && activeCategory !== null && !Array.isArray(activeCategory)) {
+                    isActive = activeCategory.themes.includes(c) || activeCategory.main.toLowerCase() === c.toLowerCase();
+                } else {
+                    isActive = Array.isArray(activeCategory) ? activeCategory.includes(c) : (c === activeCategory);
+                }
+                
                 return `<button onclick="setCategory('${c}')" class="w-full px-5 py-4 rounded-xl border ${isActive ? 'bg-orange-50 border-[#ea580c] text-[#ea580c] shadow-sm' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'} text-sm font-black tracking-wide text-left flex items-center justify-between transition-all group">
                     <span class="font-['Plus_Jakarta_Sans']">${c}</span>
                     <div class="w-6 h-6 rounded-full flex items-center justify-center ${isActive ? 'bg-[#ea580c] text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'} transition-colors">
@@ -682,26 +711,53 @@
         function renderProducts() {
             let filtered = allProducts;
             
-            // Smart Filter: Handles single string OR array of strings
-            if (activeCategory !== 'All' && !(Array.isArray(activeCategory) && activeCategory.includes('All'))) {
-                const targets = Array.isArray(activeCategory) ? activeCategory.map(c => c.toLowerCase()) : [activeCategory.toLowerCase()];
-                filtered = filtered.filter(p => {
-                    if (p.category && p.category.split(',').map(c => c.trim().toLowerCase()).some(c => targets.includes(c))) return true;
-                    if (p.variants) {
-                        return p.variants.some(v => v.category && v.category.split(',').map(c => c.trim().toLowerCase()).some(c => targets.includes(c)));
-                    }
-                    return false;
-                });
+            // Smart Filter: Handles complex object (Survey), array of strings, or single string
+            if (activeCategory !== 'All') {
+                if (typeof activeCategory === 'object' && activeCategory !== null && !Array.isArray(activeCategory)) {
+                    // COMPLEX FILTER: e.g. { main: 'minifigure', themes: ['Ninjago', 'Marvel'] }
+                    const mainTarget = activeCategory.main.toLowerCase();
+                    const themeTargets = activeCategory.themes.map(t => t.toLowerCase());
+
+                    filtered = filtered.filter(p => {
+                        let allCats = [];
+                        if (p.category) allCats.push(...p.category.split(',').map(c => c.trim().toLowerCase()));
+                        if (p.variants) {
+                            p.variants.forEach(v => {
+                                if (v.category) allCats.push(...v.category.split(',').map(c => c.trim().toLowerCase()));
+                            });
+                        }
+
+                        // Must include the main word (e.g. "minifigure" matches "minifigures") AND at least one theme
+                        const hasMain = allCats.some(c => c.includes(mainTarget)); 
+                        const hasTheme = themeTargets.length === 0 || themeTargets.some(t => allCats.includes(t));
+
+                        return hasMain && hasTheme;
+                    });
+                } else if (!(Array.isArray(activeCategory) && activeCategory.includes('All'))) {
+                    // Standard Single String or Array filter
+                    const targets = Array.isArray(activeCategory) ? activeCategory.map(c => c.toLowerCase()) : [activeCategory.toLowerCase()];
+                    filtered = filtered.filter(p => {
+                        if (p.category && p.category.split(',').map(c => c.trim().toLowerCase()).some(c => targets.includes(c))) return true;
+                        if (p.variants) {
+                            return p.variants.some(v => v.category && v.category.split(',').map(c => c.trim().toLowerCase()).some(c => targets.includes(c)));
+                        }
+                        return false;
+                    });
+                }
             }
 
+            // Image & Search matching logic
             filtered = filtered.map(p => {
                 let displayImage = p.thumbnail; 
                 let matchedVariantIndex = 0;
                 let variants = p.variants || [];
                 
                 if (currentSearchQuery.trim() !== '') {
-                    const q = currentSearchQuery.toLowerCase().trim();
-                    const vIndex = variants.findIndex(v => v.name && v.name.toLowerCase().includes(q));
+                    const q = currentSearchQuery.toLowerCase().trim().replace('#', '');
+                    const vIndex = variants.findIndex(v => 
+                        (v.name && v.name.toLowerCase().includes(q)) || 
+                        (v.code && v.code.toLowerCase().includes(q))
+                    );
                     
                     if (vIndex !== -1) { 
                         matchedVariantIndex = vIndex; 
@@ -721,11 +777,17 @@
                 return { ...p, displayImage, matchedVariantIndex };
             });
 
+            // Apply text search filter
             if (currentSearchQuery.trim() !== '') {
-                const q = currentSearchQuery.toLowerCase().trim();
+                const q = currentSearchQuery.toLowerCase().trim().replace('#', '');
                 filtered = filtered.filter(p => {
-                    const titleMatch = (p.title && p.title.toLowerCase().includes(q)) || (p.category && p.category.toLowerCase().includes(q));
-                    const variantMatch = p.variants && p.variants.some(v => v.name && v.name.toLowerCase().includes(q));
+                    const titleMatch = (p.title && p.title.toLowerCase().includes(q)) || 
+                                       (p.category && p.category.toLowerCase().includes(q)) ||
+                                       (p.product_code && p.product_code.toLowerCase().includes(q));
+                    const variantMatch = p.variants && p.variants.some(v => 
+                        (v.name && v.name.toLowerCase().includes(q)) ||
+                        (v.code && v.code.toLowerCase().includes(q))
+                    );
                     return titleMatch || p.matchedVariantIndex > 0 || variantMatch;
                 });
             }
@@ -806,7 +868,7 @@
             document.getElementById('modal-qty').innerText = modalQty;
             
             let variants = currentModalProduct.variants || [];
-            if(!variants || variants.length === 0) variants = [{ name: "Standard", price: currentModalProduct.price, stock: currentModalProduct.stock, image: currentModalProduct.thumbnail }];
+            if(!variants || variants.length === 0) variants = [{ name: "Standard", price: currentModalProduct.price, stock: currentModalProduct.stock, image: currentModalProduct.thumbnail, code: currentModalProduct.product_code }];
             currentModalProduct._activeVariants = variants;
 
             let allImages = [];
@@ -903,6 +965,7 @@
             const priceKHRStr = `${Math.round(finalPriceUSD * RATE).toLocaleString()}៛`;
             const estPrice = `$${(finalPriceUSD * 0.95).toFixed(2)}`;
             const name = v.name || `Style ${idx + 1}`;
+            const skuCode = v.code || currentModalProduct.product_code;
             
             if (finalDiscountPercent > 0) {
                 document.getElementById('sheet-price').innerHTML = `
@@ -924,6 +987,7 @@
             const variantStock = v.stock !== undefined && v.stock !== null ? parseInt(v.stock) : (currentModalProduct.stock !== undefined && currentModalProduct.stock !== null ? parseInt(currentModalProduct.stock) : 1);
             const addToCartBtn = document.getElementById('add-to-cart-btn');
             const stockLabel = document.getElementById('stock-label');
+            const skuLabel = document.getElementById('sku-label');
 
             if (isNaN(variantStock) || variantStock > 0) {
                 addToCartBtn.classList.remove('bg-gray-400');
@@ -939,6 +1003,13 @@
                 addToCartBtn.disabled = true;
                 stockLabel.className = 'text-[10px] font-black px-2 py-1 bg-red-50 text-red-500 rounded uppercase tracking-widest mt-1';
                 stockLabel.innerHTML = `Out of Stock`;
+            }
+            
+            if (skuCode && skuCode.trim() !== '') {
+                skuLabel.innerHTML = `#${skuCode}`;
+                skuLabel.classList.remove('hidden');
+            } else {
+                skuLabel.classList.add('hidden');
             }
             
             if (scrollImage && variants.length > 1) {
@@ -1025,6 +1096,7 @@
             const thumbnailImage = v.image || currentModalProduct.thumbnail;
             const stock = parseInt(v.stock !== undefined ? v.stock : currentModalProduct.stock);
             const styleName = v.name || (hasTrueVariants ? `Style ${currentVariantIndex + 1}` : "Standard");
+            const skuCode = v.code || currentModalProduct.product_code || "";
 
             if(!isNaN(stock) && stock <= 0) return alert("Sorry, this exact variant is out of stock!");
 
@@ -1033,7 +1105,8 @@
                     productId: currentModalProduct.id, variantId: dbId, 
                     name: `${currentModalProduct.title} - ${styleName}`,
                     price: finalPriceUSD, image: thumbnailImage, stock: isNaN(stock) ? 99 : stock,
-                    type: 'option', mainVariantId: `${currentModalProduct.id}-0` 
+                    type: 'option', mainVariantId: `${currentModalProduct.id}-0`,
+                    code: skuCode
                 });
             }
             
