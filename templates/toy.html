@@ -62,32 +62,12 @@
         pointer-events: none; 
     }
     
-    .step-container { display: none; width: 100%; flex-direction: column; }
-    
-    /* Step Transitions */
-    .step-transition { transition: all 0.4s ease; }
-    .step-out { 
-        display: flex !important; 
-        position: absolute; 
-        top: 0; 
-        left: 0; 
-        width: 100%; 
-        pointer-events: none; 
-        animation: slideOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+    @keyframes fadeInSlide {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
     }
-    .step-in { 
-        display: flex !important; 
-        position: relative; 
-        animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
-    }
-    
-    @keyframes slideIn {
-        from { opacity: 0; transform: translateX(30px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes slideOut {
-        from { opacity: 1; transform: translateX(0); }
-        to { opacity: 0; transform: translateX(-30px); }
+    .animate-fadeIn {
+        animation: fadeInSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
   </style>
 </head>
@@ -105,167 +85,148 @@
 
         <div class="flex-1 overflow-y-auto relative pt-16 pb-32">
             
-            <!-- ================= STEP 1: MAIN CATEGORIES ================= -->
-            <div id="survey-step-1" class="step-container step-transition step-in px-5 max-w-lg mx-auto">
+            <div class="px-5 max-w-lg mx-auto w-full">
+                <!-- Header -->
                 <div class="text-center mb-8">
                     <h2 class="text-2xl sm:text-[28px] font-black text-slate-900 font-['Moul'] mb-2 leading-relaxed">តើអ្នកចង់មើលទំនិញបែបណាដែរ?</h2>
                     <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest font-['Plus_Jakarta_Sans']">Select your favorite category</p>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-3 sm:gap-4 content-start">
-                    <!-- Option 1: Minifigures -->
-                    <button onclick="selectMainCategory('minifigure', 'survey-step-minifigures')" class="group relative aspect-square rounded-[1.25rem] overflow-hidden border-[3px] border-transparent hover:border-[#ea580c] hover:shadow-lg hover:shadow-orange-500/20 active:scale-95 transition-all shadow-sm">
-                        <img src="/static/images/cat_minifigure.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Mini+Fig&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/90 transition-colors flex items-end justify-center p-4">
-                            <div class="flex flex-col items-center justify-center translate-y-2 group-hover:translate-y-0 transition-transform">
-                                <i class="fa-solid fa-user-astronaut text-white/80 text-xl mb-1 group-hover:text-white transition-colors"></i>
-                                <span class="text-white font-black text-sm sm:text-base drop-shadow-md tracking-widest font-['Plus_Jakarta_Sans'] uppercase">Minifigures</span>
-                            </div>
+                <!-- ================= 1st LINE: MAIN CATEGORY TABS ================= -->
+                <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
+                    <!-- Tab: Minifigure -->
+                    <button onclick="selectSurveyMainTab('minifigure')" id="tab-minifigure" class="survey-tab-btn group relative aspect-[4/5] sm:aspect-square rounded-2xl overflow-hidden border-[3px] border-slate-100 hover:border-[#ea580c] active:scale-95 transition-all shadow-sm bg-slate-50">
+                        <img src="/static/images/cat_minifigure.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-60 group-[.active]:opacity-100" onerror="this.src='https://ui-avatars.com/api/?name=Mini+Fig&background=f8fafc&color=ea580c&size=300'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex items-end justify-center p-2 sm:p-3">
+                            <span class="text-white font-black text-[9px] sm:text-xs tracking-widest font-['Plus_Jakarta_Sans'] uppercase text-center leading-tight">Minifigures</span>
                         </div>
+                        <div class="tab-indicator absolute top-2 right-2 w-4 h-4 rounded-full bg-[#ea580c] text-white flex items-center justify-center opacity-0 scale-50 transition-all shadow-sm"><i class="fa-solid fa-check text-[8px]"></i></div>
                     </button>
                     
-                    <!-- Option 2: Building Set -->
-                    <button onclick="selectMainCategory('building', 'survey-step-building')" class="group relative aspect-square rounded-[1.25rem] overflow-hidden border-[3px] border-transparent hover:border-[#ea580c] hover:shadow-lg hover:shadow-orange-500/20 active:scale-95 transition-all shadow-sm">
-                        <img src="/static/images/cat_building.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Build+Set&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/90 transition-colors flex items-end justify-center p-4">
-                            <div class="flex flex-col items-center justify-center translate-y-2 group-hover:translate-y-0 transition-transform">
-                                <i class="fa-solid fa-cubes-stacked text-white/80 text-xl mb-1 group-hover:text-white transition-colors"></i>
-                                <span class="text-white font-black text-sm sm:text-base drop-shadow-md tracking-widest font-['Plus_Jakarta_Sans'] uppercase leading-tight text-center">Building Set</span>
-                            </div>
+                    <!-- Tab: Building Set -->
+                    <button onclick="selectSurveyMainTab('building')" id="tab-building" class="survey-tab-btn group relative aspect-[4/5] sm:aspect-square rounded-2xl overflow-hidden border-[3px] border-slate-100 hover:border-[#ea580c] active:scale-95 transition-all shadow-sm bg-slate-50">
+                        <img src="/static/images/cat_building.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-60 group-[.active]:opacity-100" onerror="this.src='https://ui-avatars.com/api/?name=Build+Set&background=f8fafc&color=ea580c&size=300'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex items-end justify-center p-2 sm:p-3">
+                            <span class="text-white font-black text-[9px] sm:text-xs tracking-widest font-['Plus_Jakarta_Sans'] uppercase text-center leading-tight">Building Set</span>
                         </div>
+                        <div class="tab-indicator absolute top-2 right-2 w-4 h-4 rounded-full bg-[#ea580c] text-white flex items-center justify-center opacity-0 scale-50 transition-all shadow-sm"><i class="fa-solid fa-check text-[8px]"></i></div>
                     </button>
                     
-                    <!-- Option 3: Spinner (Direct) -->
-                    <button onclick="selectCategoryAndClose('Spinner')" class="group relative aspect-square rounded-[1.25rem] overflow-hidden border-[3px] border-transparent hover:border-[#ea580c] hover:shadow-lg hover:shadow-orange-500/20 active:scale-95 transition-all shadow-sm">
-                        <img src="/static/images/cat_spinner.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Spin+ner&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-black/90 transition-colors flex items-end justify-center p-4">
-                            <div class="flex flex-col items-center justify-center translate-y-2 group-hover:translate-y-0 transition-transform">
-                                <i class="fa-solid fa-hurricane text-white/80 text-xl mb-1 group-hover:text-white transition-colors"></i>
-                                <span class="text-white font-black text-sm sm:text-base drop-shadow-md tracking-widest font-['Plus_Jakarta_Sans'] uppercase">Spinner</span>
-                            </div>
+                    <!-- Tab: Spinner -->
+                    <button onclick="selectSurveyMainTab('spinner')" id="tab-spinner" class="survey-tab-btn group relative aspect-[4/5] sm:aspect-square rounded-2xl overflow-hidden border-[3px] border-slate-100 hover:border-[#ea580c] active:scale-95 transition-all shadow-sm bg-slate-50">
+                        <img src="/static/images/cat_spinner.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-60 group-[.active]:opacity-100" onerror="this.src='https://ui-avatars.com/api/?name=Spin+ner&background=f8fafc&color=ea580c&size=300'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex items-end justify-center p-2 sm:p-3">
+                            <span class="text-white font-black text-[9px] sm:text-xs tracking-widest font-['Plus_Jakarta_Sans'] uppercase text-center leading-tight">Spinner</span>
                         </div>
+                        <div class="tab-indicator absolute top-2 right-2 w-4 h-4 rounded-full bg-[#ea580c] text-white flex items-center justify-center opacity-0 scale-50 transition-all shadow-sm"><i class="fa-solid fa-check text-[8px]"></i></div>
                     </button>
+                </div>
 
-                    <!-- Option 4: Coming Soon -->
-                    <div class="aspect-square relative rounded-[1.25rem] overflow-hidden shadow-sm border border-slate-100 opacity-60 cursor-not-allowed">
-                        <div class="absolute inset-0 bg-slate-100"></div>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <div class="w-12 h-12 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center mb-2"><i class="fa-regular fa-clock text-xl"></i></div>
-                            <span class="text-slate-500 font-black text-sm sm:text-base px-2 text-center font-['Plus_Jakarta_Sans'] uppercase tracking-widest">Coming Soon</span>
-                        </div>
+                <!-- ================= 2nd LINE: SUB THEMES CONTENT ================= -->
+                <div id="sub-categories-wrapper" class="hidden animate-fadeIn pb-8">
+                    
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="h-px bg-slate-200 flex-1"></div>
+                        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center" id="sub-title-text">Select Themes</h3>
+                        <div class="h-px bg-slate-200 flex-1"></div>
                     </div>
-                </div>
-            </div>
 
-            <!-- ================= STEP 2: MINIFIGURES MULTI-SELECT ================= -->
-            <div id="survey-step-minifigures" class="step-container step-transition px-5 max-w-lg mx-auto">
-                <button onclick="goToStep('survey-step-1')" class="absolute top-5 left-5 w-10 h-10 flex items-center justify-center bg-slate-50 border border-slate-100 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors z-20 shadow-sm active:scale-90">
-                    <i class="fa-solid fa-arrow-left text-sm"></i>
-                </button>
+                    <!-- MINIFIGURES THEMES -->
+                    <div id="sub-minifigure" class="sub-grid grid grid-cols-2 gap-3 sm:gap-4 hidden">
+                        <!-- Ninjago -->
+                        <button onclick="toggleSurveyTheme(this, 'Ninjago')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
+                            <img src="/static/images/ninjago_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Nin&background=f8fafc&color=ea580c&size=300'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                                <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Ninjago</span>
+                            </div>
+                            <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
+                                <i class="fa-solid fa-circle-check text-xl"></i>
+                            </div>
+                        </button>
+                        <!-- Marvel -->
+                        <button onclick="toggleSurveyTheme(this, 'Marvel')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
+                            <img src="/static/images/marvel_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Mar&background=f8fafc&color=ea580c&size=300'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                                <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Marvel</span>
+                            </div>
+                            <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
+                                <i class="fa-solid fa-circle-check text-xl"></i>
+                            </div>
+                        </button>
+                        <!-- Anime -->
+                        <button onclick="toggleSurveyTheme(this, 'Anime')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
+                            <img src="/static/images/anime_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Ani&background=f8fafc&color=ea580c&size=300'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                                <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Anime</span>
+                            </div>
+                            <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
+                                <i class="fa-solid fa-circle-check text-xl"></i>
+                            </div>
+                        </button>
+                        <!-- Military -->
+                        <button onclick="toggleSurveyTheme(this, 'Military')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
+                            <img src="/static/images/military_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Mil&background=f8fafc&color=ea580c&size=300'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                                <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Military</span>
+                            </div>
+                            <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
+                                <i class="fa-solid fa-circle-check text-xl"></i>
+                            </div>
+                        </button>
+                        <!-- Chinese -->
+                        <button onclick="toggleSurveyTheme(this, 'Chinese')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm col-span-2 sm:col-span-1">
+                            <img src="/static/images/chinese_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Chi&background=f8fafc&color=ea580c&size=300'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                                <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans'] text-center">Chinese / Dynasty</span>
+                            </div>
+                            <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
+                                <i class="fa-solid fa-circle-check text-xl"></i>
+                            </div>
+                        </button>
+                    </div>
 
-                <div class="text-center mb-8">
-                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900 font-['Moul'] mb-2">ម៉ូត Minifigures</h2>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">Select your themes</p>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-3 sm:gap-4 content-start">
-                    <!-- Ninjago -->
-                    <button onclick="toggleSurveyTheme(this, 'Ninjago')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                        <img src="/static/images/ninjago_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Nin&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Ninjago</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
-                    <!-- Marvel -->
-                    <button onclick="toggleSurveyTheme(this, 'Marvel')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                        <img src="/static/images/marvel_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Mar&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Marvel</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
-                    <!-- Anime -->
-                    <button onclick="toggleSurveyTheme(this, 'Anime')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                        <img src="/static/images/anime_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Ani&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Anime</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
-                    <!-- Military -->
-                    <button onclick="toggleSurveyTheme(this, 'Military')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                        <img src="/static/images/military_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Mil&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Military</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
-                    <!-- Chinese -->
-                    <button onclick="toggleSurveyTheme(this, 'Chinese')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm col-span-2 sm:col-span-1">
-                        <img src="/static/images/chinese_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Chi&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans'] text-center">Chinese / Dynasty</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
-                </div>
-            </div>
+                    <!-- BUILDING SETS THEMES -->
+                    <div id="sub-building" class="sub-grid grid grid-cols-2 gap-3 sm:gap-4 hidden">
+                        <!-- Ninjago (Set) -->
+                        <button onclick="toggleSurveyTheme(this, 'Ninjago')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
+                            <img src="/static/images/ninjago_set.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Nin&background=f8fafc&color=ea580c&size=300'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                                <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Ninjago</span>
+                            </div>
+                            <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
+                                <i class="fa-solid fa-circle-check text-xl"></i>
+                            </div>
+                        </button>
+                        
+                        <!-- Technic & F1 -->
+                        <button onclick="toggleSurveyTheme(this, 'Technic')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
+                            <img src="/static/images/technic_set.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Tec&background=f8fafc&color=ea580c&size=300'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                                <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans'] leading-tight text-center">Technic & F1</span>
+                            </div>
+                            <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
+                                <i class="fa-solid fa-circle-check text-xl"></i>
+                            </div>
+                        </button>
+                        
+                        <!-- Others -->
+                        <button onclick="toggleSurveyTheme(this, 'Others')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm col-span-2 sm:col-span-1">
+                            <img src="/static/images/others_set.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Oth&background=f8fafc&color=ea580c&size=300'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
+                                <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Other Sets</span>
+                            </div>
+                            <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
+                                <i class="fa-solid fa-circle-check text-xl"></i>
+                            </div>
+                        </button>
+                    </div>
 
-            <!-- ================= STEP 3: BUILDING SETS MULTI-SELECT ================= -->
-            <div id="survey-step-building" class="step-container step-transition px-5 max-w-lg mx-auto">
-                <button onclick="goToStep('survey-step-1')" class="absolute top-5 left-5 w-10 h-10 flex items-center justify-center bg-slate-50 border border-slate-100 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors z-20 shadow-sm active:scale-90">
-                    <i class="fa-solid fa-arrow-left text-sm"></i>
-                </button>
-
-                <div class="text-center mb-8">
-                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900 font-['Moul'] mb-2">ម៉ូត Building Sets</h2>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">Select your themes</p>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-3 sm:gap-4 content-start">
-                    <!-- Ninjago (Set) -->
-                    <button onclick="toggleSurveyTheme(this, 'Ninjago')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                        <img src="/static/images/ninjago_set.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Nin&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Ninjago</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
-                    
-                    <!-- Technic & F1 -->
-                    <button onclick="toggleSurveyTheme(this, 'Technic')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                        <img src="/static/images/technic_set.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Tec&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans'] leading-tight text-center">Technic & F1</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
-                    
-                    <!-- Others -->
-                    <button onclick="toggleSurveyTheme(this, 'Others')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm col-span-2 sm:col-span-1">
-                        <img src="/static/images/others_set.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Oth&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Other Sets</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
+                    <!-- SPINNER ACTION -->
+                    <div id="sub-spinner" class="sub-grid hidden flex-col items-center justify-center py-4">
+                        <button onclick="selectCategoryAndClose('Spinner')" class="w-full bg-[#ea580c] text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-orange-500/30 active:scale-95 transition-all text-sm">
+                            <i class="fa-solid fa-hurricane mr-2"></i> View All Spinners
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -489,10 +450,28 @@
         let currentSurveyMainCat = '';
         let selectedSurveyThemes = [];
 
-        // 🌟 SURVEY MODAL LOGIC 🌟
+        // 🌟 SINGLE-VIEW TABBED SURVEY MODAL LOGIC 🌟
         function openSurvey() {
-            // Reset survey steps and selections for a fresh start
+            // Reset selections
             selectedSurveyThemes = [];
+            currentSurveyMainCat = '';
+            
+            // Reset Tabs (Main Categories)
+            document.querySelectorAll('.survey-tab-btn').forEach(el => {
+                el.classList.remove('border-[#ea580c]', 'active');
+                el.classList.add('border-slate-100');
+                const indicator = el.querySelector('.tab-indicator');
+                if (indicator) {
+                    indicator.classList.remove('opacity-100', 'scale-100');
+                    indicator.classList.add('opacity-0', 'scale-50');
+                }
+            });
+
+            // Hide Sub Categories Area Initially
+            document.getElementById('sub-categories-wrapper').classList.add('hidden');
+            document.querySelectorAll('.sub-grid').forEach(el => el.classList.add('hidden'));
+
+            // Reset Theme Checkboxes (Sub Categories)
             document.querySelectorAll('.survey-cat-btn').forEach(el => {
                 el.classList.remove('border-[#ea580c]');
                 el.classList.add('border-transparent');
@@ -502,10 +481,8 @@
                     check.classList.add('opacity-0', 'scale-50');
                 }
             });
-            updateConfirmButtons();
             
-            // Go to step 1
-            goToStep('survey-step-1');
+            updateConfirmButtons();
             
             const modal = document.getElementById('survey-modal');
             modal.style.display = 'flex';
@@ -521,18 +498,14 @@
             }, 500);
         }
         
-        function selectMainCategory(mainCat, nextStepId) {
+        function selectSurveyMainTab(mainCat) {
             currentSurveyMainCat = mainCat;
-            goToStep(nextStepId);
-        }
-
-        function goToStep(stepId) {
-            // Reset Selections when moving between steps (only moving forward from Step 1)
-            selectedSurveyThemes = [];
+            selectedSurveyThemes = []; // Clear sub-themes when switching main tabs
+            
+            // 1. Reset all theme checkboxes visually
             document.querySelectorAll('.survey-cat-btn').forEach(el => {
                 el.classList.remove('border-[#ea580c]');
                 el.classList.add('border-transparent');
-                
                 const check = el.querySelector('.theme-check');
                 if(check) {
                     check.classList.remove('opacity-100', 'scale-100');
@@ -541,27 +514,41 @@
             });
             updateConfirmButtons();
 
-            // Transition logic
-            const currentStep = document.querySelector('.step-in');
-            const nextStep = document.getElementById(stepId);
-            
-            if (currentStep && currentStep !== nextStep) {
-                currentStep.classList.remove('step-in');
-                currentStep.classList.add('step-out');
-                // Hide completely after transition completes
-                setTimeout(() => {
-                    if (currentStep.classList.contains('step-out')) {
-                        currentStep.style.display = 'none';
-                    }
-                }, 400); 
+            // 2. Update Tab Visuals
+            document.querySelectorAll('.survey-tab-btn').forEach(el => {
+                if (el.id === 'tab-' + mainCat) {
+                    el.classList.add('border-[#ea580c]', 'active');
+                    el.classList.remove('border-slate-100');
+                    const indicator = el.querySelector('.tab-indicator');
+                    if(indicator) { indicator.classList.add('opacity-100', 'scale-100'); indicator.classList.remove('opacity-0', 'scale-50'); }
+                } else {
+                    el.classList.remove('border-[#ea580c]', 'active');
+                    el.classList.add('border-slate-100');
+                    const indicator = el.querySelector('.tab-indicator');
+                    if(indicator) { indicator.classList.remove('opacity-100', 'scale-100'); indicator.classList.add('opacity-0', 'scale-50'); }
+                }
+            });
+
+            // 3. Reveal the specific Sub-Grid dynamically
+            const wrapper = document.getElementById('sub-categories-wrapper');
+            wrapper.classList.remove('hidden');
+
+            // Hide all sub grids
+            document.querySelectorAll('.sub-grid').forEach(el => el.classList.add('hidden'));
+
+            // Show target sub grid
+            const targetGrid = document.getElementById('sub-' + mainCat);
+            if (targetGrid) {
+                targetGrid.classList.remove('hidden');
+                targetGrid.classList.add('flex'); // Keep display logic robust
             }
-            
-            if (nextStep) {
-                nextStep.style.display = 'flex';
-                // Force reflow
-                void nextStep.offsetWidth;
-                nextStep.classList.remove('step-out');
-                nextStep.classList.add('step-in');
+
+            // Update Section Title based on selection
+            const titleText = document.getElementById('sub-title-text');
+            if (mainCat === 'spinner') {
+                titleText.innerText = 'Ready to Explore';
+            } else {
+                titleText.innerText = 'Select Themes';
             }
         }
 
