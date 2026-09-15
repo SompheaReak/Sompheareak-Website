@@ -342,7 +342,7 @@
     </div>
 
     <!-- 🌟 SMART SEARCH & CATEGORY CONTROLS 🌟 -->
-    <section class="sticky top-[86px] z-[90] bg-white/95 backdrop-blur-xl border-b border-slate-100 shadow-sm transition-all">
+    <section class="sticky top-[86px] z-[90] bg-white/95 backdrop-blur-xl border-b border-slate-100 shadow-sm transition-all pb-3">
         <div class="px-4 pt-3 pb-3">
             <div class="relative flex items-center w-full max-w-5xl mx-auto group">
                 <i class="fa-solid fa-magnifying-glass absolute left-4 text-slate-400 text-sm group-focus-within:text-[#ea580c] transition-colors z-10"></i>
@@ -354,50 +354,27 @@
             </div>
         </div>
 
-        <div class="flex items-start px-4 pb-3 gap-2 max-w-5xl mx-auto overflow-hidden">
+        <div class="flex items-start px-4 gap-2.5 max-w-5xl mx-auto">
             <!-- 🌟 RESURVEY BUTTON 🌟 -->
-            <button onclick="openSurvey()" class="shrink-0 h-10 px-4 flex items-center justify-center bg-slate-900 text-white rounded-full font-bold text-[11px] uppercase tracking-wider shadow-md hover:bg-slate-800 active:scale-95 transition-all gap-2 border border-slate-800">
+            <button onclick="openSurvey()" class="shrink-0 h-8 px-3.5 flex items-center justify-center bg-slate-900 text-white rounded-full font-bold text-[9px] uppercase tracking-wider shadow-sm hover:bg-slate-800 active:scale-95 transition-all gap-1.5 border border-slate-800 mt-0.5">
                 <i class="fa-solid fa-wand-magic-sparkles text-orange-400"></i> <span class="hidden sm:inline">Guide Me</span>
             </button>
             
-            <div class="h-10 w-px bg-slate-200 mx-1 shrink-0"></div>
+            <div class="h-8 w-px bg-slate-200 shrink-0 mt-0.5"></div>
             
-            <!-- 🌟 TWO-LINE FILTERS 🌟 -->
-            <div class="flex-1 flex flex-col gap-2 overflow-hidden mask-fade-right pr-2">
+            <!-- 🌟 TWO-LINE FILTERS (COMPACT & WRAPPING) 🌟 -->
+            <div class="flex-1 flex flex-col gap-1.5 w-full">
                 <!-- Line 1: Main Categories -->
-                <div id="main-category-filters" class="flex overflow-x-auto gap-2 scrollbar-hide items-center min-h-[40px]"></div>
+                <div id="main-category-filters" class="flex flex-wrap gap-1.5 items-center"></div>
                 <!-- Line 2: Sub Themes (Hidden by default) -->
-                <div id="sub-category-filters" class="flex overflow-x-auto gap-2 scrollbar-hide items-center hidden min-h-[28px]"></div>
+                <div id="sub-category-filters" class="flex flex-wrap gap-1.5 items-center hidden"></div>
             </div>
-            
-            <!-- 🌟 ALL CATEGORIES BUTTON 🌟 -->
-            <button onclick="openCategoryModal()" class="shrink-0 w-10 h-10 flex items-center justify-center bg-slate-50 border border-slate-200 rounded-full text-slate-700 shadow-sm active:scale-90 transition-transform hover:bg-slate-100 relative group">
-                <i class="fa-solid fa-layer-group text-sm"></i>
-                <span class="absolute -top-8 right-0 bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">All Categories</span>
-            </button>
         </div>
     </section>
 
     <main class="p-4 max-w-5xl mx-auto min-h-[50vh]">
         <div id="product-grid" class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"></div>
     </main>
-
-    <!-- 🌟 ALL CATEGORIES EXPLORER MODAL 🌟 -->
-    <div id="category-modal" class="fixed inset-0 z-[1000] flex flex-col justify-end translate-y-full">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeCategoryModal()"></div>
-        <div class="relative w-full max-h-[75vh] md:max-w-md md:mx-auto bg-slate-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
-            <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-slate-100 z-10 sticky top-0 shadow-sm">
-                <div>
-                    <h2 class="text-lg font-black text-slate-900 font-['Moul']">ជ្រើសរើសប្រភេទ</h2>
-                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Explore All Categories</p>
-                </div>
-                <button onclick="closeCategoryModal()" class="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-4">
-                <div id="full-category-grid" class="flex flex-col gap-2"></div>
-            </div>
-        </div>
-    </div>
 
     <!-- 🌟 FULL SCREEN PRODUCT MODAL 🌟 -->
     <div id="product-modal" class="fixed inset-0 z-[1000] flex flex-col bg-slate-50 translate-y-full transition-transform duration-300 shadow-2xl">
@@ -708,21 +685,11 @@
         // 🌟 UPDATED: SET CATEGORY (Used by Survey & Modal) 🌟
         function setCategory(cat) {
             activeCategory = cat; 
-            closeCategoryModal();
             renderCategoryFilters();
             renderProducts();
-            
-            // Scroll to center the active main category
-            setTimeout(() => {
-                const firstActive = document.querySelector('#main-category-filters .bg-slate-900');
-                if (firstActive) firstActive.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            }, 50);
         }
 
-        function openCategoryModal() { document.getElementById('category-modal').classList.remove('translate-y-full'); }
-        function closeCategoryModal() { document.getElementById('category-modal').classList.add('translate-y-full'); }
-
-        // 🌟 REDESIGNED TWO-LINE CATEGORY UI RENDERER 🌟
+        // 🌟 REDESIGNED COMPACT SINGLE AREA CATEGORY UI RENDERER 🌟
         function renderCategoryFilters() {
             let mainCat = 'all';
             let themes = [];
@@ -747,7 +714,7 @@
             const mainHtml = mainCategories.map(c => {
                 const isActive = (mainCat === c.id) || (mainCat === 'all' && activeCategory === 'All');
                 const baseClass = isActive ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
-                return `<button onclick="setMainFilter('${c.id}')" class="px-4 h-10 rounded-full border ${baseClass} text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors shadow-sm flex-shrink-0 flex items-center">${c.icon}${c.label}</button>`;
+                return `<button onclick="setMainFilter('${c.id}')" class="px-2.5 h-8 rounded-full border ${baseClass} text-[9px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0 flex items-center">${c.icon}${c.label}</button>`;
             }).join('');
 
             // 2. Build Second Line (Sub Themes)
@@ -760,7 +727,7 @@
                 subHtml = miniThemes.map(t => {
                     const isActive = themes.includes(t);
                     const baseClass = isActive ? 'bg-[#ea580c] text-white border-[#ea580c] shadow-sm' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200';
-                    return `<button onclick="toggleThemeFilter('${t}')" class="px-3 py-1.5 rounded-lg border ${baseClass} text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0">${t}</button>`;
+                    return `<button onclick="toggleThemeFilter('${t}')" class="px-2 py-1 h-6 rounded-md border ${baseClass} text-[8px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0">${t}</button>`;
                 }).join('');
             } else if (mainCat === 'building') {
                 showRow2 = true;
@@ -768,13 +735,13 @@
                 subHtml = bldgThemes.map(t => {
                     const isActive = themes.includes(t);
                     const baseClass = isActive ? 'bg-[#ea580c] text-white border-[#ea580c] shadow-sm' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200';
-                    return `<button onclick="toggleThemeFilter('${t}')" class="px-3 py-1.5 rounded-lg border ${baseClass} text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0">${t}</button>`;
+                    return `<button onclick="toggleThemeFilter('${t}')" class="px-2 py-1 h-6 rounded-md border ${baseClass} text-[8px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0">${t}</button>`;
                 }).join('');
             } else if (mainCat === 'all' && activeCategory !== 'All' && themes.length > 0) {
                 // If they picked something random from the modal directly, show it as an active pill
                 showRow2 = true;
                 subHtml = themes.map(t => {
-                    return `<button onclick="toggleThemeFilter('${t}')" class="px-3 py-1.5 rounded-lg border bg-[#ea580c] text-white border-[#ea580c] shadow-sm text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0">${t} <i class="fa-solid fa-xmark ml-1"></i></button>`;
+                    return `<button onclick="toggleThemeFilter('${t}')" class="px-2 py-1 h-6 rounded-md border bg-[#ea580c] text-white border-[#ea580c] shadow-sm text-[8px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0">${t} <i class="fa-solid fa-xmark ml-1"></i></button>`;
                 }).join('');
             }
 
@@ -787,45 +754,6 @@
             } else {
                 subContainer.classList.add('hidden');
             }
-
-            // Sync the Explore All Modal Data too
-            updateFullCategoryGrid();
-        }
-
-        // Separate function to populate the "All Categories" explorer modal
-        function updateFullCategoryGrid() {
-            let cats = new Set(['All']);
-            allProducts.forEach(p => {
-                if(p.category) {
-                    p.category.split(',').forEach(c => { const trimmed = c.trim(); if (trimmed) cats.add(trimmed); });
-                }
-                const variants = p.variants || [];
-                variants.forEach(v => {
-                    if(v.category) v.category.split(',').forEach(c => { const trimmed = c.trim(); if (trimmed) cats.add(trimmed); });
-                });
-            });
-
-            const catArray = Array.from(cats).sort((a, b) => {
-                if(a === 'All') return -1;
-                if(b === 'All') return 1;
-                return a.localeCompare(b);
-            });
-
-            document.getElementById('full-category-grid').innerHTML = catArray.map(c => {
-                let isActive = false;
-                if (typeof activeCategory === 'object' && activeCategory !== null && !Array.isArray(activeCategory)) {
-                    isActive = activeCategory.themes.includes(c) || activeCategory.main.toLowerCase() === c.toLowerCase();
-                } else {
-                    isActive = Array.isArray(activeCategory) ? activeCategory.includes(c) : (c === activeCategory);
-                }
-                
-                return `<button onclick="setCategory('${c}')" class="w-full px-5 py-4 rounded-xl border ${isActive ? 'bg-orange-50 border-[#ea580c] text-[#ea580c] shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'} text-sm font-black tracking-wide text-left flex items-center justify-between transition-all group">
-                    <span class="font-['Plus_Jakarta_Sans']">${c}</span>
-                    <div class="w-6 h-6 rounded-full flex items-center justify-center ${isActive ? 'bg-[#ea580c] text-white shadow-sm' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'} transition-colors">
-                        <i class="fa-solid ${isActive ? 'fa-check' : 'fa-chevron-right'} text-[10px]"></i>
-                    </div>
-                </button>`
-            }).join('');
         }
 
         function renderProducts() {
@@ -969,7 +897,7 @@
                         <h3 class="font-black text-xs text-slate-900 line-clamp-2 mb-1 font-['Plus_Jakarta_Sans'] leading-tight group-hover:text-[#ea580c] transition-colors">${p.title}</h3>
                         <div class="mt-auto flex justify-between items-end pt-2">
                             ${priceHtml}
-                            <div class="w-8 h-8 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center text-slate-600 group-hover:bg-[#ea580c] group-hover:text-white group-hover:border-[#ea580c] transition-all shadow-sm"><i class="fa-solid fa-plus text-[10px]"></i></div>
+                            <div class="h-7 px-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center text-slate-600 font-bold text-[10px] font-['Kantumruy_Pro'] group-hover:bg-[#ea580c] group-hover:text-white group-hover:border-[#ea580c] transition-all shadow-sm shrink-0 ml-1">ទិញ</div>
                         </div>
                     </div>
                 </div>`;
