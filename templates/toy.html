@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Somphea Reak - Toy Collection</title>
+  <title>Somphea Reak - Minifigure Store</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -12,29 +12,29 @@
     body { 
         font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif; 
         -webkit-tap-highlight-color: transparent;
-        background-color: #f8fafc; /* Premium Slate-50 */
+        background-color: #fcfbf9;
     }
     h1, h2, h3, h4, .khmer-title { font-family: 'Moul', serif; }
     
     .pka-chan-bg {
-        background-color: #f8fafc;
-        background-image: radial-gradient(#ea580c 0.5px, transparent 0.5px), radial-gradient(#ea580c 0.5px, #f8fafc 0.5px);
-        background-size: 20px 20px; background-position: 0 0, 10px 10px; opacity: 0.25;
+        background-color: #fdfbf7;
+        background-image: radial-gradient(#ea580c 0.5px, transparent 0.5px), radial-gradient(#ea580c 0.5px, #fdfbf7 0.5px);
+        background-size: 20px 20px; background-position: 0 0, 10px 10px; opacity: 0.5;
         position: fixed; inset: 0; z-index: -1;
     }
     
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     
     .search-input {
-        background: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 14px;
+        transition: all 0.2s ease;
     }
     .search-input:focus {
         background: #ffffff;
         border-color: #ea580c;
-        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.1);
+        box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
     }
 
     /* Marquee Animation */
@@ -343,13 +343,14 @@
 
     <!-- 🌟 SMART SEARCH & CATEGORY CONTROLS 🌟 -->
     <section class="sticky top-[86px] z-[90] bg-white/95 backdrop-blur-xl border-b border-slate-100 shadow-sm transition-all pb-3">
-        <div class="px-4 pt-3 pb-3">
+        <!-- 🌟 SLIMMER SEARCH BAR 🌟 -->
+        <div class="px-4 pt-2.5 pb-2.5">
             <div class="relative flex items-center w-full max-w-5xl mx-auto group">
-                <i class="fa-solid fa-magnifying-glass absolute left-4 text-slate-400 text-sm group-focus-within:text-[#ea580c] transition-colors z-10"></i>
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-slate-400 text-xs group-focus-within:text-[#ea580c] transition-colors z-10"></i>
                 <input type="text" id="searchInput" placeholder="Search toys, categories, or #codes..." 
-                    class="search-input w-full py-3.5 pl-11 pr-10 text-sm font-bold text-slate-800 outline-none placeholder-slate-400 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
+                    class="search-input w-full py-2.5 pl-9 pr-8 text-xs font-bold text-slate-800 outline-none placeholder-slate-400 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
                 <button id="clearSearchBtn" onclick="clearSearch()" class="absolute right-3 text-slate-300 hover:text-slate-600 hidden transition-colors active:scale-90 p-1 z-10">
-                    <i class="fa-solid fa-circle-xmark text-lg"></i>
+                    <i class="fa-solid fa-circle-xmark text-sm"></i>
                 </button>
             </div>
         </div>
@@ -363,9 +364,9 @@
             <div class="h-8 w-px bg-slate-200 shrink-0 mt-0.5"></div>
             
             <!-- 🌟 TWO-LINE FILTERS (COMPACT & WRAPPING) 🌟 -->
-            <div class="flex-1 flex flex-col gap-1.5 w-full">
-                <!-- Line 1: Main Categories -->
-                <div id="main-category-filters" class="flex flex-wrap gap-1.5 items-center"></div>
+            <div class="flex-1 flex flex-col gap-1.5 w-full min-w-0">
+                <!-- Line 1: Main Categories (Forced onto one scrollable line) -->
+                <div id="main-category-filters" class="flex flex-nowrap overflow-x-auto scrollbar-hide gap-1.5 items-center w-full pb-1"></div>
                 <!-- Line 2: Sub Themes (Hidden by default) -->
                 <div id="sub-category-filters" class="flex flex-wrap gap-1.5 items-center hidden"></div>
             </div>
@@ -645,10 +646,17 @@
             renderProducts();
         }
 
-        // 🌟 UPDATED: SET MAIN FILTER LOGIC 🌟
+        // 🌟 UPDATED: SET MAIN FILTER LOGIC (Toggles Off) 🌟
         function setMainFilter(mainId) {
-            if (mainId === 'all') {
-                activeCategory = 'All';
+            let isCurrentlyActive = false;
+            if (typeof activeCategory === 'object' && activeCategory !== null && !Array.isArray(activeCategory)) {
+                isCurrentlyActive = (activeCategory.main.toLowerCase() === mainId);
+            } else if (activeCategory === mainId) {
+                isCurrentlyActive = true;
+            }
+
+            if (isCurrentlyActive) {
+                activeCategory = 'All'; // Toggle off to show all
             } else {
                 activeCategory = { main: mainId, themes: [] };
             }
@@ -703,18 +711,17 @@
                 themes = [activeCategory];
             }
 
-            // 1. Build First Line (Main Categories)
+            // 1. Build First Line (Removed 'All', forced to one scrollable line)
             const mainCategories = [
-                { id: 'all', label: 'All', icon: '' },
-                { id: 'minifigure', label: 'Minifigures', icon: '<i class="fa-solid fa-user-astronaut mr-1"></i>' },
-                { id: 'building', label: 'Building Sets', icon: '<i class="fa-solid fa-cubes-stacked mr-1"></i>' },
-                { id: 'spinner', label: 'Spinners', icon: '<i class="fa-solid fa-hurricane mr-1"></i>' }
+                { id: 'minifigure', label: 'Minifigures', icon: '<i class="fa-solid fa-user-astronaut mr-1.5"></i>' },
+                { id: 'building', label: 'Building Sets', icon: '<i class="fa-solid fa-cubes-stacked mr-1.5"></i>' },
+                { id: 'spinner', label: 'Spinners', icon: '<i class="fa-solid fa-hurricane mr-1.5"></i>' }
             ];
 
             const mainHtml = mainCategories.map(c => {
-                const isActive = (mainCat === c.id) || (mainCat === 'all' && activeCategory === 'All');
+                const isActive = (mainCat === c.id);
                 const baseClass = isActive ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
-                return `<button onclick="setMainFilter('${c.id}')" class="px-2.5 h-8 rounded-full border ${baseClass} text-[9px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0 flex items-center">${c.icon}${c.label}</button>`;
+                return `<button onclick="setMainFilter('${c.id}')" class="px-3.5 h-8 rounded-full border ${baseClass} text-[9px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0 flex items-center">${c.icon}${c.label}</button>`;
             }).join('');
 
             // 2. Build Second Line (Sub Themes)
