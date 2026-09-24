@@ -82,7 +82,6 @@
         <div class="flex-1 overflow-y-auto relative pt-16 pb-32">
             
             <!-- ================= STEP 1: MAIN CATEGORIES ================= -->
-            <!-- Added style="display: flex;" to ensure it shows up immediately on load -->
             <div id="survey-step-1" class="step-container step-transition step-in px-5 max-w-lg mx-auto" style="display: flex;">
                 <div class="text-center mb-8">
                     <h2 class="text-2xl sm:text-[28px] font-black text-slate-900 font-['Moul'] mb-2 leading-relaxed">តើអ្នកចង់មើលទំនិញបែបណាដែរ?</h2>
@@ -399,7 +398,7 @@
             <div class="bg-white px-5 py-6 mt-2 border-y border-slate-100 pb-10">
                 <div class="flex items-center gap-3 mb-5">
                     <div class="h-px bg-slate-200 flex-1"></div>
-                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center"><i class="fa-solid fa-sparkles text-orange-400 mr-1"></i> You Might Also Like</h3>
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center"><i class="fa-solid fa-layer-group text-orange-400 mr-1"></i> Similar in Category</h3>
                     <div class="h-px bg-slate-200 flex-1"></div>
                 </div>
                 <div id="recommendations-grid" class="grid grid-cols-2 gap-3"></div>
@@ -584,7 +583,7 @@
         async function fetchProducts() {
             document.getElementById('loadingOverlay').style.display = 'flex';
             try {
-                const res = await fetch('/api/products/toy');
+                const res = await fetch('/api/products/minifigure');
                 if(!res.ok) throw new Error("API Connection Failed.");
                 const data = await res.json();
                 
@@ -1024,7 +1023,7 @@
             if (isNaN(variantStock) || variantStock > 0) {
                 addToCartBtn.classList.remove('bg-slate-400');
                 addToCartBtn.classList.add('bg-[#ea580c]', 'shadow-orange-500/30');
-                addToCartBtn.innerHTML = `<i class="fa-solid fa-cart-plus"></i> បញ្ចូលទៅកន្ត្រក (Add to Cart)`;
+                addToCartBtn.innerHTML = `<i class="fa-solid fa-cart-plus"></i> បញ្ចូលទៅកន្ត្រក (Add)`;
                 addToCartBtn.disabled = false;
                 stockLabel.className = 'text-[10px] font-black px-2 py-1 bg-slate-100 text-slate-500 rounded uppercase tracking-widest mt-1 border border-slate-200';
                 stockLabel.innerHTML = `In Stock: ${isNaN(variantStock) ? 'Yes' : variantStock}`;
@@ -1075,11 +1074,27 @@
         }
 
         function renderRecommendations(excludeId) {
-            const available = allProducts.filter(p => p.id !== excludeId);
+            const currentProduct = allProducts.find(p => p.id === excludeId);
+            let available = allProducts.filter(p => p.id !== excludeId);
+            
+            // Prioritize matching categories (Makes it feel like a "Category Picture" grid)
+            if (currentProduct && currentProduct.category) {
+                const currentCats = currentProduct.category.split(',').map(c => c.trim().toLowerCase());
+                const sameCat = available.filter(p => {
+                    if (!p.category) return false;
+                    const pCats = p.category.split(',').map(c => c.trim().toLowerCase());
+                    return currentCats.some(c => pCats.includes(c));
+                });
+                if (sameCat.length > 0) {
+                    available = sameCat;
+                }
+            }
+
             const shuffled = available.sort(() => 0.5 - Math.random());
             const grid = document.getElementById('recommendations-grid');
             
-            grid.innerHTML = shuffled.slice(0, 4).map(p => {
+            // Limit safely to 40 items so they can "scroll uncounted" without browser lag
+            grid.innerHTML = shuffled.slice(0, 40).map(p => {
                 let variants = p.variants || [];
                 let vDiscount = variants.length > 0 ? parseFloat(variants[0].discount_percent) || 0 : 0;
                 let mDiscount = parseFloat(p.discount_percent) || 0;
