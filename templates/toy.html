@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Somphea Reak - Minifigure Store</title>
+  <title>Somphea Reak - Toy Collection</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -15,14 +15,12 @@
         background-color: #fcfbf9;
     }
     h1, h2, h3, h4, .khmer-title { font-family: 'Moul', serif; }
-    
     .pka-chan-bg {
         background-color: #fdfbf7;
         background-image: radial-gradient(#ea580c 0.5px, transparent 0.5px), radial-gradient(#ea580c 0.5px, #fdfbf7 0.5px);
         background-size: 20px 20px; background-position: 0 0, 10px 10px; opacity: 0.5;
         position: fixed; inset: 0; z-index: -1;
     }
-    
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     
     .search-input {
@@ -50,296 +48,247 @@
 
     /* FULL SCREEN Survey Modal Animations */
     #survey-modal { 
-        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease; 
+        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease, visibility 0.4s ease; 
         transform: translateY(0);
         opacity: 1;
+        visibility: visible;
     }
     .survey-hidden { 
         transform: translateY(100%) !important; 
         opacity: 0 !important; 
+        visibility: hidden !important; 
         pointer-events: none; 
     }
     
-    .step-container { display: none; width: 100%; flex-direction: column; }
-    
-    .step-transition { transition: all 0.4s ease; }
-    .step-out { opacity: 0; transform: translateX(-30px); pointer-events: none; position: absolute; width: 100%; top: 0; left: 0; }
-    .step-in { opacity: 1; transform: translateX(0); position: relative; }
+    .step-container { display: none; }
+    .step-active { display: flex; animation: slideIn 0.35s ease forwards; }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
   </style>
 </head>
-<body class="text-slate-900 pb-20 overflow-x-hidden">
+<body class="text-gray-900 pb-20">
 
     <div class="pka-chan-bg"></div>
 
-    <!-- 🌟 WELCOME SURVEY MODAL (FULL SCREEN) 🌟 -->
-    <div id="survey-modal" class="fixed inset-0 z-[8500] bg-white flex flex-col overflow-hidden">
-        
-        <!-- Absolute Close Button -->
-        <button onclick="closeSurvey()" class="absolute top-5 right-5 w-10 h-10 flex items-center justify-center bg-slate-50 border border-slate-100 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 active:scale-90 transition-all shadow-sm z-50">
-            <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+    <!-- 🌟 WELCOME SURVEY MODAL (POP UP) 🌟 -->
+    <div id="survey-modal" class="fixed inset-0 z-[3000] bg-white flex flex-col">
+        <!-- Close Button -->
+        <div class="p-4 flex justify-end">
+            <button onclick="closeSurvey()" class="w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-full text-gray-500 hover:text-red-500 hover:bg-red-50 active:scale-90 transition-all">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
 
-        <div class="flex-1 overflow-y-auto relative pt-16 pb-32">
+        <!-- STEP 1: MAIN CATEGORIES -->
+        <div id="survey-step-1" class="step-container step-active px-6 flex-1 flex flex-col justify-center pb-20 max-w-md mx-auto w-full">
+            <h2 class="text-[22px] font-black text-gray-900 font-['Moul'] mb-2 text-center leading-relaxed">តើអ្នកចង់មើលទំនិញបែបណាដែរ?</h2>
+            <p class="text-[11px] text-gray-400 text-center font-bold mb-8 uppercase tracking-widest">Select your favorite category</p>
             
-            <!-- ================= STEP 1: MAIN CATEGORIES ================= -->
-            <div id="survey-step-1" class="step-container step-transition step-in px-5 max-w-lg mx-auto" style="display: flex;">
-                <div class="text-center mb-8">
-                    <h2 class="text-2xl sm:text-[28px] font-black text-slate-900 font-['Moul'] mb-2 leading-relaxed">តើអ្នកចង់មើលទំនិញបែបណាដែរ?</h2>
-                    <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest font-['Plus_Jakarta_Sans']">Select your favorite category</p>
-                </div>
+            <div class="space-y-3.5">
+                <!-- Option 1: Minifigures -->
+                <button onclick="goToStep('survey-step-minifigures')" class="w-full bg-white border-2 border-[#ea580c] text-[#ea580c] py-4 rounded-2xl font-black text-lg shadow-sm hover:bg-orange-50 active:scale-95 transition-all flex items-center justify-between px-6 group">
+                    <span class="flex items-center gap-3"><i class="fa-solid fa-user-astronaut"></i> Minifigures</span>
+                    <i class="fa-solid fa-chevron-right text-sm group-hover:translate-x-1 transition-transform"></i>
+                </button>
                 
-                <div class="grid grid-cols-2 gap-3 sm:gap-4 content-start">
-                    <!-- Option 1: Minifigures -->
-                    <button onclick="selectMainCategory('minifigure', 'survey-step-minifigures')" class="group relative aspect-square rounded-[1.25rem] overflow-hidden border-[3px] border-transparent hover:border-[#ea580c] hover:shadow-lg hover:shadow-orange-500/20 active:scale-95 transition-all shadow-sm">
-                        <img src="/static/images/cat_minifigure.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Mini+Fig&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent group-hover:from-black/70 transition-colors flex items-end justify-center p-4">
-                            <div class="flex flex-col items-center justify-center translate-y-2 group-hover:translate-y-0 transition-transform">
-                                <i class="fa-solid fa-user-astronaut text-white/90 text-xl mb-1 group-hover:text-white transition-colors"></i>
-                                <span class="text-white font-black text-sm sm:text-base drop-shadow-md tracking-widest font-['Plus_Jakarta_Sans'] uppercase">Minifigures</span>
-                            </div>
-                        </div>
-                    </button>
-                    
-                    <!-- Option 2: Building Set -->
-                    <button onclick="selectMainCategory('building', 'survey-step-building')" class="group relative aspect-square rounded-[1.25rem] overflow-hidden border-[3px] border-transparent hover:border-[#ea580c] hover:shadow-lg hover:shadow-orange-500/20 active:scale-95 transition-all shadow-sm">
-                        <img src="/static/images/cat_building.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Build+Set&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent group-hover:from-black/70 transition-colors flex items-end justify-center p-4">
-                            <div class="flex flex-col items-center justify-center translate-y-2 group-hover:translate-y-0 transition-transform">
-                                <i class="fa-solid fa-cubes-stacked text-white/90 text-xl mb-1 group-hover:text-white transition-colors"></i>
-                                <span class="text-white font-black text-sm sm:text-base drop-shadow-md tracking-widest font-['Plus_Jakarta_Sans'] uppercase leading-tight text-center">Building Set</span>
-                            </div>
-                        </div>
-                    </button>
-                    
-                    <!-- Option 3: Spinner -->
-                    <button onclick="selectCategoryAndClose('Spinner')" class="group relative aspect-square rounded-[1.25rem] overflow-hidden border-[3px] border-transparent hover:border-[#ea580c] hover:shadow-lg hover:shadow-orange-500/20 active:scale-95 transition-all shadow-sm">
-                        <img src="/static/images/cat_spinner.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Spin+ner&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent group-hover:from-black/70 transition-colors flex items-end justify-center p-4">
-                            <div class="flex flex-col items-center justify-center translate-y-2 group-hover:translate-y-0 transition-transform">
-                                <i class="fa-solid fa-hurricane text-white/90 text-xl mb-1 group-hover:text-white transition-colors"></i>
-                                <span class="text-white font-black text-sm sm:text-base drop-shadow-md tracking-widest font-['Plus_Jakarta_Sans'] uppercase">Spinner</span>
-                            </div>
-                        </div>
-                    </button>
+                <!-- Option 2: Building Set -->
+                <button onclick="goToStep('survey-step-building')" class="w-full bg-white border-2 border-[#ea580c] text-[#ea580c] py-4 rounded-2xl font-black text-lg shadow-sm hover:bg-orange-50 active:scale-95 transition-all flex items-center justify-between px-6 group">
+                    <span class="flex items-center gap-3"><i class="fa-solid fa-cubes"></i> Building Set</span>
+                    <i class="fa-solid fa-chevron-right text-sm group-hover:translate-x-1 transition-transform"></i>
+                </button>
+                
+                <!-- Option 3: Spinner (Direct) -->
+                <button onclick="selectCategoryAndClose('Spinner')" class="w-full bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-2xl font-black text-lg shadow-sm hover:border-[#ea580c] hover:text-[#ea580c] active:scale-95 transition-all flex items-center justify-between px-6 group">
+                    <span class="flex items-center gap-3"><i class="fa-solid fa-hurricane"></i> Spinner</span>
+                    <i class="fa-solid fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
+                </button>
 
-                    <!-- Option 4: Coming Soon -->
-                    <div class="aspect-square relative rounded-[1.25rem] overflow-hidden shadow-sm border border-slate-100 opacity-60 cursor-not-allowed">
-                        <div class="absolute inset-0 bg-slate-100"></div>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <div class="w-12 h-12 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center mb-2"><i class="fa-regular fa-clock text-xl"></i></div>
-                            <span class="text-slate-500 font-black text-sm sm:text-base px-2 text-center font-['Plus_Jakarta_Sans'] uppercase tracking-widest">Coming Soon</span>
-                        </div>
+                <!-- Option 4: Coming Soon (Disabled) -->
+                <button disabled class="w-full bg-gray-50 border-2 border-gray-100 text-gray-400 py-4 rounded-2xl font-black text-lg flex items-center justify-between px-6 opacity-70 cursor-not-allowed">
+                    <span class="flex items-center gap-3"><i class="fa-regular fa-clock"></i> Coming soon</span>
+                    <i class="fa-solid fa-lock text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- STEP 2: MINIFIGURES SUB-OPTIONS -->
+        <div id="survey-step-minifigures" class="step-container px-4 flex-1 flex flex-col max-w-lg mx-auto w-full">
+            <div class="flex items-center mb-6 gap-3 pt-2">
+                <button onclick="goToStep('survey-step-1')" class="w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-full text-gray-700 hover:bg-gray-100 active:scale-90 transition-all shadow-sm shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
+                <div>
+                    <h2 class="text-xl font-black text-gray-900 font-['Moul']">Minifigures</h2>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Select a theme</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 overflow-y-auto pb-10 scrollbar-hide">
+                <!-- Ninjago -->
+                <div onclick="selectCategoryAndClose('Ninjago')" class="aspect-square relative rounded-[1.25rem] overflow-hidden shadow-sm border border-gray-200 cursor-pointer group active:scale-95 transition-all">
+                    <img src="/static/images/ninjago_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Nin&background=f8fafc&color=ea580c&size=300'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-2.5 left-2.5 right-2.5 flex flex-col gap-1.5">
+                        <span class="text-white font-black text-sm drop-shadow-md tracking-wide px-1">Ninjago</span>
+                        <button class="bg-[#ea580c] hover:bg-orange-600 text-white text-[11px] font-black py-1.5 rounded-lg shadow-lg w-full font-['Kantumruy_Pro'] transition-colors">ទិញ</button>
                     </div>
                 </div>
-            </div>
-
-            <!-- ================= STEP 2: MINIFIGURES MULTI-SELECT ================= -->
-            <div id="survey-step-minifigures" class="step-container step-transition px-5 max-w-lg mx-auto">
-                <button onclick="goToStep('survey-step-1')" class="absolute top-5 left-5 w-10 h-10 flex items-center justify-center bg-slate-50 border border-slate-100 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors z-20 shadow-sm active:scale-90">
-                    <i class="fa-solid fa-arrow-left text-sm"></i>
-                </button>
-
-                <div class="text-center mb-8">
-                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900 font-['Moul'] mb-2">ម៉ូត Minifigures</h2>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">Select your themes</p>
+                <!-- Marvel -->
+                <div onclick="selectCategoryAndClose('Marvel')" class="aspect-square relative rounded-[1.25rem] overflow-hidden shadow-sm border border-gray-200 cursor-pointer group active:scale-95 transition-all">
+                    <img src="/static/images/marvel_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Mar&background=f8fafc&color=ea580c&size=300'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-2.5 left-2.5 right-2.5 flex flex-col gap-1.5">
+                        <span class="text-white font-black text-sm drop-shadow-md tracking-wide px-1">Marvel</span>
+                        <button class="bg-[#ea580c] hover:bg-orange-600 text-white text-[11px] font-black py-1.5 rounded-lg shadow-lg w-full font-['Kantumruy_Pro'] transition-colors">ទិញ</button>
+                    </div>
                 </div>
-                
-                <div class="grid grid-cols-2 gap-3 sm:gap-4 content-start">
-                    <!-- Ninjago -->
-                    <button onclick="toggleSurveyTheme(this, 'Ninjago')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                        <img src="/static/images/ninjago_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Nin&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Ninjago</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
-                    <!-- Marvel -->
-                    <button onclick="toggleSurveyTheme(this, 'Marvel')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                        <img src="/static/images/marvel_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Mar&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Marvel</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
-                    <!-- Anime -->
-                    <button onclick="toggleSurveyTheme(this, 'Anime')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                        <img src="/static/images/anime_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Ani&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Anime</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
-                    <!-- Military -->
-                    <button onclick="toggleSurveyTheme(this, 'Military')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                        <img src="/static/images/military_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Mil&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Military</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
-                    <!-- Chinese -->
-                    <button onclick="toggleSurveyTheme(this, 'Chinese')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm col-span-2 sm:col-span-1">
-                        <img src="/static/images/chinese_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Chi&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans'] text-center">Chinese / Dynasty</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
+                <!-- Anime -->
+                <div onclick="selectCategoryAndClose('Anime')" class="aspect-square relative rounded-[1.25rem] overflow-hidden shadow-sm border border-gray-200 cursor-pointer group active:scale-95 transition-all">
+                    <img src="/static/images/anime_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Ani&background=f8fafc&color=ea580c&size=300'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-2.5 left-2.5 right-2.5 flex flex-col gap-1.5">
+                        <span class="text-white font-black text-sm drop-shadow-md tracking-wide px-1">Anime</span>
+                        <button class="bg-[#ea580c] hover:bg-orange-600 text-white text-[11px] font-black py-1.5 rounded-lg shadow-lg w-full font-['Kantumruy_Pro'] transition-colors">ទិញ</button>
+                    </div>
                 </div>
-            </div>
-
-            <!-- ================= STEP 3: BUILDING SETS MULTI-SELECT ================= -->
-            <div id="survey-step-building" class="step-container step-transition px-5 max-w-lg mx-auto">
-                <button onclick="goToStep('survey-step-1')" class="absolute top-5 left-5 w-10 h-10 flex items-center justify-center bg-slate-50 border border-slate-100 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors z-20 shadow-sm active:scale-90">
-                    <i class="fa-solid fa-arrow-left text-sm"></i>
-                </button>
-
-                <div class="text-center mb-8">
-                    <h2 class="text-2xl sm:text-3xl font-black text-slate-900 font-['Moul'] mb-2">ម៉ូត Building Sets</h2>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">Select your themes</p>
+                <!-- Military -->
+                <div onclick="selectCategoryAndClose('Military')" class="aspect-square relative rounded-[1.25rem] overflow-hidden shadow-sm border border-gray-200 cursor-pointer group active:scale-95 transition-all">
+                    <img src="/static/images/military_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Mil&background=f8fafc&color=ea580c&size=300'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-2.5 left-2.5 right-2.5 flex flex-col gap-1.5">
+                        <span class="text-white font-black text-sm drop-shadow-md tracking-wide px-1">Military</span>
+                        <button class="bg-[#ea580c] hover:bg-orange-600 text-white text-[11px] font-black py-1.5 rounded-lg shadow-lg w-full font-['Kantumruy_Pro'] transition-colors">ទិញ</button>
+                    </div>
                 </div>
-                
-                <div class="grid grid-cols-2 gap-3 sm:gap-4 content-start">
-                    <!-- Ninjago (Set) -->
-                    <button onclick="toggleSurveyTheme(this, 'Ninjago')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                        <img src="/static/images/ninjago_set.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Nin&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Ninjago</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
-                    
-                    <!-- Technic & F1 -->
-                    <button onclick="toggleSurveyTheme(this, 'Technic')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm">
-                        <img src="/static/images/technic_set.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Tec&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans'] leading-tight text-center">Technic & F1</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
-                    
-                    <!-- Others -->
-                    <button onclick="toggleSurveyTheme(this, 'Others')" class="survey-cat-btn group relative aspect-square rounded-3xl overflow-hidden border-[3px] border-transparent hover:border-orange-200 transition-all shadow-sm col-span-2 sm:col-span-1">
-                        <img src="/static/images/others_set.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Oth&background=f8fafc&color=ea580c&size=300'">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent flex items-end justify-center p-4 transition-colors duration-300">
-                            <span class="text-white font-black text-sm sm:text-base uppercase tracking-widest group-hover:scale-110 transition-transform font-['Plus_Jakarta_Sans']">Other Sets</span>
-                        </div>
-                        <div class="theme-check absolute top-3 right-3 bg-white rounded-full shadow-md text-[#ea580c] opacity-0 scale-50 transition-all duration-300 flex items-center justify-center w-7 h-7">
-                            <i class="fa-solid fa-circle-check text-xl"></i>
-                        </div>
-                    </button>
+                <!-- Chinese -->
+                <div onclick="selectCategoryAndClose('Chinese')" class="aspect-square relative rounded-[1.25rem] overflow-hidden shadow-sm border border-gray-200 cursor-pointer group active:scale-95 transition-all">
+                    <img src="/static/images/chinese_mini.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Chi&background=f8fafc&color=ea580c&size=300'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-2.5 left-2.5 right-2.5 flex flex-col gap-1.5">
+                        <span class="text-white font-black text-sm drop-shadow-md tracking-wide px-1">Chinese</span>
+                        <button class="bg-[#ea580c] hover:bg-orange-600 text-white text-[11px] font-black py-1.5 rounded-lg shadow-lg w-full font-['Kantumruy_Pro'] transition-colors">ទិញ</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Floating Confirm Footer for Multi-Select -->
-        <div id="survey-footer" class="absolute bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-slate-100 p-4 shadow-[0_-15px_30px_rgba(0,0,0,0.05)] z-20 transition-all duration-300 transform translate-y-full">
-            <button onclick="confirmSurveyThemes()" id="btn-confirm-themes" class="w-full max-w-lg mx-auto h-14 bg-slate-900 text-white font-black rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-[#ea580c] hover:shadow-orange-500/30 active:scale-95 transition-all uppercase text-xs tracking-wider flex items-center justify-center gap-2">
-                <i class="fa-solid fa-check-double text-lg"></i> បន្តទៅមុខ <span class="theme-count bg-white/20 px-2 py-0.5 rounded-full text-xs hidden ml-1"></span>
-            </button>
+        <!-- STEP 3: BUILDING SETS SUB-OPTIONS -->
+        <div id="survey-step-building" class="step-container px-4 flex-1 flex flex-col max-w-lg mx-auto w-full">
+            <div class="flex items-center mb-6 gap-3 pt-2">
+                <button onclick="goToStep('survey-step-1')" class="w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-full text-gray-700 hover:bg-gray-100 active:scale-90 transition-all shadow-sm shrink-0"><i class="fa-solid fa-arrow-left"></i></button>
+                <div>
+                    <h2 class="text-xl font-black text-gray-900 font-['Moul']">Building Sets</h2>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Select a theme</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 overflow-y-auto pb-10 scrollbar-hide">
+                <!-- Ninjago (Set) -->
+                <div onclick="selectCategoryAndClose('Ninjago')" class="aspect-square relative rounded-[1.25rem] overflow-hidden shadow-sm border border-gray-200 cursor-pointer group active:scale-95 transition-all">
+                    <img src="/static/images/ninjago_set.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Nin&background=f8fafc&color=ea580c&size=300'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-2.5 left-2.5 right-2.5 flex flex-col gap-1.5">
+                        <span class="text-white font-black text-sm drop-shadow-md tracking-wide px-1">Ninjago</span>
+                        <button class="bg-[#ea580c] hover:bg-orange-600 text-white text-[11px] font-black py-1.5 rounded-lg shadow-lg w-full font-['Kantumruy_Pro'] transition-colors">ទិញ</button>
+                    </div>
+                </div>
+                <!-- Technic & F1 -->
+                <div onclick="selectCategoryAndClose('Technic')" class="aspect-square relative rounded-[1.25rem] overflow-hidden shadow-sm border border-gray-200 cursor-pointer group active:scale-95 transition-all">
+                    <img src="/static/images/technic_set.jpg" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.src='https://ui-avatars.com/api/?name=Tec&background=f8fafc&color=ea580c&size=300'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-2.5 left-2.5 right-2.5 flex flex-col gap-1.5">
+                        <span class="text-white font-black text-sm drop-shadow-md tracking-wide px-1">Technic & F1</span>
+                        <button class="bg-[#ea580c] hover:bg-orange-600 text-white text-[11px] font-black py-1.5 rounded-lg shadow-lg w-full font-['Kantumruy_Pro'] transition-colors">ទិញ</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <!-- END SURVEY MODAL -->
 
     <!-- TOAST NOTIFICATION -->
-    <div id="toast" style="pointer-events: none;" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[4000] bg-slate-900/95 backdrop-blur-md text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl opacity-0 transition-opacity duration-200 scale-90">
+    <div id="toast" style="pointer-events: none;" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[4000] bg-black/90 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl opacity-0 transition-opacity duration-200 scale-90">
         <i id="toast-icon" class="fa-solid fa-circle-check text-green-400"></i>
         <span id="toast-text" class="text-xs font-bold uppercase tracking-widest font-['Kantumruy_Pro']">Added</span>
     </div>
 
     <!-- LOADING OVERLAY -->
-    <div id="loadingOverlay" style="display: none;" class="fixed inset-0 z-[5000] bg-slate-900/90 backdrop-blur-md flex-col items-center justify-center text-white">
+    <div id="loadingOverlay" style="display: none;" class="fixed inset-0 z-[5000] bg-black/90 backdrop-blur-md flex-col items-center justify-center text-white">
         <div class="w-12 h-12 border-4 border-[#ea580c] border-t-transparent rounded-full animate-spin mb-4"></div>
         <p class="text-xs font-black uppercase tracking-[0.3em] font-['Moul']">កំពុងរៀបចំ...</p>
     </div>
 
     <!-- IMAGE VIEWER MODAL (FULL SCREEN) -->
-    <div id="image-viewer-modal" class="fixed inset-0 z-[6000] bg-black/95 hidden flex-col items-center justify-center transition-opacity backdrop-blur-sm p-4">
-        <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors z-30 shadow-lg">
-            <i class="fa-solid fa-xmark text-xl"></i>
-        </button>
-        <img id="viewer-img" src="" class="max-w-full max-h-[85vh] object-contain relative z-10 rounded-xl shadow-2xl">
+    <div id="image-viewer-modal" class="fixed inset-0 z-[6000] bg-black hidden flex-col items-center justify-center transition-opacity">
+        <div class="absolute top-0 left-0 w-full p-4 flex items-center justify-start gap-4 z-20 bg-gradient-to-b from-black/50 to-transparent">
+            <button onclick="closeImageViewer()" class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <button onclick="closeImageViewer(); openCart();" class="relative w-10 h-10 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors">
+                <i class="fa-solid fa-cart-shopping text-lg"></i>
+                <span class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden cart-badge-count">0</span>
+            </button>
+        </div>
+        <img id="viewer-img" src="" class="w-full h-full object-contain relative z-10">
     </div>
 
-    <!-- 🌟 STICKY HEADER WRAPPER (HEADER + PROMO BANNER) 🌟 -->
+    <!-- 🌟 STICKY HEADER WRAPPER (PROMO BANNER + HEADER) 🌟 -->
     <div class="sticky top-0 z-[100] w-full flex flex-col shadow-sm">
         
+        <!-- Scrolling Marquee Promo Banner -->
+        <div class="bg-[#ea580c] w-full overflow-hidden flex items-center py-1.5 relative">
+            <div class="animate-marquee text-white text-[10px] sm:text-xs font-black tracking-wide font-['Kantumruy_Pro'] whitespace-nowrap">
+                មោទនភាពជាតិខ្មែរ! បញ្ចុះតម្លៃ 50% និង ហ្រ្វីសេវាដឹកជញ្ជូនលើទំនិញមួយចំនួន លក្ខខណ្ឌត្រូវបានអនុវត្ត
+            </div>
+        </div>
+
         <!-- Main Header -->
-        <header class="bg-white/95 backdrop-blur-xl border-b border-slate-100 px-3 py-2.5 flex items-center justify-between relative z-20">
+        <header class="bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 py-2.5 flex items-center justify-between">
             <!-- Left: Back Button -->
-            <a href="/" class="w-9 h-9 flex items-center justify-center bg-slate-50 rounded-full text-slate-500 border border-slate-100 active:scale-90 transition-transform shrink-0 hover:bg-slate-100">
+            <a href="/" class="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0 hover:bg-gray-100">
                 <i class="fa-solid fa-arrow-left text-xs"></i>
             </a>
             
             <!-- Center: Logo + Title -->
             <div class="flex items-center justify-center flex-1 px-2 gap-2 min-w-0">
-                <img src="/static/images/logo.jpg" onerror="this.src='/static/images/logo.png'" class="w-9 h-9 object-cover drop-shadow-sm shrink-0 rounded-full border border-slate-100" alt="Logo">
+                <img src="/static/images/logo.jpg" onerror="this.src='/static/images/logo.png'" class="w-9 h-9 object-cover drop-shadow-sm shrink-0 rounded-full border border-gray-100" alt="Logo">
                 <div class="flex flex-col justify-center text-left">
-                    <h1 class="text-[13px] sm:text-base font-black text-slate-900 leading-tight tracking-tight font-['Moul'] pb-0.5">
-                        សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs whitespace-nowrap text-slate-500">- Somphea Reak</span>
+                    <h1 class="text-[13px] sm:text-base font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5">
+                        សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-xs whitespace-nowrap text-slate-600">- Somphea Reak</span>
                     </h1>
                     <p class="text-[8px] font-extrabold text-[#ea580c] uppercase tracking-widest leading-none">Toy Collection</p>
                 </div>
             </div>
             
             <!-- Right: Universal Cart Button -->
-            <button onclick="openCartDrawer()" class="relative w-9 h-9 flex items-center justify-center bg-white border border-slate-200 rounded-full text-slate-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]">
+            <button onclick="openCartDrawer()" class="relative w-9 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]">
                 <i class="fa-solid fa-cart-shopping text-xs"></i>
                 <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden cart-badge-count">0</span>
             </button>
         </header>
-
-        <!-- Scrolling Marquee Promo Banner (UNDER HEADER) -->
-        <div class="bg-[#ea580c] w-full overflow-hidden flex items-center py-1.5 relative z-10 shadow-inner">
-            <div class="animate-marquee text-white text-[10px] sm:text-xs font-black tracking-wide font-['Kantumruy_Pro'] whitespace-nowrap">
-                មោទនភាពជាតិខ្មែរ! បញ្ចុះតម្លៃ 50% និង ហ្រ្វីសេវាដឹកជញ្ជូនលើទំនិញមួយចំនួន លក្ខខណ្ឌត្រូវបានអនុវត្ត
-            </div>
-        </div>
     </div>
 
     <!-- 🌟 SMART SEARCH & CATEGORY CONTROLS 🌟 -->
-    <section class="sticky top-[86px] z-[90] bg-white/95 backdrop-blur-xl border-b border-slate-100 shadow-sm transition-all pb-3">
-        <!-- 🌟 SLIMMER SEARCH BAR 🌟 -->
-        <div class="px-4 pt-2.5 pb-2.5">
-            <div class="relative flex items-center w-full max-w-5xl mx-auto group">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-slate-400 text-xs group-focus-within:text-[#ea580c] transition-colors z-10"></i>
-                <input type="text" id="searchInput" placeholder="Search toys, categories, or #codes..." 
-                    class="search-input w-full py-2.5 pl-9 pr-8 text-xs font-bold text-slate-800 outline-none placeholder-slate-400 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
-                <button id="clearSearchBtn" onclick="clearSearch()" class="absolute right-3 text-slate-300 hover:text-slate-600 hidden transition-colors active:scale-90 p-1 z-10">
-                    <i class="fa-solid fa-circle-xmark text-sm"></i>
+    <!-- Notice: top adjusted to account for Header (approx 58px) + Banner (approx 28px) = ~86px -->
+    <section class="sticky top-[82px] z-[90] bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-sm transition-all">
+        <div class="px-4 pt-3 pb-3">
+            <div class="relative flex items-center w-full max-w-5xl mx-auto">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 text-gray-400 text-sm"></i>
+                <input type="text" id="searchInput" placeholder="Search toys, categories, or variants..." 
+                    class="w-full bg-white border-2 border-gray-100 rounded-full py-3 pl-10 pr-10 text-sm font-bold text-gray-800 outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all placeholder-gray-400 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
+                <button id="clearSearchBtn" onclick="clearSearch()" class="absolute right-3 text-gray-300 hover:text-gray-600 hidden transition-colors active:scale-90 p-1">
+                    <i class="fa-solid fa-circle-xmark text-lg"></i>
                 </button>
             </div>
         </div>
 
-        <div class="flex items-start px-4 gap-2.5 max-w-5xl mx-auto">
-            <!-- 🌟 RESURVEY BUTTON 🌟 -->
-            <button onclick="openSurvey()" class="shrink-0 h-8 px-3.5 flex items-center justify-center bg-slate-900 text-white rounded-full font-bold text-[9px] uppercase tracking-wider shadow-sm hover:bg-slate-800 active:scale-95 transition-all gap-1.5 border border-slate-800 mt-0.5">
-                <i class="fa-solid fa-wand-magic-sparkles text-orange-400"></i> <span class="hidden sm:inline">Guide Me</span>
+        <div class="flex items-center px-4 pb-3 gap-2 max-w-5xl mx-auto">
+            <div id="category-filters" class="flex-1 flex overflow-x-auto gap-2 scrollbar-hide mask-fade-right pr-6"></div>
+            <div class="h-6 w-px bg-gray-200 mx-1 shrink-0"></div>
+            <button onclick="openCategoryModal()" class="shrink-0 w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-full text-gray-700 shadow-sm active:scale-90 transition-transform hover:bg-gray-100 relative group">
+                <i class="fa-solid fa-layer-group text-sm"></i>
+                <span class="absolute -top-8 right-0 bg-gray-800 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">All Categories</span>
             </button>
-            
-            <div class="h-8 w-px bg-slate-200 shrink-0 mt-0.5"></div>
-            
-            <!-- 🌟 TWO-LINE FILTERS (COMPACT & WRAPPING) 🌟 -->
-            <div class="flex-1 flex flex-col gap-1.5 w-full min-w-0">
-                <!-- Line 1: Main Categories (Forced onto one scrollable line) -->
-                <div id="main-category-filters" class="flex flex-nowrap overflow-x-auto scrollbar-hide gap-1.5 items-center w-full pb-1"></div>
-                <!-- Line 2: Sub Themes (Hidden by default) -->
-                <div id="sub-category-filters" class="flex flex-wrap gap-1.5 items-center hidden"></div>
-            </div>
         </div>
     </section>
 
@@ -347,96 +296,95 @@
         <div id="product-grid" class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"></div>
     </main>
 
-    <!-- 🌟 FULL SCREEN PRODUCT MODAL 🌟 -->
-    <div id="product-modal" class="fixed inset-0 z-[1000] flex flex-col bg-slate-50 translate-y-full transition-transform duration-300 shadow-2xl">
-
-        <div id="modal-scroll-body" class="flex-1 overflow-y-auto scrollbar-hide bg-slate-50 flex flex-col md:max-w-xl md:mx-auto md:w-full md:border-x md:border-slate-100">
-            <!-- Clean immersive top area, overlay buttons -->
-            <div class="w-full h-[45vh] min-h-[350px] max-h-[450px] bg-slate-100 relative group shrink-0">
-                
-                <!-- Floating Action Buttons -->
-                <div class="absolute top-4 left-4 right-4 flex justify-between items-start z-40 pointer-events-none">
-                    <button onclick="closeProductModal()" class="w-10 h-10 flex items-center justify-center bg-white/80 backdrop-blur-md border border-slate-200 rounded-full text-slate-800 hover:bg-white active:scale-90 transition-all shadow-sm pointer-events-auto">
-                        <i class="fa-solid fa-arrow-left text-lg"></i>
-                    </button>
-                    <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-white/80 backdrop-blur-md border border-slate-200 rounded-full text-slate-800 hover:text-[#ea580c] hover:bg-white active:scale-90 transition-all shadow-sm pointer-events-auto">
-                        <i class="fa-solid fa-cart-shopping text-md"></i>
-                        <span class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden cart-badge-count">0</span>
-                    </button>
+    <!-- 🌟 ALL CATEGORIES EXPLORER MODAL 🌟 -->
+    <div id="category-modal" class="fixed inset-0 z-[1000] flex flex-col justify-end translate-y-full">
+        <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeCategoryModal()"></div>
+        <div class="relative w-full max-h-[75vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
+            <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10 sticky top-0 shadow-sm">
+                <div>
+                    <h2 class="text-lg font-black text-gray-900 font-['Moul']">ជ្រើសរើសប្រភេទ</h2>
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Explore All Categories</p>
                 </div>
+                <button onclick="closeCategoryModal()" class="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+                <div id="full-category-grid" class="flex flex-col gap-2"></div>
+            </div>
+        </div>
+    </div>
 
-                <div id="modal-image-carousel" style="scroll-behavior: smooth;" class="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-hide" onscroll="handleModalCarouselScroll()"></div>
-                
-                <div class="absolute bottom-3 left-3 bg-slate-900/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider z-10" id="carousel-indicator">1 / 1</div>
-                <button onclick="openFullscreenViewer()" class="absolute bottom-3 right-3 bg-white/90 border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center text-slate-800 shadow-sm backdrop-blur-sm z-10 active:scale-90"><i class="fa-solid fa-expand text-xs"></i></button>
+    <!-- 🌟 FULL SCREEN PRODUCT MODAL 🌟 -->
+    <div id="product-modal" class="fixed inset-0 z-[1000] flex flex-col bg-white translate-y-full transition-transform duration-300 shadow-2xl">
+        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between bg-white/95 backdrop-blur-xl sticky top-0 z-30">
+            <button onclick="closeProductModal()" class="w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-full text-gray-800 hover:bg-gray-100 transition-colors shrink-0">
+                <i class="fa-solid fa-arrow-left text-lg"></i>
+            </button>
+            <div class="text-[16px] font-black text-gray-900 truncate flex-1 text-center font-['Moul'] px-2" id="modal-header-title">ទំនិញ</div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button onclick="openCartDrawer()" class="relative w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-full text-gray-800 hover:bg-gray-100 transition-colors">
+                    <i class="fa-solid fa-cart-shopping text-md"></i>
+                    <span class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden cart-badge-count">0</span>
+                </button>
+                <button onclick="closeProductModal()" class="w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-full text-gray-800 hover:bg-red-50 hover:text-red-500 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="modal-scroll-body" class="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 flex flex-col md:max-w-xl md:mx-auto md:w-full md:border-x md:border-gray-100">
+            <div class="w-full h-[40vh] min-h-[250px] max-h-[380px] bg-white relative border-b border-gray-100 group shrink-0">
+                <div id="modal-image-carousel" class="w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-hide" onscroll="handleModalCarouselScroll()"></div>
+                <div class="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider z-10" id="carousel-indicator">1 / 1</div>
+                <button onclick="openFullscreenViewer()" class="absolute bottom-3 right-3 bg-white/80 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center text-gray-800 shadow-sm backdrop-blur-sm z-10 active:scale-90"><i class="fa-solid fa-expand text-xs"></i></button>
             </div>
 
-            <div class="bg-white border-b border-slate-100 pb-2">
+            <div class="bg-white border-b border-gray-100 pb-2">
                 <div class="px-4 pt-4 pb-2 relative">
                     <div class="flex justify-between items-start">
                         <div>
                             <div class="text-[#ea580c] font-black text-2xl leading-none mb-1" id="sheet-price">$0.00</div>
-                            <div class="text-xs text-slate-400 font-extrabold mb-1" id="sheet-price-khr">0៛</div>
-                            <div class="text-[10px] text-slate-400 font-bold mb-2">Est. Price: <span id="sheet-est-price">--</span></div>
+                            <div class="text-xs text-gray-400 font-extrabold mb-1" id="sheet-price-khr">0៛</div>
+                            <div class="text-[10px] text-gray-400 font-bold mb-2">Est. Price: <span id="sheet-est-price">--</span></div>
                         </div>
-                        <div class="flex flex-col items-end">
-                            <div id="stock-label" class="text-[10px] font-black px-2 py-1 bg-slate-100 text-slate-500 rounded uppercase tracking-widest mt-1">In Stock</div>
-                            <div id="sku-label" class="text-[9px] font-mono font-bold text-slate-400 mt-2 hidden">#CODE</div>
-                        </div>
+                        <div id="stock-label" class="text-[10px] font-black px-2 py-1 bg-gray-100 text-gray-500 rounded uppercase tracking-widest mt-1">In Stock</div>
                     </div>
-                    <h2 class="text-sm font-black text-slate-900 leading-snug font-['Plus_Jakarta_Sans'] line-clamp-2" id="sheet-title">Product Title</h2>
+                    <h2 class="text-sm font-black text-gray-900 leading-snug font-['Plus_Jakarta_Sans'] line-clamp-2" id="sheet-title">Product Title</h2>
                 </div>
 
-                <!-- TRUST BADGES IN MODAL -->
-                <div class="px-4 py-3 border-t border-slate-100 flex flex-wrap gap-x-4 gap-y-2 justify-start shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-                    <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                        <i class="fa-regular fa-circle-check text-green-500"></i> Authentic Guarantee
-                    </div>
-                    <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                        <i class="fa-solid fa-truck-fast text-blue-500"></i> Fast Delivery
-                    </div>
-                    <div class="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                        <i class="fa-solid fa-location-dot text-emerald-500"></i> Cambodia
-                    </div>
-                </div>
-
-                <div class="px-4 py-2 mt-1">
+                <div class="px-4 py-2">
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-xs font-black text-slate-900 font-['Kantumruy_Pro']">Color / Style <span class="text-slate-400 font-bold ml-1 text-[10px]">(ជ្រើសរើសម៉ូត)</span></h3>
+                        <h3 class="text-xs font-black text-gray-900 font-['Kantumruy_Pro']">Color / Style <span class="text-gray-400 font-bold ml-1 text-[10px]">(ជ្រើសរើសម៉ូត)</span></h3>
                     </div>
                     <div id="variant-grid" class="grid grid-cols-4 gap-2 pb-2"></div>
                 </div>
             </div>
 
-            <div class="bg-white px-5 py-6 mt-2 border-y border-slate-100 pb-10">
+            <div class="bg-white px-5 py-6 mt-2 border-t border-gray-100 pb-10">
                 <div class="flex items-center gap-3 mb-5">
-                    <div class="h-px bg-slate-200 flex-1"></div>
-                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center"><i class="fa-solid fa-layer-group text-orange-400 mr-1"></i> Similar in Category</h3>
-                    <div class="h-px bg-slate-200 flex-1"></div>
+                    <div class="h-px bg-gray-200 flex-1"></div>
+                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center"><i class="fa-solid fa-sparkles text-orange-400 mr-1"></i> You Might Also Like</h3>
+                    <div class="h-px bg-gray-200 flex-1"></div>
                 </div>
                 <div id="recommendations-grid" class="grid grid-cols-2 gap-3"></div>
             </div>
         </div>
 
-        <div class="border-t border-slate-100 p-3 pb-5 bg-white shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)] z-40 md:max-w-xl md:mx-auto md:w-full md:border-x shrink-0">
-            <div class="flex justify-between items-center mb-2.5 px-1 gap-4">
-                <div class="flex-1 min-w-0 flex items-end gap-2">
-                    <div class="text-base text-[#ea580c] font-black leading-none" id="bottom-price-stock">...</div>
-                    <div class="text-[10px] font-bold text-slate-400 line-clamp-1 mb-[1px]" id="bottom-variant-name">...</div>
+        <div class="border-t border-gray-100 p-4 pb-6 bg-white shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)] z-30 md:max-w-xl md:mx-auto md:w-full md:border-x">
+            <div class="flex justify-between items-center mb-4 px-1 gap-4">
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-gray-900 line-clamp-1" id="bottom-variant-name">...</div>
+                    <div class="text-[13px] text-[#ea580c] font-black mt-0.5" id="bottom-price-stock">...</div>
+                </div>
+                <div class="flex items-center gap-3 bg-gray-50 rounded-xl border border-gray-200 p-1 shrink-0">
+                    <button onclick="updateModalQty(-1)" class="w-9 h-9 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 hover:text-[#ea580c] active:scale-95 transition-all"><i class="fa-solid fa-minus text-xs"></i></button>
+                    <span id="modal-qty" class="font-black text-base w-6 text-center">1</span>
+                    <button onclick="updateModalQty(1)" class="w-9 h-9 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 hover:text-[#ea580c] active:scale-95 transition-all"><i class="fa-solid fa-plus text-xs"></i></button>
                 </div>
             </div>
             
-            <div class="flex gap-2.5 h-[42px]">
-                <div class="flex items-center justify-between gap-1 bg-slate-50 rounded-xl px-1 border border-slate-200 shrink-0 w-28">
-                    <button onclick="updateModalQty(-1)" class="w-8 h-full flex items-center justify-center text-slate-500 hover:text-[#ea580c] active:scale-95 transition-all"><i class="fa-solid fa-minus text-xs"></i></button>
-                    <span id="modal-qty" class="font-black text-sm w-6 text-center text-slate-800">1</span>
-                    <button onclick="updateModalQty(1)" class="w-8 h-full flex items-center justify-center text-slate-500 hover:text-[#ea580c] active:scale-95 transition-all"><i class="fa-solid fa-plus text-xs"></i></button>
-                </div>
-                
-                <button id="add-to-cart-btn" onclick="addToCartFromModal()" class="flex-1 bg-[#ea580c] text-white font-black rounded-xl shadow-md shadow-orange-500/20 text-[13px] active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro'] disabled:active:scale-100 disabled:opacity-95">
-                    <i class="fa-solid fa-cart-plus"></i> បញ្ចូលទៅកន្ត្រក (Add)
-                </button>
-            </div>
+            <button id="add-to-cart-btn" onclick="addToCartFromModal()" class="w-full bg-[#ea580c] text-white font-black py-4 rounded-2xl shadow-xl shadow-orange-500/30 text-sm active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro'] tracking-wide disabled:active:scale-100 disabled:opacity-95">
+                <i class="fa-solid fa-cart-plus"></i> បញ្ចូលទៅកន្ត្រក (Add to Cart)
+            </button>
         </div>
     </div>
 
@@ -453,157 +401,19 @@
         let modalScrollTimeout;
 
         // Search & Smart Filter State
-        let activeCategory = 'All'; 
+        let activeCategory = 'All';
         let currentSearchQuery = '';
-        
-        let currentSurveyMainCat = '';
-        let selectedSurveyThemes = [];
-
-        // Dynamic Features arrays
-        const dynamicBadges = [
-            { text: 'BEST SALE', color: 'bg-red-500', icon: 'fa-fire' },
-            { text: 'FAST DELIVERY', color: 'bg-blue-500', icon: 'fa-truck-fast' },
-            { text: 'CAMBODIA', color: 'bg-emerald-500', icon: 'fa-location-dot' },
-            { text: 'TOP PICK', color: 'bg-purple-500', icon: 'fa-thumbs-up' }
-        ];
-
-        const positiveComments = [
-            "គុណភាពល្អ តម្លៃសមរម្យ",
-            "ស្អាតខ្លាំងណាស់ ពេញចិត្តស្តូក",
-            "សេវាកម្មល្អ ដឹកជញ្ជូនលឿន ជឿជាក់បាន",
-            "កូនខ្ញុំចូលចិត្តណាស់",
-            "ផលិតផលពិតដូចក្នុងរូប ស្អាត",
-            "គុណភាពហួសពីតម្លៃ",
-            "អ្នកលក់រាក់ទាក់ណាស់ ការវេចខ្ចប់ល្អ"
-        ];
 
         // 🌟 SURVEY MODAL LOGIC 🌟
-        function openSurvey() {
-            // Reset survey steps and selections for a fresh start
-            selectedSurveyThemes = [];
-            document.querySelectorAll('.survey-cat-btn').forEach(el => {
-                el.classList.remove('border-[#ea580c]');
-                el.classList.add('border-transparent');
-                const check = el.querySelector('.theme-check');
-                if(check) {
-                    check.classList.remove('opacity-100', 'scale-100');
-                    check.classList.add('opacity-0', 'scale-50');
-                }
-            });
-            updateConfirmButtons();
-            
-            // Go to step 1
-            goToStep('survey-step-1');
-            
-            const modal = document.getElementById('survey-modal');
-            modal.style.display = 'flex';
-            // Force reflow
-            void modal.offsetWidth;
-            modal.classList.remove('survey-hidden');
-        }
-
         function closeSurvey() {
             document.getElementById('survey-modal').classList.add('survey-hidden');
-            setTimeout(() => {
-                document.getElementById('survey-modal').style.display = 'none';
-            }, 500);
-        }
-        
-        function selectMainCategory(mainCat, nextStepId) {
-            currentSurveyMainCat = mainCat;
-            goToStep(nextStepId);
         }
 
         function goToStep(stepId) {
-            // Reset Selections when moving between steps (only moving forward from Step 1)
-            selectedSurveyThemes = [];
-            document.querySelectorAll('.survey-cat-btn').forEach(el => {
-                el.classList.remove('border-[#ea580c]');
-                el.classList.add('border-transparent');
-                
-                const check = el.querySelector('.theme-check');
-                if(check) {
-                    check.classList.remove('opacity-100', 'scale-100');
-                    check.classList.add('opacity-0', 'scale-50');
-                }
+            document.querySelectorAll('.step-container').forEach(el => {
+                el.classList.remove('step-active');
             });
-            updateConfirmButtons();
-
-            // Transition logic
-            const currentStep = document.querySelector('.step-in');
-            const nextStep = document.getElementById(stepId);
-            
-            if (currentStep && currentStep !== nextStep) {
-                currentStep.classList.remove('step-in');
-                currentStep.classList.add('step-out');
-                // Hide completely after transition completes
-                setTimeout(() => {
-                    if (currentStep.classList.contains('step-out')) {
-                        currentStep.style.display = 'none';
-                    }
-                }, 400); 
-            }
-            
-            if (nextStep) {
-                nextStep.style.display = 'flex';
-                // Force reflow
-                void nextStep.offsetWidth;
-                nextStep.classList.remove('step-out');
-                nextStep.classList.add('step-in');
-            }
-        }
-
-        function toggleSurveyTheme(el, theme) {
-            const check = el.querySelector('.theme-check');
-            const index = selectedSurveyThemes.indexOf(theme);
-            
-            if (index > -1) {
-                // Deselect
-                selectedSurveyThemes.splice(index, 1);
-                el.classList.remove('border-[#ea580c]');
-                el.classList.add('border-transparent');
-                if (check) {
-                    check.classList.remove('opacity-100', 'scale-100');
-                    check.classList.add('opacity-0', 'scale-50');
-                }
-            } else {
-                // Select
-                selectedSurveyThemes.push(theme);
-                el.classList.add('border-[#ea580c]');
-                el.classList.remove('border-transparent');
-                if (check) {
-                    check.classList.remove('opacity-0', 'scale-50');
-                    check.classList.add('opacity-100', 'scale-100');
-                }
-            }
-            updateConfirmButtons();
-        }
-
-        function updateConfirmButtons() {
-            const count = selectedSurveyThemes.length;
-            const footer = document.getElementById('survey-footer');
-            
-            document.querySelectorAll('.theme-count').forEach(el => {
-                if(count > 0) {
-                    el.innerText = `(${count})`;
-                    el.classList.remove('hidden');
-                } else {
-                    el.classList.add('hidden');
-                }
-            });
-            
-            if (count > 0) {
-                footer.classList.remove('translate-y-full');
-            } else {
-                footer.classList.add('translate-y-full');
-            }
-        }
-
-        function confirmSurveyThemes() {
-            if (selectedSurveyThemes.length > 0) {
-                setCategory({ main: currentSurveyMainCat, themes: selectedSurveyThemes });
-                closeSurvey();
-            }
+            document.getElementById(stepId).classList.add('step-active');
         }
 
         function selectCategoryAndClose(category) {
@@ -614,7 +424,7 @@
         async function fetchProducts() {
             document.getElementById('loadingOverlay').style.display = 'flex';
             try {
-                const res = await fetch('/api/products/minifigure');
+                const res = await fetch('/api/products/toy');
                 if(!res.ok) throw new Error("API Connection Failed.");
                 const data = await res.json();
                 
@@ -649,174 +459,79 @@
             renderProducts();
         }
 
-        // 🌟 SET MAIN FILTER LOGIC (Toggles Off) 🌟
-        function setMainFilter(mainId) {
-            let isCurrentlyActive = false;
-            if (typeof activeCategory === 'object' && activeCategory !== null && !Array.isArray(activeCategory)) {
-                isCurrentlyActive = (activeCategory.main.toLowerCase() === mainId);
-            } else if (activeCategory === mainId) {
-                isCurrentlyActive = true;
-            }
-
-            if (isCurrentlyActive) {
-                activeCategory = 'All'; // Toggle off to show all
-            } else {
-                activeCategory = { main: mainId, themes: [] };
-            }
-            renderCategoryFilters();
-            renderProducts();
-        }
-
-        // 🌟 TOGGLE THEME FILTER LOGIC 🌟
-        function toggleThemeFilter(theme) {
-            if (typeof activeCategory === 'object' && activeCategory !== null && !Array.isArray(activeCategory)) {
-                // Toggle theme inside the active object
-                const idx = activeCategory.themes.indexOf(theme);
-                if (idx > -1) {
-                    activeCategory.themes.splice(idx, 1);
-                } else {
-                    activeCategory.themes.push(theme);
-                }
-            } else {
-                // Wrap in array if they clicked from modal directly
-                if (Array.isArray(activeCategory)) {
-                    const idx = activeCategory.indexOf(theme);
-                    if (idx > -1) activeCategory.splice(idx, 1);
-                    else activeCategory.push(theme);
-                    if (activeCategory.length === 0) activeCategory = 'All';
-                } else {
-                    if (activeCategory === theme) activeCategory = 'All';
-                    else activeCategory = [theme];
-                }
-            }
-            renderCategoryFilters();
-            renderProducts();
-        }
-
-        // 🌟 SET CATEGORY (Used by Survey & Modal) 🌟
         function setCategory(cat) {
-            activeCategory = cat; 
-            renderCategoryFilters();
+            activeCategory = cat;
+            document.querySelectorAll('.strip-btn').forEach(b => {
+                if(b.dataset.cat === cat) {
+                    b.classList.add('bg-gray-900', 'text-white', 'border-gray-900');
+                    b.classList.remove('bg-white', 'text-gray-600', 'border-gray-200', 'hover:bg-gray-50');
+                } else {
+                    b.classList.remove('bg-gray-900', 'text-white', 'border-gray-900');
+                    b.classList.add('bg-white', 'text-gray-600', 'border-gray-200', 'hover:bg-gray-50');
+                }
+            });
+            const activeBtn = document.querySelector(`.strip-btn[data-cat="${cat}"]`);
+            if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            closeCategoryModal();
             renderProducts();
         }
 
-        // 🌟 REDESIGNED COMPACT SINGLE AREA CATEGORY UI RENDERER 🌟
+        function openCategoryModal() { document.getElementById('category-modal').classList.remove('translate-y-full'); }
+        function closeCategoryModal() { document.getElementById('category-modal').classList.add('translate-y-full'); }
+
         function renderCategoryFilters() {
-            let mainCat = 'all';
-            let themes = [];
+            let cats = new Set(['All']);
+            allProducts.forEach(p => {
+                if(p.category) {
+                    p.category.split(',').forEach(c => { const trimmed = c.trim(); if (trimmed) cats.add(trimmed); });
+                }
+                const variants = p.variants || [];
+                variants.forEach(v => {
+                    if(v.category) v.category.split(',').forEach(c => { const trimmed = c.trim(); if (trimmed) cats.add(trimmed); });
+                });
+            });
 
-            if (typeof activeCategory === 'object' && activeCategory !== null && !Array.isArray(activeCategory)) {
-                mainCat = activeCategory.main.toLowerCase();
-                themes = activeCategory.themes || [];
-            } else if (Array.isArray(activeCategory)) {
-                themes = activeCategory;
-            } else if (activeCategory !== 'All') {
-                themes = [activeCategory];
-            }
+            const catArray = Array.from(cats).sort((a, b) => {
+                if(a === 'All') return -1;
+                if(b === 'All') return 1;
+                return a.localeCompare(b);
+            });
 
-            // 1. Build First Line (Removed 'All', forced to one scrollable line)
-            const mainCategories = [
-                { id: 'minifigure', label: 'Minifigures', icon: '<i class="fa-solid fa-user-astronaut mr-1.5"></i>' },
-                { id: 'building', label: 'Building Sets', icon: '<i class="fa-solid fa-cubes-stacked mr-1.5"></i>' },
-                { id: 'spinner', label: 'Spinners', icon: '<i class="fa-solid fa-hurricane mr-1.5"></i>' }
-            ];
+            document.getElementById('category-filters').innerHTML = catArray.map(c => 
+                `<button data-cat="${c}" onclick="setCategory('${c}')" class="strip-btn px-4 py-1.5 rounded-full border ${c === activeCategory ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'} text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors shadow-sm flex-shrink-0">${c}</button>`
+            ).join('');
 
-            const mainHtml = mainCategories.map(c => {
-                const isActive = (mainCat === c.id);
-                const baseClass = isActive ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50';
-                return `<button onclick="setMainFilter('${c.id}')" class="px-3.5 h-8 rounded-full border ${baseClass} text-[9px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0 flex items-center">${c.icon}${c.label}</button>`;
-            }).join('');
-
-            // 2. Build Second Line (Sub Themes)
-            let subHtml = '';
-            let showRow2 = false;
-
-            if (mainCat === 'minifigure') {
-                showRow2 = true;
-                const miniThemes = ['Ninjago', 'Marvel', 'Anime', 'Military', 'Chinese'];
-                subHtml = miniThemes.map(t => {
-                    const isActive = themes.includes(t);
-                    const baseClass = isActive ? 'bg-[#ea580c] text-white border-[#ea580c] shadow-sm' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200';
-                    return `<button onclick="toggleThemeFilter('${t}')" class="px-2 py-1 h-6 rounded-md border ${baseClass} text-[8px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0">${t}</button>`;
-                }).join('');
-            } else if (mainCat === 'building') {
-                showRow2 = true;
-                const bldgThemes = ['Ninjago', 'Technic', 'Others'];
-                subHtml = bldgThemes.map(t => {
-                    const isActive = themes.includes(t);
-                    const baseClass = isActive ? 'bg-[#ea580c] text-white border-[#ea580c] shadow-sm' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200';
-                    return `<button onclick="toggleThemeFilter('${t}')" class="px-2 py-1 h-6 rounded-md border ${baseClass} text-[8px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0">${t}</button>`;
-                }).join('');
-            } else if (mainCat === 'all' && activeCategory !== 'All' && themes.length > 0) {
-                // If they picked something random from the modal directly, show it as an active pill
-                showRow2 = true;
-                subHtml = themes.map(t => {
-                    return `<button onclick="toggleThemeFilter('${t}')" class="px-2 py-1 h-6 rounded-md border bg-[#ea580c] text-white border-[#ea580c] shadow-sm text-[8px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors flex-shrink-0">${t} <i class="fa-solid fa-xmark ml-1"></i></button>`;
-                }).join('');
-            }
-
-            document.getElementById('main-category-filters').innerHTML = mainHtml;
-            const subContainer = document.getElementById('sub-category-filters');
-            subContainer.innerHTML = subHtml;
-            
-            if (showRow2 && subHtml !== '') {
-                subContainer.classList.remove('hidden');
-            } else {
-                subContainer.classList.add('hidden');
-            }
+            document.getElementById('full-category-grid').innerHTML = catArray.map(c => 
+                `<button onclick="setCategory('${c}')" class="w-full px-5 py-4 rounded-xl border ${c === activeCategory ? 'bg-orange-50 border-[#ea580c] text-[#ea580c] shadow-sm' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'} text-sm font-black tracking-wide text-left flex items-center justify-between transition-all group">
+                    <span class="font-['Plus_Jakarta_Sans']">${c}</span>
+                    <div class="w-6 h-6 rounded-full flex items-center justify-center ${c === activeCategory ? 'bg-[#ea580c] text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'} transition-colors">
+                        <i class="fa-solid ${c === activeCategory ? 'fa-check' : 'fa-chevron-right'} text-[10px]"></i>
+                    </div>
+                </button>`
+            ).join('');
         }
 
         function renderProducts() {
             let filtered = allProducts;
-            const isSearching = currentSearchQuery.trim() !== '';
-            
-            // Apply Smart Category Filter ONLY if NOT actively typing a search term.
-            if (!isSearching && activeCategory !== 'All') {
-                if (typeof activeCategory === 'object' && activeCategory !== null && !Array.isArray(activeCategory)) {
-                    // COMPLEX FILTER: e.g. { main: 'minifigure', themes: ['Ninjago', 'Marvel'] }
-                    const mainTarget = activeCategory.main.toLowerCase();
-                    const themeTargets = activeCategory.themes.map(t => t.toLowerCase());
-
-                    filtered = filtered.filter(p => {
-                        let allCats = [];
-                        if (p.category) allCats.push(...p.category.split(',').map(c => c.trim().toLowerCase()));
-                        if (p.variants) {
-                            p.variants.forEach(v => {
-                                if (v.category) allCats.push(...v.category.split(',').map(c => c.trim().toLowerCase()));
-                            });
-                        }
-
-                        // Must include the main word (e.g. "minifigure" matches "minifigures") AND at least one theme safely
-                        const hasMain = allCats.some(c => c.includes(mainTarget)); 
-                        const hasTheme = themeTargets.length === 0 || themeTargets.some(t => allCats.some(ac => ac.includes(t)));
-
-                        return hasMain && hasTheme;
-                    });
-                } else if (!(Array.isArray(activeCategory) && activeCategory.includes('All'))) {
-                    // Standard Single String or Array filter
-                    const targets = Array.isArray(activeCategory) ? activeCategory.map(c => c.toLowerCase()) : [activeCategory.toLowerCase()];
-                    filtered = filtered.filter(p => {
-                        if (p.category && p.category.split(',').map(c => c.trim().toLowerCase()).some(c => targets.includes(c))) return true;
-                        if (p.variants) {
-                            return p.variants.some(v => v.category && v.category.split(',').map(c => c.trim().toLowerCase()).some(c => targets.includes(c)));
-                        }
-                        return false;
-                    });
-                }
+            if (activeCategory !== 'All') {
+                const targetCatLower = activeCategory.toLowerCase();
+                filtered = filtered.filter(p => {
+                    if (p.category && p.category.split(',').map(c => c.trim().toLowerCase()).includes(targetCatLower)) return true;
+                    if (p.variants) {
+                        return p.variants.some(v => v.category && v.category.split(',').map(c => c.trim().toLowerCase()).includes(targetCatLower));
+                    }
+                    return false;
+                });
             }
 
-            // Image Mapping & Match Variant Check
             filtered = filtered.map(p => {
                 let displayImage = p.thumbnail; 
                 let matchedVariantIndex = 0;
                 let variants = p.variants || [];
                 
-                if (isSearching) {
-                    const q = currentSearchQuery.toLowerCase().trim().replace('#', '');
-                    const vIndex = variants.findIndex(v => 
-                        (v.name && v.name.toLowerCase().includes(q)) || 
-                        (v.code && v.code.toLowerCase().includes(q))
-                    );
+                if (currentSearchQuery.trim() !== '') {
+                    const q = currentSearchQuery.toLowerCase().trim();
+                    const vIndex = variants.findIndex(v => v.name && v.name.toLowerCase().includes(q));
                     
                     if (vIndex !== -1) { 
                         matchedVariantIndex = vIndex; 
@@ -836,17 +551,11 @@
                 return { ...p, displayImage, matchedVariantIndex };
             });
 
-            // Text Search Over All (Active when filter is effectively "off" due to typing)
-            if (isSearching) {
-                const q = currentSearchQuery.toLowerCase().trim().replace('#', '');
+            if (currentSearchQuery.trim() !== '') {
+                const q = currentSearchQuery.toLowerCase().trim();
                 filtered = filtered.filter(p => {
-                    const titleMatch = (p.title && p.title.toLowerCase().includes(q)) || 
-                                       (p.category && p.category.toLowerCase().includes(q)) ||
-                                       (p.product_code && p.product_code.toLowerCase().includes(q));
-                    const variantMatch = p.variants && p.variants.some(v => 
-                        (v.name && v.name.toLowerCase().includes(q)) ||
-                        (v.code && v.code.toLowerCase().includes(q))
-                    );
+                    const titleMatch = (p.title && p.title.toLowerCase().includes(q)) || (p.category && p.category.toLowerCase().includes(q));
+                    const variantMatch = p.variants && p.variants.some(v => v.name && v.name.toLowerCase().includes(q));
                     return titleMatch || p.matchedVariantIndex > 0 || variantMatch;
                 });
             }
@@ -854,10 +563,9 @@
             const grid = document.getElementById('product-grid');
             if (filtered.length === 0) {
                 grid.innerHTML = `
-                    <div class="col-span-2 md:col-span-3 lg:col-span-4 flex flex-col items-center justify-center py-24 opacity-80">
-                        <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4 border border-slate-200"><i class="fa-solid fa-magnifying-glass-minus text-3xl text-slate-400"></i></div>
-                        <h3 class="text-sm font-black text-slate-700 uppercase tracking-widest font-['Moul']">រកមិនឃើញទំនិញទេ</h3>
-                        <p class="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-widest">No products found</p>
+                    <div class="col-span-2 md:col-span-3 lg:col-span-4 flex flex-col items-center justify-center py-20 opacity-80">
+                        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4"><i class="fa-solid fa-magnifying-glass-minus text-3xl text-gray-400"></i></div>
+                        <h3 class="text-sm font-black text-gray-800 uppercase tracking-widest font-['Moul']">រកមិនឃើញទំនិញទេ</h3>
                     </div>`;
                 return;
             }
@@ -874,55 +582,39 @@
                 let basePriceUSD = variants.length > 0 ? parseFloat(variants[vIndex].price) : parseFloat(p.price);
                 let finalPriceUSD = basePriceUSD;
                 
-                // 🌟 DYNAMIC BADGE LOGIC 🌟
-                let badgeHtml = '';
-                if (finalDiscountPercent > 0) {
-                    badgeHtml = `<div class="absolute top-2 left-2 z-10 bg-red-600 text-white text-[8px] font-black px-2 py-1 rounded-md shadow-md leading-none animate-pulse">SALE -${Math.round(finalDiscountPercent)}%</div>`;
-                } else if (index % 2 === 0) {
-                    const b = dynamicBadges[(index / 2) % dynamicBadges.length];
-                    badgeHtml = `<div class="absolute top-2 left-2 z-10 ${b.color} text-white text-[7.5px] font-black px-1.5 py-1 rounded-md uppercase tracking-widest shadow-sm flex items-center gap-1"><i class="fa-solid ${b.icon}"></i> ${b.text}</div>`;
-                }
-
-                // 🌟 DYNAMIC FAKE COMMENT LOGIC 🌟
-                const randomComment = positiveComments[index % positiveComments.length];
-
+                let badgeHtml = (index % 5 === 0) ? `<div class="absolute top-2 left-2 z-10 bg-red-500 text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-widest shadow-md animate-pulse">HOT</div>` : '';
                 let priceHtml = '';
+
                 if (finalDiscountPercent > 0) {
                     finalPriceUSD = basePriceUSD - (basePriceUSD * finalDiscountPercent / 100);
+                    badgeHtml = `<div class="absolute top-2 left-2 z-10 bg-red-600 text-white text-[8px] font-black px-2 py-1 rounded-md shadow-md leading-none">SALE -${Math.round(finalDiscountPercent)}%</div>`;
                     priceHtml = `
                         <div class="flex flex-col">
-                            <span class="text-[9px] font-bold text-slate-400 line-through leading-none mb-0.5">$${basePriceUSD.toFixed(2)}</span>
+                            <span class="text-[9px] font-bold text-gray-400 line-through leading-none mb-0.5">$${basePriceUSD.toFixed(2)}</span>
                             <span class="font-black text-[13px] text-red-600 leading-none">$${finalPriceUSD.toFixed(2)}</span>
-                            <span class="text-[8px] font-bold text-slate-400 mt-0.5">${Math.round(finalPriceUSD * RATE).toLocaleString()}៛</span>
+                            <span class="text-[8px] font-bold text-gray-400 mt-0.5">${Math.round(finalPriceUSD * RATE).toLocaleString()}៛</span>
                         </div>
                     `;
                 } else {
                     priceHtml = `
                         <div class="flex flex-col">
                             <span class="font-black text-sm text-[#ea580c] leading-tight">$${finalPriceUSD.toFixed(2)}</span>
-                            <span class="text-[8px] font-bold text-slate-400">${Math.round(finalPriceUSD * RATE).toLocaleString()}៛</span>
+                            <span class="text-[8px] font-bold text-gray-400">${Math.round(finalPriceUSD * RATE).toLocaleString()}៛</span>
                         </div>
                     `;
                 }
 
                 return `
-                <div onclick="openProductModal(${p.id}, ${vIndex})" class="bg-white rounded-[20px] border border-slate-200/80 shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-all hover:shadow-md hover:border-orange-200 hover:-translate-y-0.5 group">
-                    <div class="aspect-square bg-slate-50/50 relative overflow-hidden flex items-center justify-center p-3 border-b border-slate-100">
+                <div onclick="openProductModal(${p.id}, ${vIndex})" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-all hover:shadow-xl group">
+                    <div class="aspect-[4/5] bg-gray-50 relative overflow-hidden flex items-center justify-center p-2">
                         ${badgeHtml}
                         <img src="${image}" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500">
                     </div>
                     <div class="p-3 flex flex-col flex-grow bg-white relative z-10">
-                        <h3 class="font-black text-xs text-slate-900 line-clamp-2 mb-1 font-['Plus_Jakarta_Sans'] leading-tight group-hover:text-[#ea580c] transition-colors">${p.title}</h3>
-                        
-                        <!-- 🌟 FAKE REVIEW BLOCK 🌟 -->
-                        <div class="mt-1.5 mb-2 bg-slate-50 border border-slate-100 rounded-md p-1.5 flex items-start gap-1.5">
-                            <div class="w-4 h-4 rounded-full bg-orange-100 text-[#ea580c] flex items-center justify-center shrink-0 mt-0.5"><i class="fa-solid fa-user text-[8px]"></i></div>
-                            <p class="text-[9px] text-slate-500 font-medium line-clamp-1 italic font-['Kantumruy_Pro'] pt-0.5">"${randomComment}"</p>
-                        </div>
-
-                        <div class="mt-auto flex justify-between items-end pt-1">
+                        <h3 class="font-black text-xs text-gray-900 line-clamp-2 mb-1 font-['Plus_Jakarta_Sans'] leading-tight group-hover:text-[#ea580c] transition-colors">${p.title}</h3>
+                        <div class="mt-auto flex justify-between items-end pt-2">
                             ${priceHtml}
-                            <div class="h-7 px-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center text-slate-600 font-bold text-[10px] font-['Kantumruy_Pro'] group-hover:bg-[#ea580c] group-hover:text-white group-hover:border-[#ea580c] transition-all shadow-sm shrink-0 ml-1">ទិញ</div>
+                            <div class="w-7 h-7 bg-gray-50 border border-gray-100 rounded-full flex items-center justify-center text-gray-600 group-hover:bg-[#ea580c] group-hover:text-white group-hover:border-[#ea580c] transition-all shadow-sm"><i class="fa-solid fa-plus text-[10px]"></i></div>
                         </div>
                     </div>
                 </div>`;
@@ -944,7 +636,7 @@
             document.getElementById('modal-qty').innerText = modalQty;
             
             let variants = currentModalProduct.variants || [];
-            if(!variants || variants.length === 0) variants = [{ name: "Standard", price: currentModalProduct.price, stock: currentModalProduct.stock, image: currentModalProduct.thumbnail, code: currentModalProduct.product_code }];
+            if(!variants || variants.length === 0) variants = [{ name: "Standard", price: currentModalProduct.price, stock: currentModalProduct.stock, image: currentModalProduct.thumbnail }];
             currentModalProduct._activeVariants = variants;
 
             let allImages = [];
@@ -968,8 +660,9 @@
 
             const carousel = document.getElementById('modal-image-carousel');
             carousel.innerHTML = allImages.map((imgUrl, idx) => `
-                <div class="w-full shrink-0 h-full snap-center flex items-center justify-center p-8 sm:p-10 relative">
-                    <img src="${imgUrl}" class="max-w-full max-h-full object-contain mix-blend-multiply transition-transform duration-300">
+                <div class="min-w-full h-full snap-center flex items-center justify-center p-3 relative">
+                    <img src="${imgUrl}" class="max-w-full max-h-full object-contain mix-blend-multiply">
+                    ${idx === 0 ? '<span class="absolute top-3 left-3 bg-black/60 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow-sm">Preview</span>' : `<span class="absolute top-3 left-3 bg-blue-600/90 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow-sm">Gallery Photo #${idx}</span>`}
                 </div>
             `).join('');
 
@@ -981,12 +674,10 @@
                 const img = v.image || currentModalProduct.thumbnail;
                 const name = v.name || `Style ${i + 1}`;
                 return `
-                <div onclick="selectVariant(${i})" id="var-btn-${i}" class="variant-btn w-full flex flex-col items-center p-1 border-2 rounded-xl cursor-pointer transition-all bg-white border-slate-100 hover:border-slate-300 relative group shadow-sm">
-                    <div class="w-full aspect-square rounded-lg overflow-hidden bg-slate-50 mb-1 relative border border-slate-100/50 flex items-center justify-center p-1">
-                        <img src="${img}" class="max-w-full max-h-full object-contain mix-blend-multiply">
-                    </div>
-                    <div class="w-full flex items-center justify-center text-center px-0.5 pb-0.5"><span id="var-text-${i}" class="text-[9px] font-bold text-slate-700 line-clamp-2 leading-tight">${name}</span></div>
-                    <div id="var-check-${i}" class="absolute right-1 top-1 w-4 h-4 rounded-full bg-[#ea580c] text-white flex items-center justify-center opacity-0 scale-50 transition-all duration-200 shadow-sm border-2 border-white"><i class="fa-solid fa-check text-[8px]"></i></div>
+                <div onclick="selectVariant(${i})" id="var-btn-${i}" class="variant-btn w-full flex flex-col items-center p-1 border-2 rounded-[10px] cursor-pointer transition-all bg-white border-gray-100 hover:border-gray-300 relative group shadow-sm">
+                    <div class="w-full aspect-square rounded-lg overflow-hidden bg-gray-50 mb-1 relative border border-gray-100/50"><img src="${img}" class="w-full h-full object-cover mix-blend-multiply"></div>
+                    <div class="w-full flex items-center justify-center text-center px-0.5"><span id="var-text-${i}" class="text-[9px] font-bold text-gray-700 line-clamp-2 leading-tight">${name}</span></div>
+                    <div id="var-check-${i}" class="absolute right-1 top-1 w-3.5 h-3.5 rounded-full bg-[#ea580c] text-white flex items-center justify-center opacity-0 scale-50 transition-all duration-200 shadow-sm"><i class="fa-solid fa-check text-[8px]"></i></div>
                 </div>`;
             }).join('');
 
@@ -1042,7 +733,6 @@
             const priceKHRStr = `${Math.round(finalPriceUSD * RATE).toLocaleString()}៛`;
             const estPrice = `$${(finalPriceUSD * 0.95).toFixed(2)}`;
             const name = v.name || `Style ${idx + 1}`;
-            const skuCode = v.code || currentModalProduct.product_code;
             
             if (finalDiscountPercent > 0) {
                 document.getElementById('sheet-price').innerHTML = `
@@ -1051,7 +741,7 @@
                         <span class="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded shadow-sm align-middle leading-none">SALE -${Math.round(finalDiscountPercent)}%</span>
                     </div>
                 `;
-                document.getElementById('sheet-price-khr').innerHTML = `<span class="text-slate-400 line-through mr-2">$${basePriceUSD.toFixed(2)}</span><span class="text-slate-500 font-bold">${priceKHRStr}</span>`;
+                document.getElementById('sheet-price-khr').innerHTML = `<span class="text-gray-400 line-through mr-2">$${basePriceUSD.toFixed(2)}</span><span class="text-gray-500 font-bold">${priceKHRStr}</span>`;
             } else {
                 document.getElementById('sheet-price').innerHTML = `<span class="text-[#ea580c]">${priceUSDStr}</span>`;
                 document.getElementById('sheet-price-khr').innerText = priceKHRStr;
@@ -1064,29 +754,21 @@
             const variantStock = v.stock !== undefined && v.stock !== null ? parseInt(v.stock) : (currentModalProduct.stock !== undefined && currentModalProduct.stock !== null ? parseInt(currentModalProduct.stock) : 1);
             const addToCartBtn = document.getElementById('add-to-cart-btn');
             const stockLabel = document.getElementById('stock-label');
-            const skuLabel = document.getElementById('sku-label');
 
             if (isNaN(variantStock) || variantStock > 0) {
-                addToCartBtn.classList.remove('bg-slate-400');
+                addToCartBtn.classList.remove('bg-gray-400');
                 addToCartBtn.classList.add('bg-[#ea580c]', 'shadow-orange-500/30');
-                addToCartBtn.innerHTML = `<i class="fa-solid fa-cart-plus"></i> បញ្ចូលទៅកន្ត្រក (Add)`;
+                addToCartBtn.innerHTML = `<i class="fa-solid fa-cart-plus"></i> បញ្ចូលទៅកន្ត្រក (Add to Cart)`;
                 addToCartBtn.disabled = false;
-                stockLabel.className = 'text-[10px] font-black px-2 py-1 bg-slate-100 text-slate-500 rounded uppercase tracking-widest mt-1 border border-slate-200';
+                stockLabel.className = 'text-[10px] font-black px-2 py-1 bg-gray-100 text-gray-500 rounded uppercase tracking-widest mt-1';
                 stockLabel.innerHTML = `In Stock: ${isNaN(variantStock) ? 'Yes' : variantStock}`;
             } else {
                 addToCartBtn.classList.remove('bg-[#ea580c]', 'shadow-orange-500/30');
-                addToCartBtn.classList.add('bg-slate-400');
+                addToCartBtn.classList.add('bg-gray-400');
                 addToCartBtn.innerHTML = `<i class="fa-solid fa-ban"></i> អស់ពីស្តុក (Out of Stock)`;
                 addToCartBtn.disabled = true;
-                stockLabel.className = 'text-[10px] font-black px-2 py-1 bg-red-50 text-red-500 rounded uppercase tracking-widest mt-1 border border-red-100';
+                stockLabel.className = 'text-[10px] font-black px-2 py-1 bg-red-50 text-red-500 rounded uppercase tracking-widest mt-1';
                 stockLabel.innerHTML = `Out of Stock`;
-            }
-            
-            if (skuCode && skuCode.trim() !== '') {
-                skuLabel.innerHTML = `#${skuCode}`;
-                skuLabel.classList.remove('hidden');
-            } else {
-                skuLabel.classList.add('hidden');
             }
             
             if (scrollImage && variants.length > 1) {
@@ -1097,51 +779,33 @@
                     if (currentModalProduct.use_custom_thumbnail && currentModalProduct.thumbnail) {
                         targetScrollIndex = idx + 1;
                     }
-                    // Character select sliding animation magic here
                     carousel.scrollTo({ left: carousel.clientWidth * targetScrollIndex, behavior: 'smooth' });
+                    setTimeout(() => carousel.scrollTo({ left: carousel.clientWidth * targetScrollIndex, behavior: 'auto' }), 50); 
                 }
-                // Allow scrolling state to clear after animation finishes naturally
-                setTimeout(() => { isModalImageScrolling = false; }, 500); 
+                setTimeout(() => { isModalImageScrolling = false; }, 400); 
             }
             
             document.querySelectorAll('.variant-btn').forEach((btn, i) => {
                 const textSpan = document.getElementById(`var-text-${i}`);
                 const checkIcon = document.getElementById(`var-check-${i}`);
                 if(i === idx) {
-                    btn.classList.add('border-[#ea580c]', 'bg-orange-50/40'); btn.classList.remove('border-slate-100', 'bg-white', 'hover:border-slate-300');
-                    if(textSpan) { textSpan.classList.add('text-[#ea580c]'); textSpan.classList.remove('text-slate-700'); }
+                    btn.classList.add('border-[#ea580c]', 'bg-orange-50/40'); btn.classList.remove('border-gray-100', 'bg-white', 'hover:border-gray-300');
+                    if(textSpan) { textSpan.classList.add('text-[#ea580c]'); textSpan.classList.remove('text-gray-700'); }
                     if(checkIcon) { checkIcon.classList.remove('opacity-0', 'scale-50'); checkIcon.classList.add('opacity-100', 'scale-100'); }
                 } else {
-                    btn.classList.remove('border-[#ea580c]', 'bg-orange-50/40'); btn.classList.add('border-slate-100', 'bg-white', 'hover:border-slate-300');
-                    if(textSpan) { textSpan.classList.remove('text-[#ea580c]'); textSpan.classList.add('text-slate-700'); }
+                    btn.classList.remove('border-[#ea580c]', 'bg-orange-50/40'); btn.classList.add('border-gray-100', 'bg-white', 'hover:border-gray-300');
+                    if(textSpan) { textSpan.classList.remove('text-[#ea580c]'); textSpan.classList.add('text-gray-700'); }
                     if(checkIcon) { checkIcon.classList.add('opacity-0', 'scale-50'); checkIcon.classList.remove('opacity-100', 'scale-100'); }
                 }
             });
         }
 
-        // 🌟 RECOMMENDATIONS CSS FIX (Flex & max-w-full) 🌟
         function renderRecommendations(excludeId) {
-            const currentProduct = allProducts.find(p => p.id === excludeId);
-            let available = allProducts.filter(p => p.id !== excludeId);
-            
-            // Prioritize matching categories (Makes it feel like a "Category Picture" grid)
-            if (currentProduct && currentProduct.category) {
-                const currentCats = currentProduct.category.split(',').map(c => c.trim().toLowerCase());
-                const sameCat = available.filter(p => {
-                    if (!p.category) return false;
-                    const pCats = p.category.split(',').map(c => c.trim().toLowerCase());
-                    return currentCats.some(c => pCats.includes(c));
-                });
-                if (sameCat.length > 0) {
-                    available = sameCat;
-                }
-            }
-
+            const available = allProducts.filter(p => p.id !== excludeId);
             const shuffled = available.sort(() => 0.5 - Math.random());
             const grid = document.getElementById('recommendations-grid');
             
-            // Limit safely to 40 items so they can "scroll uncounted" without browser lag
-            grid.innerHTML = shuffled.slice(0, 40).map(p => {
+            grid.innerHTML = shuffled.slice(0, 4).map(p => {
                 let variants = p.variants || [];
                 let vDiscount = variants.length > 0 ? parseFloat(variants[0].discount_percent) || 0 : 0;
                 let mDiscount = parseFloat(p.discount_percent) || 0;
@@ -1149,18 +813,15 @@
                 
                 let basePriceUSD = variants.length > 0 ? parseFloat(variants[0].price) : parseFloat(p.price);
                 let finalPriceUSD = finalDiscountPercent > 0 ? basePriceUSD - (basePriceUSD * finalDiscountPercent / 100) : basePriceUSD;
-                let badgeHtml = finalDiscountPercent > 0 ? `<div class="absolute top-1 right-1 z-10 bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm leading-none animate-pulse">-${Math.round(finalDiscountPercent)}%</div>` : '';
+                let badgeHtml = finalDiscountPercent > 0 ? `<div class="absolute top-1 right-1 z-10 bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm leading-none">-${Math.round(finalDiscountPercent)}%</div>` : '';
 
                 const image = p.use_custom_thumbnail ? p.thumbnail : (variants.length > 0 ? variants[0].image : p.thumbnail);
                 return `
-                <div onclick="swapToRecommendation(${p.id})" class="bg-white rounded-[16px] border border-slate-200 shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-all hover:border-[#ea580c] hover:-translate-y-0.5 group relative">
+                <div onclick="swapToRecommendation(${p.id})" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col cursor-pointer active:scale-95 transition-all hover:border-[#ea580c] group relative">
                     ${badgeHtml}
-                    <!-- 🌟 CSS FIX: Flex, items-center, justify-center, max-w/h-full applied here 🌟 -->
-                    <div class="aspect-square bg-slate-50/50 relative p-4 border-b border-slate-100 flex items-center justify-center overflow-hidden">
-                        <img src="${image}" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
-                    </div>
+                    <div class="aspect-[4/5] bg-gray-50 relative p-3"><img src="${image}" class="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300"></div>
                     <div class="p-3 flex flex-col flex-grow bg-white">
-                        <h3 class="font-bold text-[11px] text-slate-800 line-clamp-2 mb-1.5 font-['Plus_Jakarta_Sans'] leading-tight group-hover:text-[#ea580c] transition-colors">${p.title}</h3>
+                        <h3 class="font-bold text-[11px] text-gray-800 line-clamp-2 mb-1.5 font-['Plus_Jakarta_Sans'] leading-tight group-hover:text-[#ea580c] transition-colors">${p.title}</h3>
                         <span class="font-black text-sm text-[#ea580c] mt-auto">$${finalPriceUSD.toFixed(2)}</span>
                     </div>
                 </div>`;
@@ -1194,7 +855,6 @@
             const thumbnailImage = v.image || currentModalProduct.thumbnail;
             const stock = parseInt(v.stock !== undefined ? v.stock : currentModalProduct.stock);
             const styleName = v.name || (hasTrueVariants ? `Style ${currentVariantIndex + 1}` : "Standard");
-            const skuCode = v.code || currentModalProduct.product_code || "";
 
             if(!isNaN(stock) && stock <= 0) return alert("Sorry, this exact variant is out of stock!");
 
@@ -1203,8 +863,7 @@
                     productId: currentModalProduct.id, variantId: dbId, 
                     name: `${currentModalProduct.title} - ${styleName}`,
                     price: finalPriceUSD, image: thumbnailImage, stock: isNaN(stock) ? 99 : stock,
-                    type: 'option', mainVariantId: `${currentModalProduct.id}-0`,
-                    code: skuCode
+                    type: 'option', mainVariantId: `${currentModalProduct.id}-0` 
                 });
             }
             
