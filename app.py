@@ -16,12 +16,11 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_ultra_pro_2025')
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024 
 
-# --- 1. CLOUDINARY CONFIG (HARDENED FOR DEPLOYMENT) ---
-# Using fallback strings ensures the app boots even if ENV vars are missing during the build phase
+# --- 1. CLOUDINARY CONFIG ---
 cloudinary.config( 
-  cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "dwwearehy"), 
-  api_key = os.environ.get("CLOUDINARY_API_KEY", "dummy_key"), 
-  api_secret = os.environ.get("CLOUDINARY_API_SECRET", "dummy_secret"),
+  cloud_name = "dwwearehy", 
+  api_key = os.environ.get("CLOUDINARY_API_KEY"), 
+  api_secret = os.environ.get("CLOUDINARY_API_SECRET"),
   secure = True
 )
 
@@ -459,7 +458,7 @@ def admin_inventory():
     return render_template('admin/inventory.html', products=Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all(), categories=Category.query.order_by(Category.sort_order).all())
 
 
-# ✨ API ROUTE FOR SEARCHING PRODUCT CODES IN ORDERS ✨
+# ✨ NEW: API ROUTE FOR SEARCHING PRODUCT CODES IN ORDERS ✨
 @app.route('/admin/api/search_code', methods=['GET'])
 @login_required
 def admin_api_search_code():
@@ -538,16 +537,12 @@ def confirm_admin_order(id):
         if not order.stock_deducted:
             try:
                 for item in json.loads(order.items_json):
-                    # ✨ REBUILT: Ultra-robust identifier extraction ✨
-                    identifier = str(item.get('variantId') or item.get('cartId') or item.get('id') or '')
-                    parts = identifier.split('-')
-                    qty = int(item.get('qty', 1))
-                    
+                    parts = str(item.get('variantId', item.get('cartId', item.get('id', '')))).split('-')
                     if len(parts) >= 2 and parts[0].isdigit():
                         p_id = int(parts[0])
                         v_idx = int(parts[1]) if parts[1].isdigit() else -1
+                        qty = int(item.get('qty', 1))
                         product = Product.query.get(p_id)
-                        
                         if product:
                             if product.variants and v_idx != -1:
                                 variants = json.loads(product.variants)
@@ -559,15 +554,11 @@ def confirm_admin_order(id):
                             else: 
                                 product.stock = max(0, product.stock - qty)
                                 _sync_product_to_pool(p_id, -1, product.stock)
-                                
-                    elif identifier.isdigit():
-                        # Simple product (No variants)
-                        p_id = int(identifier)
-                        product = Product.query.get(p_id)
+                    elif item.get('cartId') and str(item.get('cartId')).isdigit():
+                        product = Product.query.get(int(item.get('cartId')))
                         if product:
-                            product.stock = max(0, product.stock - qty)
-                            _sync_product_to_pool(p_id, -1, product.stock)
-                            
+                            product.stock = max(0, product.stock - int(item.get('qty', 1)))
+                            _sync_product_to_pool(product.id, -1, product.stock)
             except Exception as e: 
                 print(f"Stock deduction error: {e}")
             
@@ -600,7 +591,7 @@ def update_admin_order(id):
             try: order.delivery_fee = float(request.form.get('delivery_fee'))
             except ValueError: pass
         
-        # Pull fully editable item data arrays from order edit form
+        # ✨ REBUILT: Pull fully editable item data arrays from order edit form ✨
         item_ids = request.form.getlist('item_ids[]')
         item_qtys = request.form.getlist('item_qtys[]')
         item_prices = request.form.getlist('item_prices[]')
@@ -701,14 +692,9 @@ def update_order_status(id, status):
         if status == 'Completed' and not order.stock_deducted:
             try:
                 for item in json.loads(order.items_json):
-                    # ✨ REBUILT: Ultra-robust identifier extraction for manual status changes ✨
-                    identifier = str(item.get('variantId') or item.get('cartId') or item.get('id') or '')
-                    parts = identifier.split('-')
-                    qty = int(item.get('qty', 1))
-                    
-                    if len(parts) >= 2 and parts[0].isdigit():
-                        p_id = int(parts[0])
-                        v_idx = int(parts[1]) if parts[1].isdigit() else -1
+                    parts = str(item.get('variantId', item.get('cartId', item.get('id', '')))).split('-')
+                    if len(parts) >= 2:
+                        p_id, v_idx, qty = int(parts[0]), int(parts[1]), int(item.get('qty', 1))
                         product = Product.query.get(p_id)
                         if product:
                             if product.variants and v_idx != -1:
@@ -721,14 +707,6 @@ def update_order_status(id, status):
                             else: 
                                 product.stock = max(0, product.stock - qty)
                                 _sync_product_to_pool(p_id, -1, product.stock)
-                                
-                    elif identifier.isdigit():
-                        p_id = int(identifier)
-                        product = Product.query.get(p_id)
-                        if product:
-                            product.stock = max(0, product.stock - qty)
-                            _sync_product_to_pool(p_id, -1, product.stock)
-                            
             except Exception as e: 
                 print(f"Error completing order stock sync: {e}")
                 
@@ -870,6 +848,8 @@ def update_product(id):
     v_stocks = request.form.getlist('v_stocks[]')
     v_cats = request.form.getlist('v_categories[]')
     v_discounts = request.form.getlist('v_discounts[]') 
+    
+    # ✨ NEW: GRAB VARIANT CODES ✨
     v_codes = request.form.getlist('v_codes[]')
     
     updated_variants = []
@@ -884,7 +864,7 @@ def update_product(id):
             "stock": stock, 
             "category": v_cats[i] if i < len(v_cats) else p.category,
             "discount_percent": float(v_discounts[i]) if i < len(v_discounts) else 0.0,
-            "code": v_codes[i] if i < len(v_codes) else ''
+            "code": v_codes[i] if i < len(v_codes) else '' # ✨ Add to dict ✨
         })
         total_stock += stock
         _sync_product_to_pool(p.id, int(v_ids[i]), stock)
@@ -962,6 +942,8 @@ def add_product():
     v_stocks = request.form.getlist('variant_stocks[]')
     v_categories = request.form.getlist('variant_categories[]')
     v_discounts = request.form.getlist('variant_discounts[]')
+    
+    # ✨ NEW: GRAB VARIANT CODES ✨
     v_codes = request.form.getlist('variant_codes[]')
     
     files = request.files.getlist('images')
@@ -991,7 +973,7 @@ def add_product():
             stock = int(v_stocks[i]) if i < len(v_stocks) else 0
             cat_str = v_categories[i] if i < len(v_categories) else category
             v_disc = float(v_discounts[i]) if i < len(v_discounts) else 0.0
-            v_code = v_codes[i] if i < len(v_codes) else ''
+            v_code = v_codes[i] if i < len(v_codes) else '' # ✨
             
             vars_json.append({
                 "id": i, "name": v_names[i] if i < len(v_names) else f"Style {i+1}", 
@@ -1191,45 +1173,25 @@ def admin_spin_delete_history(draw_id):
 def request_entity_too_large(error): 
     return redirect(request.referrer)
 
-# --- THE DEPLOYMENT "CRASH-PROOF" BOOT SEQUENCE ---
 with app.app_context():
-    try:
-        # Create all tables normally
-        db.create_all()
-        
-        # Only execute manual ALTER statements if running on the local SQLite fallback
-        # This prevents transaction aborts from crashing Postgres environments on Render/Heroku
-        if 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']:
-            queries = [
-                'ALTER TABLE product ADD COLUMN product_code VARCHAR(50)',
-                'ALTER TABLE "order" ADD COLUMN promo_code_used VARCHAR(50)',
-                'ALTER TABLE product ADD COLUMN discount_percent FLOAT DEFAULT 0.0',
-                'ALTER TABLE product ADD COLUMN use_custom_thumbnail BOOLEAN DEFAULT FALSE',
-                'ALTER TABLE product ADD COLUMN detail_images TEXT',
-                'ALTER TABLE "order" ADD COLUMN delivery_fee FLOAT DEFAULT 0.0',
-                'ALTER TABLE "order" ADD COLUMN telegram_id VARCHAR(100)',
-                'ALTER TABLE "order" ADD COLUMN telegram_name VARCHAR(200)',
-                'ALTER TABLE "order" ADD COLUMN telegram_user_payload TEXT'
-            ]
-            for q in queries:
-                try:
-                    db.session.execute(text(q))
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-    except Exception as e:
-        print(f"Warning during DB startup, safely ignored: {e}")
+    db.create_all()
+    queries = [
+        'ALTER TABLE product ADD COLUMN product_code VARCHAR(50)',
+        'ALTER TABLE "order" ADD COLUMN promo_code_used VARCHAR(50)',
+        'ALTER TABLE product ADD COLUMN discount_percent FLOAT DEFAULT 0.0',
+        'ALTER TABLE product ADD COLUMN use_custom_thumbnail BOOLEAN DEFAULT FALSE',
+        'ALTER TABLE product ADD COLUMN detail_images TEXT',
+        'ALTER TABLE "order" ADD COLUMN delivery_fee FLOAT DEFAULT 0.0',
+        'ALTER TABLE "order" ADD COLUMN telegram_id VARCHAR(100)',
+        'ALTER TABLE "order" ADD COLUMN telegram_name VARCHAR(200)',
+        'ALTER TABLE "order" ADD COLUMN telegram_user_payload TEXT'
+    ]
+    for q in queries:
+        try:
+            db.session.execute(text(q))
+            db.session.commit()
+        except:
+            db.session.rollback()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-```eof
-http://googleusercontent.com/immersive_entry_chip/0
-http://googleusercontent.com/immersive_entry_chip/1
-
-### How to use these fixes:
-
-1. **`app.py`**: I completely rewrote the bottom startup script. Your previous code was blindly attempting to execute raw SQL `ALTER TABLE` commands even when attaching to a brand-new Postgres database on the host. Postgres throws a fatal transaction error if a table doesn't exist yet, which was crashing your app before it could even start. It is now safely wrapped in a Try/Except block and bypassed completely on production servers.
-2. **`Procfile`**: This file tells Heroku/Render exactly how to start the app. Many hosts will fail immediately if they do not see this file. Create a new file called exactly `Procfile` (no `.txt` extension) in your root folder and add the line `web: gunicorn app:app`.
-3. **`.python-version`**: Create a file named exactly `.python-version` in your root folder. This forces your hosting provider to use Python 3.11.7. If you don't do this, they often default to Python 3.7, which will immediately crash when it tries to install `Flask 3.0.2`.
-
-**Important**: When configuring your environment variables on Render/Heroku, double-check that `DATABASE_URL` is completely filled out with your new Postgres credentials!
