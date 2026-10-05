@@ -209,7 +209,9 @@
       
       <!-- Center: Logo + Title -->
       <div class="flex items-center justify-center flex-1 px-2 gap-2.5 min-w-0 cursor-pointer group" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-          <img src="/static/images/logo.png" onerror="this.src='/static/images/logo.jpg'" class="w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0 group-hover:scale-105 transition-transform" alt="Logo">
+          <comment-tag id="1"><img src="/static/images/logo.png" onerror="this.src='/static/images/logo.jpg'" class="w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0 group-hover:scale-105 transition-transform" alt="Logo"></comment-tag id="1" text="<img src='/static/images/logo.png' onerror='this.onerror=null; this.src=\"/static/images/logo.jpg\"' class='w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0 group-hover:scale-105 transition-transform' alt='Logo'>
+
+Nullifying `this.onerror` prevents an infinite loop that crashes the browser if both the `.png` and the `.jpg` fail to load." type="suggestion">
           <div class="flex flex-col justify-center text-left">
               <h1 class="text-[15px] sm:text-lg font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5">
                   សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] whitespace-nowrap text-slate-600">- Somphea Reak</span>
@@ -230,7 +232,9 @@
       <div class="max-w-6xl mx-auto flex items-center gap-2">
           <div class="relative flex-1">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
-              <input type="text" id="minifig-search" oninput="handleSearchInput()" placeholder="Search figures..." class="search-input w-full pl-8 pr-7 py-1.5 text-[11px] font-bold outline-none text-gray-900 placeholder-gray-400">
+              <comment-tag id="2"><input type="text" id="minifig-search" oninput="handleSearchInput()" placeholder="Search figures..." class="search-input w-full pl-8 pr-7 py-1.5 text-[11px] font-bold outline-none text-gray-900 placeholder-gray-400"></comment-tag id="2" text="<input type='text' id='minifig-search' aria-label='Search figures' oninput='handleSearchInput()' placeholder='Search figures...' class='search-input w-full pl-8 pr-7 py-1.5 text-[11px] font-bold outline-none text-gray-900 placeholder-gray-400'>
+
+Adding an `aria-label` ensures screen reader users know what this input does, since there isn't a visible `<label>` text next to it." type="suggestion">
               <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
                   <i class="fa-solid fa-circle-xmark text-xs"></i>
               </button>
@@ -400,7 +404,10 @@
     window.addEventListener('pageshow', () => { if(typeof window.updateCartBadge === 'function') window.updateCartBadge(); });
 
     async function fetchProducts() {
-        document.getElementById('loadingOverlay').style.display = 'flex';
+        <comment-tag id="3">document.getElementById('loadingOverlay').style.display = 'flex';</comment-tag id="3" text="document.getElementById('loadingOverlay').classList.remove('hidden');
+        document.getElementById('loadingOverlay').classList.add('flex');
+
+Since your `loadingOverlay` element relies on Tailwind's `hidden` and `flex` classes, it's better to toggle those classes rather than injecting an inline `style` that can cause CSS specificity collisions later." type="suggestion">
         try {
             const res = await fetch('/api/products/minifigure');
             const data = await res.json();
@@ -412,7 +419,10 @@
         } catch (e) {
             console.error("Error loading minifigures", e);
         } finally {
-            document.getElementById('loadingOverlay').style.display = 'none';
+            <comment-tag id="4">document.getElementById('loadingOverlay').style.display = 'none';</comment-tag id="4" text="document.getElementById('loadingOverlay').classList.add('hidden');
+            document.getElementById('loadingOverlay').classList.remove('flex');
+
+Continuing from the previous suggestion, toggling Tailwind classes keeps your state management uniform." type="suggestion">
         }
         if(typeof window.updateCartBadge === 'function') window.updateCartBadge();
     }
@@ -623,7 +633,9 @@
                 <!-- Single Figure Image -->
                 <div class="aspect-square bg-slate-50 relative overflow-hidden flex items-center justify-center p-1 cursor-pointer" onclick="openImageViewer('${fig.image}')">
                     ${isSoldOut ? `<div class="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10"><span class="bg-gray-900 text-white text-[7px] font-black px-2 py-1 rounded shadow-md uppercase tracking-widest">SOLD OUT</span></div>` : ''}
-                    <img src="${fig.image}" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300 drop-shadow-sm">
+                    <comment-tag id="5"><img src="${fig.image}" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300 drop-shadow-sm"></comment-tag id="5" text="<img src='${fig.image}' alt='${fig.title}' class='max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300 drop-shadow-sm'>
+
+Dynamically inserting `alt='${fig.title}'` dramatically improves accessibility for visual products, allowing screen readers to effectively announce the item." type="suggestion">
                 </div>
 
                 <!-- Box Details -->
