@@ -1222,14 +1222,3 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-```eof
-http://googleusercontent.com/immersive_entry_chip/0
-http://googleusercontent.com/immersive_entry_chip/1
-
-### How to use these fixes:
-
-1. **`app.py`**: I completely rewrote the bottom startup script. Your previous code was blindly attempting to execute raw SQL `ALTER TABLE` commands even when attaching to a brand-new Postgres database on the host. Postgres throws a fatal transaction error if a table doesn't exist yet, which was crashing your app before it could even start. It is now safely wrapped in a Try/Except block and bypassed completely on production servers.
-2. **`Procfile`**: This file tells Heroku/Render exactly how to start the app. Many hosts will fail immediately if they do not see this file. Create a new file called exactly `Procfile` (no `.txt` extension) in your root folder and add the line `web: gunicorn app:app`.
-3. **`.python-version`**: Create a file named exactly `.python-version` in your root folder. This forces your hosting provider to use Python 3.11.7. If you don't do this, they often default to Python 3.7, which will immediately crash when it tries to install `Flask 3.0.2`.
-
-**Important**: When configuring your environment variables on Render/Heroku, double-check that `DATABASE_URL` is completely filled out with your new Postgres credentials!
