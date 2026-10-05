@@ -1,4 +1,5 @@
 
+```html:Somphea Reak Minifigure Store:minifigure.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,6 +48,8 @@
         opacity: 0 !important; 
         pointer-events: none; 
     }
+    
+    .step-container { display: none; width: 100%; flex-direction: column; }
     
     .step-transition { transition: all 0.4s ease; }
     .step-out { opacity: 0; transform: translateX(-30px); pointer-events: none; position: absolute; width: 100%; top: 0; left: 0; }
@@ -194,8 +197,8 @@
 
   <!-- IMAGE LIGHTBOX VIEWER -->
   <div id="image-viewer-modal" class="fixed inset-0 z-[6000] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
-      <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-red-500 transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
-      <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl">
+      <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors z-30 shadow-lg"><i class="fa-solid fa-xmark text-xl"></i></button>
+      <img id="viewer-img" src="" class="max-w-full max-h-[85vh] object-contain relative z-10 rounded-xl shadow-2xl">
   </div>
 
   <!-- 🌟 UNIFIED STICKY HEADER (STORE - BACK BUTTON ON LEFT) 🌟 -->
@@ -451,7 +454,8 @@
                         discountPercent: discountPercent,
                         stock: parseInt(v.stock) || 0,
                         image: v.image || product.thumbnail || product.image,
-                        category: figureCategory
+                        category: figureCategory,
+                        code: v.code || product.product_code || '' // SAFE SKU EXTRACTION
                     });
                 });
             } else {
@@ -470,7 +474,8 @@
                     discountPercent: discountPercent,
                     stock: parseInt(product.stock) || 0,
                     image: product.image || product.thumbnail,
-                    category: product.category || 'General'
+                    category: product.category || 'General',
+                    code: product.product_code || '' // SAFE SKU EXTRACTION
                 });
             }
         });
@@ -572,7 +577,8 @@
             // 2. Search Match
             const title = (fig.title || '').toLowerCase();
             const figId = String(fig.productId);
-            const matchesSearch = !activeSearchTerm || title.includes(activeSearchTerm) || figId.includes(activeSearchTerm);
+            const code = (fig.code || '').toLowerCase();
+            const matchesSearch = !activeSearchTerm || title.includes(activeSearchTerm) || figId.includes(activeSearchTerm) || code.includes(activeSearchTerm);
             
             // 3. Grade Match (Grade A > 1000 KHR, Grade B <= 1000 KHR)
             let matchesGrade = true;
@@ -628,8 +634,11 @@
                 </div>
 
                 <!-- Box Details -->
-                <div class="p-2 flex flex-col flex-grow bg-white justify-between">
-                    <div>
+                <div class="p-2 flex flex-col flex-grow bg-white justify-between relative">
+                    <!-- VISUAL CODE BADGE -->
+                    ${fig.code ? `<span class="absolute top-2 right-2 text-[8px] font-mono text-orange-500 bg-orange-50 px-1 rounded border border-orange-100 shadow-sm">#${fig.code}</span>` : ''}
+                    
+                    <div class="pr-5">
                         <!-- UPDATED FONT & SIZE FOR CLASSIC/MODERN LOOK -->
                         <h3 class="font-bold text-[10px] sm:text-[11px] text-gray-800 line-clamp-2 leading-tight mb-1 font-['Plus_Jakarta_Sans'] tracking-wide" title="${fig.title}">${fig.title}</h3>
                         ${priceHtml}
@@ -658,6 +667,8 @@
                 image: figure.image,
                 stock: figure.stock,
                 type: 'option',
+                mainVariantId: `${figure.productId}-0`,
+                code: figure.code, // PASSED CODE TO CART
                 qty: 1
             });
         }
