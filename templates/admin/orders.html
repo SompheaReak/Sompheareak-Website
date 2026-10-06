@@ -282,9 +282,10 @@
                 </div>
 
                 <!-- ================= FINANCIAL BREAKDOWN ================= -->
-                {% set subtotal = order.total_usd | default(0) | float %}
+                <!-- FIXED: Extract the true subtotal to avoid double counting the delivery fee -->
+                {% set grand_total = order.total_usd | default(0) | float %}
                 {% set delivery = order.delivery_fee | default(0) | float %}
-                {% set grand_total = subtotal + delivery %}
+                {% set subtotal = grand_total - delivery %}
 
                 <div class="bg-slate-50/90 rounded-2xl p-4 border border-slate-200/80 mb-4 space-y-2 text-xs font-bold text-slate-600">
                     <div class="flex justify-between items-center">
@@ -379,13 +380,13 @@
                             </div>
                             
                             <div class="space-y-1">
-                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Subtotal (USD)</label>
-                                <input type="number" step="any" id="edit-subtotal-{{order.id}}" name="total_usd" value="{{ order.total_usd }}" class="input-field w-full text-slate-900 font-black h-[42px]" required>
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Grand Total (USD)</label>
+                                <input type="number" step="any" id="edit-total-{{order.id}}" name="total_usd" value="{{ order.total_usd }}" class="input-field w-full text-slate-900 font-black h-[42px]" required>
                             </div>
                             
                             <div class="space-y-1">
                                 <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Delivery Fee (USD)</label>
-                                <input type="number" step="any" name="delivery_fee" value="{{ order.delivery_fee or 0 }}" class="input-field w-full text-[#ff5000] font-black h-[42px]" required>
+                                <input type="number" step="any" id="edit-delivery-{{order.id}}" name="delivery_fee" value="{{ order.delivery_fee or 0 }}" oninput="recalcTotal('{{order.id}}')" class="input-field w-full text-[#ff5000] font-black h-[42px]" required>
                             </div>
                         </div>
                     </div>
@@ -545,7 +546,7 @@
 
     // ✨ NEW: Auto-Recalculate Order Subtotal ✨
     function recalcTotal(orderId) {
-        let total = 0;
+        let itemsTotal = 0;
         const container = document.getElementById(`edit-items-container-${orderId}`);
         if (!container) return;
         
@@ -555,12 +556,15 @@
         for(let i = 0; i < qtys.length; i++) {
             const p = parseFloat(prices[i].value) || 0;
             const q = parseInt(qtys[i].value) || 0;
-            total += (p * q);
+            itemsTotal += (p * q);
         }
         
-        const subtotalInput = document.getElementById(`edit-subtotal-${orderId}`);
-        if(subtotalInput) {
-            subtotalInput.value = total.toFixed(2);
+        const deliveryInput = document.getElementById(`edit-delivery-${orderId}`);
+        const deliveryFee = deliveryInput ? (parseFloat(deliveryInput.value) || 0) : 0;
+
+        const grandTotalInput = document.getElementById(`edit-total-${orderId}`);
+        if(grandTotalInput) {
+            grandTotalInput.value = (itemsTotal + deliveryFee).toFixed(2);
         }
     }
 
