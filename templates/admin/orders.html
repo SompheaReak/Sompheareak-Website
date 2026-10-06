@@ -286,29 +286,45 @@
                 </div>
 
                 <!-- ================= FINANCIAL BREAKDOWN ================= -->
-                <!-- FIXED: Subtotal exactly sums the products. Total adds Delivery. -->
+                <!-- 
+                FIXED LOGIC: 
+                1. We calculate the TRUE subtotal based ONLY on the items in the order.
+                2. We pull the total_usd from the database.
+                3. The delivery fee is inferred as the difference between the total_usd and the true item subtotal. 
+                   (This fixes the issue where the DB saves 0 delivery fee but the subtotal was lumped together)
+                -->
                 {% set ns = namespace(subtotal=0) %}
                 {% for item in display_items %}
                     {% set ns.subtotal = ns.subtotal + (item.price * item.qty) %}
                 {% endfor %}
-                {% set subtotal = ns.subtotal %}
-                {% set delivery = order.delivery_fee | default(0) | float %}
-                {% set grand_total = subtotal + delivery %}
+                
+                {% set calculated_subtotal = ns.subtotal | float %}
+                {% set grand_total = order.total_usd | default(calculated_subtotal) | float %}
+                
+                {# If grand_total is greater than our calculated item subtotal, the difference MUST be delivery #}
+                {% set delivery_fee = grand_total - calculated_subtotal %}
+                
+                {# Fallback: If DB delivery fee is specifically set higher, trust the DB #}
+                {% set db_delivery = order.delivery_fee | default(0) | float %}
+                {% if db_delivery > delivery_fee %}
+                    {% set delivery_fee = db_delivery %}
+                    {% set grand_total = calculated_subtotal + delivery_fee %}
+                {% endif %}
 
                 <!-- FIXED: KHR on left, USD on right perfectly aligned -->
                 <div class="bg-slate-50/90 rounded-2xl p-4 border border-slate-200/80 mb-4 space-y-2 text-xs font-bold text-slate-600">
                     <div class="flex justify-between items-center">
                         <span class="uppercase text-[10px] tracking-wider text-slate-400 font-black">Subtotal</span>
                         <div class="flex items-center gap-3">
-                            <span class="text-[10px] font-bold text-slate-400">{{ "{:,.0f}".format(subtotal * 4000) }} ៛</span>
-                            <span class="text-slate-800 font-black w-14 text-right">${{ "%.2f"|format(subtotal) }}</span>
+                            <span class="text-[10px] font-bold text-slate-400">{{ "{:,.0f}".format(calculated_subtotal * 4000) }} ៛</span>
+                            <span class="text-slate-800 font-black w-14 text-right">${{ "%.2f"|format(calculated_subtotal) }}</span>
                         </div>
                     </div>
                     <div class="flex justify-between items-center border-b border-slate-200/60 pb-2">
                         <span class="uppercase text-[10px] tracking-wider text-slate-400 font-black">Delivery Charge</span>
                         <div class="flex items-center gap-3">
-                            <span class="text-[10px] font-bold text-slate-400">{{ "{:,.0f}".format(delivery * 4000) }} ៛</span>
-                            <span class="text-[#ff5000] font-black w-14 text-right">${{ "%.2f"|format(delivery) }}</span>
+                            <span class="text-[10px] font-bold text-slate-400">{{ "{:,.0f}".format(delivery_fee * 4000) }} ៛</span>
+                            <span class="text-[#ff5000] font-black w-14 text-right">${{ "%.2f"|format(delivery_fee) }}</span>
                         </div>
                     </div>
                     <div class="flex justify-between items-center pt-1.5">
@@ -397,7 +413,7 @@
                             
                             <div class="space-y-1">
                                 <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Delivery Fee (USD)</label>
-                                <input type="number" step="any" id="edit-delivery-{{order.id}}" name="delivery_fee" value="{{ order.delivery_fee or 0 }}" oninput="recalcTotal('{{order.id}}')" class="input-field w-full text-[#ff5000] font-black h-[42px]" required>
+                                <input type="number" step="any" id="edit-delivery-{{order.id}}" name="delivery_fee" value="{{ '%.2f'|format(delivery_fee) }}" oninput="recalcTotal('{{order.id}}')" class="input-field w-full text-[#ff5000] font-black h-[42px]" required>
                             </div>
                         </div>
                     </div>
