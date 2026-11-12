@@ -58,7 +58,11 @@ def optimize_and_upload(file):
     )
 
 # --- 2. PERMANENT DATABASE CONFIG ---
-db_url = os.environ.get('DATABASE_URL', 'sqlite:///fallback.db')
+DEFAULT_NEON_DB = "postgresql://neondb_owner:npg_dq6KIUVe0cyS@ep-polished-feather-a19qzv4s-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+db_url = os.environ.get('DATABASE_URL', '').strip()
+if not db_url or 'fallback.db' in db_url:
+    db_url = DEFAULT_NEON_DB
+
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
@@ -473,6 +477,40 @@ app.url_build_error_handlers.append(_url_build_error_handler)
 import importlib
 store_admin_module = importlib.import_module('store-admin')
 app.register_blueprint(store_admin_module.admin_bp)
+
+@app.route('/admin/db-status')
+def db_status():
+    if not session.get('admin'):
+        return jsonify({"error": "unauthorized"}), 401
+    
+    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    masked_uri = db_uri
+    if '@' in db_uri:
+        prefix = db_uri.split('@')[0]
+        host = db_uri.split('@')[1]
+        masked_uri = f"{prefix.split(':')[0]}://****@{host}"
+        
+    try:
+        from models import Product, Category, Order
+        prod_count = Product.query.count()
+        cat_count = Category.query.count()
+        order_count = Order.query.count()
+        first_prod = Product.query.first()
+        return jsonify({
+            "status": "connected",
+            "db_type": "postgres" if "postgres" in db_uri else "sqlite",
+            "masked_uri": masked_uri,
+            "product_count": prod_count,
+            "category_count": cat_count,
+            "order_count": order_count,
+            "sample_product": first_prod.title if first_prod else None
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "db_uri": masked_uri,
+            "error": str(e)
+        }), 500
 
 
 # --- SECURITY HEADERS MIDDLEWARE ---
