@@ -100,13 +100,15 @@ spam_tracker = {}
 @app.context_processor
 def inject_global_data():
     if request.path.startswith('/admin') and session.get('admin'):
-        products = Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
-        for p in products: 
-            p.parsed_variants = json.loads(p.variants) if p.variants else []
-        categories = Category.query.order_by(Category.sort_order).all()
-        promo_codes = PromoCode.query.order_by(PromoCode.timestamp.desc()).all()
-        pending_count = Order.query.filter_by(status='Pending').count()
-        return dict(global_products=products, global_categories=categories, global_redeem_codes=promo_codes, pending_count=pending_count)
+        if request.path.startswith('/admin/api/') or request.path.startswith('/admin/product/quick_stock'):
+            return dict()
+        try:
+            categories = Category.query.order_by(Category.sort_order).all()
+            pending_count = Order.query.filter_by(status='Pending').count()
+            return dict(global_categories=categories, pending_count=pending_count)
+        except Exception as e:
+            print(f"Warning in inject_global_data: {e}")
+            return dict()
     return dict()
 
 # --- 5. PUBLIC & STORE ROUTES ---
@@ -327,24 +329,31 @@ def checkout():
 @app.route('/api/products/<store_name>')
 def get_api(store_name):
     try:
-        all_prods = Product.query.filter_by(is_visible=True).order_by(Product.sort_order.asc(), Product.id.desc()).all()
+        # Filter matching store directly in database for fast response
+        matching_prods = Product.query.filter(
+            Product.is_visible == True,
+            Product.store.ilike(f"%{store_name}%")
+        ).order_by(Product.sort_order.asc(), Product.id.desc()).all()
         
         product_list = []
-        for p in all_prods:
-            if store_name not in (p.store or '').split(','):
+        for p in matching_prods:
+            stores = [s.strip() for s in (p.store or '').split(',') if s.strip()]
+            if store_name not in stores:
                 continue
             
             v_list = []
             try:
                 if p.variants: 
                     v_list = json.loads(p.variants)
-            except: pass
+            except Exception:
+                pass
             
             d_list = []
             try:
                 if getattr(p, 'detail_images', None): 
                     d_list = json.loads(p.detail_images)
-            except: pass
+            except Exception:
+                pass
             
             product_list.append({
                 "id": p.id,
