@@ -58,13 +58,16 @@ def optimize_and_upload(file):
     )
 
 # --- 2. PERMANENT DATABASE CONFIG ---
-DEFAULT_NEON_DB = "postgresql://neondb_owner:npg_dq6KIUVe0cyS@ep-polished-feather-a19qzv4s-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+DEFAULT_NEON_DB = "postgresql://neondb_owner:npg_dq6KIUVe0cyS@ep-polished-feather-a19qzv4s-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
 db_url = os.environ.get('DATABASE_URL', '').strip()
 if not db_url or 'fallback.db' in db_url:
     db_url = DEFAULT_NEON_DB
 
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+# Clean channel_binding parameter as it causes libpq/SCRAM failures in certain deployment environments
+db_url = db_url.replace("&channel_binding=require", "").replace("?channel_binding=require&", "?").replace("?channel_binding=require", "")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
