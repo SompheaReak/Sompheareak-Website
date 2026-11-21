@@ -180,13 +180,19 @@
                 </div>
             </div>
             
-            <!-- Right: Customer Credit Box (if logged in) + Universal Cart Button -->
+            <!-- Right: Customer Credit Box (Always Visible) + Universal Cart Button -->
             <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 {% if current_customer %}
-                <a href="{{ url_for('customer_account') }}" class="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-2.5 py-1.5 rounded-full text-[11px] font-black shadow-sm shadow-orange-500/20 active:scale-95 transition-all shrink-0" title="Your Credit Points">
+                <a href="{{ url_for('customer_account') }}" class="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-2.5 py-1.5 rounded-full text-xs font-black shadow-sm shadow-orange-500/20 active:scale-95 transition-all shrink-0" title="Your Credit Points: {{ current_customer.credit_balance or 0 }}">
                     <i class="fa-solid fa-coins text-yellow-200 text-xs"></i>
                     <span>{{ current_customer.credit_balance or 0 }}</span>
-                    <span class="text-[9px] opacity-90 uppercase font-bold tracking-tight">Pts</span>
+                    <span class="text-[9px] opacity-90 uppercase font-bold tracking-tight">Credits</span>
+                </a>
+                {% else %}
+                <a href="{{ url_for('customer_login') }}" class="flex items-center gap-1.5 bg-amber-50 border border-amber-200 hover:border-amber-400 text-amber-800 hover:text-[#ea580c] px-2.5 py-1.5 rounded-full text-xs font-black shadow-xs active:scale-95 transition-all shrink-0" title="0 Credits (Sign in to earn credits)">
+                    <i class="fa-solid fa-coins text-amber-500 text-xs"></i>
+                    <span>0</span>
+                    <span class="text-[9px] text-amber-700 uppercase font-bold tracking-tight">Credits</span>
                 </a>
                 {% endif %}
                 <button onclick="openUniversalCart()" class="relative w-9 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]" title="Cart">
@@ -279,28 +285,34 @@
 
     </main>
 
-    <!-- 🌟 APP-STYLE BOTTOM NAVIGATION (NEW: Cart / Telegram / Order History) 🌟 -->
-    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2.5rem)] max-w-[360px] h-[68px] glass-panel rounded-[28px] flex items-center justify-around px-2 z-40">
+    <!-- 🌟 APP-STYLE BOTTOM NAVIGATION (Cart / Credits / Telegram / Order History) 🌟 -->
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[390px] h-[68px] glass-panel rounded-[28px] flex items-center justify-around px-2 z-40">
         
         <!-- Left: Open Cart -->
-        <button onclick="openUniversalCart()" class="w-16 h-full flex items-center justify-center text-slate-400 hover:text-[#ea580c] flex-col gap-1 active:scale-90 transition-transform relative">
-            <i class="fa-solid fa-cart-shopping text-xl"></i>
-            <span class="text-[9px] font-black tracking-widest mt-0.5 font-['Kantumruy_Pro']">គិតលុយ</span>
-            <span id="nav-cart-badge" class="absolute top-2 right-2 bg-[#ea580c] text-white text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center shadow-md hidden cart-badge-count">0</span>
+        <button onclick="openUniversalCart()" class="w-14 h-full flex items-center justify-center text-slate-400 hover:text-[#ea580c] flex-col gap-0.5 active:scale-90 transition-transform relative">
+            <i class="fa-solid fa-cart-shopping text-lg"></i>
+            <span class="text-[9px] font-black tracking-widest mt-0.5 font-['Kantumruy_Pro']">កន្ត្រក</span>
+            <span id="nav-cart-badge" class="absolute top-2 right-1.5 bg-[#ea580c] text-white text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center shadow-md hidden cart-badge-count">0</span>
         </button>
+
+        <!-- Credit Box next to Cart -->
+        <a href="{{ url_for('customer_account') if current_customer else url_for('customer_login') }}" class="w-14 h-full flex items-center justify-center text-amber-500 hover:text-amber-600 flex-col gap-0.5 active:scale-90 transition-transform relative" title="{{ 'Your Credits: ' ~ (current_customer.credit_balance or 0) if current_customer else '0 Credits (Sign in to earn)' }}">
+            <i class="fa-solid fa-coins text-lg text-amber-500"></i>
+            <span class="text-[9px] font-black tracking-tight mt-0.5 font-['Plus_Jakarta_Sans']">{{ current_customer.credit_balance or 0 if current_customer else 0 }} Pts</span>
+        </a>
         
         <!-- Middle: Telegram Link -->
-        <div class="relative w-16 h-16 -translate-y-5 flex items-center justify-center">
+        <div class="relative w-14 h-14 -translate-y-4 flex items-center justify-center">
             <div class="absolute inset-0 rounded-full pulse-ring bg-[#2AABEE]"></div>
-            <a href="https://t.me/somphea_reak" target="_blank" rel="noopener noreferrer" class="relative w-[60px] h-[60px] bg-white rounded-full flex items-center justify-center text-[#2AABEE] border-[3px] border-white shadow-xl active:scale-90 transition-all hover:bg-slate-50 group z-10">
-                <i class="fa-brands fa-telegram text-[32px] relative z-10 -ml-0.5 mt-0.5 group-hover:scale-110 transition-transform"></i>
+            <a href="https://t.me/somphea_reak" target="_blank" rel="noopener noreferrer" class="relative w-[52px] h-[52px] bg-white rounded-full flex items-center justify-center text-[#2AABEE] border-[3px] border-white shadow-xl active:scale-90 transition-all hover:bg-slate-50 group z-10">
+                <i class="fa-brands fa-telegram text-[28px] relative z-10 -ml-0.5 mt-0.5 group-hover:scale-110 transition-transform"></i>
             </a>
         </div>
         
         <!-- Right: Order History -->
-        <button onclick="openOrderHistory()" class="w-16 h-full flex items-center justify-center text-slate-400 hover:text-[#ea580c] flex-col gap-1 active:scale-90 transition-colors">
-            <i class="fa-solid fa-clock-rotate-left text-xl"></i>
-            <span class="text-[9px] font-black tracking-wide mt-0.5 font-['Kantumruy_Pro']">ប្រវត្តិនៃការទិញ</span>
+        <button onclick="openOrderHistory()" class="w-14 h-full flex items-center justify-center text-slate-400 hover:text-[#ea580c] flex-col gap-0.5 active:scale-90 transition-colors">
+            <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+            <span class="text-[9px] font-black tracking-wide mt-0.5 font-['Kantumruy_Pro']">ប្រវត្តិទិញ</span>
         </button>
     </nav>
 
