@@ -62,9 +62,14 @@ db_url = db_url.replace("&channel_binding=require", "").replace("?channel_bindin
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 604800  # Cache static assets for 7 days
 if 'sqlite' not in db_url:
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        "pool_pre_ping": True, "pool_recycle": 300, "pool_timeout": 30      
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+        "pool_timeout": 15,
+        "pool_size": 10,
+        "max_overflow": 20
     }
 else:
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -77,18 +82,6 @@ from models import (
     get_reward_config, save_reward_config, _sync_product_to_pool, _sync_pool_to_product
 )
 db.init_app(app)
-# --- SECURITY CONFIG (FROM ENVIRONMENT) ---
-ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
-ADMIN_PASS = os.environ.get('ADMIN_PASS', 'Thesong_Admin@2022?!$')
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('admin'):
-            flash('Please log in to access the admin panel.', 'error')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 def customer_login_required(f):
     @wraps(f)
@@ -136,16 +129,6 @@ def inject_global_data():
             data['current_customer'] = None
     else:
         data['current_customer'] = None
-
-    if request.path.startswith('/admin') and session.get('admin'):
-        if request.path.startswith('/admin/api/') or request.path.startswith('/admin/product/quick_stock'):
-            return data
-        try:
-            categories = Category.query.order_by(Category.sort_order).all()
-            pending_count = Order.query.filter_by(status='Pending').count()
-            data.update(dict(global_categories=categories, pending_count=pending_count))
-        except Exception as e:
-            print(f"Warning in inject_global_data: {e}")
     return data
 
 # --- 5. PUBLIC & STORE ROUTES ---
@@ -882,13 +865,24 @@ def checkout():
         db.session.add(new_order)
         db.session.commit()
         _handle_order_post_processing(new_order)
+        _catalog_cache.clear()
         return jsonify({'status': 'success', 'order_id': new_order.id, 'total': computed_total})
     except Exception as e: 
         db.session.rollback()
         return jsonify({'status': 'error', 'message': 'Failed to process order'}), 400
 
+_catalog_cache = {}
+CATALOG_CACHE_TTL = 30  # seconds
+
 @app.route('/api/products/<store_name>')
 def get_api(store_name):
+    now = time.time()
+    cached = _catalog_cache.get(store_name)
+    if cached and (now - cached['time'] < CATALOG_CACHE_TTL):
+        resp = jsonify(cached['data'])
+        resp.headers['Cache-Control'] = 'public, max-age=15, stale-while-revalidate=60'
+        return resp
+
     try:
         # Filter matching store directly in database for fast response
         matching_prods = Product.query.filter(
@@ -931,10 +925,14 @@ def get_api(store_name):
             })
             
         categories = Category.query.order_by(Category.sort_order.asc()).all()
-        return jsonify({
+        res_data = {
             "products": product_list,
             "categories": [{"name": c.name, "image": c.image} for c in categories]
-        })
+        }
+        _catalog_cache[store_name] = {'time': now, 'data': res_data}
+        resp = jsonify(res_data)
+        resp.headers['Cache-Control'] = 'public, max-age=15, stale-while-revalidate=60'
+        return resp
     except Exception as e: 
         print(f"CRITICAL API ERROR: {str(e)}")
         return jsonify({"products": [], "categories": [], "error": str(e)}), 200
@@ -1038,18 +1036,13 @@ def execute_spin():
     return jsonify({"success": True, "new_balance": player.balance, "prizes": prizes, "extra_reward": extra_reward_amount})
 
 
-# --- CONNECT STORE-ADMIN ---
-def _url_build_error_handler(error, endpoint, values):
-    for ep in app.view_functions:
-        if ep.endswith('.' + endpoint):
-            return url_for(ep, **values)
-    raise error
-
-app.url_build_error_handlers.append(_url_build_error_handler)
-
-import importlib
-store_admin_module = importlib.import_module('store-admin')
-app.register_blueprint(store_admin_module.admin_bp)
+# --- ADMIN REDIRECT ROUTE ---
+@app.route('/admin')
+@app.route('/admin/<path:subpath>')
+def admin_redirect(subpath=''):
+    admin_base = os.environ.get('ADMIN_PANEL_URL', 'https://store-admin-5uew.onrender.com').rstrip('/')
+    target = f"{admin_base}/admin/{subpath}".rstrip('/') if subpath else f"{admin_base}/admin/login"
+    return redirect(target)
 
 
 # --- SECURITY HEADERS MIDDLEWARE ---
