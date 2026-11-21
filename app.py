@@ -933,17 +933,23 @@ def get_api(store_name):
         return resp
 
     try:
-        # Filter matching store directly in database for fast response
-        matching_prods = Product.query.filter(
-            Product.is_visible == True,
-            Product.store.ilike(f"%{store_name}%")
-        ).order_by(Product.sort_order.asc(), Product.id.desc()).all()
+        if store_name == 'all':
+            matching_prods = Product.query.filter(
+                Product.is_visible == True
+            ).order_by(Product.sort_order.asc(), Product.id.desc()).all()
+        else:
+            # Filter matching store directly in database for fast response
+            matching_prods = Product.query.filter(
+                Product.is_visible == True,
+                Product.store.ilike(f"%{store_name}%")
+            ).order_by(Product.sort_order.asc(), Product.id.desc()).all()
         
         product_list = []
         for p in matching_prods:
-            stores = [s.strip() for s in (p.store or '').split(',') if s.strip()]
-            if store_name not in stores:
-                continue
+            if store_name != 'all':
+                stores = [s.strip() for s in (p.store or '').split(',') if s.strip()]
+                if store_name not in stores:
+                    continue
             
             v_list = []
             try:
@@ -966,6 +972,7 @@ def get_api(store_name):
                 "price": p.price,
                 "stock": p.stock,
                 "category": p.category, 
+                "store": p.store or '',
                 "thumbnail": p.image,
                 "discount_percent": getattr(p, 'discount_percent', 0.0) or 0.0,
                 "use_custom_thumbnail": getattr(p, 'use_custom_thumbnail', False) or False,
