@@ -7,10 +7,12 @@ import string
 import uuid
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, render_template_string
+from urllib.parse import urlparse, urljoin
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, render_template_string, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
+from werkzeug.security import generate_password_hash, check_password_hash
 import cloudinary
 import cloudinary.uploader
 
@@ -96,9 +98,26 @@ spam_tracker = {}
 rate_limit_trackers = {
     'forgot_password': {},
     'customer_login': {},
+    'customer_register': {},
     'orders': {},
     'otp_verify': {}
 }
+
+# Constant-time dummy password hash to prevent timing attacks & account enumeration
+DUMMY_PASSWORD_HASH = generate_password_hash("dummy_protection_hash_against_timing_attacks")
+
+def is_safe_redirect_url(target):
+    if not target or not isinstance(target, str):
+        return False
+    target = target.strip()
+    if target.startswith('//') or target.startswith('\\\\'):
+        return False
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return (
+        test_url.scheme in ('http', 'https') and
+        ref_url.netloc == test_url.netloc
+    )
 
 def get_client_ip():
     forwarded = request.headers.get('X-Forwarded-For')
@@ -163,6 +182,14 @@ def normalize_phone(phone_str):
 @app.route('/customer/register', methods=['GET', 'POST'])
 def customer_register():
     if request.method == 'POST':
+        client_ip = get_client_ip()
+        allowed, retry_after = check_rate_limit('customer_register', client_ip, max_requests=5, window_seconds=600)
+        if not allowed:
+            if request.is_json:
+                return jsonify({'error': f'Too many registration attempts. Please wait {retry_after} seconds.'}), 429
+            flash(f'Too many registration attempts. Please wait {retry_after} seconds.', 'error')
+            return redirect(url_for('customer_register'))
+
         data = request.get_json(silent=True) or request.form
         full_name = (data.get('full_name') or '').strip()[:100]
         raw_phone = (data.get('phone') or '').strip()
@@ -194,10 +221,10 @@ def customer_register():
             flash('Please enter a valid phone number (at least 8 digits).', 'error')
             return redirect(url_for('customer_register'))
 
-        if len(password) < 3:
+        if len(password) < 6:
             if request.is_json:
-                return jsonify({'error': 'Password must be at least 3 characters long.'}), 400
-            flash('Password must be at least 3 characters long.', 'error')
+                return jsonify({'error': 'Password must be at least 6 characters long.'}), 400
+            flash('Password must be at least 6 characters long.', 'error')
             return redirect(url_for('customer_register'))
 
         if len(password) > 100:
@@ -230,12 +257,16 @@ def customer_register():
             flash('This phone number is already registered. Please login.', 'error')
             return redirect(url_for('customer_login'))
 
+        # Regenerate session on registration to prevent session fixation
+        session.clear()
         session['customer_id'] = user.id
         session['customer_phone'] = user.phone
         if request.is_json:
             return jsonify({'success': True, 'customer': user.to_dict()})
         flash('Account created successfully! Welcome to Somphea Reak.', 'success')
-        next_url = request.args.get('next') or url_for('customer_account')
+        next_url = request.args.get('next')
+        if not is_safe_redirect_url(next_url):
+            next_url = url_for('customer_account')
         return redirect(next_url)
 
     return render_template('customer/login.html', mode='register')
@@ -267,7 +298,11 @@ def customer_login():
                 CustomerUser.full_name == login_id
             )
         ).first()
-        if not user or not user.check_password(password):
+
+        # Constant-time password check: Always run check_password to eliminate timing attacks & account enumeration
+        password_correct = user.check_password(password) if user else check_password_hash(DUMMY_PASSWORD_HASH, password)
+
+        if not user or not password_correct:
             fail_times.append(now)
             login_fails[client_ip] = fail_times
             if request.is_json:
@@ -278,27 +313,29 @@ def customer_login():
         # Reset failed attempts on success
         login_fails.pop(client_ip, None)
 
+        # Regenerate session on authentication to prevent session fixation
+        session.clear()
         session['customer_id'] = user.id
         session['customer_phone'] = user.phone
         if request.is_json:
             return jsonify({'success': True, 'customer': user.to_dict()})
         flash(f'Welcome back, {user.full_name or user.phone}!', 'success')
-        next_url = request.args.get('next') or url_for('customer_account')
+        next_url = request.args.get('next')
+        if not is_safe_redirect_url(next_url):
+            next_url = url_for('customer_account')
         return redirect(next_url)
 
     return render_template('customer/login.html', mode='login')
 
 @app.route('/customer/logout')
 def customer_logout():
-    session.pop('customer_id', None)
-    session.pop('customer_phone', None)
+    session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('index'))
 
 # --- PASSWORD RECOVERY VIA ADMIN TELEGRAM ALERT ---
 @app.route('/customer/forgot-password', methods=['GET', 'POST'])
 def customer_forgot_password():
-    submitted_user = None
     if request.method == 'POST':
         client_ip = get_client_ip()
         allowed, retry_after = check_rate_limit('forgot_password', client_ip, max_requests=5, window_seconds=300)
@@ -323,26 +360,27 @@ def customer_forgot_password():
             db.or_(CustomerUser.phone == phone, CustomerUser.phone == raw_phone)
         ).first()
 
-        if not user:
-            if request.is_json:
-                return jsonify({'error': 'No account found with this phone number.'}), 404
-            flash('No account found with this phone number. Please check the number or register.', 'error')
-            return redirect(url_for('customer_forgot_password'))
+        # Mask phone to prevent PII exposure (e.g. 012***78)
+        masked_phone = (phone[:3] + '***' + phone[-2:]) if len(phone) >= 5 else phone
 
-        # Dispatch real-time alert to Admin Telegram Bot
-        from telegram_notifier import send_telegram_recovery_alert
-        alert_sent = send_telegram_recovery_alert(user, note=note)
+        if user:
+            # Dispatch real-time alert to Admin Telegram Bot
+            try:
+                from telegram_notifier import send_telegram_recovery_alert
+                send_telegram_recovery_alert(user, note=note)
+            except Exception as e:
+                print(f"Warning sending telegram recovery alert: {e}")
 
+        # Uniform response to completely eliminate user enumeration (CWE-204)
         if request.is_json:
             return jsonify({
                 'success': True,
-                'message': 'Account recovery request sent to admin! Admin will contact you with your password.',
-                'phone': user.phone,
-                'admin_alert_dispatched': alert_sent
+                'message': 'If an account exists for this phone number, a recovery request has been sent to admin.',
+                'phone': masked_phone
             })
 
-        flash(f'Account recovery request sent to Admin! Admin will verify {user.phone} and provide your password.', 'success')
-        return render_template('customer/forgot_password.html', submitted=True, user=user)
+        flash(f'If an account exists for {masked_phone}, an alert was sent to Admin. Admin will verify and assist you.', 'success')
+        return render_template('customer/forgot_password.html', submitted=True, masked_phone=masked_phone)
 
     return render_template('customer/forgot_password.html', submitted=False)
 
@@ -377,10 +415,10 @@ def customer_reset_password():
             flash('Passwords do not match.', 'error')
             return render_template('customer/reset_password.html', phone=phone)
 
-        if len(new_password) < 4:
+        if len(new_password) < 6:
             if request.is_json:
-                return jsonify({'error': 'Password must be at least 4 characters long.'}), 400
-            flash('Password must be at least 4 characters long.', 'error')
+                return jsonify({'error': 'Password must be at least 6 characters long.'}), 400
+            flash('Password must be at least 6 characters long.', 'error')
             return render_template('customer/reset_password.html', phone=phone)
 
         user = CustomerUser.query.filter(
@@ -414,7 +452,7 @@ def customer_reset_password():
         user.reset_otp_expires_at = None
         db.session.commit()
 
-        session.pop('reset_phone', None)
+        session.clear()
 
         if request.is_json:
             return jsonify({'success': True, 'message': 'Password reset successful!'})
@@ -429,7 +467,7 @@ def customer_reset_password():
 def customer_account():
     user = CustomerUser.query.get(session['customer_id'])
     if not user:
-        session.pop('customer_id', None)
+        session.clear()
         return redirect(url_for('customer_login'))
 
     credit_rules = SystemSetting.get_val('credit_rules', {
@@ -438,12 +476,22 @@ def customer_account():
         "min_redeem_points": 100
     })
 
-    # Find customer's recent vouchers
-    vouchers = PromoCode.query.filter(
-        PromoCode.code.like('CRD-%'),
-        PromoCode.is_active == True,
-        (PromoCode.max_uses == 0) | (PromoCode.current_uses < PromoCode.max_uses)
-    ).order_by(PromoCode.timestamp.desc()).all()
+    # Scope vouchers strictly to the logged-in customer's own redeemed voucher codes (IDOR protection)
+    user_txs = CreditTransaction.query.filter_by(user_id=user.id).all()
+    user_voucher_codes = []
+    for tx in user_txs:
+        if tx.description and 'Code: CRD-' in tx.description:
+            match = re.search(r'Code:\s*(CRD-[A-Z0-9]+)', tx.description)
+            if match:
+                user_voucher_codes.append(match.group(1))
+
+    vouchers = []
+    if user_voucher_codes:
+        vouchers = PromoCode.query.filter(
+            PromoCode.code.in_(user_voucher_codes),
+            PromoCode.is_active == True,
+            (PromoCode.max_uses == 0) | (PromoCode.current_uses < PromoCode.max_uses)
+        ).order_by(PromoCode.timestamp.desc()).all()
 
     return render_template('customer/account.html', user=user, credit_rules=credit_rules, vouchers=vouchers)
 
@@ -1050,6 +1098,12 @@ def admin_redirect(subpath=''):
     return redirect(target)
 
 
+# --- SEO & CRAWLER DIRECTIVES ---
+@app.route('/robots.txt')
+def robots_txt():
+    content = "User-agent: *\nAllow: /\nDisallow: /customer/\nDisallow: /api/\n"
+    return Response(content, mimetype="text/plain")
+
 # --- SECURITY HEADERS MIDDLEWARE ---
 @app.after_request
 def set_security_headers(response):
@@ -1058,6 +1112,7 @@ def set_security_headers(response):
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     return response
 
 @app.errorhandler(404)
