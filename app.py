@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime, timedelta
 from functools import wraps
 from urllib.parse import urlparse, urljoin
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, render_template_string, Response
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, render_template_string, Response, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
@@ -37,6 +37,15 @@ def _load_env_fallback(filepath='.env'):
 _load_env_fallback()
 
 app = Flask(__name__)
+
+# --- WHITENOISE KERNEL ZERO-COPY STATIC ASSET STREAMING ---
+try:
+    from whitenoise import WhiteNoise
+    static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+    if os.path.exists(static_folder):
+        app.wsgi_app = WhiteNoise(app.wsgi_app, root=static_folder, prefix='static/', max_age=604800)
+except Exception:
+    pass
 
 # --- SECURITY CONFIGURATION (SESSION & COOKIE HARDENING) ---
 app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_ultra_pro_2025')
@@ -70,8 +79,8 @@ if 'sqlite' not in db_url:
         "pool_pre_ping": True,
         "pool_recycle": 300,
         "pool_timeout": 15,
-        "pool_size": 10,
-        "max_overflow": 20
+        "pool_size": 3,
+        "max_overflow": 5
     }
 else:
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
@@ -128,6 +137,10 @@ def get_client_ip():
 def check_rate_limit(tracker_name, key, max_requests, window_seconds):
     tracker = rate_limit_trackers.setdefault(tracker_name, {})
     now = time.time()
+    if len(tracker) > 200:
+        stale = [k for k, v in tracker.items() if not v or (now - v[-1] >= window_seconds)]
+        for k in stale:
+            tracker.pop(k, None)
     timestamps = [ts for ts in tracker.get(key, []) if now - ts < window_seconds]
     if len(timestamps) >= max_requests:
         tracker[key] = timestamps
@@ -672,6 +685,11 @@ def place_order():
         client_ip = client_ip.split(',')[0].strip()
         
     current_time = time.time()
+    if len(spam_tracker) > 200:
+        stale = [ip for ip, data in spam_tracker.items() if current_time - data[0] >= 300]
+        for ip in stale:
+            spam_tracker.pop(ip, None)
+
     if client_ip in spam_tracker:
         last_time, count = spam_tracker[client_ip]
         if current_time - last_time < 300:
@@ -926,6 +944,10 @@ CATALOG_CACHE_TTL = 30  # seconds
 @app.route('/api/products/<store_name>')
 def get_api(store_name):
     now = time.time()
+    if len(_catalog_cache) > 20:
+        stale = [k for k, v in _catalog_cache.items() if now - v.get('time', 0) >= CATALOG_CACHE_TTL]
+        for k in stale:
+            _catalog_cache.pop(k, None)
     include_charms = request.args.get('include_charms', '0') == '1'
     cache_key = f"{store_name}_{int(include_charms)}"
     cached = _catalog_cache.get(cache_key)
@@ -1114,6 +1136,13 @@ def robots_txt():
     content = "User-agent: *\nAllow: /\nDisallow: /customer/\nDisallow: /api/\n"
     return Response(content, mimetype="text/plain")
 
+@app.route('/favicon.ico')
+def favicon():
+    icon_path = os.path.join(app.root_path, 'static', 'images')
+    if os.path.exists(os.path.join(icon_path, 'logo.jpg')):
+        return send_from_directory(icon_path, 'logo.jpg', mimetype='image/jpeg', max_age=604800)
+    return ('', 204)
+
 # --- SECURITY HEADERS MIDDLEWARE ---
 @app.after_request
 def set_security_headers(response):
@@ -1129,6 +1158,8 @@ def set_security_headers(response):
 def not_found_error(error):
     if request.path.startswith('/api/'):
         return jsonify({'error': 'Resource not found'}), 404
+    if request.path.startswith('/static/') or request.path.endswith(('.ico', '.png', '.jpg', '.jpeg', '.gif', '.css', '.js', '.map', '.woff', '.woff2')):
+        return "Not found", 404
     return redirect(url_for('index'))
 
 @app.errorhandler(500)
