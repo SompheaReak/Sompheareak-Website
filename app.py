@@ -926,7 +926,9 @@ CATALOG_CACHE_TTL = 30  # seconds
 @app.route('/api/products/<store_name>')
 def get_api(store_name):
     now = time.time()
-    cached = _catalog_cache.get(store_name)
+    include_charms = request.args.get('include_charms', '0') == '1'
+    cache_key = f"{store_name}_{int(include_charms)}"
+    cached = _catalog_cache.get(cache_key)
     if cached and (now - cached['time'] < CATALOG_CACHE_TTL):
         resp = jsonify(cached['data'])
         resp.headers['Cache-Control'] = 'public, max-age=15, stale-while-revalidate=60'
@@ -934,9 +936,14 @@ def get_api(store_name):
 
     try:
         if store_name == 'all':
-            matching_prods = Product.query.filter(
-                Product.is_visible == True
-            ).order_by(Product.sort_order.asc(), Product.id.desc()).all()
+            query = Product.query.filter(Product.is_visible == True)
+            if not include_charms:
+                query = query.filter(
+                    ~Product.store.ilike('%custom_bracelet%'),
+                    ~Product.category.ilike('%charm%'),
+                    ~Product.title.ilike('charm %')
+                )
+            matching_prods = query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
         else:
             # Filter matching store directly in database for fast response
             matching_prods = Product.query.filter(
@@ -985,7 +992,7 @@ def get_api(store_name):
             "products": product_list,
             "categories": [{"name": c.name, "image": c.image} for c in categories]
         }
-        _catalog_cache[store_name] = {'time': now, 'data': res_data}
+        _catalog_cache[cache_key] = {'time': now, 'data': res_data}
         resp = jsonify(res_data)
         resp.headers['Cache-Control'] = 'public, max-age=15, stale-while-revalidate=60'
         return resp

@@ -1101,15 +1101,23 @@
             const countBadge = document.getElementById('product-count-badge');
             if (!grid) return;
 
-            let filtered = catalogAllProducts;
+            let filtered = catalogAllProducts.filter(p => {
+                const isCharm = (p.store || '').toLowerCase().includes('custom_bracelet') ||
+                                (p.category || '').toLowerCase().includes('charm') ||
+                                (p.title || '').toLowerCase().startsWith('charm ');
+                return !isCharm;
+            });
 
             // Filter category
             if (catalogActiveCategory !== 'all') {
                 const target = catalogActiveCategory.toLowerCase();
                 filtered = filtered.filter(p => {
-                    const storeMatch = (p.store || '').toLowerCase().includes(target);
+                    const stores = (p.store || '').toLowerCase().split(',').map(s => s.trim());
                     const catMatch = (p.category || '').toLowerCase().includes(target);
-                    return storeMatch || catMatch;
+                    if (target === 'bracelet') {
+                        return stores.includes('bracelet') || (catMatch && !p.store.includes('custom_bracelet'));
+                    }
+                    return stores.some(s => s.includes(target)) || catMatch;
                 });
             }
 
