@@ -37,7 +37,7 @@ _load_env_fallback()
 app = Flask(__name__)
 
 # --- SECURITY CONFIGURATION (SESSION & COOKIE HARDENING) ---
-app.secret_key = os.environ.get('SECRET_KEY', 'change_in_production_env')
+app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_ultra_pro_2025')
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024 
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -49,8 +49,8 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12)
 # Using fallback strings ensures the app boots even if ENV vars are missing during the build phase
 cloudinary.config( 
   cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "dwwearehy"), 
-  api_key = os.environ.get("CLOUDINARY_API_KEY", "dummy_key"), 
-  api_secret = os.environ.get("CLOUDINARY_API_SECRET", "dummy_secret"),
+  api_key = os.environ.get("CLOUDINARY_API_KEY", "998136922585551"), 
+  api_secret = os.environ.get("CLOUDINARY_API_SECRET", "mL1MT4pxmbzUiWsW9BagJNtlhh8"),
   secure = True
 )
 
@@ -60,9 +60,10 @@ def optimize_and_upload(file):
     )
 
 # --- 2. DATABASE CONFIGURATION (LOADED VIA .env OR ENVIRONMENT) ---
+DEFAULT_NEON_DB = "postgresql://neondb_owner:npg_dq6KIUVe0cyS@ep-polished-feather-a19qzv4s-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
 db_url = os.environ.get('DATABASE_URL', '').strip()
-if not db_url:
-    db_url = f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'fallback.db')}"
+if not db_url or 'fallback.db' in db_url:
+    db_url = DEFAULT_NEON_DB
 
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
@@ -85,7 +86,7 @@ from models import db, Product, Category, Order, PromoCode, PlayerSession, Redee
 db.init_app(app)
 # --- SECURITY CONFIG (FROM ENVIRONMENT) ---
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
-ADMIN_PASS = os.environ.get('ADMIN_PASS', '')
+ADMIN_PASS = os.environ.get('ADMIN_PASS', 'Thesong_Admin@2022?!$')
 
 def login_required(f):
     @wraps(f)
