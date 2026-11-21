@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import time
 import random
@@ -9,21 +10,20 @@ from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash, render_template_string
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 import cloudinary
 import cloudinary.uploader
 
 # --- LOAD ENVIRONMENT VARIABLES (.env) ---
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 try:
     from dotenv import load_dotenv
-    load_dotenv(os.path.join(BASE_DIR, '.env'))
+    load_dotenv()
 except ImportError:
     pass
 
-def _load_env_fallback():
-    env_path = os.path.join(BASE_DIR, '.env')
-    if os.path.exists(env_path):
-        with open(env_path, 'r') as f:
+def _load_env_fallback(filepath='.env'):
+    if os.path.exists(filepath):
+        with open(filepath, 'r') as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith('#') and '=' in line:
@@ -45,21 +45,10 @@ if os.environ.get('FLASK_ENV') == 'production' or os.environ.get('RENDER') or os
     app.config['SESSION_COOKIE_SECURE'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12) 
 
-# --- 1. CLOUDINARY CONFIG (HARDENED FOR DEPLOYMENT) ---
-# Using fallback strings ensures the app boots even if ENV vars are missing during the build phase
-cloudinary.config( 
-  cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "dwwearehy"), 
-  api_key = os.environ.get("CLOUDINARY_API_KEY", "998136922585551"), 
-  api_secret = os.environ.get("CLOUDINARY_API_SECRET", "mL1MT4pxmbzUiWsW9BagJNtlhh8"),
-  secure = True
-)
+# --- 1. UPLOAD HANDLING (CLOUDINARY WITH LOCAL STORAGE FALLBACK) ---
+from uploader import optimize_and_upload
 
-def optimize_and_upload(file):
-    return cloudinary.uploader.upload(
-        file, format="webp", quality="auto", width=900, height=900, crop="limit"
-    )
-
-# --- 2. DATABASE CONFIGURATION (LOADED VIA .env OR ENVIRONMENT) ---
+# --- 2. PERMANENT DATABASE CONFIG ---
 DEFAULT_NEON_DB = "postgresql://neondb_owner:npg_dq6KIUVe0cyS@ep-polished-feather-a19qzv4s-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
 db_url = os.environ.get('DATABASE_URL', '').strip()
 if not db_url or 'fallback.db' in db_url:
@@ -82,7 +71,11 @@ else:
         "pool_pre_ping": True
     }
 
-from models import db, Product, Category, Order, PromoCode, PlayerSession, RedeemCode, MinifigurePool, DrawHistory, get_reward_config, save_reward_config, _sync_product_to_pool, _sync_pool_to_product
+from models import (
+    db, Product, Category, Order, PromoCode, PlayerSession, RedeemCode,
+    MinifigurePool, DrawHistory, CustomerUser, CreditTransaction, SystemSetting,
+    get_reward_config, save_reward_config, _sync_product_to_pool, _sync_pool_to_product
+)
 db.init_app(app)
 # --- SECURITY CONFIG (FROM ENVIRONMENT) ---
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
@@ -97,21 +90,62 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def customer_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('customer_id'):
+            flash('Please log in to your account.', 'info')
+            return redirect(url_for('customer_login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
+
 spam_tracker = {}
+rate_limit_trackers = {
+    'forgot_password': {},
+    'customer_login': {},
+    'orders': {}
+}
+
+def get_client_ip():
+    forwarded = request.headers.get('X-Forwarded-For')
+    if forwarded:
+        return forwarded.split(',')[0].strip()
+    return request.remote_addr or '127.0.0.1'
+
+def check_rate_limit(tracker_name, key, max_requests, window_seconds):
+    tracker = rate_limit_trackers.setdefault(tracker_name, {})
+    now = time.time()
+    timestamps = [ts for ts in tracker.get(key, []) if now - ts < window_seconds]
+    if len(timestamps) >= max_requests:
+        tracker[key] = timestamps
+        retry_after = max(1, int(window_seconds - (now - timestamps[0])))
+        return False, retry_after
+    timestamps.append(now)
+    tracker[key] = timestamps
+    return True, 0
 
 @app.context_processor
 def inject_global_data():
+    data = {}
+    cust_id = session.get('customer_id')
+    if cust_id:
+        try:
+            data['current_customer'] = CustomerUser.query.get(cust_id)
+        except Exception:
+            data['current_customer'] = None
+    else:
+        data['current_customer'] = None
+
     if request.path.startswith('/admin') and session.get('admin'):
         if request.path.startswith('/admin/api/') or request.path.startswith('/admin/product/quick_stock'):
-            return dict()
+            return data
         try:
             categories = Category.query.order_by(Category.sort_order).all()
             pending_count = Order.query.filter_by(status='Pending').count()
-            return dict(global_categories=categories, pending_count=pending_count)
+            data.update(dict(global_categories=categories, pending_count=pending_count))
         except Exception as e:
             print(f"Warning in inject_global_data: {e}")
-            return dict()
-    return dict()
+    return data
 
 # --- 5. PUBLIC & STORE ROUTES ---
 @app.route('/')
@@ -130,6 +164,334 @@ def minifigure_store(): return render_template('minifigure.html')
 @app.route('/lucky-draw')
 @app.route('/spin')
 def mystery_box(): return render_template('lucky_draw.html')
+
+def normalize_phone(phone_str):
+    if not phone_str:
+        return ''
+    cleaned = re.sub(r'[\s\-\(\)\.]+', '', str(phone_str).strip())
+    if cleaned.startswith('+855'):
+        cleaned = '0' + cleaned[4:]
+    elif cleaned.startswith('855') and len(cleaned) >= 11:
+        cleaned = '0' + cleaned[3:]
+    return cleaned
+
+# --- CUSTOMER ACCOUNT & AUTH ROUTES ---
+@app.route('/customer/register', methods=['GET', 'POST'])
+def customer_register():
+    if request.method == 'POST':
+        data = request.get_json(silent=True) or request.form
+        raw_phone = (data.get('phone') or '').strip()
+        phone = normalize_phone(raw_phone)
+        password = (data.get('password') or '').strip()
+        full_name = (data.get('full_name') or '').strip()
+
+        if not phone or not password:
+            if request.is_json:
+                return jsonify({'error': 'Phone number and password are required.'}), 400
+            flash('Phone number and password are required.', 'error')
+            return redirect(url_for('customer_register'))
+
+        if len(phone) < 8 or len(phone) > 15 or not re.match(r'^\+?[0-9]+$', phone):
+            if request.is_json:
+                return jsonify({'error': 'Please enter a valid phone number (at least 8 digits).'}), 400
+            flash('Please enter a valid phone number (at least 8 digits).', 'error')
+            return redirect(url_for('customer_register'))
+
+        if len(password) < 3:
+            if request.is_json:
+                return jsonify({'error': 'Password must be at least 3 characters long.'}), 400
+            flash('Password must be at least 3 characters long.', 'error')
+            return redirect(url_for('customer_register'))
+
+        if len(password) > 100:
+            if request.is_json:
+                return jsonify({'error': 'Password is too long (maximum 100 characters).'}), 400
+            flash('Password is too long (maximum 100 characters).', 'error')
+            return redirect(url_for('customer_register'))
+
+        full_name = full_name[:100]
+
+        existing = CustomerUser.query.filter(
+            db.or_(
+                CustomerUser.phone == phone,
+                CustomerUser.phone == raw_phone
+            )
+        ).first()
+        if existing:
+            if request.is_json:
+                return jsonify({'error': 'This phone number is already registered. Please login.'}), 409
+            flash('This phone number is already registered. Please login.', 'error')
+            return redirect(url_for('customer_login'))
+
+        user = CustomerUser(phone=phone, full_name=full_name)
+        user.set_password(password)
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            if request.is_json:
+                return jsonify({'error': 'This phone number is already registered. Please login.'}), 409
+            flash('This phone number is already registered. Please login.', 'error')
+            return redirect(url_for('customer_login'))
+
+        session['customer_id'] = user.id
+        session['customer_phone'] = user.phone
+        if request.is_json:
+            return jsonify({'success': True, 'customer': user.to_dict()})
+        flash('Account created successfully! Welcome to Somphea Reak.', 'success')
+        next_url = request.args.get('next') or url_for('customer_account')
+        return redirect(next_url)
+
+    return render_template('customer/login.html', mode='register')
+
+@app.route('/customer/login', methods=['GET', 'POST'])
+def customer_login():
+    if request.method == 'POST':
+        client_ip = get_client_ip()
+        login_fails = rate_limit_trackers.setdefault('customer_login', {})
+        now = time.time()
+        fail_times = [ts for ts in login_fails.get(client_ip, []) if now - ts < 600]
+        if len(fail_times) >= 10:
+            wait_sec = max(1, int(600 - (now - fail_times[0])))
+            if request.is_json:
+                return jsonify({'error': f'Too many failed login attempts. Please try again in {wait_sec} seconds.'}), 429
+            flash('Too many failed login attempts. Please try again in 10 minutes.', 'error')
+            return redirect(url_for('customer_login'))
+
+        data = request.get_json(silent=True) or request.form
+        raw_phone = (data.get('phone') or '').strip()
+        phone = normalize_phone(raw_phone)
+        password = (data.get('password') or '').strip()
+
+        user = CustomerUser.query.filter(
+            db.or_(CustomerUser.phone == phone, CustomerUser.phone == raw_phone)
+        ).first()
+        if not user or not user.check_password(password):
+            fail_times.append(now)
+            login_fails[client_ip] = fail_times
+            if request.is_json:
+                return jsonify({'error': 'Invalid phone number or password.'}), 401
+            flash('Invalid phone number or password.', 'error')
+            return redirect(url_for('customer_login'))
+
+        # Reset failed attempts on success
+        login_fails.pop(client_ip, None)
+
+        session['customer_id'] = user.id
+        session['customer_phone'] = user.phone
+        if request.is_json:
+            return jsonify({'success': True, 'customer': user.to_dict()})
+        flash(f'Welcome back, {user.full_name or user.phone}!', 'success')
+        next_url = request.args.get('next') or url_for('customer_account')
+        return redirect(next_url)
+
+    return render_template('customer/login.html', mode='login')
+
+@app.route('/customer/logout')
+def customer_logout():
+    session.pop('customer_id', None)
+    session.pop('customer_phone', None)
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('index'))
+
+# --- PASSWORD RECOVERY VIA ADMIN TELEGRAM ALERT ---
+@app.route('/customer/forgot-password', methods=['GET', 'POST'])
+def customer_forgot_password():
+    submitted_user = None
+    if request.method == 'POST':
+        client_ip = get_client_ip()
+        allowed, retry_after = check_rate_limit('forgot_password', client_ip, max_requests=5, window_seconds=300)
+        if not allowed:
+            if request.is_json:
+                return jsonify({'error': f'Too many recovery requests. Please try again in {retry_after} seconds.'}), 429
+            flash('Too many password recovery requests. Please try again in 5 minutes.', 'error')
+            return redirect(url_for('customer_forgot_password'))
+
+        data = request.get_json(silent=True) or request.form
+        raw_phone = (data.get('phone') or '').strip()
+        note = (data.get('note') or '').strip()[:200]
+        phone = normalize_phone(raw_phone)
+
+        if not phone:
+            if request.is_json:
+                return jsonify({'error': 'Please enter your registered phone number.'}), 400
+            flash('Please enter your registered phone number.', 'error')
+            return redirect(url_for('customer_forgot_password'))
+
+        user = CustomerUser.query.filter(
+            db.or_(CustomerUser.phone == phone, CustomerUser.phone == raw_phone)
+        ).first()
+
+        if not user:
+            if request.is_json:
+                return jsonify({'error': 'No account found with this phone number.'}), 404
+            flash('No account found with this phone number. Please check the number or register.', 'error')
+            return redirect(url_for('customer_forgot_password'))
+
+        # Dispatch real-time alert to Admin Telegram Bot
+        from telegram_notifier import send_telegram_recovery_alert
+        alert_sent = send_telegram_recovery_alert(user, note=note)
+
+        if request.is_json:
+            return jsonify({
+                'success': True,
+                'message': 'Account recovery request sent to admin! Admin will contact you with your password.',
+                'phone': user.phone,
+                'admin_alert_dispatched': alert_sent
+            })
+
+        flash(f'Account recovery request sent to Admin! Admin will verify {user.phone} and provide your password.', 'success')
+        return render_template('customer/forgot_password.html', submitted=True, user=user)
+
+    return render_template('customer/forgot_password.html', submitted=False)
+
+@app.route('/customer/reset-password', methods=['GET', 'POST'])
+def customer_reset_password():
+    prefill_phone = session.get('reset_phone', '')
+    if request.method == 'POST':
+        data = request.get_json(silent=True) or request.form
+        raw_phone = (data.get('phone') or prefill_phone or '').strip()
+        phone = normalize_phone(raw_phone)
+        otp = (data.get('otp') or '').strip()
+        new_password = (data.get('new_password') or '').strip()
+        confirm_password = (data.get('confirm_password') or '').strip()
+
+        if not phone or not otp or not new_password:
+            if request.is_json:
+                return jsonify({'error': 'Phone, OTP code, and new password are required.'}), 400
+            flash('Phone, OTP code, and new password are required.', 'error')
+            return render_template('customer/reset_password.html', phone=phone)
+
+        if new_password != confirm_password:
+            if request.is_json:
+                return jsonify({'error': 'Passwords do not match.'}), 400
+            flash('Passwords do not match.', 'error')
+            return render_template('customer/reset_password.html', phone=phone)
+
+        if len(new_password) < 4:
+            if request.is_json:
+                return jsonify({'error': 'Password must be at least 4 characters long.'}), 400
+            flash('Password must be at least 4 characters long.', 'error')
+            return render_template('customer/reset_password.html', phone=phone)
+
+        user = CustomerUser.query.filter(
+            db.or_(CustomerUser.phone == phone, CustomerUser.phone == raw_phone)
+        ).first()
+
+        if not user or not user.reset_otp:
+            if request.is_json:
+                return jsonify({'error': 'Invalid request or no active reset code found.'}), 400
+            flash('Invalid request or no active reset code found. Please request a new code.', 'error')
+            return redirect(url_for('customer_forgot_password'))
+
+        # Check expiration
+        now_utc = datetime.utcnow()
+        if not user.reset_otp_expires_at or user.reset_otp_expires_at < now_utc:
+            if request.is_json:
+                return jsonify({'error': 'Recovery code has expired. Please request a new one.'}), 400
+            flash('Recovery code has expired. Please request a new code.', 'error')
+            return redirect(url_for('customer_forgot_password'))
+
+        # Check OTP match
+        if str(user.reset_otp).strip() != otp:
+            if request.is_json:
+                return jsonify({'error': 'Incorrect verification code. Please try again.'}), 400
+            flash('Incorrect verification code. Please check your SMS and try again.', 'error')
+            return render_template('customer/reset_password.html', phone=phone)
+
+        # Success - update password and clear OTP
+        user.set_password(new_password)
+        user.reset_otp = None
+        user.reset_otp_expires_at = None
+        db.session.commit()
+
+        session.pop('reset_phone', None)
+
+        if request.is_json:
+            return jsonify({'success': True, 'message': 'Password reset successful!'})
+
+        flash('Your password has been reset successfully! Please sign in with your new password.', 'success')
+        return redirect(url_for('customer_login'))
+
+    return render_template('customer/reset_password.html', phone=prefill_phone)
+
+@app.route('/customer/account')
+@customer_login_required
+def customer_account():
+    user = CustomerUser.query.get(session['customer_id'])
+    if not user:
+        session.pop('customer_id', None)
+        return redirect(url_for('customer_login'))
+
+    credit_rules = SystemSetting.get_val('credit_rules', {
+        "points_per_usd": 10,
+        "points_per_voucher_dollar": 20,
+        "min_redeem_points": 100
+    })
+
+    # Find customer's recent vouchers
+    vouchers = PromoCode.query.filter(
+        PromoCode.code.like('CRD-%'),
+        PromoCode.is_active == True,
+        (PromoCode.max_uses == 0) | (PromoCode.current_uses < PromoCode.max_uses)
+    ).order_by(PromoCode.timestamp.desc()).all()
+
+    return render_template('customer/account.html', user=user, credit_rules=credit_rules, vouchers=vouchers)
+
+@app.route('/customer/redeem-voucher', methods=['POST'])
+@customer_login_required
+def customer_redeem_voucher():
+    user = CustomerUser.query.get(session['customer_id'])
+    if not user:
+        return redirect(url_for('customer_login'))
+
+    try:
+        points = int(request.form.get('points', 0))
+    except (ValueError, TypeError):
+        points = 0
+
+    credit_rules = SystemSetting.get_val('credit_rules', {
+        "points_per_usd": 10,
+        "points_per_voucher_dollar": 20,
+        "min_redeem_points": 100
+    })
+
+    min_points = credit_rules.get('min_redeem_points', 100)
+    pts_per_dollar = max(1, credit_rules.get('points_per_voucher_dollar', 20))
+
+    if points < min_points:
+        flash(f'Minimum {min_points} credit points required to redeem a voucher.', 'error')
+        return redirect(url_for('customer_account'))
+
+    if user.credit_balance < points:
+        flash('You do not have enough credit points.', 'error')
+        return redirect(url_for('customer_account'))
+
+    voucher_value = round(points / pts_per_dollar, 2)
+    voucher_code = f"CRD-{uuid.uuid4().hex[:6].upper()}"
+
+    new_promo = PromoCode(
+        code=voucher_code,
+        discount_type='flat',
+        discount_value=voucher_value,
+        min_order_value=0.0,
+        max_uses=1,
+        current_uses=0,
+        is_active=True
+    )
+    user.credit_balance -= points
+    tx = CreditTransaction(
+        user_id=user.id,
+        amount=-points,
+        description=f"Redeemed for ${voucher_value:.2f} Voucher (Code: {voucher_code})"
+    )
+    db.session.add(new_promo)
+    db.session.add(tx)
+    db.session.commit()
+
+    flash(f'Voucher created! Code: {voucher_code} for ${voucher_value:.2f} discount.', 'success')
+    return redirect(url_for('customer_account'))
 
 @app.route('/api/check-promo', methods=['GET'])
 def check_promo():
@@ -214,6 +576,43 @@ def checkout_page():
     """
     return render_template_string(checkout_html, subtotal=subtotal, discount_amount=discount_amount, final_total=final_total, redeem_code=redeem_code, cart_data_raw=cart_data_raw)
 
+def _handle_order_post_processing(order):
+    """
+    1. Awards credit points if customer is logged in or registered with phone.
+    2. Sends real-time Telegram order alert.
+    """
+    try:
+        cust_id = session.get('customer_id')
+        user = CustomerUser.query.get(cust_id) if cust_id else None
+        if not user and order.customer_phone:
+            raw_phone = order.customer_phone.strip()
+            clean_phone = normalize_phone(raw_phone)
+            user = CustomerUser.query.filter(
+                db.or_(CustomerUser.phone == clean_phone, CustomerUser.phone == raw_phone)
+            ).first()
+
+        if user:
+            credit_rules = SystemSetting.get_val('credit_rules', {"points_per_usd": 10})
+            pts_per_usd = max(0, int(credit_rules.get('points_per_usd', 10)))
+            earned = int(float(order.total_usd or 0.0) * pts_per_usd)
+            if earned > 0:
+                user.credit_balance = (user.credit_balance or 0) + earned
+                tx = CreditTransaction(
+                    user_id=user.id,
+                    amount=earned,
+                    description=f"Earned from Order #{order.id} (${order.total_usd:.2f})"
+                )
+                db.session.add(tx)
+                db.session.commit()
+    except Exception as e:
+        print(f"Credit award error: {e}")
+
+    try:
+        from telegram_notifier import send_telegram_order_alert
+        send_telegram_order_alert(order)
+    except Exception as e:
+        print(f"Telegram alert error: {e}")
+
 @app.route('/place_order', methods=['POST'])
 def place_order():
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
@@ -242,12 +641,51 @@ def place_order():
         if not cart_items:
             return "Cart is empty", 400
 
-        # Server-side validation of pricing to prevent tampering
+        # Server-side validation of pricing from database to prevent price tampering
         subtotal = 0.0
         for item in cart_items:
             qty = max(1, int(item.get('qty', 1)))
-            price = max(0.0, float(item.get('price', 0.0)))
-            subtotal += price * qty
+            raw_id = str(item.get('id') or item.get('variantId') or item.get('cartId') or '').strip()
+            p_id = None
+            v_id = -1
+            if '-' in raw_id:
+                parts = raw_id.split('-')
+                if parts[0].isdigit():
+                    p_id = int(parts[0])
+                if len(parts) >= 2 and parts[1].isdigit():
+                    v_id = int(parts[1])
+            elif raw_id.isdigit():
+                p_id = int(raw_id)
+            
+            p = None
+            if p_id:
+                item['id'] = p_id
+                p = Product.query.get(p_id)
+            elif item.get('title'):
+                raw_title = str(item.get('title')).split(' - ')[0].strip().lower()
+                p = Product.query.filter(Product.title.ilike(raw_title)).first()
+                if p:
+                    item['id'] = p.id
+            
+            item_price = 0.0
+            if p:
+                item_price = float(p.price or 0.0)
+                if p.variants and v_id != -1:
+                    try:
+                        variants = json.loads(p.variants)
+                        for v in variants:
+                            if v.get('id') == v_id and 'price' in v and v.get('price') is not None:
+                                item_price = float(v.get('price'))
+                                break
+                    except Exception:
+                        pass
+                if getattr(p, 'cost_price', None) is not None:
+                    item['cost_price'] = float(p.cost_price or 0.0)
+            else:
+                item_price = max(0.0, float(item.get('price', 0.0)))
+
+            item['price'] = item_price
+            subtotal += item_price * qty
 
         discount_amount = 0.0
         promo_code = request.form.get('promo_code_used', '').strip().upper()
@@ -259,8 +697,13 @@ def place_order():
                         discount_amount = subtotal * (promo.discount_value / 100.0)
                     elif promo.discount_type == 'flat':
                         discount_amount = promo.discount_value
+                    promo.current_uses += 1
+                else:
+                    promo_code = None
             else:
                 promo_code = None
+        else:
+            promo_code = None
 
         final_total = max(0.0, subtotal - discount_amount)
 
@@ -275,6 +718,9 @@ def place_order():
         )
         db.session.add(new_order)
         db.session.commit()
+
+        # Handle post-order credit rewards & Telegram alert
+        _handle_order_post_processing(new_order)
         
         success_html = """
         <!DOCTYPE html><html lang="en"><head><title>Success</title><script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet"></head>
@@ -294,7 +740,7 @@ def place_order():
 
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
-    data = request.json
+    data = request.json or {}
     try:
         tg_user = data.get('telegram_user')
         tg_id = str(tg_user.get('id')) if tg_user and tg_user.get('id') else None
@@ -308,14 +754,84 @@ def checkout():
 
         tg_payload = json.dumps(tg_user) if tg_user else None
 
+        items = data.get('items', [])
+        if not items:
+            return jsonify({'status': 'error', 'message': 'Cart is empty'}), 400
+
+        subtotal = 0.0
+        for item in items:
+            qty = max(1, int(item.get('qty', 1)))
+            raw_id = str(item.get('id') or item.get('variantId') or item.get('cartId') or '').strip()
+            p_id = None
+            v_id = -1
+            if '-' in raw_id:
+                parts = raw_id.split('-')
+                if parts[0].isdigit():
+                    p_id = int(parts[0])
+                if len(parts) >= 2 and parts[1].isdigit():
+                    v_id = int(parts[1])
+            elif raw_id.isdigit():
+                p_id = int(raw_id)
+            
+            p = None
+            if p_id:
+                item['id'] = p_id
+                p = Product.query.get(p_id)
+            elif item.get('title'):
+                raw_title = str(item.get('title')).split(' - ')[0].strip().lower()
+                p = Product.query.filter(Product.title.ilike(raw_title)).first()
+                if p:
+                    item['id'] = p.id
+
+            item_price = 0.0
+            if p:
+                item_price = float(p.price or 0.0)
+                if p.variants and v_id != -1:
+                    try:
+                        variants = json.loads(p.variants)
+                        for v in variants:
+                            if v.get('id') == v_id and 'price' in v and v.get('price') is not None:
+                                item_price = float(v.get('price'))
+                                break
+                    except Exception:
+                        pass
+                if getattr(p, 'cost_price', None) is not None:
+                    item['cost_price'] = float(p.cost_price or 0.0)
+            else:
+                item_price = max(0.0, float(item.get('price', 0.0)))
+
+            item['price'] = item_price
+            subtotal += item_price * qty
+
+        discount_amount = 0.0
+        promo_code = (data.get('redeemCode') or '').strip().upper()
+        if promo_code:
+            promo = PromoCode.query.filter_by(code=promo_code, is_active=True).first()
+            if promo and (promo.max_uses == 0 or promo.current_uses < promo.max_uses):
+                if subtotal >= promo.min_order_value:
+                    if promo.discount_type == 'percent':
+                        discount_amount = subtotal * (promo.discount_value / 100.0)
+                    elif promo.discount_type == 'flat':
+                        discount_amount = promo.discount_value
+                    promo.current_uses += 1
+                else:
+                    promo_code = None
+            else:
+                promo_code = None
+        else:
+            promo_code = None
+
+        delivery_fee = max(0.0, float(data.get('deliveryFee', 0) or 0))
+        computed_total = round(max(0.0, subtotal - discount_amount) + delivery_fee, 2)
+
         new_order = Order(
-            customer_name=data.get('name'), 
-            customer_phone=data.get('phone'), 
-            customer_address=data.get('address'),
-            items_json=json.dumps(data.get('items', [])), 
-            total_usd=float(data.get('total', 0) or 0), 
-            delivery_fee=float(data.get('deliveryFee', 0) or 0),
-            promo_code_used=data.get('redeemCode'), 
+            customer_name=(data.get('name') or '').strip()[:100], 
+            customer_phone=(data.get('phone') or '').strip()[:20], 
+            customer_address=(data.get('address') or '').strip(),
+            items_json=json.dumps(items), 
+            total_usd=computed_total, 
+            delivery_fee=delivery_fee,
+            promo_code_used=promo_code if discount_amount > 0 else None, 
             telegram_id=tg_id,           
             telegram_name=tg_name,       
             telegram_user_payload=tg_payload, 
@@ -323,7 +839,8 @@ def checkout():
         )
         db.session.add(new_order)
         db.session.commit()
-        return jsonify({'status': 'success', 'order_id': new_order.id})
+        _handle_order_post_processing(new_order)
+        return jsonify({'status': 'success', 'order_id': new_order.id, 'total': computed_total})
     except Exception as e: 
         db.session.rollback()
         return jsonify({'status': 'error', 'message': 'Failed to process order'}), 400
@@ -492,40 +1009,6 @@ import importlib
 store_admin_module = importlib.import_module('store-admin')
 app.register_blueprint(store_admin_module.admin_bp)
 
-@app.route('/admin/db-status')
-def db_status():
-    if not session.get('admin'):
-        return jsonify({"error": "unauthorized"}), 401
-    
-    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
-    masked_uri = db_uri
-    if '@' in db_uri:
-        prefix = db_uri.split('@')[0]
-        host = db_uri.split('@')[1]
-        masked_uri = f"{prefix.split(':')[0]}://****@{host}"
-        
-    try:
-        from models import Product, Category, Order
-        prod_count = Product.query.count()
-        cat_count = Category.query.count()
-        order_count = Order.query.count()
-        first_prod = Product.query.first()
-        return jsonify({
-            "status": "connected",
-            "db_type": "postgres" if "postgres" in db_uri else "sqlite",
-            "masked_uri": masked_uri,
-            "product_count": prod_count,
-            "category_count": cat_count,
-            "order_count": order_count,
-            "sample_product": first_prod.title if first_prod else None
-        })
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "db_uri": masked_uri,
-            "error": str(e)
-        }), 500
-
 
 # --- SECURITY HEADERS MIDDLEWARE ---
 @app.after_request
@@ -567,11 +1050,14 @@ with app.app_context():
                 'ALTER TABLE "order" ADD COLUMN promo_code_used VARCHAR(50)',
                 'ALTER TABLE product ADD COLUMN discount_percent FLOAT DEFAULT 0.0',
                 'ALTER TABLE product ADD COLUMN use_custom_thumbnail BOOLEAN DEFAULT FALSE',
+                'ALTER TABLE product ADD COLUMN cost_price FLOAT DEFAULT 0.0',
                 'ALTER TABLE product ADD COLUMN detail_images TEXT',
                 'ALTER TABLE "order" ADD COLUMN delivery_fee FLOAT DEFAULT 0.0',
                 'ALTER TABLE "order" ADD COLUMN telegram_id VARCHAR(100)',
                 'ALTER TABLE "order" ADD COLUMN telegram_name VARCHAR(200)',
-                'ALTER TABLE "order" ADD COLUMN telegram_user_payload TEXT'
+                'ALTER TABLE "order" ADD COLUMN telegram_user_payload TEXT',
+                'ALTER TABLE customer_user ADD COLUMN reset_otp VARCHAR(10)',
+                'ALTER TABLE customer_user ADD COLUMN reset_otp_expires_at DATETIME'
             ]
             for q in queries:
                 try:
@@ -583,4 +1069,7 @@ with app.app_context():
         print(f"Warning during DB startup, safely ignored: {e}")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    port = int(os.environ.get("PORT", 5001))
+    print(f"🚀 Starting Somphea Reak Test Store on http://127.0.0.1:{port}")
+    app.run(host="0.0.0.0", port=port, debug=True)
+
