@@ -352,11 +352,12 @@
                 </div>
 
                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង (Contact Info)</label>
-                <input type="text" id="uni-cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Full Name)">
-                <input type="tel" id="uni-cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone Number)">
+                <input type="text" id="uni-cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Full Name) *">
+                <input type="tel" id="uni-cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone Number) *">
+                <input type="text" id="uni-cust-telegram" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="Telegram (Username @ ឬ លេខទូរស័ព្ទ) *">
                 
                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន (Address)</label>
-                <textarea id="uni-cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ (Full Delivery Address)"></textarea>
+                <textarea id="uni-cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ (Full Delivery Address) *"></textarea>
             </div>
         </div>
         <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:pb-5">
@@ -745,9 +746,10 @@
             
             const name = document.getElementById('uni-cust-name').value.trim(); 
             const phone = document.getElementById('uni-cust-phone').value.trim(); 
+            const telegram = document.getElementById('uni-cust-telegram') ? document.getElementById('uni-cust-telegram').value.trim() : '';
             const address = document.getElementById('uni-cust-address').value.trim();
             
-            if(!name || !phone || !address) return alert("សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់! (Please fill all info!)");
+            if(!name || !phone || !telegram || !address) return alert("សូមបំពេញឈ្មោះ លេខទូរស័ព្ទ Telegram និងអាសយដ្ឋាន! (Please fill name, phone, telegram, and address!)");
             if(phone.length < 8) return alert("លេខទូរស័ព្ទមិនត្រឹមត្រូវ! (Invalid phone number!)");
 
             const btn = document.getElementById('uni-confirm-btn'); 
@@ -800,7 +802,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        name, phone, address, 
+                        name, phone, telegram, address, 
                         items: itemsPayload, 
                         total: (subtotalKHR + delivery) / UNIVERSAL_CART_RATE,
                         telegram_user: tgUserPayload

@@ -181,15 +181,28 @@ def normalize_phone(phone_str):
 def customer_register():
     if request.method == 'POST':
         data = request.get_json(silent=True) or request.form
+        full_name = (data.get('full_name') or '').strip()[:100]
         raw_phone = (data.get('phone') or '').strip()
+        telegram = (data.get('telegram') or '').strip()[:100]
         phone = normalize_phone(raw_phone)
         password = (data.get('password') or '').strip()
-        full_name = (data.get('full_name') or '').strip()
+
+        if not full_name:
+            if request.is_json:
+                return jsonify({'error': 'User name is required.'}), 400
+            flash('User name is required.', 'error')
+            return redirect(url_for('customer_register'))
 
         if not phone or not password:
             if request.is_json:
                 return jsonify({'error': 'Phone number and password are required.'}), 400
             flash('Phone number and password are required.', 'error')
+            return redirect(url_for('customer_register'))
+
+        if not telegram:
+            if request.is_json:
+                return jsonify({'error': 'Telegram number or @username is required.'}), 400
+            flash('Telegram number or @username is required.', 'error')
             return redirect(url_for('customer_register'))
 
         if len(phone) < 8 or len(phone) > 15 or not re.match(r'^\+?[0-9]+$', phone):
@@ -210,8 +223,6 @@ def customer_register():
             flash('Password is too long (maximum 100 characters).', 'error')
             return redirect(url_for('customer_register'))
 
-        full_name = full_name[:100]
-
         existing = CustomerUser.query.filter(
             db.or_(
                 CustomerUser.phone == phone,
@@ -224,7 +235,7 @@ def customer_register():
             flash('This phone number is already registered. Please login.', 'error')
             return redirect(url_for('customer_login'))
 
-        user = CustomerUser(phone=phone, full_name=full_name)
+        user = CustomerUser(phone=phone, full_name=full_name, telegram=telegram)
         user.set_password(password)
         try:
             db.session.add(user)
@@ -756,10 +767,20 @@ def checkout():
 
     data = request.json or {}
     try:
+        raw_name = (data.get('name') or '').strip()
         raw_phone = (data.get('phone') or '').strip()
+        raw_telegram = (data.get('telegram') or '').strip()
+        raw_address = (data.get('address') or '').strip()
         phone_digits = re.sub(r'[^0-9]', '', raw_phone)
-        if raw_phone and len(phone_digits) < 8:
-            return jsonify({'status': 'error', 'message': 'Please provide a valid phone number with at least 8 digits.'}), 400
+
+        if not raw_name:
+            return jsonify({'status': 'error', 'message': 'Customer name is required.'}), 400
+        if not raw_phone or len(phone_digits) < 8:
+            return jsonify({'status': 'error', 'message': 'Valid phone number with at least 8 digits is required.'}), 400
+        if not raw_telegram:
+            return jsonify({'status': 'error', 'message': 'Telegram contact (@username or phone) is required.'}), 400
+        if not raw_address:
+            return jsonify({'status': 'error', 'message': 'Delivery address is required.'}), 400
 
         tg_user = data.get('telegram_user')
         tg_id = str(tg_user.get('id')) if tg_user and tg_user.get('id') else None
@@ -770,6 +791,8 @@ def checkout():
             last_name = tg_user.get('last_name')
             if last_name:
                 tg_name += f" {last_name}"
+        if not tg_name and raw_telegram:
+            tg_name = raw_telegram
 
         tg_payload = json.dumps(tg_user) if tg_user else None
 
@@ -844,15 +867,15 @@ def checkout():
         computed_total = round(max(0.0, subtotal - discount_amount) + delivery_fee, 2)
 
         new_order = Order(
-            customer_name=(data.get('name') or '').strip()[:100], 
-            customer_phone=(data.get('phone') or '').strip()[:20], 
-            customer_address=(data.get('address') or '').strip(),
+            customer_name=raw_name[:100], 
+            customer_phone=raw_phone[:20], 
+            customer_address=raw_address,
             items_json=json.dumps(items), 
             total_usd=computed_total, 
             delivery_fee=delivery_fee,
             promo_code_used=promo_code if discount_amount > 0 else None, 
             telegram_id=tg_id,           
-            telegram_name=tg_name,       
+            telegram_name=tg_name[:200] if tg_name else None,       
             telegram_user_payload=tg_payload, 
             status="Pending"
         )
