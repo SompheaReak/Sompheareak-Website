@@ -103,7 +103,8 @@ spam_tracker = {}
 rate_limit_trackers = {
     'forgot_password': {},
     'customer_login': {},
-    'orders': {}
+    'orders': {},
+    'otp_verify': {}
 }
 
 def get_client_ip():
@@ -350,6 +351,14 @@ def customer_forgot_password():
 def customer_reset_password():
     prefill_phone = session.get('reset_phone', '')
     if request.method == 'POST':
+        client_ip = get_client_ip()
+        allowed, retry_after = check_rate_limit('otp_verify', client_ip, max_requests=5, window_seconds=300)
+        if not allowed:
+            if request.is_json:
+                return jsonify({'error': f'Too many verification attempts. Please wait {retry_after} seconds.'}), 429
+            flash(f'Too many verification attempts. Please try again in 5 minutes.', 'error')
+            return render_template('customer/reset_password.html', phone=prefill_phone)
+
         data = request.get_json(silent=True) or request.form
         raw_phone = (data.get('phone') or prefill_phone or '').strip()
         phone = normalize_phone(raw_phone)
@@ -740,8 +749,18 @@ def place_order():
 
 @app.route('/api/checkout', methods=['POST'])
 def checkout():
+    client_ip = get_client_ip()
+    allowed, retry_after = check_rate_limit('orders', client_ip, max_requests=10, window_seconds=60)
+    if not allowed:
+        return jsonify({'status': 'error', 'message': f'Too many orders placed from this IP. Please wait {retry_after} seconds.'}), 429
+
     data = request.json or {}
     try:
+        raw_phone = (data.get('phone') or '').strip()
+        phone_digits = re.sub(r'[^0-9]', '', raw_phone)
+        if raw_phone and len(phone_digits) < 8:
+            return jsonify({'status': 'error', 'message': 'Please provide a valid phone number with at least 8 digits.'}), 400
+
         tg_user = data.get('telegram_user')
         tg_id = str(tg_user.get('id')) if tg_user and tg_user.get('id') else None
         
