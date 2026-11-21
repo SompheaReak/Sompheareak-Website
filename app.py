@@ -634,19 +634,15 @@ def checkout_page():
 
 def _handle_order_post_processing(order):
     """
-    1. Awards credit points if customer is logged in or registered with phone.
+    1. Awards credit points ONLY if customer is logged in to their account.
+       Strict rule: No logged-in account = No credit (guests cannot earn credit).
     2. Sends real-time Telegram order alert.
     """
     try:
         cust_id = session.get('customer_id')
         user = CustomerUser.query.get(cust_id) if cust_id else None
-        if not user and order.customer_phone:
-            raw_phone = order.customer_phone.strip()
-            clean_phone = normalize_phone(raw_phone)
-            user = CustomerUser.query.filter(
-                db.or_(CustomerUser.phone == clean_phone, CustomerUser.phone == raw_phone)
-            ).first()
 
+        # STRICT RULE: No logged-in account = No credit. Guests cannot earn credit points.
         if user:
             credit_rules = SystemSetting.get_val('credit_rules', {"points_per_usd": 10})
             pts_per_usd = max(0, int(credit_rules.get('points_per_usd', 10)))
