@@ -116,22 +116,47 @@
         
         <!-- 🌟 UNIFIED HEADER (INDEX - TELEGRAM ON LEFT) 🌟 -->
         <header class="bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 py-2.5 flex items-center justify-between relative z-20">
-            <!-- Left: Telegram Profile Login Button -->
-            <div id="tg-auth-container" class="w-9 h-9 flex items-center justify-center relative shrink-0">
-                <button id="tg-login-btn" onclick="openTgLoginModal()" class="w-9 h-9 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full border border-blue-100 active:scale-90 transition-transform hidden">
-                    <i class="fa-solid fa-user text-xs"></i>
-                </button>
-                <button id="tg-user-profile" onclick="toggleProfileMenu()" class="hidden w-9 h-9 relative rounded-full border border-[#ea580c] p-[1px] active:scale-90 transition-transform bg-white shadow-sm">
-                    <img id="tg-user-avatar" src="" class="w-full h-full rounded-full object-cover">
-                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full border border-white flex items-center justify-center shadow-md">
-                        <i class="fa-brands fa-telegram text-[6px] text-white"></i>
+            <!-- Left: Customer Profile / Sign-in -->
+            {% if current_customer %}
+            <div class="relative shrink-0" id="customer-profile-container">
+                <button onclick="toggleProfileDropdown()" class="flex items-center gap-1.5 bg-orange-50 border border-orange-200 hover:border-orange-300 rounded-full pl-1 pr-2.5 py-1 text-left transition-all active:scale-95 shadow-sm">
+                    <div class="w-7 h-7 rounded-full bg-[#ea580c] text-white flex items-center justify-center font-black text-xs shadow-inner">
+                        {{ (current_customer.full_name or current_customer.phone)[:1].upper() }}
                     </div>
+                    <div class="hidden sm:flex flex-col">
+                        <span class="text-[11px] font-black text-slate-900 leading-tight truncate max-w-[80px]">{{ current_customer.full_name or current_customer.phone }}</span>
+                        <span class="text-[9px] font-extrabold text-[#ea580c] leading-none">{{ current_customer.credit_balance or 0 }} pts</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-[8px] text-slate-400 ml-0.5"></i>
                 </button>
-                <div id="tg-profile-menu" class="absolute top-12 left-0 bg-white border border-slate-100 shadow-xl rounded-2xl p-4 hidden flex-col w-56 transition-all z-50">
-                    <p id="tg-user-name" class="font-bold text-sm text-slate-800 truncate"></p>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1"><i class="fa-brands fa-telegram text-blue-500 mr-1"></i>Telegram Verified</p>
+                <div id="customer-profile-dropdown" class="hidden absolute top-11 left-0 bg-white border border-slate-100 shadow-xl rounded-2xl p-3 w-56 flex flex-col gap-2 z-50">
+                    <div class="px-2 py-1 border-b border-slate-100">
+                        <p class="font-black text-xs text-slate-900 truncate">{{ current_customer.full_name or 'Member' }}</p>
+                        <p class="text-[10px] text-slate-400 font-bold truncate">{{ current_customer.phone }}</p>
+                        {% if current_customer.telegram %}
+                        <p class="text-[9px] text-blue-500 font-bold truncate"><i class="fa-brands fa-telegram mr-1"></i>{{ current_customer.telegram }}</p>
+                        {% endif %}
+                        <div class="mt-1.5 inline-flex items-center gap-1 bg-orange-50 text-[#ea580c] text-[10px] font-black px-2 py-0.5 rounded-full border border-orange-100">
+                            <i class="fa-solid fa-coins text-[9px]"></i> {{ current_customer.credit_balance or 0 }} Credits
+                        </div>
+                    </div>
+                    <a href="{{ url_for('customer_account') }}" class="flex items-center gap-2 px-2.5 py-2 text-xs font-bold text-slate-700 hover:bg-orange-50 hover:text-[#ea580c] rounded-xl transition-all">
+                        <i class="fa-solid fa-user-gear text-slate-400 text-xs"></i> My Account & Vouchers
+                    </a>
+                    <a href="{{ url_for('customer_logout') }}" class="flex items-center gap-2 px-2.5 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                        <i class="fa-solid fa-right-from-bracket text-red-400 text-xs"></i> Sign Out
+                    </a>
                 </div>
             </div>
+            {% else %}
+            <a href="{{ url_for('customer_login') }}" class="relative w-9 h-9 flex items-center justify-center bg-orange-50 border border-orange-200 rounded-full text-[#ea580c] shadow-sm hover:bg-orange-100 active:scale-90 transition-transform shrink-0" title="Sign In / Register">
+                <i class="fa-solid fa-user text-xs"></i>
+                <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#ea580c]"></span>
+                </span>
+            </a>
+            {% endif %}
             
             <!-- Center: Logo + Title (NO BORDERS OR SHADOWS ON LOGO) -->
             <div class="flex items-center justify-center flex-1 px-2 gap-2.5 min-w-0 cursor-pointer group" onclick="window.scrollTo({top:0, behavior:'smooth'})">
@@ -351,10 +376,22 @@
                     </div>
                 </div>
 
+                {% if current_customer %}
+                <div class="flex items-center gap-3 bg-orange-50 border border-orange-100 p-3.5 rounded-2xl mb-4 shadow-sm">
+                    <div class="w-10 h-10 rounded-full bg-[#ea580c] text-white flex items-center justify-center overflow-hidden shrink-0 font-black text-sm shadow-inner">
+                        {{ (current_customer.full_name or current_customer.phone)[:1].upper() }}
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-slate-900 leading-tight">Ordering as <span class="text-[#ea580c]">{{ current_customer.full_name or current_customer.phone }}</span></p>
+                        <p class="text-[9px] font-bold text-orange-600 uppercase tracking-widest mt-0.5"><i class="fa-solid fa-coins mr-1"></i> {{ current_customer.credit_balance or 0 }} Credit Points &bull; Member</p>
+                    </div>
+                </div>
+                {% endif %}
+
                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង (Contact Info)</label>
-                <input type="text" id="uni-cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Full Name) *">
-                <input type="tel" id="uni-cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone Number) *">
-                <input type="text" id="uni-cust-telegram" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="Telegram (Username @ ឬ លេខទូរស័ព្ទ) *">
+                <input type="text" id="uni-cust-name" value="{{ current_customer.full_name if current_customer else '' }}" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Full Name) *">
+                <input type="tel" id="uni-cust-phone" value="{{ current_customer.phone if current_customer else '' }}" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone Number) *">
+                <input type="text" id="uni-cust-telegram" value="{{ current_customer.telegram if current_customer else '' }}" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="Telegram (Username @ ឬ លេខទូរស័ព្ទ) *">
                 
                 <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន (Address)</label>
                 <textarea id="uni-cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ (Full Delivery Address) *"></textarea>
@@ -470,6 +507,14 @@
             closeTgLoginModal();
         }
 
+        function toggleProfileDropdown() {
+            const menu = document.getElementById('customer-profile-dropdown');
+            if (menu) {
+                menu.classList.toggle('hidden');
+                menu.classList.toggle('flex');
+            }
+        }
+
         function loadSavedTelegramUser() {
             try {
                 const saved = localStorage.getItem('tg_user');
@@ -477,17 +522,20 @@
                     tgUser = JSON.parse(saved);
                     renderTelegramAuthUI();
                 } else {
-                    document.getElementById('tg-login-btn').classList.remove('hidden');
+                    const btn = document.getElementById('tg-login-btn');
+                    if (btn) btn.classList.remove('hidden');
                 }
-            } catch (e) { document.getElementById('tg-login-btn').classList.remove('hidden'); }
+            } catch (e) {
+                const btn = document.getElementById('tg-login-btn');
+                if (btn) btn.classList.remove('hidden');
+            }
         }
 
         function toggleProfileMenu() {
             const menu = document.getElementById('tg-profile-menu');
-            if (menu.classList.contains('hidden')) {
-                menu.classList.remove('hidden'); menu.classList.add('flex');
-            } else {
-                menu.classList.add('hidden'); menu.classList.remove('flex');
+            if (menu) {
+                menu.classList.toggle('hidden');
+                menu.classList.toggle('flex');
             }
         }
 
@@ -499,10 +547,11 @@
             const checkoutBadge = document.getElementById('checkout-tg-badge');
             
             if (tgUser) {
-                loginBtn.classList.add('hidden'); profileBtn.classList.remove('hidden');
+                if (loginBtn) loginBtn.classList.add('hidden');
+                if (profileBtn) profileBtn.classList.remove('hidden');
                 const fullName = (tgUser.first_name + ' ' + (tgUser.last_name || '')).trim();
-                avatarImg.src = tgUser.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0284c7&color=fff`;
-                nameText.innerText = fullName;
+                if (avatarImg) avatarImg.src = tgUser.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0284c7&color=fff`;
+                if (nameText) nameText.innerText = fullName;
 
                 if (document.getElementById('uni-cust-name') && !document.getElementById('uni-cust-name').value) {
                     document.getElementById('uni-cust-name').value = fullName;
@@ -510,20 +559,31 @@
                 if (checkoutBadge) {
                     checkoutBadge.classList.remove('hidden');
                     checkoutBadge.classList.add('flex');
-                    document.getElementById('checkout-tg-avatar').src = avatarImg.src;
-                    document.getElementById('checkout-tg-name').innerText = fullName;
+                    const cImg = document.getElementById('checkout-tg-avatar');
+                    const cName = document.getElementById('checkout-tg-name');
+                    if (cImg && avatarImg) cImg.src = avatarImg.src;
+                    if (cName) cName.innerText = fullName;
                 }
             } else {
-                loginBtn.classList.remove('hidden'); profileBtn.classList.add('hidden');
+                if (loginBtn) loginBtn.classList.remove('hidden');
+                if (profileBtn) profileBtn.classList.add('hidden');
                 if (checkoutBadge) checkoutBadge.classList.add('hidden');
             }
         }
 
         document.addEventListener('click', (e) => {
+            const custContainer = document.getElementById('customer-profile-container');
+            const custMenu = document.getElementById('customer-profile-dropdown');
+            if (custContainer && custMenu && !custContainer.contains(e.target)) {
+                custMenu.classList.add('hidden');
+                custMenu.classList.remove('flex');
+            }
+
             const container = document.getElementById('tg-auth-container');
             const menu = document.getElementById('tg-profile-menu');
             if (container && !container.contains(e.target) && menu && !menu.classList.contains('hidden')) {
-                menu.classList.add('hidden'); menu.classList.remove('flex');
+                menu.classList.add('hidden');
+                menu.classList.remove('flex');
             }
         });
 
