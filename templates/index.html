@@ -73,8 +73,31 @@
         
         /* Adjusted shadow opacity to be much softer so images are clearer */
         .gradient-bottom { background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 40%, transparent 100%); }
-        .gradient-side { background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 40%, transparent 100%); }
-        
+        /* Taobao-style Uneven Waterfall / Masonry Feed */
+        .taobao-waterfall {
+            column-count: 2;
+            column-gap: 0.75rem;
+        }
+        @media (min-width: 640px) {
+            .taobao-waterfall {
+                column-count: 3;
+                column-gap: 1rem;
+            }
+        }
+        @media (min-width: 768px) {
+            .taobao-waterfall {
+                column-count: 4;
+                column-gap: 1rem;
+            }
+        }
+        .taobao-waterfall-card {
+            break-inside: avoid;
+            -webkit-column-break-inside: avoid;
+            page-break-inside: avoid;
+            display: inline-block;
+            width: 100%;
+        }
+
         /* Glassmorphism */
         .glass-panel {
             background: rgba(255, 255, 255, 0.85); 
@@ -343,27 +366,35 @@
             </div>
 
             <!-- Product Grid -->
-            <div id="all-products-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-                <!-- Skeleton loader -->
-                <div class="animate-pulse bg-white rounded-[20px] p-3 border border-slate-200/80 h-64 flex flex-col justify-between">
-                    <div class="bg-slate-100 rounded-xl aspect-square w-full mb-3"></div>
-                    <div class="h-4 bg-slate-100 rounded w-3/4 mb-2"></div>
-                    <div class="h-4 bg-slate-100 rounded w-1/2"></div>
+            <div id="all-products-grid" class="taobao-waterfall columns-2 sm:columns-3 md:columns-4 gap-3 sm:gap-4">
+                <!-- Skeleton loader (staggered heights like Taobao) -->
+                <div class="taobao-waterfall-card mb-3 sm:mb-4">
+                    <div class="animate-pulse bg-white rounded-[20px] p-3 border border-slate-200/80">
+                        <div class="bg-slate-100 rounded-xl aspect-[3/4] w-full mb-3"></div>
+                        <div class="h-4 bg-slate-100 rounded w-3/4 mb-2"></div>
+                        <div class="h-4 bg-slate-100 rounded w-1/2"></div>
+                    </div>
                 </div>
-                <div class="animate-pulse bg-white rounded-[20px] p-3 border border-slate-200/80 h-64 flex flex-col justify-between">
-                    <div class="bg-slate-100 rounded-xl aspect-square w-full mb-3"></div>
-                    <div class="h-4 bg-slate-100 rounded w-3/4 mb-2"></div>
-                    <div class="h-4 bg-slate-100 rounded w-1/2"></div>
+                <div class="taobao-waterfall-card mb-3 sm:mb-4">
+                    <div class="animate-pulse bg-white rounded-[20px] p-3 border border-slate-200/80">
+                        <div class="bg-slate-100 rounded-xl aspect-square w-full mb-3"></div>
+                        <div class="h-4 bg-slate-100 rounded w-3/4 mb-2"></div>
+                        <div class="h-4 bg-slate-100 rounded w-1/2"></div>
+                    </div>
                 </div>
-                <div class="animate-pulse bg-white rounded-[20px] p-3 border border-slate-200/80 h-64 flex flex-col justify-between">
-                    <div class="bg-slate-100 rounded-xl aspect-square w-full mb-3"></div>
-                    <div class="h-4 bg-slate-100 rounded w-3/4 mb-2"></div>
-                    <div class="h-4 bg-slate-100 rounded w-1/2"></div>
+                <div class="taobao-waterfall-card mb-3 sm:mb-4">
+                    <div class="animate-pulse bg-white rounded-[20px] p-3 border border-slate-200/80">
+                        <div class="bg-slate-100 rounded-xl aspect-[4/5] w-full mb-3"></div>
+                        <div class="h-4 bg-slate-100 rounded w-3/4 mb-2"></div>
+                        <div class="h-4 bg-slate-100 rounded w-1/2"></div>
+                    </div>
                 </div>
-                <div class="animate-pulse bg-white rounded-[20px] p-3 border border-slate-200/80 h-64 flex flex-col justify-between">
-                    <div class="bg-slate-100 rounded-xl aspect-square w-full mb-3"></div>
-                    <div class="h-4 bg-slate-100 rounded w-3/4 mb-2"></div>
-                    <div class="h-4 bg-slate-100 rounded w-1/2"></div>
+                <div class="taobao-waterfall-card mb-3 sm:mb-4">
+                    <div class="animate-pulse bg-white rounded-[20px] p-3 border border-slate-200/80">
+                        <div class="bg-slate-100 rounded-xl aspect-square w-full mb-3"></div>
+                        <div class="h-4 bg-slate-100 rounded w-3/4 mb-2"></div>
+                        <div class="h-4 bg-slate-100 rounded w-1/2"></div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1069,14 +1100,20 @@
             try {
                 const res = await fetch('/api/products/all');
                 const data = await res.json();
-                catalogAllProducts = data.products || [];
+                let prods = data.products || [];
+                // Shuffle array so products in general page are always random on every page load/refresh
+                for (let i = prods.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [prods[i], prods[j]] = [prods[j], prods[i]];
+                }
+                catalogAllProducts = prods;
                 renderCatalogProducts();
             } catch (err) {
                 console.error('Failed to load products:', err);
                 const grid = document.getElementById('all-products-grid');
                 if (grid) {
                     grid.innerHTML = `
-                        <div class="col-span-full text-center py-12 text-slate-400 font-bold text-xs">
+                        <div class="col-span-full text-center py-12 text-slate-400 font-bold text-xs" style="column-span: all; -webkit-column-span: all;">
                             <i class="fa-solid fa-triangle-exclamation text-2xl text-amber-500 mb-2"></i>
                             <p>មិនអាចទាញទិន្នន័យបានទេ (Failed to load products)</p>
                         </div>
@@ -1151,7 +1188,7 @@
 
             if (filtered.length === 0) {
                 grid.innerHTML = `
-                    <div class="col-span-full flex flex-col items-center justify-center py-16 text-center">
+                    <div class="col-span-full flex flex-col items-center justify-center py-16 text-center" style="column-span: all; -webkit-column-span: all;">
                         <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-3 text-slate-400">
                             <i class="fa-solid fa-magnifying-glass-minus text-2xl"></i>
                         </div>
@@ -1162,7 +1199,17 @@
                 return;
             }
 
-            grid.innerHTML = filtered.map(p => {
+            // Taobao-style aspect ratio sequence for uneven card waterfall
+            const aspectPatterns = [
+                'aspect-square',
+                'aspect-[3/4]',
+                'aspect-[4/5]',
+                'aspect-square',
+                'aspect-[4/5]',
+                'aspect-[3/4]'
+            ];
+
+            grid.innerHTML = filtered.map((p, idx) => {
                 const price = parseFloat(p.price) || 0;
                 const discount = parseFloat(p.discount_percent) || 0;
                 const hasDiscount = discount > 0;
@@ -1175,32 +1222,35 @@
                 }
 
                 const imgUrl = p.thumbnail || 'https://placehold.co/400x400/f8fafc/ea580c?text=SompheaReak';
+                const cardAspect = aspectPatterns[idx % aspectPatterns.length];
 
                 return `
-                <div class="bg-white rounded-[20px] border border-slate-200/80 shadow-sm overflow-hidden flex flex-col group hover:shadow-md hover:border-orange-200 hover:-translate-y-0.5 transition-all">
-                    <div class="aspect-square bg-slate-50/50 relative overflow-hidden flex items-center justify-center p-3 border-b border-slate-100 cursor-pointer" onclick="openImageViewer('${imgUrl}')">
-                        ${badgeHtml}
-                        <img src="${imgUrl}" alt="${p.title}" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300" onerror="this.src='https://placehold.co/400x400/f8fafc/ea580c?text=Product'">
-                    </div>
-                    <div class="p-3 flex flex-col flex-grow justify-between">
-                        <div>
-                            <div class="flex items-center justify-between text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                                <span>${p.category || p.store || 'Item'}</span>
-                                ${p.product_code ? `<span class="bg-slate-100 px-1 py-0.5 rounded text-[8px] font-mono text-slate-500">#${p.product_code}</span>` : ''}
-                            </div>
-                            <h3 class="font-black text-xs text-slate-900 line-clamp-2 leading-tight group-hover:text-[#ea580c] transition-colors" title="${p.title}">
-                                ${p.title}
-                            </h3>
+                <div class="taobao-waterfall-card mb-3 sm:mb-4">
+                    <div class="bg-white rounded-[20px] border border-slate-200/80 shadow-sm overflow-hidden flex flex-col group hover:shadow-md hover:border-orange-200 hover:-translate-y-0.5 transition-all">
+                        <div class="${cardAspect} bg-slate-50/50 relative overflow-hidden flex items-center justify-center p-3 border-b border-slate-100 cursor-pointer" onclick="openImageViewer('${imgUrl}')">
+                            ${badgeHtml}
+                            <img src="${imgUrl}" alt="${p.title}" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300" onerror="this.src='https://placehold.co/400x400/f8fafc/ea580c?text=Product'">
                         </div>
-                        <div class="mt-3 pt-2 border-t border-slate-100 flex items-end justify-between">
+                        <div class="p-3 flex flex-col flex-grow justify-between">
                             <div>
-                                ${hasDiscount ? `<span class="text-[9px] font-bold text-slate-400 line-through block leading-none">$${price.toFixed(2)}</span>` : ''}
-                                <span class="font-black text-xs sm:text-sm text-[#ea580c] leading-none block">$${finalPrice.toFixed(2)}</span>
-                                <span class="text-[8px] font-bold text-slate-400 leading-none mt-0.5 block">${priceKHR.toLocaleString()}៛</span>
+                                <div class="flex items-center justify-between text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                                    <span>${p.category || p.store || 'Item'}</span>
+                                    ${p.product_code ? `<span class="bg-slate-100 px-1 py-0.5 rounded text-[8px] font-mono text-slate-500">#${p.product_code}</span>` : ''}
+                                </div>
+                                <h3 class="font-black text-xs text-slate-900 line-clamp-2 leading-tight group-hover:text-[#ea580c] transition-colors" title="${p.title}">
+                                    ${p.title}
+                                </h3>
                             </div>
-                            <button onclick="addCatalogProductToCart(${p.id})" class="w-8 h-8 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center text-slate-700 hover:bg-[#ea580c] hover:text-white hover:border-[#ea580c] transition-all shadow-sm active:scale-90 shrink-0" title="Add to Cart">
-                                <i class="fa-solid fa-plus text-[10px]"></i>
-                            </button>
+                            <div class="mt-3 pt-2 border-t border-slate-100 flex items-end justify-between">
+                                <div>
+                                    ${hasDiscount ? `<span class="text-[9px] font-bold text-slate-400 line-through block leading-none">$${price.toFixed(2)}</span>` : ''}
+                                    <span class="font-black text-xs sm:text-sm text-[#ea580c] leading-none block">$${finalPrice.toFixed(2)}</span>
+                                    <span class="text-[8px] font-bold text-slate-400 leading-none mt-0.5 block">${priceKHR.toLocaleString()}៛</span>
+                                </div>
+                                <button onclick="addCatalogProductToCart(${p.id})" class="w-8 h-8 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center text-slate-700 hover:bg-[#ea580c] hover:text-white hover:border-[#ea580c] transition-all shadow-sm active:scale-90 shrink-0" title="Add to Cart">
+                                    <i class="fa-solid fa-plus text-[10px]"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
