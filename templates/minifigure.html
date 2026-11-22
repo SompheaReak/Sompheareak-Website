@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#18181b" media="(prefers-color-scheme: dark)">
   <title>Somphea Reak - Minifigure Store</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,7 +14,14 @@
     body { 
         font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif; 
         -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
         background-color: #fcfbf9;
+    }
+
+    @media (max-width: 768px) {
+        input, select, textarea {
+            font-size: 16px !important;
+        }
     }
     h1, h2, h3, h4, .khmer-title { font-family: 'Moul', serif; }
     .pka-chan-bg {
@@ -59,7 +68,7 @@
   <div class="pka-chan-bg"></div>
 
   <!-- ==================== FULL SCREEN SURVEY MODAL ==================== -->
-  <div id="survey-modal" class="fixed inset-0 z-[8500] bg-white flex flex-col overflow-hidden survey-hidden">
+  <div id="survey-modal" class="fixed inset-0 z-[8500] bg-white flex flex-col overflow-hidden survey-hidden" style="display: none;">
       
       <!-- Close Button -->
       <button onclick="closeSurvey()" class="absolute top-5 right-5 w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors z-50 shadow-sm border border-gray-100">
@@ -199,67 +208,69 @@
       <img id="viewer-img" src="" class="max-w-full max-h-[85vh] object-contain relative z-10 rounded-xl shadow-2xl">
   </div>
 
-  <!-- 🌟 UNIFIED STICKY HEADER (STORE - BACK BUTTON ON LEFT) 🌟 -->
-  <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 py-2.5 flex items-center justify-between shadow-sm">
-      
-      <!-- Left: Back Button -->
-      <div class="w-9 h-9 flex items-center justify-center relative shrink-0">
-          <a href="/" class="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform hover:bg-gray-100">
-              <i class="fa-solid fa-arrow-left text-xs"></i>
-          </a>
-      </div>
-      
-      <!-- Center: Logo + Title -->
-      <div class="flex items-center justify-center flex-1 px-2 gap-2.5 min-w-0 cursor-pointer group" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-          <img src="/static/images/logo.png" onerror="this.src='/static/images/logo.jpg'" class="w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0 group-hover:scale-105 transition-transform" alt="Logo">
-          <div class="flex flex-col justify-center text-left">
-              <h1 class="text-[15px] sm:text-lg font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5">
-                  សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] whitespace-nowrap text-slate-600">- Somphea Reak</span>
-              </h1>
-              <p class="text-[9px] font-extrabold text-[#ea580c] uppercase tracking-widest leading-none mt-0.5">Minifigure Vault</p>
+  <!-- 🌟 UNIFIED STICKY HEADER & SEARCH WRAPPER 🌟 -->
+  <div class="sticky top-0 z-[100] w-full flex flex-col shadow-sm">
+      <header class="bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 py-2.5 flex items-center justify-between">
+          
+          <!-- Left: Back Button -->
+          <div class="w-9 h-9 flex items-center justify-center relative shrink-0">
+              <a href="/" class="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform hover:bg-gray-100">
+                  <i class="fa-solid fa-arrow-left text-xs"></i>
+              </a>
           </div>
-      </div>
-      
-      <!-- Right: Customer Credit Box (Always Visible) + Cart Button -->
-      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {% if current_customer %}
-          <a href="{{ url_for('customer_account') }}" class="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-[11px] font-black shadow-sm shadow-orange-500/20 active:scale-95 transition-all shrink-0" title="Your Credit Points: {{ current_customer.credit_balance or 0 }}">
-              <i class="fa-solid fa-coins text-yellow-200 text-xs"></i>
-              <span>{{ current_customer.credit_balance or 0 }}</span>
-              <span class="text-[8px] sm:text-[9px] opacity-90 uppercase font-bold tracking-tight">Credits</span>
-          </a>
-          {% else %}
-          <a href="{{ url_for('customer_login') }}" class="flex items-center gap-1.5 bg-amber-50 border border-amber-200 hover:border-amber-400 text-amber-800 hover:text-[#ea580c] px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-[11px] font-black shadow-xs active:scale-95 transition-all shrink-0" title="0 Credits (Sign in to earn credits)">
-              <i class="fa-solid fa-coins text-amber-500 text-xs"></i>
-              <span>0</span>
-              <span class="text-[8px] sm:text-[9px] text-amber-700 uppercase font-bold tracking-tight">Credits</span>
-          </a>
-          {% endif %}
-          <button onclick="if(typeof window.openUniversalCart === 'function') window.openUniversalCart(); else if (typeof window.openCartDrawer === 'function') window.openCartDrawer();" class="relative w-9 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]" title="Cart">
-              <i class="fa-solid fa-cart-shopping text-xs"></i>
-              <span id="cart-badge" class="cart-badge-count absolute -top-1 -right-1 bg-[#ea580c] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden border border-white">0</span>
-          </button>
-      </div>
-  </header>
-
-  <!-- SEARCH & CATEGORY PILLS -->
-  <section class="bg-white/95 backdrop-blur-xl border-b border-gray-100 sticky top-[57px] z-[95] px-2.5 py-2 space-y-2 shadow-sm">
-      <div class="max-w-6xl mx-auto flex items-center gap-2">
-          <div class="relative flex-1">
-              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
-              <input type="text" id="minifig-search" oninput="handleSearchInput()" placeholder="Search figures..." class="search-input w-full pl-8 pr-7 py-1.5 text-[11px] font-bold outline-none text-gray-900 placeholder-gray-400">
-              <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
-                  <i class="fa-solid fa-circle-xmark text-xs"></i>
+          
+          <!-- Center: Logo + Title -->
+          <div class="flex items-center justify-center flex-1 px-2 gap-2 min-w-0 cursor-pointer group" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+              <img src="/static/images/logo.png" onerror="this.src='/static/images/logo.jpg'" class="w-9 h-9 sm:w-11 sm:h-11 object-contain shrink-0 group-hover:scale-105 transition-transform" alt="Logo">
+              <div class="flex flex-col justify-center text-left min-w-0">
+                  <h1 class="text-[13px] sm:text-base md:text-lg font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5 truncate">
+                      សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] whitespace-nowrap text-slate-600 font-semibold text-xs sm:text-sm">- Somphea Reak</span>
+                  </h1>
+                  <p class="text-[8px] sm:text-[9px] font-extrabold text-[#ea580c] uppercase tracking-widest leading-none mt-0.5">Minifigure Vault</p>
+              </div>
+          </div>
+          
+          <!-- Right: Customer Credit Box (Always Visible) + Cart Button -->
+          <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {% if current_customer %}
+              <a href="{{ url_for('customer_account') }}" class="flex items-center gap-1 sm:gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-[11px] font-black shadow-sm shadow-orange-500/20 active:scale-95 transition-all shrink-0" title="Your Credit Points: {{ current_customer.credit_balance or 0 }}">
+                  <i class="fa-solid fa-coins text-yellow-200 text-xs"></i>
+                  <span>{{ current_customer.credit_balance or 0 }}</span>
+                  <span class="hidden xs:inline text-[8px] sm:text-[9px] opacity-90 uppercase font-bold tracking-tight">Pts</span>
+              </a>
+              {% else %}
+              <a href="{{ url_for('customer_login') }}" class="flex items-center gap-1 sm:gap-1.5 bg-amber-50 border border-amber-200 hover:border-amber-400 text-amber-800 hover:text-[#ea580c] px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-[11px] font-black shadow-xs active:scale-95 transition-all shrink-0" title="0 Credits (Sign in to earn credits)">
+                  <i class="fa-solid fa-coins text-amber-500 text-xs"></i>
+                  <span>0</span>
+                  <span class="hidden xs:inline text-[8px] sm:text-[9px] text-amber-700 uppercase font-bold tracking-tight">Pts</span>
+              </a>
+              {% endif %}
+              <button onclick="if(typeof window.openUniversalCart === 'function') window.openUniversalCart(); else if (typeof window.openCartDrawer === 'function') window.openCartDrawer();" class="relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]" title="Cart">
+                  <i class="fa-solid fa-cart-shopping text-xs"></i>
+                  <span id="cart-badge" class="cart-badge-count absolute -top-1 -right-1 bg-[#ea580c] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden border border-white">0</span>
               </button>
           </div>
-      </div>
+      </header>
 
-      <div class="max-w-6xl mx-auto">
-          <div id="category-filters" class="flex overflow-x-auto gap-1.5 scrollbar-hide py-1">
-              <!-- Dynamically populated by JS (including the new Filter button) -->
+      <!-- SEARCH & CATEGORY PILLS (Inside sticky wrapper) -->
+      <section class="bg-white/95 backdrop-blur-xl border-b border-gray-100 px-2.5 py-2 space-y-2 shadow-xs">
+          <div class="max-w-6xl mx-auto flex items-center gap-2">
+              <div class="relative flex-1">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px]"></i>
+                  <input type="text" id="minifig-search" oninput="handleSearchInput()" placeholder="Search figures..." class="search-input w-full pl-8 pr-7 py-2 text-xs font-bold outline-none text-gray-900 placeholder-gray-400">
+                  <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
+                      <i class="fa-solid fa-circle-xmark text-xs"></i>
+                  </button>
+              </div>
           </div>
-      </div>
-  </section>
+
+          <div class="max-w-6xl mx-auto">
+              <div id="category-filters" class="flex overflow-x-auto gap-1.5 scrollbar-hide py-1">
+                  <!-- Dynamically populated by JS (including the new Filter button) -->
+              </div>
+          </div>
+      </section>
+  </div>
 
   <!-- COUNTER -->
   <div class="max-w-6xl mx-auto px-3 pt-2.5 flex justify-between items-center text-[9px] font-extrabold text-gray-400 uppercase tracking-widest">

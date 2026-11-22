@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#18181b" media="(prefers-color-scheme: dark)">
     <meta name="description" content="Somphea Reak Premium Studio - Custom Italian modular bracelets, Lego & Minifigures, and exclusive lucky draw collectibles in Cambodia.">
     <meta name="robots" content="index, follow">
     <meta property="og:title" content="Somphea Reak | Premium Studio">
@@ -28,6 +29,14 @@
             background-color: #f6f5f3;
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
+            touch-action: manipulation;
+        }
+
+        /* Prevent iOS auto-zoom on form inputs */
+        @media (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
         }
         
         h1, h2, h3, h4, .khmer-title { font-family: 'Moul', serif; font-weight: normal; }
@@ -161,41 +170,41 @@
                     <i class="fa-solid fa-user text-xs"></i>
                 </a>
                 
-                <!-- Explicit 'Sign Up Now' Button Next to Profile -->
-                <a href="{{ url_for('customer_register') }}" class="flex items-center gap-1.5 bg-[#ea580c] hover:bg-orange-600 text-white px-2.5 sm:px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-md shadow-orange-500/20 active:scale-95 transition-all shrink-0 whitespace-nowrap">
+                <!-- Explicit 'Sign Up Now' Button (visible on tablet/desktop to keep mobile header clean) -->
+                <a href="{{ url_for('customer_register') }}" class="hidden sm:flex items-center gap-1.5 bg-[#ea580c] hover:bg-orange-600 text-white px-2.5 sm:px-3.5 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-md shadow-orange-500/20 active:scale-95 transition-all shrink-0 whitespace-nowrap">
                     <i class="fa-solid fa-user-plus text-[9px] sm:text-[10px]"></i>
-                    <span>Sign Up Now</span>
+                    <span>Sign Up</span>
                 </a>
             </div>
             {% endif %}
             
             <!-- Center: Logo + Title (NO BORDERS OR SHADOWS ON LOGO) -->
-            <div class="flex items-center justify-center flex-1 px-2 gap-2.5 min-w-0 cursor-pointer group" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-                <img src="/static/images/logo.png" onerror="this.src='/static/images/logo.jpg'" class="w-11 h-11 sm:w-12 sm:h-12 object-contain shrink-0 group-hover:scale-105 transition-transform" alt="Logo">
-                <div class="flex flex-col justify-center text-left">
-                    <h1 class="text-[15px] sm:text-lg font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5">
-                        សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] whitespace-nowrap text-slate-600">- Somphea Reak</span>
+            <div class="flex items-center justify-center flex-1 px-1 sm:px-2 gap-1.5 sm:gap-2.5 min-w-0 cursor-pointer group" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+                <img src="/static/images/logo.png" onerror="this.src='/static/images/logo.jpg'" class="w-8 h-8 sm:w-11 sm:h-11 object-contain shrink-0 group-hover:scale-105 transition-transform" alt="Logo">
+                <div class="flex flex-col justify-center text-left min-w-0">
+                    <h1 class="text-[13px] sm:text-base md:text-lg font-black text-gray-900 leading-tight tracking-tight font-['Moul'] pb-0.5 truncate">
+                        សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] whitespace-nowrap text-slate-600 font-semibold text-[10px] sm:text-sm">- Somphea Reak</span>
                     </h1>
-                    <p class="text-[9px] font-extrabold text-[#ea580c] uppercase tracking-widest leading-none mt-0.5">Premium Studio</p>
+                    <p class="text-[8px] sm:text-[9px] font-extrabold text-[#ea580c] uppercase tracking-widest leading-none mt-0.5">Premium Studio</p>
                 </div>
             </div>
             
             <!-- Right: Customer Credit Box (Always Visible) + Universal Cart Button -->
-            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <div class="flex items-center gap-1 sm:gap-2 shrink-0">
                 {% if current_customer %}
-                <a href="{{ url_for('customer_account') }}" class="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-2.5 py-1.5 rounded-full text-xs font-black shadow-sm shadow-orange-500/20 active:scale-95 transition-all shrink-0" title="Your Credit Points: {{ current_customer.credit_balance or 0 }}">
-                    <i class="fa-solid fa-coins text-yellow-200 text-xs"></i>
+                <a href="{{ url_for('customer_account') }}" class="flex items-center gap-1 sm:gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-black shadow-sm shadow-orange-500/20 active:scale-95 transition-all shrink-0" title="Your Credit Points: {{ current_customer.credit_balance or 0 }}">
+                    <i class="fa-solid fa-coins text-yellow-200 text-[10px] sm:text-xs"></i>
                     <span>{{ current_customer.credit_balance or 0 }}</span>
-                    <span class="text-[9px] opacity-90 uppercase font-bold tracking-tight">Credits</span>
+                    <span class="hidden xs:inline text-[9px] opacity-90 uppercase font-bold tracking-tight">Pts</span>
                 </a>
                 {% else %}
-                <a href="{{ url_for('customer_login') }}" class="flex items-center gap-1.5 bg-amber-50 border border-amber-200 hover:border-amber-400 text-amber-800 hover:text-[#ea580c] px-2.5 py-1.5 rounded-full text-xs font-black shadow-xs active:scale-95 transition-all shrink-0" title="0 Credits (Sign in to earn credits)">
-                    <i class="fa-solid fa-coins text-amber-500 text-xs"></i>
+                <a href="{{ url_for('customer_login') }}" class="flex items-center gap-1 sm:gap-1.5 bg-amber-50 border border-amber-200 hover:border-amber-400 text-amber-800 hover:text-[#ea580c] px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-black shadow-xs active:scale-95 transition-all shrink-0" title="0 Credits (Sign in to earn credits)">
+                    <i class="fa-solid fa-coins text-amber-500 text-[10px] sm:text-xs"></i>
                     <span>0</span>
-                    <span class="text-[9px] text-amber-700 uppercase font-bold tracking-tight">Credits</span>
+                    <span class="hidden xs:inline text-[9px] text-amber-700 uppercase font-bold tracking-tight">Pts</span>
                 </a>
                 {% endif %}
-                <button onclick="openUniversalCart()" class="relative w-9 h-9 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]" title="Cart">
+                <button onclick="openUniversalCart()" class="relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0 hover:text-[#ea580c]" title="Cart">
                     <i class="fa-solid fa-cart-shopping text-xs"></i>
                     <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md hidden cart-badge-count">0</span>
                 </button>
@@ -359,7 +368,7 @@
     </main>
 
     <!-- 🌟 APP-STYLE BOTTOM NAVIGATION (Cart / Credits / Telegram / Orders / Account) 🌟 -->
-    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-[430px] h-[68px] glass-panel rounded-[28px] flex items-center justify-around px-2 z-40 shadow-xl border border-white/60">
+    <nav class="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-[430px] h-[68px] glass-panel rounded-[28px] flex items-center justify-around px-2 z-40 shadow-xl border border-white/60">
         
         <!-- 1. Open Cart -->
         <button onclick="openUniversalCart()" class="w-12 sm:w-14 h-full flex items-center justify-center text-slate-500 hover:text-[#ea580c] flex-col gap-0.5 active:scale-90 transition-transform relative">
@@ -409,9 +418,9 @@
     <!-- CART DRAWER -->
     <div id="universal-cart-drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[8000] flex flex-col justify-end transition-transform duration-300">
         <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeUniversalCart()"></div>
-        <div class="relative w-full h-[85vh] bg-gray-50 rounded-t-[32px] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
+        <div class="relative w-full h-[88dvh] max-h-[88dvh] bg-gray-50 rounded-t-[32px] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
             
-            <div class="bg-white px-5 sm:px-6 py-5 flex items-center justify-between border-b border-gray-100 z-10">
+            <div class="bg-white px-5 sm:px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10 shrink-0">
                 <div>
                     <h2 class="text-xl font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2>
                     <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Your Shopping Cart</p>
@@ -426,7 +435,7 @@
             <div id="universal-cart-items-container" class="flex-1 overflow-y-auto p-4 md:p-5 space-y-3"></div>
             
             <!-- 🌟 NEW: UNIFIED STICKY FOOTER (SELECT ALL, DELETE, CHECKOUT) 🌟 -->
-            <div class="bg-white border-t border-gray-100 p-4 sm:p-5 z-10 pb-8 md:pb-5 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] rounded-t-2xl relative">
+            <div class="bg-white border-t border-gray-100 p-4 sm:p-5 z-10 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] md:pb-5 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] rounded-t-2xl relative shrink-0">
                 <div class="flex items-center justify-between mb-4">
                     <label class="flex items-center gap-2.5 cursor-pointer text-xs font-black text-slate-700">
                         <input type="checkbox" id="select-all-cart" class="universal-cart-checkbox" onchange="toggleSelectAllCart(this)">
