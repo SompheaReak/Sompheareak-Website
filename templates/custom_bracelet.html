@@ -55,8 +55,10 @@
     .bracelet-preview-container::-webkit-scrollbar { display: none; }
 
     .bracelet-link-container {
-      flex: 0 0 10vw; 
-      width: 10vw; 
+      flex: 0 0 11.5vw; 
+      width: 11.5vw; 
+      min-width: 44px;
+      max-width: 64px;
       aspect-ratio: 2 / 3.5;
       position: relative;
       cursor: grab;
@@ -112,7 +114,7 @@
       background-repeat: no-repeat; background-size: contain; vertical-align: middle;
     }
 
-    .style-2-item { aspect-ratio: 9 / 15; position: relative; }
+    .style-2-item { aspect-ratio: 9 / 15.5; position: relative; min-height: 68px; }
     .long-press-zoomable { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
   </style>
 </head>
@@ -321,9 +323,9 @@
   </section>
 
   <!-- CATEGORY & CHARM GALLERIES -->
-  <section class="p-3 sm:p-4 pb-[calc(7rem+env(safe-area-inset-bottom,0px))] max-w-4xl mx-auto">
-    <div id="categoryGallery" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5" style="display: none;"></div>
-    <div id="allCharmsGallery" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-2.5"></div>
+  <section class="px-2 sm:px-4 py-3 sm:py-4 pb-[calc(7rem+env(safe-area-inset-bottom,0px))] max-w-4xl mx-auto">
+    <div id="categoryGallery" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-2.5" style="display: none;"></div>
+    <div id="allCharmsGallery" class="grid grid-cols-8 gap-1.5 sm:gap-2.5"></div>
   </section>
 
   <!-- CHARM SELECTOR DRAWER (Style 1) -->
@@ -340,8 +342,8 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        <div class="flex-grow overflow-y-auto p-4 bg-gray-50">
-            <div id="charmGrid" class="grid grid-cols-7 gap-1.5 pb-20"></div>
+        <div class="flex-grow overflow-y-auto p-2 sm:p-4 bg-gray-50">
+            <div id="charmGrid" class="grid grid-cols-8 gap-1 sm:gap-1.5 pb-20"></div>
         </div>
     </div>
   </div>
@@ -702,11 +704,11 @@
             return `
                 <div onclick="if(!longPressActive && !${isOut}) addCharmById('${c.ui_id}')" 
                      onpointerdown="handleImageTouchStart(event, '${c.image}')" onpointerup="handleImageTouchEnd()" onpointerleave="handleImageTouchEnd()" onpointercancel="handleImageTouchEnd()"
-                     class="relative style-2-item flex flex-col items-center justify-center p-1 bg-white rounded-xl border border-gray-100 shadow-sm transition-shadow hover:shadow-md ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer overflow-hidden'} long-press-zoomable">
-                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[7px] px-1 py-0.5 rounded-bl shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
-                    <img src="${c.image}" class="w-full h-full object-contain drop-shadow-sm pointer-events-none mb-[16px]">
-                    <div class="absolute bottom-0 inset-x-0 w-full text-center bg-gray-50/95 py-1 border-t border-gray-100">
-                        <p class="text-[9px] sm:text-[10px] font-black text-[#ea580c] truncate px-1">${formatNumber(c.price)}៛</p>
+                     class="relative style-2-item flex flex-col items-center justify-center p-0.5 sm:p-1 bg-white rounded-lg sm:rounded-xl border border-gray-100 shadow-sm transition-shadow hover:shadow-md ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer overflow-hidden'} long-press-zoomable">
+                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[6px] sm:text-[7px] px-0.5 sm:px-1 py-0.5 rounded-bl shadow-sm z-20 font-black tracking-widest uppercase leading-none">OUT</div>` : ''}
+                    <img src="${c.image}" class="w-full h-full object-contain drop-shadow-sm pointer-events-none mb-[14px] sm:mb-[16px]">
+                    <div class="absolute bottom-0 inset-x-0 w-full text-center bg-gray-50/95 py-0.5 sm:py-1 border-t border-gray-100">
+                        <p class="text-[8px] sm:text-[9.5px] font-black text-[#ea580c] truncate px-0.5 sm:px-1">${formatNumber(c.price)}៛</p>
                     </div>
                 </div>`;
         }).join('');
@@ -719,11 +721,13 @@
             return `
                 <div onclick="if(!longPressActive && !${isOut}) addCharmById('${c.ui_id}')" 
                      onpointerdown="handleImageTouchStart(event, '${c.image}')" onpointerup="handleImageTouchEnd()" onpointerleave="handleImageTouchEnd()" onpointercancel="handleImageTouchEnd()"
-                     class="relative flex flex-col items-center gap-1 p-1 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer'} long-press-zoomable">
-                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1.5 py-0.5 rounded shadow-sm z-20 font-black tracking-widest uppercase font-['Kantumruy_Pro']">${t('sold_out')}</div>` : ''}
-                    <img src="${c.image}" class="w-full aspect-square object-contain drop-shadow-sm pointer-events-none">
-                    <div class="w-full text-center border-t border-gray-50 pt-0.5 mt-0.5">
-                        <p class="text-[7px] font-black text-gray-900">${formatNumber(c.price)}៛</p>
+                     class="relative flex flex-col items-center justify-between p-0.5 sm:p-1 bg-white rounded-lg border border-gray-100 shadow-sm ${isOut ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-90 transition-transform cursor-pointer'} long-press-zoomable min-h-[58px] sm:min-h-[68px]">
+                    ${isOut ? `<div class="absolute top-0 right-0 bg-red-600 text-white text-[5px] px-1 py-0.5 rounded shadow-sm z-20 font-black tracking-widest uppercase font-['Kantumruy_Pro']">${t('sold_out')}</div>` : ''}
+                    <div class="w-full flex-grow flex items-center justify-center p-0.5 overflow-hidden">
+                        <img src="${c.image}" class="w-full aspect-square object-contain drop-shadow-sm pointer-events-none">
+                    </div>
+                    <div class="w-full text-center border-t border-gray-50 pt-0.5 shrink-0">
+                        <p class="text-[7px] sm:text-[8px] font-black text-gray-900 truncate">${formatNumber(c.price)}៛</p>
                     </div>
                 </div>`;
         }).join('');
