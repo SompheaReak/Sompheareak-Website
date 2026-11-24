@@ -427,7 +427,30 @@
     function updateCartQty(id, delta) { const item = userCart.find(i => i.id === id); if(item && !item.isGacha) { item.qty += delta; if(item.qty < 1) item.qty = 1; if(item.qty > 99) item.qty = 99; saveCart(); renderCartUI(); } }
     function removeCartItem(id) { if(confirm("លុបចេញពីកន្ត្រក?")) { userCart = userCart.filter(i => i.id !== id); saveCart(); renderCartUI(); updateCartBadge(); } }
 
-    function calculateDelivery(subtotalKHR) { if (subtotalKHR === 0 && userCart.filter(i => i.selected).length > 0) return 4000; if (subtotalKHR === 0) return 0; if (subtotalKHR < 20000) return 8000; if (subtotalKHR < 40000) return 6000; return 4000; }
+    let lmDeliveryRules = { free_delivery_enabled: true, min_spend_khr: 80000, standard_delivery_khr: 4000 };
+    async function loadLmDeliveryRules() {
+        try {
+            const res = await fetch('/api/delivery-settings');
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.status === 'success') {
+                    lmDeliveryRules = data;
+                }
+            }
+        } catch(e) {}
+    }
+    loadLmDeliveryRules();
+
+    function calculateDelivery(subtotalKHR) {
+        if (subtotalKHR === 0 && userCart.filter(i => i.selected).length > 0) return 4000;
+        if (subtotalKHR === 0) return 0;
+        if (lmDeliveryRules.free_delivery_enabled && subtotalKHR >= lmDeliveryRules.min_spend_khr) {
+            return 0; // Free delivery
+        }
+        if (subtotalKHR < 20000) return 8000;
+        if (subtotalKHR < 40000) return 6000;
+        return lmDeliveryRules.standard_delivery_khr || 4000;
+    }
     function openCheckout() {
         const selectedItems = userCart.filter(i => i.selected); if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយដើម្បីបន្ត!");
         let subtotalUSD = 0; selectedItems.forEach(item => { subtotalUSD += (item.price * item.qty); });
@@ -454,7 +477,7 @@
         const delivery = calculateDelivery(subtotal * RATE); const totalUSD = subtotal + (delivery / RATE);
 
         try {
-            const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD }) });
+            const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD, deliveryFee: delivery / RATE }) });
             if(res.ok) { alert("Checkout Successful! We will contact you soon."); userCart = userCart.filter(i => !i.selected); saveCart(); window.location.reload(); }
             else { alert("Error sending order"); }
         } catch (e) { alert("Checkout Successful (Demo Mode)"); userCart = userCart.filter(i => !i.selected); saveCart(); window.location.reload(); }

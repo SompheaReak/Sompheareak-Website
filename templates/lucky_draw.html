@@ -743,14 +743,31 @@
         function updateCartQty(id, delta) { const item = userCart.find(i => i.id === id); if(item) { item.qty += delta; if(item.qty < 1) item.qty = 1; if(item.qty > 10) item.qty = 10; saveCart(); renderCartUI(); } }
         function removeCartItem(id) { if(confirm("លុបចេញពីកន្ត្រក? (Remove from cart?)")) { userCart = userCart.filter(i => i.id !== id); saveCart(); renderCartUI(); } }
 
+        let luckyDeliveryRules = { free_delivery_enabled: true, min_spend_khr: 80000, standard_delivery_khr: 6000 };
+        async function loadLuckyDeliveryRules() {
+            try {
+                const res = await fetch('/api/delivery-settings');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.status === 'success') {
+                        luckyDeliveryRules = data;
+                    }
+                }
+            } catch(e) {}
+        }
+        loadLuckyDeliveryRules();
+
         function calculateDelivery(subtotalKHR) {
             if (userCart.filter(i => i.selected).length > 0 && subtotalKHR === 0) return 8000;
             if (subtotalKHR === 0) return 0;
+            if (luckyDeliveryRules.free_delivery_enabled && subtotalKHR >= luckyDeliveryRules.min_spend_khr) {
+                return 0; // Free delivery
+            }
             if (subtotalKHR < 20000) return 8000;
             if (subtotalKHR < 40000) return 6000;
             if (subtotalKHR < 60000) return 4000;
             if (subtotalKHR < 80000) return 2000;
-            return 0; 
+            return luckyDeliveryRules.standard_delivery_khr || 6000; 
         }
 
         function openCheckout() {
@@ -816,7 +833,7 @@
                 const res = await fetch('/api/checkout', { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD }) 
+                    body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD, deliveryFee: delivery / RATE }) 
                 });
                 if(res.ok) { 
                     alert("Order Successful! We will contact you on Telegram soon to process delivery."); 

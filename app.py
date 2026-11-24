@@ -582,6 +582,27 @@ def check_promo():
         'discountAmount': promo.discount_value if promo.discount_type == 'flat' else 0
     })
 
+@app.route('/api/delivery-settings', methods=['GET'])
+def get_delivery_settings():
+    rules = SystemSetting.get_val('delivery_rules', {
+        'free_delivery_enabled': True,
+        'min_spend_for_free_delivery': 20.0,
+        'standard_delivery_fee': 1.5
+    })
+    min_spend = float(rules.get('min_spend_for_free_delivery', 20.0) or 20.0)
+    std_fee = float(rules.get('standard_delivery_fee', 1.5) or 1.5)
+    enabled = bool(rules.get('free_delivery_enabled', True))
+    rate = 4000.0
+    return jsonify({
+        'status': 'success',
+        'free_delivery_enabled': enabled,
+        'min_spend_usd': min_spend,
+        'min_spend_khr': int(round(min_spend * rate)),
+        'standard_delivery_usd': std_fee,
+        'standard_delivery_khr': int(round(std_fee * rate)),
+        'currency_rate': rate
+    })
+
 @app.route('/checkout', methods=['POST'])
 def checkout_page():
     cart_data_raw = request.form.get('cart_data', '[]')
@@ -775,14 +796,30 @@ def place_order():
         else:
             promo_code = None
 
-        final_total = max(0.0, subtotal - discount_amount)
+        delivery_rules = SystemSetting.get_val('delivery_rules', {
+            'free_delivery_enabled': True,
+            'min_spend_for_free_delivery': 20.0,
+            'standard_delivery_fee': 1.5
+        })
+        free_deliv_enabled = bool(delivery_rules.get('free_delivery_enabled', True))
+        free_deliv_threshold = float(delivery_rules.get('min_spend_for_free_delivery', 20.0) or 20.0)
+        standard_fee = float(delivery_rules.get('standard_delivery_fee', 1.5) or 1.5)
+
+        net_spend = max(0.0, subtotal - discount_amount)
+        if free_deliv_enabled and net_spend >= free_deliv_threshold:
+            delivery_fee = 0.0
+        else:
+            delivery_fee = standard_fee
+
+        final_total = round(net_spend + delivery_fee, 2)
 
         new_order = Order(
             customer_name=(request.form.get('name') or '').strip()[:100], 
             customer_phone=(request.form.get('phone') or '').strip()[:20], 
             customer_address=(request.form.get('address') or '').strip(),
             items_json=json.dumps(cart_items), 
-            total_usd=round(final_total, 2), 
+            total_usd=final_total, 
+            delivery_fee=delivery_fee,
             status="Pending",
             promo_code_used=promo_code if discount_amount > 0 else None
         )
@@ -913,8 +950,26 @@ def checkout():
         else:
             promo_code = None
 
-        delivery_fee = max(0.0, float(data.get('deliveryFee', 0) or 0))
-        computed_total = round(max(0.0, subtotal - discount_amount) + delivery_fee, 2)
+        delivery_rules = SystemSetting.get_val('delivery_rules', {
+            'free_delivery_enabled': True,
+            'min_spend_for_free_delivery': 20.0,
+            'standard_delivery_fee': 1.5
+        })
+        free_deliv_enabled = bool(delivery_rules.get('free_delivery_enabled', True))
+        free_deliv_threshold = float(delivery_rules.get('min_spend_for_free_delivery', 20.0) or 20.0)
+        standard_fee = float(delivery_rules.get('standard_delivery_fee', 1.5) or 1.5)
+
+        net_spend = max(0.0, subtotal - discount_amount)
+        if free_deliv_enabled and net_spend >= free_deliv_threshold:
+            delivery_fee = 0.0
+        else:
+            raw_deliv = data.get('deliveryFee')
+            if raw_deliv is not None and str(raw_deliv).strip() != '':
+                delivery_fee = max(0.0, float(raw_deliv))
+            else:
+                delivery_fee = standard_fee
+
+        computed_total = round(net_spend + delivery_fee, 2)
 
         new_order = Order(
             customer_name=raw_name[:100], 

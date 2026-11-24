@@ -51,6 +51,20 @@
                 </button>
             </div>
 
+            <!-- Free Delivery Progress Tracker -->
+            <div id="uni-free-delivery-tracker" class="mb-3 p-2.5 rounded-xl border border-dashed transition-all hidden">
+                <div class="flex items-center justify-between text-[11px] font-black mb-1">
+                    <span id="uni-free-delivery-title" class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-truck-fast text-[#ea580c]"></i>
+                        <span id="uni-free-delivery-text">...</span>
+                    </span>
+                    <span id="uni-free-delivery-percent" class="text-[10px] font-black text-slate-400">0%</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                    <div id="uni-free-delivery-bar" class="h-full bg-gradient-to-r from-orange-500 to-emerald-500 rounded-full transition-all duration-300" style="width: 0%;"></div>
+                </div>
+            </div>
+
             <div class="space-y-2 mb-4">
                 <div class="flex justify-between items-center text-xs font-bold text-gray-500">
                     <span>Subtotal (តម្លៃទំនិញ)</span>
@@ -246,22 +260,46 @@
         window.updateCartBadge();
     }
 
+    let universalDeliveryRules = {
+        free_delivery_enabled: true,
+        min_spend_usd: 20.0,
+        min_spend_khr: 80000,
+        standard_delivery_usd: 1.5,
+        standard_delivery_khr: 6000
+    };
+
+    async function fetchUniversalDeliveryRules() {
+        try {
+            const res = await fetch('/api/delivery-settings');
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.status === 'success') {
+                    universalDeliveryRules = data;
+                    renderUniversalCartUI();
+                    if (typeof updateCheckoutTotals === 'function') updateCheckoutTotals();
+                }
+            }
+        } catch(e) {}
+    }
+    fetchUniversalDeliveryRules();
+
     function calculateUniversalDelivery(subtotalKHR) {
-        if (subtotalKHR === 0) return 0;
-        if (subtotalKHR < 20000) return 8000;
-        if (subtotalKHR < 40000) return 6000;
-        if (subtotalKHR < 60000) return 4000;
-        if (subtotalKHR < 80000) return 2000;
-        return 0;
+        if (subtotalKHR <= 0) return 0;
+        if (universalDeliveryRules.free_delivery_enabled && subtotalKHR >= universalDeliveryRules.min_spend_khr) {
+            return 0;
+        }
+        return universalDeliveryRules.standard_delivery_khr || 6000;
     }
 
     // --- 2. RENDER THE CART UI ---
     function renderUniversalCartUI() {
         const container = document.getElementById('universal-cart-items-container');
         const selectAllCb = document.getElementById('select-all-cart');
+        const tracker = document.getElementById('uni-free-delivery-tracker');
         if (!container) return;
 
         if(globalStoreCart.length === 0) {
+            if (tracker) tracker.classList.add('hidden');
             container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3 text-gray-400"></i><p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-gray-500">កន្ត្រកទទេ (Empty)</p></div>`;
             document.getElementById('uni-cart-subtotal').innerText = "0៛";
             document.getElementById('uni-cart-delivery').innerText = "0៛";
@@ -365,6 +403,44 @@
         }
 
         document.getElementById('uni-cart-grand-total-khr').innerText = Math.round(subtotalKHR + delivery).toLocaleString() + "៛";
+
+        // Update Free Delivery Tracker
+        if (tracker && universalDeliveryRules.free_delivery_enabled && subtotalKHR > 0) {
+            tracker.classList.remove('hidden');
+            const target = universalDeliveryRules.min_spend_khr || 80000;
+            const pct = Math.min(100, Math.round((subtotalKHR / target) * 100));
+            const trackerText = document.getElementById('uni-free-delivery-text');
+            const trackerPercent = document.getElementById('uni-free-delivery-percent');
+            const trackerBar = document.getElementById('uni-free-delivery-bar');
+
+            if (subtotalKHR >= target) {
+                tracker.className = 'mb-3 p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/80 transition-all';
+                if (trackerText) trackerText.innerHTML = '<span class="text-emerald-700 font-black">🎉 ទទួលបានការដឹកជញ្ជូនឥតគិតថ្លៃ! (Free Delivery Unlocked!)</span>';
+                if (trackerPercent) {
+                    trackerPercent.innerText = '100%';
+                    trackerPercent.className = 'text-[10px] font-black text-emerald-600';
+                }
+                if (trackerBar) {
+                    trackerBar.style.width = '100%';
+                    trackerBar.className = 'h-full bg-emerald-500 rounded-full transition-all duration-300';
+                }
+            } else {
+                const diff = target - subtotalKHR;
+                const diffUsd = (diff / UNIVERSAL_CART_RATE).toFixed(2);
+                tracker.className = 'mb-3 p-2.5 rounded-xl border border-orange-200 bg-orange-50/60 transition-all';
+                if (trackerText) trackerText.innerHTML = `<span class="text-slate-700 font-bold">ថែម <span class="text-[#ea580c] font-black">${diff.toLocaleString()}៛ ($${diffUsd})</span> ទៀតដើម្បីបាន Free Delivery!</span>`;
+                if (trackerPercent) {
+                    trackerPercent.innerText = `${pct}%`;
+                    trackerPercent.className = 'text-[10px] font-black text-slate-500';
+                }
+                if (trackerBar) {
+                    trackerBar.style.width = `${pct}%`;
+                    trackerBar.className = 'h-full bg-gradient-to-r from-orange-400 to-[#ea580c] rounded-full transition-all duration-300';
+                }
+            }
+        } else if (tracker) {
+            tracker.classList.add('hidden');
+        }
     }
 
     // Cart Actions
@@ -676,6 +752,7 @@
                     address, 
                     items: itemsPayload, 
                     total: totalUSD,
+                    deliveryFee: delivery / UNIVERSAL_CART_RATE,
                     redeemCode: appliedPromoCode, // Included Redeem Code for API
                     telegram_user: tgUserPayload 
                 }) 

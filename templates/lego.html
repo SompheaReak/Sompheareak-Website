@@ -346,13 +346,31 @@
         if (savedCart) userCart = JSON.parse(savedCart);
     } catch(e) {}
 
+    let legoDeliveryRules = { free_delivery_enabled: true, min_spend_khr: 80000, standard_delivery_khr: 6000 };
+    async function loadLegoDeliveryRules() {
+        try {
+            const res = await fetch('/api/delivery-settings');
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.status === 'success') {
+                    legoDeliveryRules = data;
+                    if (typeof renderCartDrawer === 'function') renderCartDrawer();
+                }
+            }
+        } catch(e) {}
+    }
+    loadLegoDeliveryRules();
+
     function calculateDelivery(subtotalKHR) {
         if (subtotalKHR === 0) return 0;
+        if (legoDeliveryRules.free_delivery_enabled && subtotalKHR >= legoDeliveryRules.min_spend_khr) {
+            return 0; // Free delivery
+        }
         if (subtotalKHR < 20000) return 8000;
         if (subtotalKHR < 40000) return 6000;
         if (subtotalKHR < 60000) return 4000;
         if (subtotalKHR < 80000) return 2000;
-        return 0; // 80,000+ is Free
+        return legoDeliveryRules.standard_delivery_khr || 6000;
     }
 
     function updateCartBadge() {
@@ -986,7 +1004,7 @@
         const delivery = calculateDelivery(subtotal); const totalUSD = (subtotal + delivery) / RATE;
 
         try {
-            const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD }) });
+            const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD, deliveryFee: delivery / RATE }) });
             if(res.ok) { alert("Order Successful! We will contact you on Telegram soon."); userCart = userCart.filter(i => !i.selected); saveCart(); window.location.reload(); }
         } catch (e) { alert("Error sending order"); }
         btn.innerText = "បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)"; btn.disabled = false;
