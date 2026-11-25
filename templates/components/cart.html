@@ -618,52 +618,70 @@
     }
 
     // --- 4. ORDER HISTORY (MY ORDERS) LOGIC ---
-    function openOrderHistory() {
+    async function openOrderHistory() {
         closeUniversalCart();
         const historyContainer = document.getElementById('universal-history-container');
-        let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
-        
-        if (history.length === 0) {
-            historyContainer.innerHTML = `
-                <div class="py-20 text-center opacity-40">
-                    <i class="fa-solid fa-box-open text-5xl mb-3 text-gray-400"></i>
-                    <p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-gray-500">មិនទាន់មានប្រវត្តិកម្ម៉ង់ទេ</p>
-                    <p class="text-[10px] font-bold text-gray-400 mt-1">No orders yet</p>
-                </div>
-            `;
-        } else {
-            historyContainer.innerHTML = history.map(order => `
-                <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm mb-4">
-                    <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-3">
-                        <div>
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order ID</span>
-                            <p class="font-black text-sm text-gray-800 font-mono">${order.id}</p>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-100 px-2 py-1 rounded uppercase tracking-widest">${order.status}</span>
-                            <p class="text-[9px] font-bold text-gray-400 mt-1">${new Date(order.date).toLocaleDateString()}</p>
-                        </div>
-                    </div>
-                    <div class="space-y-3 mb-3">
-                        ${order.items.map(item => `
-                            <div class="flex items-center gap-3">
-                                <img src="${item.image}" class="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 object-contain p-0.5 shrink-0" onerror="this.src='https://via.placeholder.com/100?text=Item'">
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-bold text-xs text-gray-900 truncate">${item.title}</p>
-                                    <p class="text-[9px] font-bold text-gray-400 truncate">Qty: ${item.qty} • ${item.style || ''}</p>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="flex justify-between items-center border-t border-gray-100 pt-3">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">សរុប (Total)</span>
-                        <span class="font-black text-sm text-[#ea580c]">${Math.round(order.totalKHR).toLocaleString()}៛</span>
-                    </div>
-                </div>
-            `).join('');
+        const isLoggedInCustomer = {{ 'true' if current_customer else 'false' }};
+        if (!isLoggedInCustomer) {
+            localStorage.removeItem('sr_order_history');
+            historyContainer.innerHTML = `<div class="py-20 text-center px-6"><i class="fa-solid fa-user-lock text-4xl mb-3 text-gray-300"></i><p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-gray-500">គ្មានប្រវត្តិកម្ម៉ង់សម្រាប់ភ្ញៀវទេ</p><p class="text-xs font-bold text-gray-400 mt-1">Guest orders do not save history. Sign in to track order status.</p><a href="{{ url_for('customer_login') }}" class="inline-block mt-4 bg-[#ea580c] text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider shadow-sm">Sign In</a></div>`;
+            document.getElementById('universal-history-modal').classList.remove('translate-x-full');
+            return;
         }
-        
+        historyContainer.innerHTML = `<div class="py-16 text-center text-gray-400 text-xs font-bold">Loading orders...</div>`;
         document.getElementById('universal-history-modal').classList.remove('translate-x-full');
+        try {
+            const res = await fetch('/api/customer/orders', { credentials: 'same-origin', cache: 'no-store' });
+            const data = res.ok ? await res.json() : { orders: [] };
+            const orders = data.orders || [];
+            if (orders.length === 0) {
+                historyContainer.innerHTML = `
+                    <div class="py-20 text-center opacity-40">
+                        <i class="fa-solid fa-box-open text-5xl mb-3 text-gray-400"></i>
+                        <p class="font-black text-sm uppercase font-['Kantumruy_Pro'] text-gray-500">មិនទាន់មានប្រវត្តិកម្ម៉ង់ទេ</p>
+                        <p class="text-[10px] font-bold text-gray-400 mt-1">No orders yet</p>
+                    </div>
+                `;
+            } else {
+                const badgeStyle = (st) => {
+                    if (st === 'Reject' || st === 'Cancelled') return 'bg-red-50 text-red-600 border-red-200';
+                    if (st === 'Completed') return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+                    if (st === 'Processing') return 'bg-blue-50 text-blue-600 border-blue-200';
+                    return 'bg-amber-50 text-amber-600 border-amber-200';
+                };
+                historyContainer.innerHTML = orders.map(order => `
+                    <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm mb-4">
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-3">
+                            <div>
+                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order ID</span>
+                                <p class="font-black text-sm text-gray-800 font-mono">#${order.id}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[9px] font-black border px-2 py-1 rounded uppercase tracking-widest ${badgeStyle(order.status)}">${order.status}</span>
+                                <p class="text-[9px] font-bold text-gray-400 mt-1">${order.date ? new Date(order.date).toLocaleDateString() : ''}</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3 mb-3">
+                            ${(order.items || []).map(item => `
+                                <div class="flex items-center gap-3">
+                                    <img src="${item.image}" class="w-10 h-10 rounded-lg bg-gray-50 border border-gray-100 object-contain p-0.5 shrink-0" onerror="this.src='https://via.placeholder.com/100?text=Item'">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-bold text-xs text-gray-900 truncate">${item.title}</p>
+                                        <p class="text-[9px] font-bold text-gray-400 truncate">Qty: ${item.qty}${item.style ? ' • ' + item.style : ''}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="flex justify-between items-center border-t border-gray-100 pt-3">
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">សរុប (Total)</span>
+                            <span class="font-black text-sm text-[#ea580c]">$${Number(order.total_usd || 0).toFixed(2)}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (e) {
+            historyContainer.innerHTML = `<div class="py-16 text-center text-red-500 text-xs font-bold">Failed to load orders.</div>`;
+        }
     }
 
     function closeOrderHistory() {
@@ -769,17 +787,12 @@
                 const resData = await res.json().catch(() => ({}));
                 const orderId = resData.order_id || ("ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase());
                 const isLoggedInCustomer = {{ 'true' if current_customer else 'false' }};
-                if (isLoggedInCustomer) {
-                    const newOrder = {
-                        id: orderId,
-                        date: new Date().toISOString(),
-                        items: orderHistoryItems,
-                        totalKHR: subtotalAfterDiscount + delivery,
-                        status: "រង់ចាំ (Pending)"
-                    };
-                    let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
-                    history.unshift(newOrder); 
-                    localStorage.setItem('sr_order_history', JSON.stringify(history));
+                if (!isLoggedInCustomer) {
+                    localStorage.removeItem('sr_order_history');
+                    ['uni-cust-name', 'uni-cust-phone', 'uni-cust-telegram', 'uni-cust-address'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = '';
+                    });
                 }
 
                 alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");

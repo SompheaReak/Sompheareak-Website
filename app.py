@@ -502,6 +502,32 @@ def customer_account():
 
     return render_template('customer/account.html', user=user, credit_rules=credit_rules, vouchers=vouchers)
 
+@app.route('/api/customer/orders')
+def api_customer_orders():
+    cust_id = session.get('customer_id')
+    if not cust_id:
+        return jsonify({'orders': []}), 401
+    orders = Order.query.filter_by(customer_id=cust_id).order_by(Order.timestamp.desc()).limit(30).all()
+    result = []
+    for o in orders:
+        try:
+            items = json.loads(o.items_json) if o.items_json else []
+        except Exception:
+            items = []
+        result.append({
+            'id': o.id,
+            'status': o.status or 'Pending',
+            'total_usd': float(o.total_usd or 0.0),
+            'date': o.timestamp.isoformat() + 'Z' if o.timestamp else '',
+            'items': [{
+                'title': it.get('title') or it.get('name') or 'Item',
+                'qty': it.get('qty', 1),
+                'image': it.get('image', ''),
+                'style': it.get('style') or it.get('variantName') or ''
+            } for it in items]
+        })
+    return jsonify({'orders': result})
+
 @app.route('/customer/redeem-voucher', methods=['POST'])
 @customer_login_required
 def customer_redeem_voucher():
