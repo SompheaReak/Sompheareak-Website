@@ -132,10 +132,10 @@ def send_telegram_recovery_alert(user, note=None, async_dispatch=True):
         return False
 
     try:
-        from datetime import datetime
+        from datetime import datetime, timedelta, timezone
         from telegram_service import escape_tg_markdown
 
-        now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        now_str = datetime.now(timezone(timedelta(hours=7))).strftime("%Y-%m-%d %H:%M:%S")
         cust_name = escape_tg_markdown(user.full_name or "N/A")
         cust_phone = escape_tg_markdown(user.phone)
         safe_note = escape_tg_markdown(note)
@@ -148,7 +148,7 @@ def send_telegram_recovery_alert(user, note=None, async_dispatch=True):
             f"🪙 *Credit Balance:* {user.credit_balance} pts\n"
             f"{note_line}"
             f"━━━━━━━━━━━━━━━━━━━\n"
-            f"⏰ {now_str} UTC\n"
+            f"⏰ {now_str} ICT (UTC+7)\n"
             f"👉 Go to Admin Panel -> Customers to reset and provide their password."
         )
         if async_dispatch:

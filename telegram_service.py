@@ -3,7 +3,7 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any, List, Optional
 
 import httpx
@@ -134,7 +134,7 @@ def format_order_message(payload: "OrderAlertPayload") -> str:
         f"🎟️ *Promo:* {escape_tg_markdown(payload.promo_code_used or 'None')}\n"
         f"📦 *Items:*\n{items_formatted}\n"
         f"━━━━━━━━━━━━━━━━━━━\n"
-        f"⏰ {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+        f"⏰ {datetime.now(timezone(timedelta(hours=7))).strftime('%Y-%m-%d %H:%M:%S')} ICT (UTC+7)"
     )
 
 
@@ -216,7 +216,7 @@ async def alert_recovery(payload: RecoveryAlertPayload, background_tasks: Backgr
         from fastapi import HTTPException
         raise HTTPException(status_code=503, detail="Telegram credentials not configured")
 
-    now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    now_str = datetime.now(timezone(timedelta(hours=7))).strftime("%Y-%m-%d %H:%M:%S")
     safe_note = escape_tg_markdown(payload.note)
     note_line = f"📝 *Note:* {safe_note}\n" if safe_note else ""
     msg = (
@@ -227,7 +227,7 @@ async def alert_recovery(payload: RecoveryAlertPayload, background_tasks: Backgr
         f"🪙 *Credit Balance:* {payload.credit_balance} pts\n"
         f"{note_line}"
         f"━━━━━━━━━━━━━━━━━━━\n"
-        f"⏰ {now_str} UTC\n"
+        f"⏰ {now_str} ICT (UTC+7)\n"
         f"👉 Go to Admin Panel -> Customers to reset and provide their password."
     )
     background_tasks.add_task(_send_background_alert, bot_token, chat_id, msg, "recovery alert")
