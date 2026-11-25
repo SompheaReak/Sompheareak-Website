@@ -24,12 +24,22 @@
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Moul&display=swap');
         
+        html, body {
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+
         body { 
             font-family: 'Plus Jakarta Sans', 'Kantumruy Pro', sans-serif; 
             background-color: #f6f5f3;
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
             touch-action: manipulation;
+        }
+
+        a, button {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* Prevent iOS auto-zoom on form inputs */
@@ -115,7 +125,7 @@
             background: rgba(255, 255, 255, 0.85); 
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.8); 
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.65);
         }
         .glass-dark {
             background: rgba(15, 15, 15, 0.5); 
@@ -178,6 +188,13 @@
             visibility: hidden;
             pointer-events: none;
         }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 <body class="text-slate-900 pb-32 select-none antialiased">
@@ -237,7 +254,7 @@
     <div class="sticky top-0 z-[100] w-full flex flex-col shadow-sm">
         
         <!-- 🌟 UNIFIED HEADER (INDEX - TELEGRAM ON LEFT) 🌟 -->
-        <header class="bg-white/95 backdrop-blur-xl border-b border-gray-100 px-3 py-2.5 flex items-center justify-between relative z-20">
+        <header class="bg-white/95 backdrop-blur-xl border-b border-gray-100 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pt-[max(0.625rem,env(safe-area-inset-top))] pb-2.5 flex items-center justify-between gap-1.5 relative z-20">
             <!-- Left: Customer Profile / Sign-in -->
             {% if current_customer %}
             <div class="relative shrink-0" id="customer-profile-container">
@@ -331,7 +348,7 @@
     </div>
 
     <!-- MAIN APP CONTAINER -->
-    <main class="max-w-2xl mx-auto pt-4 px-4 sm:px-6">
+    <main class="max-w-2xl mx-auto pt-4 px-3.5 sm:px-6 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))]">
         
         <!-- 🌟 AUTO-SLIDING BANNER (1800x900px Aspect Ratio) 🌟 -->
         <section class="pb-6 animate-fade-up relative">
@@ -537,6 +554,9 @@
     <div id="universal-cart-drawer" style="transform: translateY(100%); pointer-events: none;" class="fixed inset-0 z-[8000] flex flex-col justify-end transition-transform duration-300">
         <div class="absolute inset-0 bg-black/60 transition-opacity" onclick="closeUniversalCart()"></div>
         <div class="relative w-full h-[88dvh] max-h-[88dvh] bg-gray-50 rounded-t-[32px] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
+            <div class="bg-white pt-2.5 pb-0 flex justify-center shrink-0">
+                <div class="w-10 h-1 rounded-full bg-slate-200"></div>
+            </div>
             
             <div class="bg-white px-5 sm:px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10 shrink-0">
                 <div>
