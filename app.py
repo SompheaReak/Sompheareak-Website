@@ -224,7 +224,7 @@ def customer_register():
             return redirect(url_for('customer_register'))
 
         if not is_valid_cambodia_phone(phone):
-            msg = 'Please enter a valid Cambodia phone number (e.g. 012 345 678 or +855 12 345 678).'
+            msg = 'Please enter a valid phone number (e.g. 012 345 678 or +855 12 345 678).'
             if request.is_json:
                 return jsonify({'error': msg}), 400
             flash(msg, 'error')
