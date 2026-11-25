@@ -295,18 +295,16 @@ def customer_login():
             return redirect(url_for('customer_login'))
 
         data = request.get_json(silent=True) or request.form
-        login_id = (data.get('phone') or data.get('login_id') or '').strip()
-        phone = normalize_phone(login_id)
+        raw_phone = (data.get('phone') or '').strip()
+        phone = normalize_phone(raw_phone)
         password = (data.get('password') or '').strip()
 
         user = CustomerUser.query.filter(
             db.or_(
                 CustomerUser.phone == phone,
-                CustomerUser.phone == login_id,
-                CustomerUser.telegram == login_id,
-                CustomerUser.full_name == login_id
+                CustomerUser.phone == raw_phone
             )
-        ).first()
+        ).first() if phone else None
 
         # Constant-time password check: Always run check_password to eliminate timing attacks & account enumeration
         password_correct = user.check_password(password) if user else check_password_hash(DUMMY_PASSWORD_HASH, password)
@@ -315,8 +313,8 @@ def customer_login():
             fail_times.append(now)
             login_fails[client_ip] = fail_times
             if request.is_json:
-                return jsonify({'error': 'Invalid login credentials or password.'}), 401
-            flash('Invalid login credentials or password.', 'error')
+                return jsonify({'error': 'Invalid phone number or password.'}), 401
+            flash('Invalid phone number or password.', 'error')
             return redirect(url_for('customer_login'))
 
         # Reset failed attempts on success
