@@ -191,6 +191,13 @@ def normalize_phone(phone_str):
         cleaned = '0' + cleaned[3:]
     return cleaned
 
+CAMBODIA_PHONE_RE = re.compile(
+    r'^0(?:1[0-9]|2[3-6]|3[1-689]|4[2-4]|5[2-5]|6[0-9]|7[0-9]|8[01356789]|9[02356789])\d{6,7}$'
+)
+
+def is_valid_cambodia_phone(phone):
+    return bool(phone and CAMBODIA_PHONE_RE.match(phone))
+
 # --- CUSTOMER ACCOUNT & AUTH ROUTES ---
 @app.route('/customer/register', methods=['GET', 'POST'])
 def customer_register():
@@ -204,17 +211,11 @@ def customer_register():
             return redirect(url_for('customer_register'))
 
         data = request.get_json(silent=True) or request.form
-        full_name = (data.get('full_name') or '').strip()[:100]
+        full_name = (data.get('full_name') or '').strip()[:100] or None
         raw_phone = (data.get('phone') or '').strip()
-        telegram = (data.get('telegram') or '').strip()[:100]
+        telegram = (data.get('telegram') or '').strip()[:100] or None
         phone = normalize_phone(raw_phone)
         password = (data.get('password') or '').strip()
-
-        if not full_name:
-            if request.is_json:
-                return jsonify({'error': 'User name is required.'}), 400
-            flash('User name is required.', 'error')
-            return redirect(url_for('customer_register'))
 
         if not phone or not password:
             if request.is_json:
@@ -222,16 +223,11 @@ def customer_register():
             flash('Phone number and password are required.', 'error')
             return redirect(url_for('customer_register'))
 
-        if not telegram:
+        if not is_valid_cambodia_phone(phone):
+            msg = 'Please enter a valid Cambodia phone number (e.g. 012 345 678 or +855 12 345 678).'
             if request.is_json:
-                return jsonify({'error': 'Telegram number or @username is required.'}), 400
-            flash('Telegram number or @username is required.', 'error')
-            return redirect(url_for('customer_register'))
-
-        if len(phone) < 8 or len(phone) > 15 or not re.match(r'^\+?[0-9]+$', phone):
-            if request.is_json:
-                return jsonify({'error': 'Please enter a valid phone number (at least 8 digits).'}), 400
-            flash('Please enter a valid phone number (at least 8 digits).', 'error')
+                return jsonify({'error': msg}), 400
+            flash(msg, 'error')
             return redirect(url_for('customer_register'))
 
         if len(password) < 6:
