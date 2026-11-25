@@ -662,31 +662,9 @@ def checkout_page():
 
 def _handle_order_post_processing(order):
     """
-    1. Awards credit points ONLY if customer is logged in to their account.
-       Strict rule: No logged-in account = No credit (guests cannot earn credit).
-    2. Sends real-time Telegram order alert.
+    Sends real-time Telegram order alert.
+    Credit points are awarded only after admin confirms the order.
     """
-    try:
-        cust_id = session.get('customer_id')
-        user = CustomerUser.query.get(cust_id) if cust_id else None
-
-        # STRICT RULE: No logged-in account = No credit. Guests cannot earn credit points.
-        if user:
-            credit_rules = SystemSetting.get_val('credit_rules', {"points_per_usd": 10})
-            pts_per_usd = max(0, int(credit_rules.get('points_per_usd', 10)))
-            earned = int(float(order.total_usd or 0.0) * pts_per_usd)
-            if earned > 0:
-                user.credit_balance = (user.credit_balance or 0) + earned
-                tx = CreditTransaction(
-                    user_id=user.id,
-                    amount=earned,
-                    description=f"Earned from Order #{order.id} (${order.total_usd:.2f})"
-                )
-                db.session.add(tx)
-                db.session.commit()
-    except Exception as e:
-        print(f"Credit award error: {e}")
-
     try:
         from telegram_notifier import send_telegram_order_alert
         if not send_telegram_order_alert(order):
@@ -816,7 +794,8 @@ def place_order():
             total_usd=final_total, 
             delivery_fee=delivery_fee,
             status="Pending",
-            promo_code_used=promo_code if discount_amount > 0 else None
+            promo_code_used=promo_code if discount_amount > 0 else None,
+            customer_id=session.get('customer_id')
         )
         db.session.add(new_order)
         db.session.commit()
@@ -977,6 +956,7 @@ def checkout():
             telegram_id=tg_id,           
             telegram_name=tg_name[:200] if tg_name else None,       
             telegram_user_payload=tg_payload, 
+            customer_id=session.get('customer_id'),
             status="Pending"
         )
         db.session.add(new_order)
@@ -1242,6 +1222,7 @@ with app.app_context():
                 'ALTER TABLE "order" ADD COLUMN telegram_id VARCHAR(100)',
                 'ALTER TABLE "order" ADD COLUMN telegram_name VARCHAR(200)',
                 'ALTER TABLE "order" ADD COLUMN telegram_user_payload TEXT',
+                'ALTER TABLE "order" ADD COLUMN customer_id INTEGER',
                 'ALTER TABLE customer_user ADD COLUMN reset_otp VARCHAR(10)',
                 'ALTER TABLE customer_user ADD COLUMN reset_otp_expires_at DATETIME'
             ]
