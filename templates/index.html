@@ -1146,48 +1146,36 @@
                 });
 
                 if (res.ok) {
-                    const newOrder = { 
-                        id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(), 
-                        date: new Date().toISOString(), 
-                        items: orderHistoryItems, 
-                        totalKHR: subtotalKHR + delivery, 
-                        status: "រង់ចាំ (Pending)"
-                    };
-                    let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]'); 
-                    history.unshift(newOrder); 
-                    localStorage.setItem('sr_order_history', JSON.stringify(history));
+                    const resData = await res.json().catch(() => ({}));
+                    const orderId = resData.order_id || ("ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase());
+                    const isLoggedInCustomer = {{ 'true' if current_customer else 'false' }};
+                    if (isLoggedInCustomer) {
+                        const newOrder = { 
+                            id: orderId, 
+                            date: new Date().toISOString(), 
+                            items: orderHistoryItems, 
+                            totalKHR: subtotalKHR + delivery, 
+                            status: "រង់ចាំ (Pending)"
+                        };
+                        let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]'); 
+                        history.unshift(newOrder); 
+                        localStorage.setItem('sr_order_history', JSON.stringify(history));
+                    }
                     
                     globalStoreCart = globalStoreCart.filter(i => !i.selected); 
                     saveGlobalCart(); 
                     
                     btn.innerHTML = originalText; btn.disabled = false;
                     closeUniversalCheckout();
-                    openOrderHistory();
-                    setTimeout(() => { alert(`ការបញ្ជាទិញបានជោគជ័យ! (Order Success!)\nលេខកូដ: #${newOrder.id}`); }, 300);
+                    if (isLoggedInCustomer) openOrderHistory();
+                    setTimeout(() => { alert(`ការបញ្ជាទិញបានជោគជ័យ! (Order Success!)\nលេខកូដ: #${orderId}`); }, 300);
                 } else {
                     alert("Error processing order");
                     btn.innerHTML = originalText; btn.disabled = false;
                 }
             } catch (error) {
-                // Fallback for demo logic if no backend is running
-                const newOrder = { 
-                    id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(), 
-                    date: new Date().toISOString(), 
-                    items: orderHistoryItems, 
-                    totalKHR: subtotalKHR + delivery, 
-                    status: "បានបញ្ជូន (Sent)"
-                };
-                let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]'); 
-                history.unshift(newOrder); 
-                localStorage.setItem('sr_order_history', JSON.stringify(history));
-                
-                globalStoreCart = globalStoreCart.filter(i => !i.selected); 
-                saveGlobalCart(); 
-                
+                alert("Error processing order. Please try again.");
                 btn.innerHTML = originalText; btn.disabled = false;
-                closeUniversalCheckout();
-                openOrderHistory();
-                setTimeout(() => { alert(`ការបញ្ជាទិញបានជោគជ័យ! (Order Success!)\nលេខកូដ: #${newOrder.id}`); }, 300);
             }
         };
 

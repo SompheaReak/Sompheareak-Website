@@ -763,16 +763,21 @@
             });
             
             if (res.ok) {
-                const newOrder = {
-                    id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
-                    date: new Date().toISOString(),
-                    items: orderHistoryItems,
-                    totalKHR: subtotalAfterDiscount + delivery,
-                    status: "រង់ចាំ (Pending)"
-                };
-                let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
-                history.unshift(newOrder); 
-                localStorage.setItem('sr_order_history', JSON.stringify(history));
+                const resData = await res.json().catch(() => ({}));
+                const orderId = resData.order_id || ("ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase());
+                const isLoggedInCustomer = {{ 'true' if current_customer else 'false' }};
+                if (isLoggedInCustomer) {
+                    const newOrder = {
+                        id: orderId,
+                        date: new Date().toISOString(),
+                        items: orderHistoryItems,
+                        totalKHR: subtotalAfterDiscount + delivery,
+                        status: "រង់ចាំ (Pending)"
+                    };
+                    let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
+                    history.unshift(newOrder); 
+                    localStorage.setItem('sr_order_history', JSON.stringify(history));
+                }
 
                 alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");
                 globalStoreCart = globalStoreCart.filter(i => !i.selected); 
@@ -784,21 +789,8 @@
                 btn.innerHTML = originalText; btn.disabled = false;
             }
         } catch (e) { 
-            const newOrder = {
-                id: "ORD-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
-                date: new Date().toISOString(),
-                items: orderHistoryItems,
-                totalKHR: subtotalAfterDiscount + delivery,
-                status: "បានផ្ញើទៅ Telegram (Sent)"
-            };
-            let history = JSON.parse(localStorage.getItem('sr_order_history') || '[]');
-            history.unshift(newOrder);
-            localStorage.setItem('sr_order_history', JSON.stringify(history));
-
-            alert("ការបញ្ជាទិញបានជោគជ័យ\nសូមអ្នកទាក់ទងទៅកាន់អ្នកលក់ដើម្បីទទួលទំនិញ\nt.me/Somphea_Reak");
-            globalStoreCart = globalStoreCart.filter(i => !i.selected); 
-            saveGlobalCart(); 
-            window.location.href = "https://t.me/Somphea_Reak";
+            alert("Error processing order. Please try again.");
+            btn.innerHTML = originalText; btn.disabled = false;
         }
     }
 </script>
