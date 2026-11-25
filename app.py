@@ -695,7 +695,8 @@ def _handle_order_post_processing(order):
 
     try:
         from telegram_notifier import send_telegram_order_alert
-        send_telegram_order_alert(order)
+        if not send_telegram_order_alert(order):
+            print(f"Telegram alert not sent for order #{order.id}")
     except Exception as e:
         print(f"Telegram alert error: {e}")
 
