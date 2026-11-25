@@ -44,6 +44,13 @@
         box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
     }
 
+    .store-product-card {
+        will-change: transform, box-shadow;
+        transform: translateZ(0);
+        content-visibility: auto;
+        contain-intrinsic-size: 0 280px;
+    }
+
     /* FULL SCREEN Survey Modal Animations */
     #survey-modal { 
         transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease; 
@@ -649,26 +656,25 @@
             }
 
             return `
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col relative group ${isSoldOut ? 'opacity-50' : ''}">
+            <div class="store-product-card bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col relative group transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-950/5 hover:border-orange-200 ${isSoldOut ? 'opacity-60' : 'active:scale-[0.98]'}">
                 ${badgeHtml}
                 <!-- Single Figure Image -->
-                <div class="aspect-square bg-slate-50 relative overflow-hidden flex items-center justify-center p-1 cursor-pointer" onclick="openImageViewer('${fig.image}')">
-                    ${isSoldOut ? `<div class="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10"><span class="bg-gray-900 text-white text-[7px] font-black px-2 py-1 rounded shadow-md uppercase tracking-widest">SOLD OUT</span></div>` : ''}
-                    <img src="${fig.image}" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-300 drop-shadow-sm">
+                <div class="aspect-square bg-slate-50/70 relative overflow-hidden flex items-center justify-center p-2 cursor-pointer border-b border-slate-100" onclick="openImageViewer('${fig.image}')">
+                    ${isSoldOut ? `<div class="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-10"><span class="bg-slate-900 text-white text-[7px] font-black px-2 py-1 rounded-md shadow-md uppercase tracking-widest">SOLD OUT</span></div>` : ''}
+                    <img src="${fig.image}" alt="${fig.title}" loading="lazy" decoding="async" class="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] drop-shadow-sm will-change-transform">
                 </div>
 
                 <!-- Box Details -->
-                <div class="p-2 flex flex-col flex-grow bg-white justify-between relative">
+                <div class="p-2.5 flex flex-col flex-grow bg-white justify-between relative">
                     <!-- VISUAL CODE BADGE -->
-                    ${fig.code ? `<span class="absolute top-2 right-2 text-[8px] font-mono text-orange-500 bg-orange-50 px-1 rounded border border-orange-100 shadow-sm">#${fig.code}</span>` : ''}
+                    ${fig.code ? `<span class="absolute top-2 right-2 text-[8px] font-mono text-orange-600 bg-orange-50 px-1 rounded border border-orange-200 shadow-2xs">#${fig.code}</span>` : ''}
                     
                     <div class="pr-5">
-                        <!-- UPDATED FONT & SIZE FOR CLASSIC/MODERN LOOK -->
-                        <h3 class="font-bold text-[10px] sm:text-[11px] text-gray-800 line-clamp-2 leading-tight mb-1 font-['Plus_Jakarta_Sans'] tracking-wide" title="${fig.title}">${fig.title}</h3>
+                        <h3 class="font-extrabold text-[11px] text-slate-800 line-clamp-2 leading-tight mb-1 font-['Plus_Jakarta_Sans'] tracking-tight group-hover:text-[#ea580c] transition-colors" title="${fig.title}">${fig.title}</h3>
                         ${priceHtml}
                     </div>
 
-                    <button onclick="addToCartUnpacked('${fig.cartId}')" ${isSoldOut ? 'disabled' : ''} class="w-full mt-2 py-1.5 bg-gray-50 text-gray-700 hover:bg-gray-900 hover:text-white border border-gray-100 ${isSoldOut ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'active:scale-95'} rounded-xl text-[9px] font-extrabold uppercase tracking-wider transition-all flex items-center justify-center gap-1 shadow-sm">
+                    <button onclick="addToCartUnpacked('${fig.cartId}')" ${isSoldOut ? 'disabled' : ''} class="w-full mt-2 py-1.5 bg-slate-50 text-slate-700 hover:bg-slate-900 hover:text-white border border-slate-200 ${isSoldOut ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'active:scale-95'} rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 shadow-2xs">
                         <i class="fa-solid fa-cart-plus text-[8px]"></i> Add
                     </button>
                 </div>
