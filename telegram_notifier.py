@@ -1,69 +1,61 @@
-import os
+import asyncio
 import json
 import logging
+import os
+from concurrent.futures import ThreadPoolExecutor
+
 import requests
-from datetime import datetime
+
+from telegram_service import (
+    OrderAlertPayload,
+    format_order_message,
+    get_cached_credentials,
+    send_to_all_chats_async,
+)
 
 logger = logging.getLogger(__name__)
+_EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="tg-alert")
+
 
 def get_telegram_credentials():
-    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+    return get_cached_credentials()
+
+
+def _parse_order_items(order):
+    if not hasattr(order, "items_json") or not order.items_json:
+        return []
     try:
-        from models import SystemSetting
-        tg_conf = SystemSetting.get_val("telegram_config")
-        if isinstance(tg_conf, dict):
-            if tg_conf.get("bot_token"):
-                bot_token = tg_conf.get("bot_token").strip()
-            if tg_conf.get("chat_id"):
-                chat_id = str(tg_conf.get("chat_id")).strip()
-    except Exception as e:
-        logger.warning(f"Failed to fetch telegram_config from DB: {e}")
-    return bot_token, chat_id
+        return json.loads(order.items_json) if isinstance(order.items_json, str) else order.items_json
+    except Exception:
+        return []
 
-def _post_telegram_message(bot_token, chat_id, text, parse_mode="Markdown"):
-    """Send a message to one or more comma-separated Telegram chat IDs."""
-    chat_ids = [c.strip() for c in str(chat_id).split(",") if c.strip()]
-    if not bot_token or not chat_ids:
-        return False, "Bot token or Chat ID is missing"
 
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    all_ok = True
-    last_err = "Unknown error"
+def _dispatch_order_worker(payload: OrderAlertPayload, bot_token: str, chat_id: str) -> bool:
+    service_url = os.environ.get("TELEGRAM_SERVICE_URL", "").strip().rstrip("/")
+    if service_url:
+        try:
+            resp = requests.post(
+                f"{service_url}/alert/order",
+                json=payload.model_dump(),
+                timeout=3.0,
+            )
+            if resp.status_code in (200, 202):
+                return True
+            logger.warning(f"FastAPI telegram service returned {resp.status_code}, falling back to direct send")
+        except Exception as exc:
+            logger.warning(f"FastAPI telegram service unreachable ({exc}), falling back to direct send")
 
-    for cid in chat_ids:
-        payload = {"chat_id": cid, "text": text}
-        if parse_mode:
-            payload["parse_mode"] = parse_mode
+    msg = format_order_message(payload)
+    ok, err = asyncio.run(send_to_all_chats_async(bot_token, chat_id, msg))
+    if not ok:
+        logger.error(f"Telegram order alert #{payload.order_id} failed: {err}")
+    return ok
 
-        sent = False
-        for attempt in range(2):
-            try:
-                resp = requests.post(url, json=payload, timeout=6.0)
-                if resp.status_code == 200:
-                    sent = True
-                    break
-                if resp.status_code == 400 and "parse_mode" in payload:
-                    logger.warning(f"Telegram Markdown 400 for {cid}, retrying plain text: {resp.text[:200]}")
-                    payload = {"chat_id": cid, "text": text.replace('*', '').replace('`', '')}
-                    continue
-                data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
-                last_err = data.get("description", f"HTTP {resp.status_code}")
-                logger.error(f"Telegram send failed for {cid} ({resp.status_code}): {resp.text[:300]}")
-                if resp.status_code < 500:
-                    break
-            except requests.RequestException as req_err:
-                last_err = str(req_err)
-                logger.warning(f"Telegram request attempt {attempt + 1} for {cid} failed: {req_err}")
-        if not sent:
-            all_ok = False
 
-    return all_ok, ("Sent" if all_ok else last_err)
-
-def send_telegram_order_alert(order, bot_token=None, chat_id=None):
+def send_telegram_order_alert(order, bot_token=None, chat_id=None, async_dispatch=True):
     """
-    Dispatches order notification alert to Telegram.
-    Non-blocking / failsafe: catches all network errors so checkout never fails.
+    Dispatches order notification alert to Telegram without blocking the Flask request thread.
+    Snapshots order fields before leaving request context.
     """
     if not bot_token or not chat_id:
         b_tok, c_id = get_telegram_credentials()
@@ -75,58 +67,28 @@ def send_telegram_order_alert(order, bot_token=None, chat_id=None):
         return False
 
     try:
-        # Parse items
-        items = []
-        if hasattr(order, 'items_json') and order.items_json:
-            try:
-                items = json.loads(order.items_json) if isinstance(order.items_json, str) else order.items_json
-            except Exception:
-                items = []
-
-        item_lines = []
-        for idx, item in enumerate(items, 1):
-            title = escape_tg_markdown(item.get('title') or item.get('name') or 'Item')
-            qty = item.get('qty', 1)
-            price = float(item.get('price', 0.0))
-            var_name = escape_tg_markdown(item.get('variantName'))
-            var_text = f" ({var_name})" if var_name else ""
-            item_lines.append(f"  {idx}. {title}{var_text} x{qty} — ${price:.2f}")
-
-        items_formatted = "\n".join(item_lines) if item_lines else "  (No items specified)"
-        khr_equiv = int(float(order.total_usd or 0.0) * 4100)
-
-        cust_name = escape_tg_markdown(order.customer_name)
-        cust_phone = escape_tg_markdown(order.customer_phone)
-        cust_addr = escape_tg_markdown(order.customer_address)
-        promo_code = escape_tg_markdown(order.promo_code_used or 'None')
-        tg_contact = escape_tg_markdown(getattr(order, 'telegram_name', None))
-        tg_line = f"✈️ *Telegram:* {tg_contact}\n" if tg_contact else ""
-
-        msg = (
-            f"🛍️ *NEW ORDER ALERT #{order.id}*\n"
-            f"━━━━━━━━━━━━━━━━━━━\n"
-            f"👤 *Customer:* {cust_name}\n"
-            f"📞 *Phone:* `{cust_phone}`\n"
-            f"{tg_line}"
-            f"📍 *Address:* {cust_addr}\n"
-            f"💵 *Total:* ${order.total_usd:.2f} ({khr_equiv:,} ៛)\n"
-            f"🎟️ *Promo:* {promo_code}\n"
-            f"📦 *Items:*\n{items_formatted}\n"
-            f"━━━━━━━━━━━━━━━━━━━\n"
-            f"⏰ {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
+        payload = OrderAlertPayload(
+            order_id=int(order.id),
+            customer_name=str(order.customer_name or ""),
+            customer_phone=str(order.customer_phone or ""),
+            customer_address=str(order.customer_address or ""),
+            total_usd=float(order.total_usd or 0.0),
+            promo_code_used=order.promo_code_used,
+            telegram_name=getattr(order, "telegram_name", None),
+            items=_parse_order_items(order),
+            bot_token=bot_token,
+            chat_id=chat_id,
         )
-
-        ok, _ = _post_telegram_message(bot_token, chat_id, msg)
-        return ok
+        if async_dispatch:
+            _EXECUTOR.submit(_dispatch_order_worker, payload, bot_token, chat_id)
+            return True
+        return _dispatch_order_worker(payload, bot_token, chat_id)
     except Exception as e:
-        logger.error(f"Error sending Telegram alert: {e}")
+        logger.error(f"Error queuing Telegram alert: {e}")
         return False
 
+
 def send_telegram_test_message(bot_token, chat_id):
-    """
-    Sends a test verification message to verify token and chat ID.
-    Returns (success: bool, message: str)
-    """
     if not bot_token:
         return False, "Bot token is missing"
     if not chat_id:
@@ -136,31 +98,24 @@ def send_telegram_test_message(bot_token, chat_id):
         "✅ *Somphea Reak Telegram Alert Connected!*\n\n"
         "Your bot is now configured successfully. You will receive real-time notifications whenever a customer places an order."
     )
-    ok, err = _post_telegram_message(bot_token, chat_id, text)
+    ok, err = asyncio.run(send_to_all_chats_async(bot_token, chat_id, text))
     if ok:
         return True, "Test alert sent successfully! Check your Telegram chat."
     return False, f"Telegram API error: {err}"
 
-def escape_tg_markdown(text):
-    if not text:
-        return ""
-    # Strip markdown delimiters that could break Telegram entity parser
-    for char in ['*', '_', '`', '[', ']']:
-        text = str(text).replace(char, '')
-    return text.strip()
 
-def send_telegram_recovery_alert(user, note=None):
-    """
-    Dispatches account password recovery request alert to admin Telegram bot.
-    """
+def send_telegram_recovery_alert(user, note=None, async_dispatch=True):
     bot_token, chat_id = get_telegram_credentials()
     if not bot_token or not chat_id:
         logger.info("Telegram recovery alert skipped: Bot Token or Chat ID not configured.")
         return False
 
     try:
-        now_str = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-        cust_name = escape_tg_markdown(user.full_name or 'N/A')
+        from datetime import datetime
+        from telegram_service import escape_tg_markdown
+
+        now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        cust_name = escape_tg_markdown(user.full_name or "N/A")
         cust_phone = escape_tg_markdown(user.phone)
         safe_note = escape_tg_markdown(note)
         note_line = f"📝 *Note:* {safe_note}\n" if safe_note else ""
@@ -175,8 +130,10 @@ def send_telegram_recovery_alert(user, note=None):
             f"⏰ {now_str} UTC\n"
             f"👉 Go to Admin Panel -> Customers to reset and provide their password."
         )
-
-        ok, _ = _post_telegram_message(bot_token, chat_id, msg)
+        if async_dispatch:
+            _EXECUTOR.submit(lambda: asyncio.run(send_to_all_chats_async(bot_token, chat_id, msg)))
+            return True
+        ok, _ = asyncio.run(send_to_all_chats_async(bot_token, chat_id, msg))
         return ok
     except Exception as e:
         logger.error(f"Error sending recovery Telegram alert: {e}")
