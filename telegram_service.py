@@ -57,8 +57,9 @@ def invalidate_credentials_cache() -> None:
 async def _send_single_chat(client: httpx.AsyncClient, bot_token: str, cid: str, text: str) -> tuple[bool, str]:
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload: dict[str, Any] = {"chat_id": cid, "text": text, "parse_mode": "Markdown"}
+    last_err = "Telegram request failed"
 
-    for attempt in range(2):
+    for attempt in range(3):
         try:
             resp = await client.post(url, json=payload)
             if resp.status_code == 200:
@@ -67,14 +68,14 @@ async def _send_single_chat(client: httpx.AsyncClient, bot_token: str, cid: str,
                 logger.warning(f"Telegram Markdown 400 for {cid}, retrying plain text")
                 payload = {"chat_id": cid, "text": text.replace("*", "").replace("`", "")}
                 continue
-            err = resp.text[:200]
-            logger.error(f"Telegram send failed for {cid} ({resp.status_code}): {err}")
+            last_err = resp.text[:200]
+            logger.error(f"Telegram send failed for {cid} ({resp.status_code}): {last_err}")
             if resp.status_code < 500:
-                return False, err
+                return False, last_err
         except httpx.HTTPError as exc:
-            logger.warning(f"Telegram HTTP attempt {attempt + 1} for {cid} failed: {exc}")
-            err = str(exc)
-    return False, "Telegram request failed"
+            last_err = str(exc) or exc.__class__.__name__
+            logger.warning(f"Telegram HTTP attempt {attempt + 1} for {cid} failed: {last_err}")
+    return False, last_err
 
 
 async def send_to_all_chats_async(bot_token: str, chat_id: str, text: str) -> tuple[bool, str]:
@@ -93,22 +94,32 @@ async def send_to_all_chats_async(bot_token: str, chat_id: str, text: str) -> tu
     if _http_client is not None:
         return await _dispatch(_http_client)
 
-    async with httpx.AsyncClient(timeout=6.0) as client:
+    async with httpx.AsyncClient(timeout=httpx.Timeout(15.0, connect=8.0)) as client:
         return await _dispatch(client)
+
+
+async def _send_background_alert(bot_token: str, chat_id: str, text: str, label: str) -> None:
+    try:
+        ok, err = await send_to_all_chats_async(bot_token, chat_id, text)
+        if not ok:
+            logger.error(f"Telegram {label} failed: {err}")
+    except Exception as exc:
+        logger.exception(f"Telegram {label} raised unexpected error: {exc}")
 
 
 def format_order_message(payload: "OrderAlertPayload") -> str:
     item_lines = []
     for idx, item in enumerate(payload.items, 1):
         title = escape_tg_markdown(item.get("title") or item.get("name") or "Item")
-        qty = item.get("qty", 1)
-        price = float(item.get("price", 0.0))
+        qty = item.get("qty") or 1
+        price = float(item.get("price") or 0.0)
         var_name = escape_tg_markdown(item.get("variantName"))
         var_text = f" ({var_name})" if var_name else ""
         item_lines.append(f"  {idx}. {title}{var_text} x{qty} — ${price:.2f}")
 
     items_formatted = "\n".join(item_lines) if item_lines else "  (No items specified)"
-    khr_equiv = int(float(payload.total_usd or 0.0) * 4100)
+    total_usd = float(payload.total_usd or 0.0)
+    khr_equiv = int(total_usd * 4100)
     tg_contact = escape_tg_markdown(payload.telegram_name)
     tg_line = f"✈️ *Telegram:* {tg_contact}\n" if tg_contact else ""
 
@@ -119,7 +130,7 @@ def format_order_message(payload: "OrderAlertPayload") -> str:
         f"📞 *Phone:* `{escape_tg_markdown(payload.customer_phone)}`\n"
         f"{tg_line}"
         f"📍 *Address:* {escape_tg_markdown(payload.customer_address)}\n"
-        f"💵 *Total:* ${payload.total_usd:.2f} ({khr_equiv:,} ៛)\n"
+        f"💵 *Total:* ${total_usd:.2f} ({khr_equiv:,} ៛)\n"
         f"🎟️ *Promo:* {escape_tg_markdown(payload.promo_code_used or 'None')}\n"
         f"📦 *Items:*\n{items_formatted}\n"
         f"━━━━━━━━━━━━━━━━━━━\n"
@@ -155,7 +166,7 @@ class RecoveryAlertPayload(BaseModel):
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     global _http_client
-    _http_client = httpx.AsyncClient(timeout=6.0)
+    _http_client = httpx.AsyncClient(timeout=httpx.Timeout(15.0, connect=8.0))
     try:
         yield
     finally:
@@ -173,14 +184,18 @@ async def health():
 
 @app.post("/alert/order", status_code=202)
 async def alert_order(payload: OrderAlertPayload, background_tasks: BackgroundTasks):
-    b_tok, c_id = get_cached_credentials()
-    bot_token = payload.bot_token or b_tok
-    chat_id = payload.chat_id or c_id
+    bot_token = (payload.bot_token or "").strip()
+    chat_id = (payload.chat_id or "").strip()
     if not bot_token or not chat_id:
-        return {"queued": False, "reason": "Telegram credentials not configured"}
+        b_tok, c_id = get_cached_credentials()
+        bot_token = bot_token or b_tok
+        chat_id = chat_id or c_id
+    if not bot_token or not chat_id:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=503, detail="Telegram credentials not configured")
 
     msg = format_order_message(payload)
-    background_tasks.add_task(send_to_all_chats_async, bot_token, chat_id, msg)
+    background_tasks.add_task(_send_background_alert, bot_token, chat_id, msg, f"order #{payload.order_id}")
     return {"queued": True, "order_id": payload.order_id}
 
 
@@ -198,7 +213,8 @@ async def alert_test(payload: TestAlertPayload):
 async def alert_recovery(payload: RecoveryAlertPayload, background_tasks: BackgroundTasks):
     bot_token, chat_id = get_cached_credentials()
     if not bot_token or not chat_id:
-        return {"queued": False, "reason": "Telegram credentials not configured"}
+        from fastapi import HTTPException
+        raise HTTPException(status_code=503, detail="Telegram credentials not configured")
 
     now_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     safe_note = escape_tg_markdown(payload.note)
@@ -214,5 +230,5 @@ async def alert_recovery(payload: RecoveryAlertPayload, background_tasks: Backgr
         f"⏰ {now_str} UTC\n"
         f"👉 Go to Admin Panel -> Customers to reset and provide their password."
     )
-    background_tasks.add_task(send_to_all_chats_async, bot_token, chat_id, msg)
+    background_tasks.add_task(_send_background_alert, bot_token, chat_id, msg, "recovery alert")
     return {"queued": True}

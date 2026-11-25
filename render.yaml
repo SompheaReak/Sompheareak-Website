@@ -4,6 +4,12 @@ services:
     env: python
     buildCommand: "pip install -r requirements.txt"
     startCommand: "gunicorn app:app --workers 2 --threads 4 --worker-class gthread --max-requests 500 --max-requests-jitter 50 --timeout 60"
+    envVars:
+      - key: TELEGRAM_SERVICE_URL
+        fromService:
+          type: web
+          name: telegram-alert
+          property: hostport
   - type: web
     name: telegram-alert
     env: python

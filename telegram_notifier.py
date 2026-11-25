@@ -4,7 +4,7 @@ import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
 
-import requests
+import httpx
 
 from telegram_service import (
     OrderAlertPayload,
@@ -15,6 +15,20 @@ from telegram_service import (
 
 logger = logging.getLogger(__name__)
 _EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="tg-alert")
+
+
+def _log_future_exception(future) -> None:
+    try:
+        exc = future.exception()
+    except Exception:
+        return
+    if exc is not None:
+        logger.error("Telegram background dispatch crashed: %s", exc, exc_info=exc)
+
+
+def _submit_background(fn, *args) -> None:
+    future = _EXECUTOR.submit(fn, *args)
+    future.add_done_callback(_log_future_exception)
 
 
 def get_telegram_credentials():
@@ -30,18 +44,25 @@ def _parse_order_items(order):
         return []
 
 
+def _normalize_service_url(raw: str) -> str:
+    url = raw.strip().rstrip("/")
+    if url and not url.startswith(("http://", "https://")):
+        url = f"http://{url}"
+    return url
+
+
 def _dispatch_order_worker(payload: OrderAlertPayload, bot_token: str, chat_id: str) -> bool:
-    service_url = os.environ.get("TELEGRAM_SERVICE_URL", "").strip().rstrip("/")
+    service_url = _normalize_service_url(os.environ.get("TELEGRAM_SERVICE_URL", ""))
     if service_url:
         try:
-            resp = requests.post(
+            resp = httpx.post(
                 f"{service_url}/alert/order",
                 json=payload.model_dump(),
-                timeout=3.0,
+                timeout=5.0,
             )
-            if resp.status_code in (200, 202):
+            if resp.status_code in (200, 202) and resp.json().get("queued", True):
                 return True
-            logger.warning(f"FastAPI telegram service returned {resp.status_code}, falling back to direct send")
+            logger.warning(f"FastAPI telegram service returned {resp.status_code}: {resp.text[:200]}, falling back to direct send")
         except Exception as exc:
             logger.warning(f"FastAPI telegram service unreachable ({exc}), falling back to direct send")
 
@@ -80,7 +101,7 @@ def send_telegram_order_alert(order, bot_token=None, chat_id=None, async_dispatc
             chat_id=chat_id,
         )
         if async_dispatch:
-            _EXECUTOR.submit(_dispatch_order_worker, payload, bot_token, chat_id)
+            _submit_background(_dispatch_order_worker, payload, bot_token, chat_id)
             return True
         return _dispatch_order_worker(payload, bot_token, chat_id)
     except Exception as e:
@@ -131,7 +152,7 @@ def send_telegram_recovery_alert(user, note=None, async_dispatch=True):
             f"👉 Go to Admin Panel -> Customers to reset and provide their password."
         )
         if async_dispatch:
-            _EXECUTOR.submit(lambda: asyncio.run(send_to_all_chats_async(bot_token, chat_id, msg)))
+            _submit_background(lambda: asyncio.run(send_to_all_chats_async(bot_token, chat_id, msg)))
             return True
         ok, _ = asyncio.run(send_to_all_chats_async(bot_token, chat_id, msg))
         return ok
