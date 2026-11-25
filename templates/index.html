@@ -154,9 +154,81 @@
         }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Page-level Skeleton Loader */
+        @keyframes skelShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .skel-box {
+            background: linear-gradient(90deg, #e7e5e4 25%, #f5f5f4 50%, #e7e5e4 75%);
+            background-size: 200% 100%;
+            animation: skelShimmer 1.3s ease-in-out infinite;
+        }
+        #page-skeleton-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #f8f7f5;
+            overflow: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #page-skeleton-loader.is-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="text-slate-900 pb-32 select-none antialiased">
+
+    <!-- Initial Page Skeleton Loader -->
+    <div id="page-skeleton-loader" aria-hidden="true">
+        <div style="background:#fff;border-bottom:1px solid #f1f5f9;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div class="skel-box" style="width:82px;height:32px;border-radius:9999px;"></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div class="skel-box" style="width:36px;height:36px;border-radius:10px;"></div>
+                <div>
+                    <div class="skel-box" style="width:120px;height:14px;border-radius:6px;margin-bottom:5px;"></div>
+                    <div class="skel-box" style="width:72px;height:9px;border-radius:4px;"></div>
+                </div>
+            </div>
+            <div class="skel-box" style="width:76px;height:32px;border-radius:9999px;"></div>
+        </div>
+        <div style="max-width:1152px;margin:0 auto;padding:16px 12px;">
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:16px;">
+                <div class="skel-box" style="height:170px;border-radius:24px;"></div>
+                <div class="skel-box" style="height:170px;border-radius:24px;"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
+                <div style="background:#fff;border-radius:20px;padding:12px;border:1px solid #e2e8f0;">
+                    <div class="skel-box" style="width:100%;height:150px;border-radius:12px;margin-bottom:10px;"></div>
+                    <div class="skel-box" style="width:75%;height:14px;border-radius:6px;margin-bottom:6px;"></div>
+                    <div class="skel-box" style="width:45%;height:14px;border-radius:6px;"></div>
+                </div>
+                <div style="background:#fff;border-radius:20px;padding:12px;border:1px solid #e2e8f0;">
+                    <div class="skel-box" style="width:100%;height:180px;border-radius:12px;margin-bottom:10px;"></div>
+                    <div class="skel-box" style="width:70%;height:14px;border-radius:6px;margin-bottom:6px;"></div>
+                    <div class="skel-box" style="width:40%;height:14px;border-radius:6px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            function hidePageSkeleton() {
+                var el = document.getElementById('page-skeleton-loader');
+                if (!el || el.classList.contains('is-hidden')) return;
+                el.classList.add('is-hidden');
+                setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 350);
+            }
+            if (document.readyState === 'complete') hidePageSkeleton();
+            else {
+                window.addEventListener('load', hidePageSkeleton, { once: true });
+                setTimeout(hidePageSkeleton, 3500);
+            }
+        })();
+    </script>
 
     <div class="premium-bg"></div>
     <div class="premium-mesh"></div>
